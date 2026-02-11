@@ -4,28 +4,7 @@
 
 ---
 
-## Resolved Items
-
-Items addressed since the initial review:
-
-| # | Item | Resolution |
-|---|------|-----------|
-| 2 | Krazydad content licensing | `KD_TNT_` removed from puzzle IDs (now `SB_`). Krazydad credited in README. Puzzles are self-generated. |
-| 3 | JWT auth unspecced | BetterAuth handles sessions (cookie-based, not JWT). Fully specced in `GEN-auth-sync.md` + `GEN-docket-auth-reference.md`. |
-| 4 | No password hashing plan | BetterAuth + PBKDF2-SHA256 (100k iterations). Specced in Docket reference. |
-| 6 | No rate limiting on auth | Anonymous users are local-only (no `POST /auth/anon`). BetterAuth handles session management. Cloudflare rate limiting available for auth endpoints. |
-| 16 | Auth solves a problem that doesn't exist | Anonymous is now purely local. No server record until user creates an account. |
-| 22 | RevenueCat webhook unspecced | HMAC-SHA256 verification via `X-RevenueCat-Signature` header. Code in `GEN-api.md`. |
-| 23 | No password reset or email verification | BetterAuth handles both natively. Resend for emails. Specced in Docket reference. |
-| 26 | First launch offline = zero content | Decided: bundle puzzles in app binary (~54KB). No R2 dependency for v1. |
-| 8 | Solver performance on mobile | Hints are pre-computed at build time and stored as puzzle metadata. Solver never runs on device. Hermes benchmark unnecessary. |
-| 9 | Hint system requires solver refactor | Hints are pre-computed metadata bundled with puzzles. No runtime solver needed, no refactor needed. |
-
----
-
 ## Recommended Build Order
-
-All remaining findings integrated into the phase where they must be addressed.
 
 ### Phase 0: Before Writing App Code
 
@@ -33,10 +12,6 @@ Housekeeping and gate decisions. No app code yet.
 
 | Do | Addresses |
 |----|-----------|
-| **Make repo buildable from clean clone** -- Un-gitignore `package.json` and `tsconfig.json`. A fresh clone must `npm install && npm test`. | #12 Repo not buildable |
-| **Fix stale level numbering comments** in `src/sieve/rules/index.ts`. Comments say L1-L10, actual values are 1-11. | #14 Stale comments |
-| **Fix difficulty range mismatch** -- SBN metadata says `d{int}` is 1-10 but formula produces 1-50+. Normalize or update spec. Needed before curating packs. | #13 Difficulty range |
-| **Delete `GEN-information-architecture.md`** -- It's a 744-line duplicate of the other five GEN docs. Keep the per-topic files as source of truth. | #10 Spec duplication |
 | **Write pack generation script** -- Curate 1000-puzzle corpus into packs with difficulty curves. Output bundled JSON assets. Include pre-computed hints as puzzle metadata. | #28 No content pipeline (partial), #9 (resolved via metadata) |
 
 ### Phase 1: Playable Game (no backend)
