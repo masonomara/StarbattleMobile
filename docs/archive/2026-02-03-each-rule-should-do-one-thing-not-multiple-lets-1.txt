@@ -1,0 +1,659 @@
+
+ ▐▛███▜▌   Claude Code v2.1.31
+▝▜█████▛▘  Opus 4.5 · Claude Max
+  ▘▘ ▝▝    ~/Documents/projects/starbattle
+
+❯ each rule should do ONE THING - not multiple. lets start with auditing    
+  composite regions as a taosist, it needs to do ONE THING - if we need to  
+  break it up / refactor we can, but first we need to understand. What does 
+   @src/sieve/rules/14-compositeRegions/compositeRegions.ts actually do -   
+  describe like water flowing                                               
+  ⎿  Read src/sieve/rules/14-compositeRegions/compositeRegions.ts (1532 lines)
+
+⏺ Looking at this file, let me trace the water's path.
+
+  The One Thing
+
+  Find virtual regions with known star counts, then deduce from tight tilings.
+
+  That's it. Everything else is how to find those virtual regions.
+
+  The Flow
+
+                      ┌─────────────────────┐
+                      │   Entry Point       │
+                      │ compositeRegions()  │
+                      └─────────┬───────────┘
+                                │
+           ┌────────────────────┼────────────────────┐
+           ▼                    ▼                    ▼
+     Reserved Area        Adjacent Lines       Standard Composites
+     Exclusions           (row/col combos)     (region-based)
+           │                    │                    │
+           │                    │         ┌──────────┴──────────┐
+           │                    │         ▼                     ▼
+           │                    │    Counting Surplus      Combinations
+           │                    │    (under/over)          (adjacent regions)
+           │                    │         │                     │
+           └────────────────────┴─────────┴─────────────────────┘
+                                │
+                                ▼
+                      ┌─────────────────────┐
+                      │  Analyze Composite  │
+                      │  (tight tiling?)    │
+                      └─────────┬───────────┘
+                                │
+                ┌───────────────┴───────────────┐
+                ▼                               ▼
+          Forced Stars                    Impossible Cells
+          (in ALL placements)             (in NO placements)
+
+  The Problem
+
+  This file does five distinct things to find composites:
+
+  1. Reserved Area Exclusions (lines 1383-1448) — when forced regions exactly
+  cover a line's need
+  2. Adjacent Line Composites (lines 1309-1370) — combining 2-4 adjacent
+  rows/columns
+  3. Undercounting Composites (lines 127-203) — M rows with N regions, M > N
+  4. Overcounting Composites (lines 212-330) — N regions in M rows, N > M
+  5. Combination Composites (lines 335-482) — adjacent regions merged (singles,
+  pairs, triplets)
+  6. Partitioned Regions (lines 489-523) — disconnected components within a
+  region
+
+  That's six finders feeding into one analyzer. The analyzer itself has two
+  paths:
+  - Tiling-based analysis (findAllMinimalTilings)
+  - Direct enumeration (enumerateValidPlacements)
+
+  Water's Verdict
+
+  The essence is singular: tight virtual regions reveal forced moves.
+
+  But the implementation is a delta with many tributaries. Each finder is its
+  own logic, its own edge cases, its own bugs to maintain.
+
+  If refactoring: the finders could be separate rules that each produce
+  composites, feeding a single "tight composite analyzer" rule. The analysis
+  logic is already shared — it's the finding that sprawls.
+
+❯ so we're identified reserved area exclusions, adjacent lines (row/col     
+  combons), standard composites (region-based), counting surplus            
+  (under/over), combinations (adjacent regions) and analyze composite       
+  (tight tiling) - are thso ethe six finder or am i missing anything?       
+
+⏺ Let me be precise. Looking at the actual functions:
+
+  The Finders (produce composites)
+
+  1. Undercounting (findUndercountingComposites) — M rows, N regions fully
+  inside, M > N → leftover cells need (M-N)×stars
+  2. Overcounting (findOvercountingComposites) — M rows fully inside N regions,
+  N > M → region cells outside need (N-M)×stars
+  3. Combinations (findCombinationComposites) — adjacent regions merged
+  (singles, pairs, triplets)
+  4. Partitioned Regions (findPartitionedRegionComposites) — disconnected
+  components within one region
+  5. Adjacent Lines (findAdjacentLineComposites) — 2-4 adjacent rows/columns
+  combined
+
+  Not a Finder
+
+  - Reserved Area Exclusions (applyReservedAreaExclusions) — this is a direct 
+  analyzer, not a finder. It doesn't produce composites; it directly marks cells
+   when forced regions exactly cover a line's need.
+
+  The Analyzers (consume composites)
+
+  - analyzeComposite — for standard composites (uses tiling or direct
+  enumeration)
+  - analyzeAdjacentLineComposite — for adjacent line composites (uses exact
+  per-line quotas)
+
+  Corrected Picture
+
+  5 Finders → Composites → 2 Analyzers → Marks/Stars
+
+  1 Direct Analyzer (reserved area) → Marks
+
+  So: 5 finders, 1 direct analyzer, 2 composite analyzers. Seven distinct
+  logical units in one file.
+
+❯ break thsoe downf or me, finders, analyzers, composite analyzers? 
+
+⏺ Finders
+
+  Functions that identify groups of cells with known star counts. They return
+  Composite[].
+  Function: findUndercountingComposites
+  What it finds: Leftover cells when M rows contain N regions (M > N)
+  ────────────────────────────────────────
+  Function: findOvercountingComposites
+  What it finds: Leftover cells when N regions span M rows (N > M)
+  ────────────────────────────────────────
+  Function: findCombinationComposites
+  What it finds: 1-3 adjacent regions merged together
+  ────────────────────────────────────────
+  Function: findPartitionedRegionComposites
+  What it finds: Disconnected components within a split region
+  ────────────────────────────────────────
+  Function: findAdjacentLineComposites
+  What it finds: 2-4 adjacent rows or columns combined
+  Composite Analyzers
+
+  Functions that consume a composite and deduce forced stars / impossible cells.
+  Function: analyzeComposite
+  How it analyzes: Uses tiling (findAllMinimalTilings) or direct enumeration
+  ────────────────────────────────────────
+  Function: analyzeAdjacentLineComposite
+  How it analyzes: Uses exact per-line quotas via enumerateWithExactLineQuotas
+  Direct Analyzer
+
+  Function that skips the composite abstraction entirely — analyzes and marks in
+   one step.
+  Function: applyReservedAreaExclusions
+  What it does: For each line, if forced regions exactly cover need, exclude
+    other regions' cells
+  Helper Functions
+
+  Supporting cast (not finders or analyzers):
+  Function: buildAdjacencyGraph
+  Purpose: Which regions touch (8-connected)
+  ────────────────────────────────────────
+  Function: findConnectedComponents
+  Purpose: Split coords into connected groups
+  ────────────────────────────────────────
+  Function: enumerateValidPlacements
+  Purpose: Backtrack all valid star placements
+  ────────────────────────────────────────
+  Function: enumerateWithExactLineQuotas
+  Purpose: Backtrack with per-line constraints
+  ────────────────────────────────────────
+  Function: findExternalForcedCells
+  Purpose: Cells outside composite covered by all tilings
+  Summary
+
+  5 Finders
+  2 Composite Analyzers
+  1 Direct Analyzer
+  5 Helpers
+
+  Thirteen functions. One file. One exported function orchestrating them all.
+
+❯ map thsoe out for me again visually 
+
+⏺ ┌─────────────────────────────────────────────────────────────────────────────
+  ┐
+  │                           compositeRegions()
+   │
+  │                            (main export)
+   │
+  └─────────────────────────────────────────────────────────────────────────────
+  ┘
+                                      │
+          ┌───────────────────────────┼───────────────────────────┐
+          ▼                           ▼                           ▼
+  ┌───────────────┐         ┌─────────────────┐         ┌─────────────────┐
+  │    DIRECT     │         │   ADJACENT      │         │    STANDARD     │
+  │   ANALYZER    │         │     LINES       │         │   COMPOSITES    │
+  └───────────────┘         └─────────────────┘         └─────────────────┘
+          │                         │                           │
+          ▼                         ▼                           ▼
+  ┌───────────────┐         ┌─────────────────┐         ┌─────────────────┐
+  │ applyReserved │         │ findAdjacentLine│         │ FINDERS:        │
+  │ AreaExclusions│         │ Composites      │         │                 │
+  │               │         │                 │         │ • findUnder-    │
+  │ (marks cells  │         │ (row/col combos)│         │   counting      │
+  │  directly)    │         │                 │         │                 │
+  └───────────────┘         └────────┬────────┘         │ • findOver-     │
+          │                          │                  │   counting      │
+          │                          ▼                  │                 │
+          │                 ┌─────────────────┐         │ • findCombina-  │
+          │                 │ COMPOSITE       │         │   tion          │
+          │                 │ ANALYZER:       │         │                 │
+          │                 │                 │         │ • findPartition-│
+          │                 │ analyzeAdjacent │         │   edRegion      │
+          │                 │ LineComposite   │         └────────┬────────┘
+          │                 └────────┬────────┘                  │
+          │                          │                           ▼
+          │                          │                  ┌─────────────────┐
+          │                          │                  │ COMPOSITE       │
+          │                          │                  │ ANALYZER:       │
+          │                          │                  │                 │
+          │                          │                  │ analyzeComposite│
+          │                          │                  └────────┬────────┘
+          │                          │                           │
+          │                          ▼                           ▼
+          │                 ┌─────────────────────────────────────────────┐
+          │                 │              HELPERS                        │
+          │                 ├─────────────────────────────────────────────┤
+          │                 │ enumerateWithExactLineQuotas                │
+          │                 │ enumerateValidPlacements                    │
+          │                 │ findExternalForcedCells                     │
+          │                 └─────────────────────────────────────────────┘
+          │                                      │
+          └──────────────────────────────────────┘
+                             │
+                             ▼
+                   ┌─────────────────┐
+                   │ SHARED HELPERS  │
+                   ├─────────────────┤
+                   │ buildAdjacency- │
+                   │ Graph           │
+                   │                 │
+                   │ findConnected-  │
+                   │ Components      │
+                   │                 │
+                   │ maxIndependent- │
+                   │ SetSize (import)│
+                   │                 │
+                   │ findAllMinimal- │
+                   │ Tilings (import)│
+                   └─────────────────┘
+
+  Data Flow
+
+  ┌────────────┐    ┌────────────┐    ┌────────────┐    ┌────────────┐
+  │   Board    │───▶│  Finders   │───▶│ Composite  │───▶│  Analyzers │───▶
+  cells mutated
+  │   cells    │    │            │    │ {cells,    │    │            │
+  (star/marked)
+  │   analysis │    │            │    │  starsNeed}│    │            │
+  └────────────┘    └────────────┘    └────────────┘    └────────────┘
+                          │
+                          │ (reserved area skips this)
+                          ▼
+                    direct mutation
+
+❯ this seems very compicated and convoluted, what would my taosit proejct   
+  manager think fo this?                                                    
+
+⏺ Your Taoist project manager would say:
+
+  ---
+  "This water does not know where it flows."
+
+  The file claims one purpose: composite regions. But it contains:
+
+  - 5 different ways to find composites
+  - 2 different ways to analyze them
+  - 1 thing that skips composites entirely
+  - 13 functions
+  - 1,532 lines
+
+  A river does not split into six streams, reunite, then split again.
+
+  ---
+  The Taoist Critique
+  Principle: Do one thing
+  Violation: Does six things to find, two things to analyze, one thing that
+    ignores both
+  ────────────────────────────────────────
+  Principle: Name reveals nature
+  Violation: "compositeRegions" — but reserved area exclusions aren't composites
+  ────────────────────────────────────────
+  Principle: Water finds the simplest path
+  Violation: Code tries every path, every time
+  ────────────────────────────────────────
+  Principle: Emptiness is useful
+  Violation: File is full — no room to breathe, understand, or change
+  ---
+  What Would Flow
+
+  reserved-area-exclusions.ts    →  does ONE thing
+  undercounting-composites.ts    →  does ONE thing
+  overcounting-composites.ts     →  does ONE thing
+  combination-composites.ts      →  does ONE thing
+  partitioned-composites.ts      →  does ONE thing
+  adjacent-line-composites.ts    →  does ONE thing
+
+  Each stream knows itself. Each can be tested alone. Each can be removed
+  without disturbing the others.
+
+  ---
+  "The master does less and accomplishes more."
+
+  This code does more and accomplishes... confusion.
+
+❯ map out the relationships and interdependencies of each finder, composite 
+   analyzers, direct analyzers, and helper funcitons                        
+
+⏺ ┌─────────────────────────────────────────────────────────────────────────────
+  ────┐
+  │                              compositeRegions()
+       │
+  └─────────────────────────────────────────────────────────────────────────────
+  ────┘
+           │
+
+  ├────────────────────────────────────────────────────────────────────┐
+           │
+  │
+           ▼
+  ▼
+  ┌─────────────────────┐
+  ┌──────────────────┐
+  │ DIRECT ANALYZER     │                                              │
+  buildAdjacency-  │
+  ├─────────────────────┤                                              │ Graph
+            │
+  │ applyReservedArea-  │
+  └────────┬─────────┘
+  │ Exclusions          │
+  │
+  └─────────┬───────────┘
+  │
+            │
+  │
+            ▼
+  │
+     maxIndependentSetSize (import)
+  │
+
+  │
+
+  ┌────────────────────────────────────────────────────────────────────┘
+           │
+           ▼
+  ┌─────────────────────────────────────────────────────────────────────────────
+  ────┐
+  │                                  FINDERS
+       │
+  ├──────────────────┬──────────────────┬───────────────────┬───────────────────
+  ────┤
+  │ findUnder-       │ findOver-        │ findCombination-  │ findPartitioned-
+      │
+  │ countingComp.    │ countingComp.    │ Composites        │ RegionComposites
+      │
+  ├──────────────────┼──────────────────┼───────────────────┼───────────────────
+  ────┤
+  │ (no deps)        │ (no deps)        │ needs adjacency   │
+  ┌───────────────────┐ │
+  │                  │                  │ graph passed in   │ │findConnected-
+    │ │
+  │                  │                  │                   │ │Components
+    │ │
+  │                  │                  │                   │
+  ├───────────────────┤ │
+  │                  │                  │                   │ │ coordKey
+  (import) │ │
+  │                  │                  │                   │
+  └───────────────────┘ │
+  │                  │                  │                   │          +
+      │
+  │                  │                  │                   │
+  maxIndependentSetSize │
+  └──────────────────┴──────────────────┴───────────────────┴───────────────────
+  ────┘
+           │
+           ▼
+  ┌─────────────────────────────────────────────────────────────────────────────
+  ────┐
+  │                            COMPOSITE ANALYZER
+       │
+  ├─────────────────────────────────────────────────────────────────────────────
+  ────┤
+  │                              analyzeComposite
+       │
+  └─────────┬───────────────────────────┬───────────────────────────┬───────────
+  ────┘
+            │                           │                           │
+            ▼                           ▼                           ▼
+     canTileWithMinCount         findAllMinimalTilings      analyzeViaDirect-
+     (import)                    (import)                   Enumeration
+                                        │                           │
+                                        ▼                           ▼
+                                 findExternalForcedCells    enumerateValid-
+                                        │                   Placements
+                                        ▼                           │
+                                 coordKey (import)                  ▼
+                                                            coordKey (import)
+
+  ┌─────────────────────────────────────────────────────────────────────────────
+  ────┐
+  │                           ADJACENT LINE PATH
+       │
+  │                     (separate from standard composites)
+       │
+  └─────────────────────────────────────────────────────────────────────────────
+  ────┘
+           │
+           ▼
+  ┌─────────────────────┐         ┌─────────────────────────┐
+  │ findAdjacentLine-   │────────▶│ analyzeAdjacentLine-    │
+  │ Composites          │         │ Composite               │
+  ├─────────────────────┤         └───────────┬─────────────┘
+  │ (no deps)           │                     │
+  └─────────────────────┘                     ▼
+                                  ┌─────────────────────────┐
+                                  │ enumerateWithExact-     │
+                                  │ LineQuotas              │
+                                  └───────────┬─────────────┘
+                                              │
+                                  ┌───────────┴───────────┐
+                                  ▼                       ▼
+                           coordKey (import)    maxIndependentSetSize
+                                                      (import)
+
+  Dependency Matrix
+  Function: compositeRegions
+  Calls Internal: 9 functions
+  Calls Imported: —
+  ────────────────────────────────────────
+  Function: applyReservedAreaExclusions
+  Calls Internal: —
+  Calls Imported: maxIndependentSetSize
+  ────────────────────────────────────────
+  Function: findUndercountingComposites
+  Calls Internal: —
+  Calls Imported: —
+  ────────────────────────────────────────
+  Function: findOvercountingComposites
+  Calls Internal: —
+  Calls Imported: —
+  ────────────────────────────────────────
+  Function: findCombinationComposites
+  Calls Internal: —
+  Calls Imported: —
+  ────────────────────────────────────────
+  Function: findPartitionedRegionComposites
+  Calls Internal: findConnectedComponents
+  Calls Imported: maxIndependentSetSize
+  ────────────────────────────────────────
+  Function: findAdjacentLineComposites
+  Calls Internal: —
+  Calls Imported: —
+  ────────────────────────────────────────
+  Function: analyzeComposite
+  Calls Internal: analyzeViaDirectEnumeration, findExternalForcedCells
+  Calls Imported: canTileWithMinCount, findAllMinimalTilings
+  ────────────────────────────────────────
+  Function: analyzeAdjacentLineComposite
+  Calls Internal: enumerateWithExactLineQuotas
+  Calls Imported: —
+  ────────────────────────────────────────
+  Function: analyzeViaDirectEnumeration
+  Calls Internal: enumerateValidPlacements
+  Calls Imported: —
+  ────────────────────────────────────────
+  Function: enumerateValidPlacements
+  Calls Internal: —
+  Calls Imported: coordKey
+  ────────────────────────────────────────
+  Function: enumerateWithExactLineQuotas
+  Calls Internal: —
+  Calls Imported: coordKey, maxIndependentSetSize
+  ────────────────────────────────────────
+  Function: findConnectedComponents
+  Calls Internal: —
+  Calls Imported: coordKey
+  ────────────────────────────────────────
+  Function: findExternalForcedCells
+  Calls Internal: —
+  Calls Imported: coordKey
+  ────────────────────────────────────────
+  Function: buildAdjacencyGraph
+  Calls Internal: —
+  Calls Imported: —
+  The Tangle
+
+  Two separate analysis pipelines:
+  1. Standard path: 4 finders → analyzeComposite → tiling helpers
+  2. Adjacent line path: 1 finder → analyzeAdjacentLineComposite → quota
+  enumeration
+
+  Plus one outlier:
+  - Reserved area: skips both pipelines entirely
+
+  Three paths. One file. No shared abstraction.
+
+✻ Cogitated for 31s
+
+❯ how would my taosist manager propose to break this up so that every rule  
+  serves ONE distinct fucniton?                                             
+
+⏺ The Taoist Refactor
+
+  "Each stream knows only its own path."
+
+  ---
+  Current: 1 File, 7 Concerns
+
+  compositeRegions.ts (1,532 lines)
+  ├── reserved area exclusions
+  ├── adjacent line composites
+  ├── undercounting composites
+  ├── overcounting composites
+  ├── combination composites
+  ├── partitioned region composites
+  └── shared analysis logic (tangled)
+
+  ---
+  Proposed: 7 Files, 7 Purposes
+
+  src/sieve/rules/
+  ├── 14-reservedAreaExclusions/
+  │   └── reservedAreaExclusions.ts
+  │       "When forced regions exactly cover a line's need, exclude others"
+  │
+  ├── 15-adjacentLineAnalysis/
+  │   └── adjacentLineAnalysis.ts
+  │       "Combine adjacent rows/columns, enforce per-line quotas"
+  │
+  ├── 16-undercountingSurplus/
+  │   └── undercountingSurplus.ts
+  │       "M rows with N regions inside (M > N) → leftover needs stars"
+  │
+  ├── 17-overcountingSurplus/
+  │   └── overcountingSurplus.ts
+  │       "N regions spanning M rows (N > M) → outside cells need stars"
+  │
+  ├── 18-regionCombinations/
+  │   └── regionCombinations.ts
+  │       "Adjacent regions merged → combined star count"
+  │
+  ├── 19-partitionedRegions/
+  │   └── partitionedRegions.ts
+  │       "Disconnected components within split region → minimum stars"
+  │
+  └── helpers/
+      └── compositeAnalysis.ts
+          "Given cells + starsNeeded, find forced/impossible via tiling"
+
+  ---
+  Each Rule's Shape
+
+  // Every rule follows this pattern:
+
+  export default function ruleName(
+    board: Board,
+    cells: CellState[][],
+    analysis: BoardAnalysis,
+  ): boolean {
+    // 1. Find the composite (or skip if none exists)
+    // 2. Analyze it (using shared helper if needed)
+    // 3. Return true if changed, false if not
+  }
+
+  ---
+  Shared Helper
+
+  // helpers/compositeAnalysis.ts
+
+  export function analyzeCompositeForDeductions(
+    unknownCells: Coord[],
+    starsNeeded: number,
+    board: Board,
+    cells: CellState[][],
+    analysis: BoardAnalysis,
+  ): boolean {
+    // Tiling-based analysis
+    // Direct enumeration fallback
+    // Returns true if any cell changed
+  }
+
+  ---
+  Dependency Flow (Clean)
+
+  ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
+  │ reservedArea     │   │ adjacentLine     │   │ undercounting    │
+  │ Exclusions       │   │ Analysis         │   │ Surplus          │
+  └────────┬─────────┘   └────────┬─────────┘   └────────┬─────────┘
+           │                      │                      │
+           │                      │                      ▼
+           │                      │             ┌──────────────────┐
+           │                      │             │ compositeAnalysis│
+           │                      │             │ (shared helper)  │
+           │                      │             └──────────────────┘
+           │                      │                      ▲
+           │                      │                      │
+  ┌────────┴─────────┐   ┌────────┴─────────┐   ┌───────┴──────────┐
+  │ overcounting     │   │ regionCombin-    │   │ partitioned      │
+  │ Surplus          │   │ ations           │   │ Regions          │
+  └──────────────────┘   └──────────────────┘   └──────────────────┘
+
+           │                      │                      │
+           ▼                      ▼                      ▼
+     (self-contained)    (uses shared helper)   (uses shared helper)
+
+  ---
+  The Taoist Test
+
+  Each file answers ONE question:
+  File: reservedAreaExclusions
+  Question: "Does a line's need equal its forced regions' minimum?"
+  ────────────────────────────────────────
+  File: adjacentLineAnalysis
+  Question: "Do adjacent lines constrain each other?"
+  ────────────────────────────────────────
+  File: undercountingSurplus
+  Question: "Do rows have leftover cells outside contained regions?"
+  ────────────────────────────────────────
+  File: overcountingSurplus
+  Question: "Do regions have leftover cells outside spanning rows?"
+  ────────────────────────────────────────
+  File: regionCombinations
+  Question: "Do adjacent regions form a tight composite?"
+  ────────────────────────────────────────
+  File: partitionedRegions
+  Question: "Do disconnected components have minimum requirements?"
+  ────────────────────────────────────────
+  File: compositeAnalysis
+  Question: "Given a composite, what's forced?"
+  If you cannot state the question in one sentence, the rule does too much.
+
+  ---
+  Migration Path
+
+  1. Extract compositeAnalysis.ts (shared helper) — no behavior change
+  2. Extract reservedAreaExclusions.ts — simplest, no dependencies
+  3. Extract partitionedRegions.ts — uses only shared helper
+  4. Extract undercountingSurplus.ts — uses only shared helper
+  5. Extract overcountingSurplus.ts — uses only shared helper
+  6. Extract regionCombinations.ts — uses only shared helper
+  7. Extract adjacentLineAnalysis.ts — has own enumeration, may keep it
+  8. Delete compositeRegions.ts — nothing remains
+
+  Each step: extract, test, commit. Water carves the canyon slowly.
