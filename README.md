@@ -1,4 +1,4 @@
-This is a greenfield react native star battl elibrary puzzle app. 
+This is a greenfield react native star battl elibrary puzzle app.
 
 See `docs/specs/00-eight-element-framework.md` for business context
 See `docs/specs/00-feature-list.md` for the first draft of features
