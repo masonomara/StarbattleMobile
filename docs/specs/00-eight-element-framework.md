@@ -5,7 +5,7 @@
 - Puzzle sieve enables more difficult puzzles
 - Other puzzles for experts don't have hints
 - Difficulty calibration is sore point for users
-- Will pay for challenges, not just removing ads
+- Will pay for challenges
 - Value hint quality over hint quantity
 - Want to get better at a specific thing
 
@@ -13,8 +13,7 @@
 
 - Popular versions already cater toward casual (NYT, LinkedIn)
 - These games lean into daily habit hooks, social comparison
-- Tolerate ads, expect free
-- Won't pay for hints
+- Won't pay for puzzles
 - Lower lifetime value, higher volume
 - Want something to do
 
@@ -48,9 +47,8 @@
 
 **Monetization**
 
-- Primary: puzzle pack purchases (tiered by difficulty) - future feature
-- Secondary: subscriptions for ad-free experience, unlimited hints, unlocking all puzzles (separate and combo options)
-- Tertiary: passive banner ads (omnipresent, not rewarded)
+- Primary: unlock all puzzles (one-time purchase, bypasses sequential unlock)
+- Secondary: paid puzzle packs (tiered by difficulty) — future, post-v1
 
 **Retention**
 
@@ -92,8 +90,8 @@
 
 **Monetization**
 
-- Purchase puzzle packs
-- Subscribe (ad-free, hints, unlocks)
+- Purchase unlock-all
+- Purchase puzzle packs (future)
 
 **Retention**
 

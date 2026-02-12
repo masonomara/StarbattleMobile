@@ -54,7 +54,6 @@ GET /sync
   Auth: Cookie session (withAuth)
   Response: {
     settings: UserSettings,
-    purchases: Purchases,
     progress: Record<string, PuzzleProgress>,
     packProgress: Record<string, number>  // packId -> unlocked_index
   }
@@ -93,8 +92,8 @@ GET /puzzles/pack/:packId                                    [post-v1]
   Response: PackFile
 
   - Free packs: serve directly from R2
-  - Paid packs: check D1 purchases table for user entitlement, then serve from R2
-  - Returns 403 if user has not purchased the paid pack
+  - Paid packs (post-v1): check D1 purchases table for user entitlement, then serve from R2
+  - Returns 403 if user has not purchased the paid pack (post-v1)
   - CDN caching: Cache-Control: public, max-age=86400
 
 GET /puzzles/daily/:date
@@ -145,9 +144,6 @@ async function verifyRevenueCatSignature(
 
 ### Entitlement Mapping
 
-| RevenueCat Entitlement | D1 Column                   |
-| ---------------------- | --------------------------- |
-| `remove_ads`           | `purchases.remove_ads`      |
-| `unlock_all`           | `purchases.unlock_all`      |
-| `unlimited_hints`      | `purchases.unlimited_hints` |
-| `pro_bundle`           | `purchases.pro_bundle`      |
+| RevenueCat Entitlement | D1 Column              |
+| ---------------------- | ---------------------- |
+| `unlock_all`           | `purchases.unlock_all` |

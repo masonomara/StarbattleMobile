@@ -1,6 +1,6 @@
 # Auth, Sync & Client Features
 
-Auth flows, sync behavior, hints, purchases, and streaks.
+Auth flows, sync behavior, hints, and streaks.
 
 BetterAuth handles all account management. Anonymous users are purely local — no server-side records until the user creates an account.
 
@@ -245,13 +245,13 @@ async function processOfflineQueue() {
 
 ## Hint System
 
-### Decision: Fully Client-Side
+### Decision: Fully Client-Side, Free, Unlimited
 
-Hints run entirely on the device. The solver and explanation templates are bundled in the app. No server calls needed.
+Hints read pre-computed metadata from puzzle files and map rule names to explanation templates. No solver runs on device. No server calls needed.
 
 **Rationale:**
 - Works offline — no network dependency for hints
-- Free — no per-hint server cost
+- Free and unlimited — no tracking, no monetization, no server cost
 - Instant — no round-trip latency
 - Deterministic — same rule always produces a correct explanation
 
@@ -259,13 +259,12 @@ Hints run entirely on the device. The solver and explanation templates are bundl
 
 ```text
 1. User taps hint button
-2. Check hints_remaining in local storage (or unlimited purchase)
-3. Run solver one cycle on current board state
-4. Map rule name → explanation template
-5. Decrement hints_remaining in local storage
-6. Display hint (faded star/mark + explanation)
-7. If authenticated, sync hints_remaining on next sync cycle
+2. Read pre-computed hint metadata from puzzle file
+3. Map rule name → explanation template
+4. Display hint (faded star/mark + explanation)
 ```
+
+Hints are free and unlimited. No count tracking, no server sync, no purchase gating.
 
 ### Explanation Templates
 
@@ -289,30 +288,19 @@ const explanationTemplates: Record<string, (ctx: HintContext) => string> = {
 
 | Condition             | Client Action             |
 | --------------------- | ------------------------- |
-| No hints remaining    | Show purchase prompt      |
 | Puzzle already solved | Hide hint button          |
 
 ---
 
 ## Purchases
 
-### RevenueCat Integration
+### Unlock All (v1 — only IAP)
 
-RevenueCat handles App Store / Play Store receipt validation. Webhook notifies Worker of purchase events.
-
-### Client-Side Check
+RevenueCat handles App Store / Play Store receipt validation for the single `unlock_all` entitlement. Unlock status is checked locally via RevenueCat SDK; no server round-trip needed for v1.
 
 ```typescript
-function hasEntitlement(ent: string): boolean {
-  return localPurchases[ent] === true;
-}
-
-async function refreshPurchases() {
-  const { purchases } = await fetch("/sync", {
-    credentials: "include",
-  }).then((r) => r.json());
-  localPurchases = purchases;
-  storage.set("purchases", purchases);
+function hasUnlockAll(): boolean {
+  return storage.get<boolean>("unlock_all") === true;
 }
 ```
 

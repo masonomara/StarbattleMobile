@@ -29,7 +29,7 @@ Local First with Cloud backup
 
 ## Puzzle solver
 
-- solver bundled in app (client-side); used for both hint system and difficulty validation
+- difficulty validation runs at build time (solver is not bundled in the app)
 - hints: run one cycle, return rule used, cells changed, and template-based explanation
   - do not auto-apply the marks; show faded mark for user to fill in
 - difficulty rating stored in puzzle metadata
@@ -85,9 +85,7 @@ Local First with Cloud backup
 ## App settings
 
 - theme (light, dark, or midnight)
-- remove ads (IAP)
-- all subscription options
-- buy hints
+- unlock all puzzles (IAP)
 - privacy policy
 - email support
 - restore purchases
@@ -100,7 +98,7 @@ Local First with Cloud backup
 
 - run solver one cycle, get next deduction
 - template-based explanation: each solver rule maps to a hand-written plain-language template (no AI dependency — free, instant, deterministic)
-- each user gets three hints; unlimited hints are available for subscription; hint packs available for purchase
+- hints are free and unlimited
 - show which cells changed and why; do not mark for user; show faded star/mark where it should go, and let user tap it
 
 ## Progression system
@@ -111,21 +109,17 @@ Local First with Cloud backup
 
 ## Monetization
 
-- banner ads: always visible, not rewarded (explore AdMob and AppLovin)
-- in app purchases:
-  - remove ads (one time purchase)
-  - unlock all puzzles (one time purchase; bypasses sequential unlock within free packs)
-  - hint packages: 3 free hints total, then pay (each hint ~$0.50; discounts on larger bundles; unlimited hint option)
-  - pro package: bundle unlimited hints, all puzzles unlocked, and remove ads
+- in-app purchases:
+  - unlock all puzzles (one-time purchase; bypasses sequential unlock within free packs) — the only v1 IAP
 - paid puzzle packs: future feature (tiered pricing by difficulty; not in v1)
-- receipt validation (server side or 3rd-party like RevenueCat)
+- receipt validation via RevenueCat (single entitlement: unlock_all)
 - restore purchases flow
 
 ## Local storage
 
 - puzzle progress (per puzzle cell states, time, and completion status)
 - settings (auto x, error highlighting, and theme)
-- purchase status (remove ads, unlock all, hints, pro package)
+- purchase status (unlock all)
 - streak data
 - all synced to server either anonymously or via account
 
@@ -141,7 +135,7 @@ Local First with Cloud backup
 - Puzzle won't load: show "Sorry partner, this puzzle is having trouble loading" with tap to retry
 - Hint fails: show "Sorry partner, this hint is giving us trouble right now" (template-based hints are deterministic, so failures are rare — only on solver/network issues)
 - Network fails: silent (local-first means this is invisible; sync retries on next connection)
-- Hint count only decrements after successful response, not before request
+- Hints are free and unlimited; no decrement logic needed
 
 ## UI/UX Navigation
 
