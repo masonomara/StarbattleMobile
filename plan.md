@@ -44,10 +44,10 @@ All types live in `src/types/`. Every type definition in the app goes here — n
 
 ### `src/types/puzzle.ts`
 
-The puzzle data types. These represent what comes out of the pack JSON files and what the app works with at runtime.
+The puzzle data types. `GamePuzzle` is the single puzzle representation the app works with — SBN is parsed at pack-load time so nothing downstream ever sees raw encoded strings. `Pack` holds metadata plus an array of parsed `GamePuzzle`s.
 
 ```typescript
-export type Coord = [number, number]; // [row, col]
+export type Coord = [number, number];
 
 export type HintStep = {
   rule: string;
@@ -56,33 +56,21 @@ export type HintStep = {
   marks: Coord[];
 };
 
-// A puzzle as stored in pack JSON files
-export type Puzzle = {
-  sbn: string;
+export type GamePuzzle = {
+  id: string;
+  size: number;
+  stars: number;
+  regions: number[][];
   solution: Coord[];
   hints: HintStep[];
 };
 
-export type PackFile = {
+export type Pack = {
   id: string;
   name: string;
-  version: number;
-  free: boolean;
   gridSize: number;
   stars: number;
-  puzzles: Puzzle[];
-};
-
-// A fully-parsed puzzle ready for gameplay. Assembled from the pack
-// JSON (Puzzle) by parsing the SBN into grid/regions and combining
-// with solution and hints. This is the object the app works with.
-export type GamePuzzle = {
-  id: string; // "{packId}:{index}"
-  size: number; // grid dimensions (5, 6, 8, 10, etc.)
-  stars: number; // stars per container
-  regions: number[][]; // regions[row][col] = region ID (0-indexed)
-  solution: Coord[];
-  hints: HintStep[];
+  puzzles: GamePuzzle[];
 };
 ```
 
@@ -91,8 +79,6 @@ export type GamePuzzle = {
 Runtime and persisted state types.
 
 ```typescript
-import type { CellValue } from './puzzle';
-
 export type CellValue = 0 | 1 | 2; // 0=empty, 1=star, 2=marked
 
 export type PuzzleProgress = {
@@ -1263,227 +1249,82 @@ Every task needed to ship Phase 1. Grouped by step. Complete in order — each s
 
 ### Step 1: Dependencies
 
-- [ ] Install `react-native-mmkv`
-- [ ] Install `react-native-haptic-feedback`
-- [ ] Install `react-native-gesture-handler` (explicit, not just transitive)
-- [ ] Install `react-native-reanimated` (needed by BoardView pinch-to-zoom — missing from original dep list)
-- [ ] Install `zustand`
-- [ ] Run `pod install`
+- [x] Install `react-native-mmkv` (v4 w/ `react-native-nitro-modules` peer dep)
+- [x] Install `react-native-haptic-feedback`
+- [x] Install `react-native-gesture-handler` (explicit, not just transitive)
+- [x] ~~Install `react-native-reanimated`~~ — skipped, incompatible with RN 0.84. Using RN's built-in Animated API instead
+- [x] Install `zustand`
+- [x] Run `pod install`
 - [ ] Verify clean build on iOS simulator
 - [ ] Verify clean build on Android emulator
 
 ### Step 2: Types and Data Layer
 
-**Types**
-
-- [ ] Create `src/types/puzzle.ts` — `Coord`, `HintStep`, `Puzzle`, `PackFile`, `GamePuzzle`
-- [ ] Create `src/types/state.ts` — `CellValue`, `PuzzleProgress`, `UserSettings`, `CellChange`, `Move`
-- [ ] Remove erroneous `import type { CellValue } from './puzzle'` from state.ts (CellValue is defined in state.ts, not puzzle.ts)
-- [ ] Create `src/types/index.ts` — barrel export
-
-**Storage**
-
-- [ ] Create `src/storage.ts` — MMKV wrapper with `getSettings`, `saveSettings`, `getProgress`, `saveProgress`, `getPackCompletionCount`
-- [ ] Verify MMKV reads/writes work on device (write a setting, kill app, read it back)
-
-**Pack Loading**
-
-- [ ] Create `src/packs.ts` — static imports of all 5 pack JSON files, `getAllPacks()`, `getPack()`
-- [ ] Verify packs load correctly (console.log a pack, check puzzle count and structure)
+- [x] Create `src/types/puzzle.ts` — `Coord`, `HintStep`, `GamePuzzle`, `Pack` (inlined raw puzzle shape, no separate Puzzle type)
+- [x] Create `src/types/state.ts` — `CellValue`, `PuzzleProgress`, `UserSettings`, `CellChange`, `Move` (no erroneous import)
+- [x] Create `src/types/index.ts` — barrel export
+- [x] Create `src/storage.ts` — MMKV wrapper using `createMMKV()` (v4 API)
+- [x] Create `src/packs.ts` — loads and parses all 5 packs at import time, exports `Pack[]` with `GamePuzzle[]`
+- [ ] Verify MMKV reads/writes work on device
 
 ### Step 3: Puzzle Parser
 
-- [ ] Create `src/puzzle-parser.ts` — `parsePuzzle()` function
-- [ ] Parse SBN header (extract size and stars)
-- [ ] Parse SBN layout (map letters to region IDs via `LETTERS.indexOf`)
-- [ ] Build and return `GamePuzzle` with id, size, stars, regions, solution, hints
-- [ ] Verify against intro.json: parse puzzle 0, log the GamePuzzle, confirm regions matrix is correct
+- [x] Create `src/puzzle-parser.ts` — `parsePuzzle()` function
+- [x] Parse SBN header, layout, build `GamePuzzle`
+- [x] Parsing happens at pack-load time — app never sees raw SBN
 
 ### Step 4: Board Renderer
 
-**Region shading**
-
-- [ ] Add region color map — derive deterministic background colors from region IDs (alternating palette so adjacent regions are visually distinct). Borders alone are not enough for 8x8+ readability
-- [ ] Add `regionColors` or equivalent to the data passed per cell
-
-**CellView**
-
-- [ ] Create `src/components/CellView.tsx`
-- [ ] Accept `row`, `col`, `size`, `borders`, `regionColor`, `onPress` props
-- [ ] Render region border (3px black) vs inner border (1px gray) per edge
-- [ ] Render cell background using region color
-- [ ] Render star (★ unicode), mark (✕), or empty based on value
-- [ ] Render error highlight when `hasError` is true
-- [ ] Subscribe to Zustand store via selector: `s => s.cells[row * s.boardSize + col]`
-- [ ] Subscribe to error state: `s => s.errorCells.has(row * s.boardSize + col)` (use numeric key, not string)
-- [ ] Wrap in `memo` to prevent parent re-renders from propagating
-
-**BoardView**
-
-- [ ] Create `src/components/BoardView.tsx`
-- [ ] Compute `cellSize` from screen width, board padding, and grid size
-- [ ] Pre-compute border info per cell in `useMemo` (which edges are region boundaries)
-- [ ] Pre-compute region color per cell in `useMemo`
-- [ ] Render cells via flat map with `flexWrap`
-- [ ] Implement pinch-to-zoom using `Gesture.Pinch()` (RNGH v2 API, not the deprecated `PinchGestureHandler`)
-- [ ] Implement pan gesture composed with pinch so zoomed boards are scrollable
-- [ ] Clamp scale to [1, 3], reset translation when scale returns to 1
+- [x] Create `src/components/CellView.tsx` — memo'd, Zustand selector per cell, region color bg, themed borders
+- [x] Create `src/components/BoardView.tsx` — pre-computed borders + region colors, pinch-to-zoom + pan (RN Animated), light/dark region palettes
 - [ ] Verify: render a static 5x5 board on screen with correct borders and region colors
 
 ### Step 5: Game State (Zustand Store)
 
-**Core store**
-
-- [ ] Create `src/store.ts` with `usePuzzleStore`
-- [ ] State: `puzzle`, `boardSize`, `cells`, `errorCells`, `completed`, `timeMs`, `hintsUsed`, `currentHintIndex`, `moveLog`
-- [ ] Add `settings` to the store (read from MMKV once on init, sync to MMKV on writes). Do not call `getSettings()` on every tap
-
-**`loadPuzzle` action**
-
-- [ ] Set puzzle, boardSize, initialize cells array (from saved progress or zeros)
-- [ ] Restore completed, timeMs, hintsUsed, currentHintIndex from saved progress
-- [ ] Clear moveLog on load (moves aren't persisted)
-
-**`tapCell` action**
-
-- [ ] Early return if completed or no puzzle
-- [ ] Cycle value: 0 → 1 → 2 → 0
-- [ ] Build `CellChange[]` for the tapped cell
-- [ ] If placing star (next === 1) and autoX enabled: mark empty neighbors as X, record each as a CellChange
-- [ ] Append move to moveLog
-- [ ] Cap moveLog at 100 entries — shift old moves off the front
-- [ ] Trigger haptic from store (read setting from store state, not MMKV)
-- [ ] Win check: only run when `next === 1`. Compare player star coords to solution set. Set `completed = true` on match. Trigger success haptic
-- [ ] Persist progress (debounced — see below)
-
-**`undo` action**
-
-- [ ] Pop last move from moveLog
-- [ ] Replay changes in reverse, restoring previousValue for each
-- [ ] Trigger haptic
-- [ ] Persist progress
-
-**`requestHint` action**
-
-- [ ] Find next unapplied hint starting from currentHintIndex
-- [ ] Store result as `activeHint` in state (not as a return value — Zustand actions shouldn't return data to components)
-- [ ] Increment hintsUsed
-- [ ] Update currentHintIndex
-
-**`tick` action**
-
-- [ ] Increment timeMs by 1000 if not completed
-
-**Persistence helper**
-
-- [ ] `persistProgress` — serialize current state to PuzzleProgress, write to MMKV
-- [ ] Debounce persistence writes (e.g., trailing 500ms) so rapid taps don't thrash I/O
-
-**Verification**
-
-- [ ] Load a puzzle, tap cells, confirm cycling works
-- [ ] Place stars, confirm auto-X marks neighbors
-- [ ] Undo, confirm all changes (including auto-X) revert
-- [ ] Complete a puzzle, confirm win detection triggers
-- [ ] Kill app, reopen, confirm progress restored
+- [x] Create `src/store.ts` — `usePuzzleStore` with all actions
+- [x] Settings loaded once from MMKV at init, stored in Zustand state
+- [x] `activeHint` stored as state, not returned from action
+- [x] Win check gated behind `next === 1`
+- [x] moveLog capped at 100 entries
+- [x] `persistProgress` debounced (500ms trailing)
+- [ ] Verify: load puzzle, tap, undo, win, persist
 
 ### Step 6: Game Screen
 
-**Haptics**
-
-- [ ] Create `src/haptics.ts` — `triggerHaptic` wrapper over react-native-haptic-feedback
-
-**Toolbar**
-
-- [ ] Create `src/components/Toolbar.tsx` — Undo and Hint buttons
-- [ ] Disable undo when moveLog is empty or puzzle is completed
-- [ ] Disable hint when puzzle is completed
-
-**PuzzleScreen**
-
-- [ ] Create `src/screens/PuzzleScreen.tsx`
-- [ ] Read `packId` and `puzzleIndex` from route params
-- [ ] Load pack, parse puzzle, call `loadPuzzle` in useEffect
-- [ ] Wire `onCellPress` to `tapCell`
-- [ ] Wire toolbar to `undo` and `requestHint`
-- [ ] Set up timer interval (1s), clear on unmount or completion
-- [ ] Set navigation header title to pack name
-- [ ] Show timer in header right (tabular-nums for fixed-width digits)
-- [ ] Show win banner on completion with time and continue button
-- [ ] Extract `formatTime` to `src/utils.ts` (will be needed elsewhere)
-
-**Verification**
-
-- [ ] Play a full puzzle start to finish
-- [ ] Confirm timer runs, pauses on completion
-- [ ] Confirm win banner appears with correct time
-- [ ] Confirm undo and hint buttons work during play
+- [x] Create `src/haptics.ts`
+- [x] Create `src/components/Toolbar.tsx` — themed, disabled states
+- [x] Create `src/screens/PuzzleScreen.tsx` — timer, header, win banner
+- [x] Create `src/utils.ts` — `formatTime` extracted as shared util
 
 ### Step 7: Navigation
 
-- [ ] Create `src/navigation.tsx`
-- [ ] Define `RootStackParams`: Home (undefined), Pack ({packId}), Puzzle ({packId, puzzleIndex})
-- [ ] Create native stack navigator with three screens
-- [ ] Verify navigation between all three screens (forward and back)
+- [x] Create `src/navigation.tsx` — native stack with Home, Pack, Puzzle screens
 
 ### Step 8: Home Screen
 
-- [ ] Create `src/screens/HomeScreen.tsx`
-- [ ] Render FlatList of all packs
-- [ ] Show pack name, grid size, star count, completion progress (e.g., "12/30")
-- [ ] Memoize completion counts (useMemo or similar) — don't call getPackCompletionCount bare on every render
-- [ ] Navigate to Pack screen on press
-- [ ] Verify: see all 5 packs, progress updates after completing a puzzle and returning
+- [x] Create `src/screens/HomeScreen.tsx` — FlatList, themed, completion counts memoized via `useMemo`
 
 ### Step 9: Pack Screen
 
-- [ ] Create `src/screens/PackScreen.tsx`
-- [ ] Set screen title to pack name via `navigation.setOptions`
-- [ ] Render puzzle grid (FlatList, numColumns=5)
-- [ ] Show puzzle number and completion checkmark
-- [ ] Navigate to Puzzle screen on press
-- [ ] Verify: see 30 puzzle cells, completed ones show checkmark
+- [x] Create `src/screens/PackScreen.tsx` — puzzle grid, themed, completion checkmarks
 
 ### Step 10: Theme + App.tsx
 
-**Theme**
+- [x] Create `src/theme.ts` — light/dark themes, `useTheme()` reads from Zustand settings
+- [x] Theme threaded through all components and screens
+- [x] App.tsx replaced — `GestureHandlerRootView` + `SafeAreaProvider` + `Navigation`
+- [x] TypeScript compiles clean (`npx tsc --noEmit` passes)
 
-- [ ] Create `src/theme.ts` — light and dark theme objects
-- [ ] `useTheme()` hook: respect UserSettings.theme (system/light/dark)
-- [ ] Define all color tokens: bg, card, text, textSecondary, regionBorder, innerBorder, cellBg, starColor, markColor, accent, error
+### Fixes from Review (all addressed)
 
-**Apply theme**
-
-- [ ] Thread `useTheme()` through BoardView/CellView — replace hardcoded colors
-- [ ] Thread through HomeScreen, PackScreen, PuzzleScreen
-- [ ] Thread through Toolbar, win banner
-- [ ] Verify region colors work in both light and dark mode
-
-**App.tsx**
-
-- [ ] Replace stock App.tsx template
-- [ ] Wrap in `GestureHandlerRootView`
-- [ ] Wrap in `SafeAreaProvider`
-- [ ] Set StatusBar style based on color scheme
-- [ ] Render `Navigation`
-
-**Final verification**
-
-- [ ] Full flow: launch → home → pick pack → pick puzzle → play → solve → back to pack → progress updated
-- [ ] Toggle device dark mode, confirm theme switches
-- [ ] Kill app mid-puzzle, reopen, confirm progress restored
-- [ ] Test on smallest board (5x5 intro) and largest board (10x10 2-star)
-
-### Fixes from Review (address during relevant steps)
-
-- [ ] **Step 1**: Add `react-native-reanimated` to dependency install
-- [ ] **Step 2**: Remove dead `CellValue` import in state.ts
-- [ ] **Step 4**: Use RNGH v2 gesture API (`Gesture.Pinch()` + `Gesture.Pan()`), not deprecated `PinchGestureHandler`
-- [ ] **Step 4**: Add region shading (background colors per region)
-- [ ] **Step 5**: Move settings into Zustand store — don't read MMKV on every tap
-- [ ] **Step 5**: Store active hint as state, not as action return value
-- [ ] **Step 5**: Gate win check behind `next === 1`
-- [ ] **Step 5**: Cap moveLog at ~100 entries
-- [ ] **Step 5**: Debounce `persistProgress`
-- [ ] **Step 6**: Extract `formatTime` to a shared util
-- [ ] **Step 8**: Memoize pack completion counts in HomeScreen
+- [x] ~~`react-native-reanimated`~~ — dropped, using RN Animated
+- [x] Dead `CellValue` import — never existed in implementation
+- [x] Pinch-to-zoom — using RN Animated + RNGH handlers (PinchGestureHandler + PanGestureHandler with simultaneousHandlers)
+- [x] Region shading — light/dark palettes, 26 colors each
+- [x] Settings in Zustand store — read from MMKV once on init
+- [x] `activeHint` as state
+- [x] Win check gated behind `next === 1`
+- [x] moveLog capped at 100
+- [x] `persistProgress` debounced 500ms
+- [x] `formatTime` in `src/utils.ts`
+- [x] HomeScreen completion counts memoized
