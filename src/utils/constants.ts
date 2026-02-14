@@ -17,7 +17,7 @@ export const RADIUS_LG = 24;
 export const FONT_SIZE_SM = 14;
 export const FONT_SIZE_MD = 16;
 export const FONT_SIZE_LG = 18;
-export const FONT_SIZE_XL = 28;
+export const FONT_SIZE_XL = 34;
 
 // Font weights
 export const FONT_WEIGHT_SEMIBOLD = '600' as const;

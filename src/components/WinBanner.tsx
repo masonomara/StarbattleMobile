@@ -10,20 +10,15 @@ import { useTheme } from '../utils/useTheme';
 import type { RootStackParams } from '../navigation';
 import {
   SPACING_XS,
-  SPACING_XL,
   FONT_SIZE_MD,
   FONT_SIZE_XL,
   FONT_WEIGHT_BOLD,
 } from '../utils/constants';
 
-function WinTime({ color }: { color: string }) {
-  const timeMs = usePuzzleStore(s => s.timeMs);
-  return <Text style={[styles.winTime, { color }]}>{formatTime(timeMs)}</Text>;
-}
-
 export function WinBanner() {
   const completed = usePuzzleStore(s => s.completed);
   const puzzleId = usePuzzleStore(s => s.puzzle?.id);
+  const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParams>>();
@@ -72,12 +67,13 @@ export function WinBanner() {
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      <Text style={[styles.winText, { color: theme.onAccent }]}>Solved!</Text>
-      <WinTime color={theme.onAccent} />
+      <Text style={[styles.winText, { color: theme.onAccent }]}>Solved in {formatTime(timeMs)}</Text>
+    
       <Button
         title={isLastPuzzle ? `Back to ${pack?.name ?? 'Pack'}` : 'Next Puzzle'}
         onPress={handleNext}
         color={theme.onAccent}
+        style={[styles.winButton, {backgroundColor: theme.onAccent}]}
       />
     </Animated.View>
   );
@@ -89,11 +85,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: SPACING_XL,
+    paddingTop: 24,
+    paddingLeft: 16,
+    paddingRight: 16,
+    paddingBottom: 16,
     alignItems: 'center',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
   },
   winText: { fontSize: FONT_SIZE_XL, fontWeight: FONT_WEIGHT_BOLD },
   winTime: { fontSize: FONT_SIZE_MD, marginTop: SPACING_XS },
+  winButton: { height: 44, width: '100%', borderRadius: 16,}
 });
