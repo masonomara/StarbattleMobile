@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { GestureDetector } from 'react-native-gesture-handler';
 import { BoardView } from '../components/BoardView';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
@@ -11,6 +12,7 @@ import { FONT_SIZE_MD } from '../utils/constants';
 import { formatTime } from '../utils/formatTime';
 import type { RootStackParams } from '../navigation';
 import { useTheme } from '../utils/useTheme';
+import { useZoom } from '../hooks/useZoom';
 
 function Timer({ color }: { color: string }) {
   const timeMs = usePuzzleStore(s => s.timeMs);
@@ -36,16 +38,14 @@ export function PuzzleScreen({ route, navigation }: Props) {
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
 
-  const zoomResetRef = useRef<(() => void) | null>(null);
-  const [isZoomed, setIsZoomed] = React.useState(false);
-  const handleZoomReset = useCallback(() => zoomResetRef.current?.(), []);
+  const { gesture, scale, translateX, translateY, isZoomed, handleZoomReset } =
+    useZoom();
 
   useEffect(() => {
     if (!rawPuzzle) return;
     const puzzleId = `${packId}:${puzzleIndex}`;
     const parsed = parsePuzzle(rawPuzzle, puzzleId);
     loadPuzzle(parsed);
-    navigation.setOptions({ title: pack?.name });
   }, [rawPuzzle, packId, puzzleIndex, loadPuzzle, navigation, pack?.name]);
 
   const renderTimer = useCallback(
@@ -61,13 +61,16 @@ export function PuzzleScreen({ route, navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
-      <View style={styles.boardArea}>
-        <BoardView
-          puzzle={puzzle}
-          zoomResetRef={zoomResetRef}
-          onZoomChange={setIsZoomed}
-        />
-      </View>
+      <GestureDetector gesture={gesture}>
+        <View style={styles.boardArea}>
+          <BoardView
+            puzzle={puzzle}
+            scale={scale}
+            translateX={translateX}
+            translateY={translateY}
+          />
+        </View>
+      </GestureDetector>
       <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
       <WinBanner />
     </View>

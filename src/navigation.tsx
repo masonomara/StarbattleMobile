@@ -26,8 +26,19 @@ export function Navigation() {
           component={HomeScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="Pack" component={PackScreen} />
-        <Stack.Screen name="Puzzle" component={PuzzleScreen} />
+        <Stack.Screen
+          name="Pack"
+          component={PackScreen}
+          options={{ headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="Puzzle"
+          component={PuzzleScreen}
+          options={{
+            headerTransparent: true,
+            title: '',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,18 +1,15 @@
 import React, { memo, useCallback } from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
+import { Star, X } from 'lucide-react-native';
 import { usePuzzleStore } from '../store';
 import {
   REGION_BORDER_WIDTH,
   INNER_BORDER_WIDTH,
   BORDER_STYLE,
   CELL_SIZE,
-  STAR_SYMBOL,
-  STAR_FONT_SIZE_RATIO,
-  STAR_FONT_WEIGHT,
-  MARK_SYMBOL,
-  MARK_FONT_SIZE_RATIO,
-  MARK_FONT_WEIGHT,
+  STAR_ICON_SIZE_RATIO,
+  MARK_ICON_SIZE_RATIO,
 } from '../utils/constants';
 import type { Borders } from '../types/puzzle';
 import type { Theme } from '../utils/useTheme';

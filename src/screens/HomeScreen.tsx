@@ -3,7 +3,7 @@ import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getAllPacks } from '../packs';
-import { getCompletedCount } from '../storage';
+import { useUserStore } from '../stores/userStore';
 import {
   SPACING_XS,
   SPACING_MD,
@@ -23,6 +23,7 @@ type Props = NativeStackScreenProps<RootStackParams, 'Home'>;
 export function HomeScreen({ navigation }: Props) {
   const packs = getAllPacks();
   const theme = useTheme();
+  const packProgress = useUserStore(s => s.packProgress);
 
   const [focusCount, setFocusCount] = useState(0);
   useFocusEffect(
@@ -33,7 +34,7 @@ export function HomeScreen({ navigation }: Props) {
 
   const renderPack = ({ item }: { item: Pack }) => {
     const total = item.puzzles.length;
-    const completed = getCompletedCount(item.id, total);
+    const completed = packProgress[item.id]?.completedCount ?? 0;
 
     return (
       <Pressable

@@ -48,13 +48,13 @@ Local-only. No server, no auth, no sync, no purchases, no ads.
 
 10. **Undo button.**
 
-12. **Auto-X toggle.** When placing a star, automatically X out conflicting cells.
+11. **Auto-X toggle.** When placing a star, automatically X out conflicting cells.
 
-13. **Light/dark theme.** Follow system default.
+12. **Light/dark theme.** Follow system default.
 
-14. **Timer.** Display elapsed time, persist across sessions.
+13. **Timer.** Display elapsed time, persist across sessions.
 
-15. **Local storage with MMKV.** Save puzzle progress. Handle write errors gracefully -- crash during write or storage pressure shouldn't corrupt state.
+14. **Local storage with MMKV.** Save puzzle progress. Handle write errors gracefully -- crash during write or storage pressure shouldn't corrupt state.
 
 **Phase 1 is done when:** You can hand your phone to someone and they can play through a puzzle pack start to finish with no issues.
 
@@ -68,13 +68,13 @@ Still local-only. The goal is daily habit formation.
 
 17. **Daily streak tracking.** Local, UTC-based.
 
-11. **Hint button.** Free, unlimited. Reads pre-computed hints from puzzle metadata. No solver on device.
+18. **Hint button.** Free, unlimited. Reads pre-computed hints from puzzle metadata. No solver on device.
 
-18. **Pack progression tracking.** Local. Track completion percentage per pack.
+19. **Pack progression tracking.** Local. Track completion percentage per pack.
 
-19. **Error highlighting toggle.** Optional: show when placed stars violate constraints.
+20. **Error highlighting toggle.** Optional: show when placed stars violate constraints.
 
-20. **Privacy policy.** Apple and Google both reject apps without one. Write it before anything else in this phase. Cover: what data is stored locally, that nothing is collected server-side yet, and future plans for cloud sync if applicable.
+21. **Privacy policy.** Apple and Google both reject apps without one. Write it before anything else in this phase. Cover: what data is stored locally, that nothing is collected server-side yet, and future plans for cloud sync if applicable.
 
 **Phase 2 is done when:** Users open the app daily, play the daily puzzle, and maintain streaks.
 

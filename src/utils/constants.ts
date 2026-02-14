@@ -56,7 +56,7 @@ export const SHADOW_MD: ViewStyle = {
 export const CELL_SIZE = 38;
 
 // Border widths
-export const REGION_BORDER_WIDTH = 1;
+export const REGION_BORDER_WIDTH = 1.5;
 export const INNER_BORDER_WIDTH = 0.5;
 export const BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
 
@@ -71,5 +71,5 @@ export const MARK_FONT_SIZE_RATIO = 0.4;
 export const MARK_FONT_WEIGHT = '700' as const;
 
 // Pinch-to-zoom limits
-export const MIN_ZOOM = 1;
-export const MAX_ZOOM = 3;
+export const MIN_ZOOM = .5;
+export const MAX_ZOOM = 5;

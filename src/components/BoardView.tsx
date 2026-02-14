@@ -1,81 +1,23 @@
-import React, { useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { Animated, StyleSheet } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { CellView } from './CellView';
 import { usePuzzleStore } from '../store';
 
 import type { Puzzle, Borders } from '../types/puzzle';
-import {
-  CELL_SIZE,
-  MAX_ZOOM,
-  MIN_ZOOM,
-  REGION_BORDER_WIDTH,
-} from '../utils/constants';
+import { CELL_SIZE, REGION_BORDER_WIDTH } from '../utils/constants';
 import { useTheme } from '../utils/useTheme';
 
 type Props = {
   puzzle: Puzzle;
-  zoomResetRef?: React.MutableRefObject<(() => void) | null>;
-  onZoomChange?: (isZoomed: boolean) => void;
+  scale: Animated.Value;
+  translateX: Animated.Value;
+  translateY: Animated.Value;
 };
 
-export function BoardView({ puzzle, zoomResetRef, onZoomChange }: Props) {
+export function BoardView({ puzzle, scale, translateX, translateY }: Props) {
   const theme = useTheme();
   const tapCell = usePuzzleStore(s => s.tapCell);
   const boardSize = CELL_SIZE * puzzle.size;
-
-  const scale = useRef(new Animated.Value(1)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  const savedScale = useRef(1);
-  const savedTranslateX = useRef(0);
-  const savedTranslateY = useRef(0);
-
-  const resetZoom = useCallback(() => {
-    Animated.parallel([
-      Animated.spring(scale, { toValue: MIN_ZOOM, useNativeDriver: true }),
-      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-      Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-    ]).start();
-    savedScale.current = MIN_ZOOM;
-    savedTranslateX.current = 0;
-    savedTranslateY.current = 0;
-    onZoomChange?.(false);
-  }, [scale, translateX, translateY, onZoomChange]);
-
-  useEffect(() => {
-    if (zoomResetRef) zoomResetRef.current = resetZoom;
-  }, [zoomResetRef, resetZoom]);
-
-  const pinchGesture = Gesture.Pinch()
-    .onUpdate(e => {
-      scale.setValue(savedScale.current * e.scale);
-    })
-    .onEnd(e => {
-      const clamped = Math.max(
-        MIN_ZOOM,
-        Math.min(savedScale.current * e.scale, MAX_ZOOM),
-      );
-      savedScale.current = clamped;
-      Animated.spring(scale, {
-        toValue: clamped,
-        useNativeDriver: true,
-      }).start();
-      onZoomChange?.(clamped !== MIN_ZOOM);
-    });
-
-  const panGesture = Gesture.Pan()
-    .onUpdate(e => {
-      translateX.setValue(savedTranslateX.current + e.translationX);
-      translateY.setValue(savedTranslateY.current + e.translationY);
-    })
-    .onEnd(e => {
-      savedTranslateX.current += e.translationX;
-      savedTranslateY.current += e.translationY;
-    });
-
-  const composed = Gesture.Simultaneous(pinchGesture, panGesture);
 
   const cellBorders = useMemo(() => {
     const borders: Borders[] = [];
@@ -96,8 +38,7 @@ export function BoardView({ puzzle, zoomResetRef, onZoomChange }: Props) {
   }, [puzzle]);
 
   return (
-    <GestureDetector gesture={composed}>
-      <Animated.View
+    <Animated.View
         style={[
           styles.board,
           {
@@ -121,8 +62,7 @@ export function BoardView({ puzzle, zoomResetRef, onZoomChange }: Props) {
             />
           );
         })}
-      </Animated.View>
-    </GestureDetector>
+    </Animated.View>
   );
 }
 

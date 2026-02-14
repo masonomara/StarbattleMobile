@@ -3,7 +3,7 @@ import { Text, Pressable, FlatList, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getPack } from '../packs';
-import { getProgress } from '../storage';
+import { useUserStore } from '../stores/userStore';
 import {
   SPACING_SM,
   SPACING_LG,
@@ -23,6 +23,7 @@ export function PackScreen({ route, navigation }: Props) {
   const { packId } = route.params;
   const pack = getPack(packId);
   const theme = useTheme();
+  const userGetProgress = useUserStore(s => s.getProgress);
 
   const [focusCount, setFocusCount] = useState(0);
   useFocusEffect(
@@ -45,7 +46,7 @@ export function PackScreen({ route, navigation }: Props) {
     index: number;
   }) => {
     const puzzleId = `${packId}:${index}`;
-    const progress = getProgress(puzzleId);
+    const progress = userGetProgress(puzzleId);
     const isCompleted = progress?.completed ?? false;
 
     return (
