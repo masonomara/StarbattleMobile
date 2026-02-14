@@ -21,21 +21,21 @@ Everything a player needs to download the app, open it, pick a puzzle, play it t
 Install what we need. Nothing else.
 
 ```bash
-npm install react-native-mmkv react-native-haptic-feedback react-native-gesture-handler zustand
+npm install react-native-mmkv react-native-haptic-feedback react-native-gesture-handler react-native-reanimated zustand lucide-react-native
 cd ios && pod install && cd ..
 ```
-
-<!-- BOARD ZOOM: are we 100% certian that Zustard is the move? If we feel that in advance Zustard might have perforance issues on big boards, shouldnt we consider just starting with the bigger option like react-native-skia? I dont want to make things overly complicated, but do want to make sure we are covered. Do research and find examples onlone or open source for reference and make the decision. -->
 
 **react-native-mmkv** — fast key-value storage for puzzle progress and settings. Crash-safe, synchronous reads.
 
 **react-native-haptic-feedback** — tap feedback on cell cycles and win detection.
 
-**react-native-gesture-handler** — already a transitive dependency of React Navigation but we need it explicitly for tap handling and pinch-to-zoom on the board.
+**react-native-gesture-handler** — already a transitive dependency of React Navigation but we need it explicitly for tap handling, pinch-to-zoom, and pan gestures on the board.
 
-**zustand** — lightweight state management with selectors. Each cell subscribes to its own slice of state, so tapping one cell only re-renders that cell (and its auto-X neighbors), not the entire board.
+**react-native-reanimated** — UI-thread animations for pinch-to-zoom transforms, pan gestures, and the win banner slide-up. Required by the Gesture API (v2) from gesture-handler.
 
-<!-- BOARD ZOOM: see earlier board zoom note, not sure if Zustard and React Native gesture handler are best resources. -->
+**zustand** — lightweight state management with selectors. Each cell subscribes to its own slice of state, so tapping one cell only re-renders that cell (and its auto-X neighbors), not the entire board. Zustand is state management, not rendering — standard React Native Views handle grids up to 10x10 (100 cells) with no issues, and cell-level subscriptions keep re-renders minimal. If Phase 2's larger grids (14x14+) show rendering bottlenecks, the board renderer (BoardView/CellView) can be swapped to react-native-skia without changing the state management layer.
+
+**lucide-react-native** — icon library for toolbar buttons (undo, zoom reset). Lightweight, tree-shakeable.
 
 ---
 
@@ -45,7 +45,7 @@ All types live in `src/types/` folder. Every type definition in the app goes her
 
 ### `src/types/puzzle.ts`
 
-The puzzle data types. `RawPuzzle` is the shape straight from the pack JSON — SBN string plus pre-computed solution. `Puzzle` is the parsed representation the app works with — SBN is parsed at pack-load time so nothing downstream ever sees raw encoded strings. `Pack` holds metadata plus an array of `RawPuzzle`s (parsed into `Puzzle`s at load time).
+The puzzle data types. `RawPuzzle` is the shape straight from the pack JSON — SBN string, pre-computed solution. `Puzzle` is the parsed representation the app works with — SBN is parsed when a puzzle is loaded for play so nothing downstream ever sees raw encoded strings. `Pack` holds metadata plus an array of `RawPuzzle`s.
 
 ```typescript
 export type Coord = [number, number];
@@ -66,9 +66,19 @@ export type Puzzle = {
 export type Pack = {
   id: string;
   name: string;
+  version: number;
+  free: boolean;
   gridSize: number;
   stars: number;
   puzzles: RawPuzzle[];
+};
+
+// Board display — which edges of a cell are region boundaries
+export type Borders = {
+  top: boolean;
+  bottom: boolean;
+  left: boolean;
+  right: boolean;
 };
 ```
 
@@ -90,7 +100,6 @@ export type Progress = {
 
 export type UserSettings = {
   autoX: boolean;
-  autoXRowsCols: boolean;
   highlightErrors: boolean;
   showTimer: boolean;
   theme: 'system' | 'light' | 'dark';
@@ -108,13 +117,13 @@ export type CellChange = {
   previousValue: CellValue;
 };
 
-// One player action (tap). Contains the tapped cell change plus any auto-X cells that were marked as a side effect. Auto-X neighbors (adjacent cells) is controlled by `autoX`. Auto-X for completed rows/columns/regions is controlled by `autoXRowsCols`. On undo, iterate changes in reverse and restore each previousValue.
+// One player action (tap). Contains the tapped cell change plus any auto-X cells that were marked as a side effect. On undo, iterate changes in reverse and restore each previousValue.
 export type Move = {
   changes: CellChange[];
 };
 ```
 
-<!-- the original autoX type should be autoXNeighbors to better read with the autoXRowsCOlumns -->
+<!-- Auto x Neighbors and auto x rows/columns need to be seperate optiosn in user settings, ont eh settings UI screen, and perfrom different action ont eh baord editor, auto x neighbors is default on. Auto x rows/columns is deafult off. -->
 
 ### `src/storage.ts`
 
@@ -122,7 +131,7 @@ Thin wrapper over MMKV. All reads are synchronous. All writes are fire-and-forge
 
 ```typescript
 import { MMKV } from 'react-native-mmkv';
-import type { UserSettings, Progress, PackProgress } from './types';
+import type { UserSettings, Progress, PackProgress } from './types/state';
 
 const storage = new MMKV();
 
@@ -134,7 +143,6 @@ const KEYS = {
 
 const DEFAULT_SETTINGS: UserSettings = {
   autoX: true,
-  autoXRowsCols: false,
   highlightErrors: true,
   showTimer: true,
   theme: 'system',
@@ -189,7 +197,7 @@ import fiveStar from '../packs/1star-5x5.json';
 import sixStar from '../packs/1star-6x6.json';
 import eightStar from '../packs/1star-8x8.json';
 import tenStar from '../packs/2star-10x10.json';
-import type { Pack } from './types';
+import type { Pack } from './types/puzzle';
 
 const PACKS: Pack[] = [
   introData as Pack,
@@ -217,7 +225,7 @@ The app works with `Puzzle` objects, not raw SBN strings or raw pack JSON. SBN i
 ### `src/puzzle-parser.ts`
 
 ```typescript
-import type { RawPuzzle, Puzzle } from './types';
+import type { RawPuzzle, Puzzle } from './types/puzzle';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
@@ -261,62 +269,96 @@ The core visual. A grid of cells where each cell owns its own border rendering.
 
 ### Architecture
 
-- `BoardView` — the container. Wraps the cell grid in a pinch-to-zoom gesture handler. Computes cell size once from screen width and grid size.
-- `CellView` — one cell. Renders content (empty, star icon, X mark) and its own borders. Each cell determines its border widths and colors based on whether its neighbors belong to the same region. Inner borders: 1px dark gray. Region borders: 3px black.
-- Cell size is constant (computed once). Does not change during gameplay. Players can pinch-to-zoom with two fingers for larger boards.
+- `BoardView` — the container. Wraps the cell grid in simultaneous pinch-to-zoom and pan gesture handlers. Cells are a fixed 38 pixels. The board dimensions are determined by the cells (`38 * gridSize`) — larger puzzles are why zoom and pan are essential.
+- `CellView` — one cell. Renders content (empty, star icon, X mark) and its own borders. Each cell determines its border widths based on whether its neighbors belong to the same region. Inner borders: 1px. Region borders: 3px. All colors come from the theme.
+- Cell size is fixed at 38px. Does not change during gameplay. Players can pinch-to-zoom with two fingers and pan to navigate larger boards.
+- Errors are represented by changing the star color to red — cell backgrounds never change for errors.
 
 ### `src/components/BoardView.tsx`
 
 ```tsx
-import React, { useMemo } from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
-import { PinchGestureHandler } from 'react-native-gesture-handler';
+import React, { useMemo, useCallback } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
 } from 'react-native-reanimated';
 import { CellView } from './CellView';
-import type { Puzzle } from '../types';
+import type { Puzzle, Borders } from '../types/puzzle';
 
 type Props = {
   puzzle: Puzzle;
   onCellPress: (row: number, col: number) => void;
+  zoomResetRef?: React.MutableRefObject<(() => void) | null>;
+  onZoomChange?: (isZoomed: boolean) => void;
 };
 
-const BOARD_PADDING = 16;
+const CELL_SIZE = 38;
 
-export function BoardView({ puzzle, onCellPress }: Props) {
-  const { width: screenWidth } = useWindowDimensions();
-  const boardSize = screenWidth - BOARD_PADDING * 2;
-  const cellSize = boardSize / puzzle.size;
+export function BoardView({
+  puzzle,
+  onCellPress,
+  zoomResetRef,
+  onZoomChange,
+}: Props) {
+  const boardSize = CELL_SIZE * puzzle.size;
 
-  // Pinch-to-zoom
+  // Zoom and pan state (UI thread via reanimated)
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
 
-  const pinchHandler = useAnimatedGestureHandler({
-    onActive: event => {
-      scale.value = savedScale.value * event.scale;
-    },
-    onEnd: () => {
+  // Expose zoom reset to parent via ref
+  const resetZoom = useCallback(() => {
+    scale.value = withSpring(1);
+    savedScale.value = 1;
+    translateX.value = withSpring(0);
+    translateY.value = withSpring(0);
+    savedTranslateX.value = 0;
+    savedTranslateY.value = 0;
+    onZoomChange?.(false);
+  }, []);
+
+  if (zoomResetRef) zoomResetRef.current = resetZoom;
+
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate(e => {
+      scale.value = savedScale.value * e.scale;
+    })
+    .onEnd(() => {
       savedScale.value = Math.max(1, Math.min(scale.value, 3));
-      scale.value = savedScale.value;
-    },
-  });
+      scale.value = withSpring(savedScale.value);
+      onZoomChange?.(savedScale.value !== 1);
+    });
+
+  const panGesture = Gesture.Pan()
+    .onUpdate(e => {
+      translateX.value = savedTranslateX.value + e.translationX;
+      translateY.value = savedTranslateY.value + e.translationY;
+    })
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+
+  const composed = Gesture.Simultaneous(pinchGesture, panGesture);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
   }));
 
   // Pre-compute border info for each cell (only runs when puzzle changes)
   const cellBorders = useMemo(() => {
-    const borders: {
-      top: boolean;
-      bottom: boolean;
-      left: boolean;
-      right: boolean;
-    }[] = [];
+    const borders: Borders[] = [];
     for (let row = 0; row < puzzle.size; row++) {
       for (let col = 0; col < puzzle.size; col++) {
         const region = puzzle.regions[row][col];
@@ -334,7 +376,7 @@ export function BoardView({ puzzle, onCellPress }: Props) {
   }, [puzzle]);
 
   return (
-    <PinchGestureHandler onGestureEvent={pinchHandler}>
+    <GestureDetector gesture={composed}>
       <Animated.View
         style={[
           styles.board,
@@ -350,14 +392,14 @@ export function BoardView({ puzzle, onCellPress }: Props) {
               key={i}
               row={row}
               col={col}
-              size={cellSize}
+              size={CELL_SIZE}
               borders={borders}
               onPress={onCellPress}
             />
           );
         })}
       </Animated.View>
-    </PinchGestureHandler>
+    </GestureDetector>
   );
 }
 
@@ -370,23 +412,25 @@ const styles = StyleSheet.create({
 });
 ```
 
+<!-- as we are in development and i plan on iterating/making board style very customizable, can you make sure the variabels for board style design like Border Width, Border COlor, Inner Border Width, innder Boarder Dashes, inner baorder color, cell size are all variabels that we can easily adjust client side. The cell size is a good start -->
+
 ### `src/components/CellView.tsx`
 
 Each cell subscribes to its own slice of the Zustand store. When cell 42 changes, only cell 42 (and its auto-X neighbors) re-render. The board never re-renders.
 
-Each cell renders its own borders. The `borders` prop tells the cell which edges are region boundaries (3px black) vs inner grid lines (1px dark gray).
+Each cell renders its own borders. The `borders` prop tells the cell which edges are region boundaries (3px, theme region color) vs inner grid lines (1px, theme inner color).
+
+Errors are shown by changing the star color to red. Cell background stays the same — no background color changes for errors.
 
 ```tsx
 import React, { memo, useCallback } from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
 import { usePuzzleStore } from '../store';
+import { useTheme } from '../theme';
+import type { Borders } from '../types/puzzle';
 
-type Borders = {
-  top: boolean;
-  bottom: boolean;
-  left: boolean;
-  right: boolean;
-};
+const REGION_BORDER = 3;
+const INNER_BORDER = 1;
 
 type Props = {
   row: number;
@@ -396,11 +440,6 @@ type Props = {
   onPress: (row: number, col: number) => void;
 };
 
-const REGION_BORDER = 3;
-const INNER_BORDER = 1;
-const REGION_COLOR = '#000000';
-const INNER_COLOR = '#CCCCCC';
-
 export const CellView = memo(function CellView({
   row,
   col,
@@ -408,12 +447,13 @@ export const CellView = memo(function CellView({
   borders,
   onPress,
 }: Props) {
+  const theme = useTheme();
   const value = usePuzzleStore(s => s.cells[row * s.boardSize + col]);
   const hasError = usePuzzleStore(s => s.errorCells.has(`${row},${col}`));
 
   const handlePress = useCallback(() => onPress(row, col), [onPress, row, col]);
 
-  const bgColor = hasError ? '#FFCDD2' : '#FFFFFF';
+  const starColor = hasError ? theme.starErrorColor : theme.starColor;
 
   return (
     <Pressable
@@ -423,23 +463,38 @@ export const CellView = memo(function CellView({
         {
           width: size,
           height: size,
-          backgroundColor: bgColor,
+          backgroundColor: theme.cellBg,
           borderTopWidth: borders.top ? REGION_BORDER : INNER_BORDER,
           borderBottomWidth: borders.bottom ? REGION_BORDER : INNER_BORDER,
           borderLeftWidth: borders.left ? REGION_BORDER : INNER_BORDER,
           borderRightWidth: borders.right ? REGION_BORDER : INNER_BORDER,
-          borderTopColor: borders.top ? REGION_COLOR : INNER_COLOR,
-          borderBottomColor: borders.bottom ? REGION_COLOR : INNER_COLOR,
-          borderLeftColor: borders.left ? REGION_COLOR : INNER_COLOR,
-          borderRightColor: borders.right ? REGION_COLOR : INNER_COLOR,
+          borderTopColor: borders.top ? theme.regionBorder : theme.innerBorder,
+          borderBottomColor: borders.bottom
+            ? theme.regionBorder
+            : theme.innerBorder,
+          borderLeftColor: borders.left
+            ? theme.regionBorder
+            : theme.innerBorder,
+          borderRightColor: borders.right
+            ? theme.regionBorder
+            : theme.innerBorder,
         },
       ]}
     >
       {value === 1 && (
-        <Text style={[styles.star, { fontSize: size * 0.5 }]}>★</Text>
+        <Text style={[styles.star, { fontSize: size * 0.5, color: starColor }]}>
+          ★
+        </Text>
       )}
       {value === 2 && (
-        <Text style={[styles.mark, { fontSize: size * 0.4 }]}>✕</Text>
+        <Text
+          style={[
+            styles.mark,
+            { fontSize: size * 0.4, color: theme.markColor },
+          ]}
+        >
+          ✕
+        </Text>
       )}
     </Pressable>
   );
@@ -451,19 +506,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   star: {
-    color: '#000000',
     fontWeight: '700',
   },
   mark: {
-    color: '#9E9E9E',
     fontWeight: '300',
   },
 });
 ```
-
-<!-- When there is an error on the board, the cell background doesnt thcange color. The only way we shoudl be representing an error is that the star turns red - the same color as a mark -->
-<!-- cells should be fixed size, 38 pixels. Boards adjust and fit the grid of cells, not the other way around. That is why the zoom and pinch to zoom and scrolling is so important. Fix this -->
-<!-- styles should be as centrally defined as possible, colors shoudl be defined in the constants/design types -->
 
 Star rendering uses the ★ unicode character. If this looks bad on device, swap for an SVG icon later. Start simple.
 
@@ -473,6 +522,8 @@ Star rendering uses the ★ unicode character. If this looks bad on device, swap
 
 The puzzle store owns all mutable game state. Components subscribe to slices via selectors. This gives us cell-level re-renders — when one cell changes, only that cell (and auto-X neighbors) re-render. The board itself never re-renders.
 
+Tap order is **empty → mark → star → empty**. The mark-first cycle matches how players naturally solve: eliminate cells first, then place stars.
+
 Undo uses a **move log**, not full-board snapshots. Each move records the tapped cell's previous value and any auto-X side effects. On undo, the changes are replayed in reverse. A typical move is 1-9 entries (the tap + up to 8 neighbors). Compare to a full snapshot of a 25x25 board: 625 entries per move.
 
 ### `src/store.ts`
@@ -481,7 +532,8 @@ Undo uses a **move log**, not full-board snapshots. Each move records the tapped
 import { create } from 'zustand';
 import { triggerHaptic } from './haptics';
 import { getProgress, saveProgress, getSettings } from './storage';
-import type { CellValue, Puzzle, Progress, Move, CellChange } from './types';
+import type { CellValue, Progress, Move, CellChange } from './types/state';
+import type { Puzzle } from './types/puzzle';
 
 type PuzzleState = {
   // Puzzle data
@@ -539,12 +591,12 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const changes: CellChange[] = [];
     const newCells = [...cells];
 
-    // Cycle: 0 -> 1 -> 2 -> 0
-    const next: CellValue = current === 0 ? 1 : current === 1 ? 2 : 0;
+    // Cycle: 0 (empty) -> 2 (mark) -> 1 (star) -> 0 (empty)
+    const next: CellValue = current === 0 ? 2 : current === 2 ? 1 : 0;
     changes.push({ index: idx, previousValue: current });
     newCells[idx] = next;
 
-    // Auto-X when placing a star
+    // Auto-X neighbors when placing a star
     if (next === 1 && settings.autoX) {
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
@@ -633,9 +685,7 @@ function persistProgress(state: PuzzleState): void {
 }
 ```
 
-<!-- tap order shoudl go "unknown -> mark -> star" not "unknown -> star -> mark". -->
-<!-- auto x''s and auto x rows/columns shoudl be removed -->
-<!-- it doesnt look like this game state accounts for auto x rows/columns, jsut auto x neighbors -->
+<!-- again on the autoX neighbors and autoX rows/columns, same rules shoudl apply and seperate fucntiosn should exist - neighbors and rows/columns caused by the sr palcement are removed when the star is removed. -->
 
 ---
 
@@ -643,17 +693,37 @@ function persistProgress(state: PuzzleState): void {
 
 The puzzle gameplay screen. Uses React Navigation's standard header. Game logic lives in the Zustand store — this screen is mostly wiring.
 
+Layout: the board area fills the screen (for zooming and panning). The toolbar floats at the bottom with absolute positioning. The win banner slides up from the bottom over everything.
+
+### `src/utils/formatTime.ts`
+
+```typescript
+export function formatTime(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}:${sec.toString().padStart(2, '0')}`;
+}
+```
+
 ### `src/screens/PuzzleScreen.tsx`
 
 ```tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BoardView } from '../components/BoardView';
 import { Toolbar } from '../components/Toolbar';
 import { parsePuzzle } from '../puzzle-parser';
 import { getPack } from '../packs';
 import { usePuzzleStore } from '../store';
+import { useTheme } from '../theme';
+import { formatTime } from '../utils/formatTime';
 import type { RootStackParams } from '../navigation';
 
 type Props = NativeStackScreenProps<RootStackParams, 'Puzzle'>;
@@ -662,6 +732,7 @@ export function PuzzleScreen({ route, navigation }: Props) {
   const { packId, puzzleIndex } = route.params;
   const pack = getPack(packId);
   const rawPuzzle = pack?.puzzles[puzzleIndex];
+  const theme = useTheme();
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const tapCell = usePuzzleStore(s => s.tapCell);
@@ -672,12 +743,22 @@ export function PuzzleScreen({ route, navigation }: Props) {
   const canUndo = usePuzzleStore(s => s.moveLog.length > 0);
   const puzzle = usePuzzleStore(s => s.puzzle);
 
+  // Zoom reset coordination between board and toolbar
+  const zoomResetRef = useRef<(() => void) | null>(null);
+  const [isZoomed, setIsZoomed] = React.useState(false);
+
+  // Win banner slide-up animation
+  const bannerTranslateY = useSharedValue(200);
+  const bannerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: bannerTranslateY.value }],
+  }));
+
   // Load puzzle into store
   useEffect(() => {
     if (!rawPuzzle || !pack) return;
     const puzzleId = `${packId}:${puzzleIndex}`;
-    const Puzzle = parsePuzzle(rawPuzzle, puzzleId);
-    loadPuzzle(Puzzle);
+    const parsed = parsePuzzle(rawPuzzle, puzzleId);
+    loadPuzzle(parsed);
   }, [rawPuzzle, pack, packId, puzzleIndex, loadPuzzle]);
 
   // Timer
@@ -687,51 +768,81 @@ export function PuzzleScreen({ route, navigation }: Props) {
     return () => clearInterval(interval);
   }, [completed, tick]);
 
+  // Animate win banner on completion
+  useEffect(() => {
+    if (completed) {
+      bannerTranslateY.value = withSpring(0);
+    } else {
+      bannerTranslateY.value = 200;
+    }
+  }, [completed]);
+
   // Configure navigation header
   useEffect(() => {
     navigation.setOptions({
       title: pack?.name ?? '',
-      headerRight: () => <Text style={styles.timer}>{formatTime(timeMs)}</Text>,
+      headerRight: () => (
+        <Text style={[styles.timer, { color: theme.textSecondary }]}>
+          {formatTime(timeMs)}
+        </Text>
+      ),
     });
-  }, [navigation, pack, timeMs]);
+  }, [navigation, pack, timeMs, theme]);
 
   if (!puzzle) return null;
 
   return (
-    <View style={styles.container}>
-      <BoardView puzzle={puzzle} onCellPress={tapCell} />
+    <View style={[styles.container, { backgroundColor: theme.bg }]}>
+      <View style={styles.boardArea}>
+        <BoardView
+          puzzle={puzzle}
+          onCellPress={tapCell}
+          zoomResetRef={zoomResetRef}
+          onZoomChange={setIsZoomed}
+        />
+      </View>
 
-      <Toolbar onUndo={undo} canUndo={canUndo} completed={completed} />
+      <Toolbar
+        onUndo={undo}
+        canUndo={canUndo}
+        completed={completed}
+        isZoomed={isZoomed}
+        onZoomReset={() => zoomResetRef.current?.()}
+      />
 
       {completed && (
-        <View style={styles.winBanner}>
+        <Animated.View
+          style={[
+            styles.winBanner,
+            { backgroundColor: theme.accent },
+            bannerStyle,
+          ]}
+        >
           <Text style={styles.winText}>Solved!</Text>
           <Text style={styles.winTime}>{formatTime(timeMs)}</Text>
           <Text onPress={() => navigation.goBack()} style={styles.nextButton}>
             Continue
           </Text>
-        </View>
+        </Animated.View>
       )}
     </View>
   );
 }
 
-function formatTime(ms: number): string {
-  const totalSec = Math.floor(ms / 1000);
-  const min = Math.floor(totalSec / 60);
-  const sec = totalSec % 60;
-  return `${min}:${sec.toString().padStart(2, '0')}`;
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  timer: { fontSize: 16, fontVariant: ['tabular-nums'], color: '#666' },
+  boardArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  timer: { fontSize: 16, fontVariant: ['tabular-nums'] },
   winBanner: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#4CAF50',
     padding: 24,
     alignItems: 'center',
   },
@@ -745,10 +856,6 @@ const styles = StyleSheet.create({
   },
 });
 ```
-
-<!-- the win banner should appear to slide up from teh bottom  Explore popup from bottom modal optiosn or menus -->
-<!-- the toolbar shoudl eb autoset near the bottom of the screen, absolute position, not "attatched: to the size fo the baordview. the baordview shoudl always be 100% of the screen szie and width to make zooming and panning as easy as possible -->
-<!-- foramtTime should be a util finction -->
 
 ### `src/haptics.ts`
 
@@ -767,25 +874,59 @@ export function triggerHaptic(type: HapticType): void {
 
 ### `src/components/Toolbar.tsx`
 
+Two buttons: zoom reset and undo. Lucide icons, no text labels. Absolutely positioned near the bottom of the screen so it floats over the board area.
+
+The zoom reset button is disabled (grayed out) when the board is at default zoom. When pressed, it triggers a smooth spring animation back to default scale and position.
+
 ```tsx
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
+import { Undo2, Minimize2 } from 'lucide-react-native';
+import { useTheme } from '../theme';
 
 type Props = {
   onUndo: () => void;
   canUndo: boolean;
   completed: boolean;
+  isZoomed: boolean;
+  onZoomReset: () => void;
 };
 
-export function Toolbar({ onUndo, canUndo, completed }: Props) {
+export function Toolbar({
+  onUndo,
+  canUndo,
+  completed,
+  isZoomed,
+  onZoomReset,
+}: Props) {
+  const theme = useTheme();
+  const undoDisabled = !canUndo || completed;
+  const zoomDisabled = !isZoomed;
+
   return (
     <View style={styles.toolbar}>
       <Pressable
-        onPress={onUndo}
-        disabled={!canUndo || completed}
-        style={[styles.button, (!canUndo || completed) && styles.disabled]}
+        onPress={onZoomReset}
+        disabled={zoomDisabled}
+        style={[
+          styles.button,
+          { backgroundColor: theme.card },
+          zoomDisabled && styles.disabled,
+        ]}
       >
-        <Text style={styles.buttonText}>Undo</Text>
+        <Minimize2 size={20} color={theme.text} />
+      </Pressable>
+
+      <Pressable
+        onPress={onUndo}
+        disabled={undoDisabled}
+        style={[
+          styles.button,
+          { backgroundColor: theme.card },
+          undoDisabled && styles.disabled,
+        ]}
+      >
+        <Undo2 size={20} color={theme.text} />
       </Pressable>
     </View>
   );
@@ -793,33 +934,35 @@ export function Toolbar({ onUndo, canUndo, completed }: Props) {
 
 const styles = StyleSheet.create({
   toolbar: {
+    position: 'absolute',
+    bottom: 48,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 16,
-    paddingVertical: 16,
   },
   button: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 8,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  disabled: { opacity: 0.4 },
-  buttonText: { fontSize: 16, fontWeight: '600', color: '#333' },
+  disabled: { opacity: 0.3 },
 });
 ```
-
-<!-- lets add a button that auto zooms back to the default zoom size, it shoudl be grayed out until the zoom is pinched in or pinched out. It shoudl ahve a smooth and quick "snap" back to default zoom when pressed. The toolbar shoudl be jsut zoom and undo for now -->
-<!-- These buttosn shouldnt be words, they shoudl jsut be lucide icons -->
 
 ---
 
 ## Step 7: Navigation
 
-Three screens: Home, Pack Detail, and Puzzle. Stack navigator with standard React Navigation headers.
-
-<!-- only pack detail and puzzle shoudl have standard headers. the home header canbe hidden -->
-<!-- back buttons shoudlnt have text, jsut icon. hide the text label -->
+Three screens: Home, Pack Detail, and Puzzle. Stack navigator. Home screen has no header. Pack and Puzzle screens use standard React Navigation headers with icon-only back buttons (no text labels).
 
 ### `src/navigation.tsx`
 
@@ -842,11 +985,15 @@ const Stack = createNativeStackNavigator<RootStackParams>();
 export function Navigation() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={{
+          headerBackTitleVisible: false,
+        }}
+      >
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: 'Star Battle' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen name="Pack" component={PackScreen} />
         <Stack.Screen name="Puzzle" component={PuzzleScreen} />
@@ -856,7 +1003,7 @@ export function Navigation() {
 }
 ```
 
-Standard headers with back buttons handled automatically by React Navigation. Screen titles set via `options` or dynamically via `navigation.setOptions` in each screen.
+Home header is hidden — the home screen manages its own layout. Pack and Puzzle screens use standard headers with back buttons handled automatically by React Navigation. Back buttons show only the chevron icon, no text label. Screen titles set dynamically via `navigation.setOptions` in each screen.
 
 ---
 
@@ -864,38 +1011,54 @@ Standard headers with back buttons handled automatically by React Navigation. Sc
 
 Shows the list of puzzle packs with completion progress.
 
+Uses `useFocusEffect` to re-render when the screen gains focus — this ensures completion counts update immediately when navigating back from a completed puzzle, since progress is read synchronously from MMKV during render but FlatList doesn't know the underlying data changed.
+
 ### `src/screens/HomeScreen.tsx`
 
 ```tsx
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getAllPacks } from '../packs';
-import { getPackCompletionCount } from '../storage';
-import type { PackFile } from '../types';
+import { getPackProgress } from '../storage';
+import { useTheme } from '../theme';
+import type { Pack } from '../types/puzzle';
 import type { RootStackParams } from '../navigation';
 
 type Props = NativeStackScreenProps<RootStackParams, 'Home'>;
 
 export function HomeScreen({ navigation }: Props) {
   const packs = getAllPacks();
+  const theme = useTheme();
 
-  const renderPack = ({ item }: { item: PackFile }) => {
-    const completed = getPackCompletionCount(item.id, item.puzzles.length);
+  // Force re-render on focus so completion counts stay fresh
+  const [, setFocusCount] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setFocusCount(c => c + 1);
+    }, []),
+  );
+
+  const renderPack = ({ item }: { item: Pack }) => {
+    const packProgress = getPackProgress(item.id);
+    const completed = packProgress.completedPuzzleIds.length;
     const total = item.puzzles.length;
 
     return (
       <Pressable
-        style={styles.packCard}
+        style={[styles.packCard, { backgroundColor: theme.card }]}
         onPress={() => navigation.navigate('Pack', { packId: item.id })}
       >
         <View style={styles.packInfo}>
-          <Text style={styles.packName}>{item.name}</Text>
-          <Text style={styles.packMeta}>
-            {item.gridSize}x{item.gridSize} · {item.stars}★
+          <Text style={[styles.packName, { color: theme.text }]}>
+            {item.name}
+          </Text>
+          <Text style={[styles.packMeta, { color: theme.textSecondary }]}>
+            {item.gridSize}x{item.gridSize}
           </Text>
         </View>
-        <Text style={styles.packProgress}>
+        <Text style={[styles.packProgress, { color: theme.accent }]}>
           {completed}/{total}
         </Text>
       </Pressable>
@@ -908,6 +1071,7 @@ export function HomeScreen({ navigation }: Props) {
       keyExtractor={p => p.id}
       renderItem={renderPack}
       contentContainerStyle={styles.list}
+      style={{ backgroundColor: theme.bg }}
     />
   );
 }
@@ -918,7 +1082,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -929,13 +1092,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   packInfo: { flex: 1 },
-  packName: { fontSize: 18, fontWeight: '600', color: '#333' },
-  packMeta: { fontSize: 14, color: '#888', marginTop: 4 },
-  packProgress: { fontSize: 16, fontWeight: '600', color: '#4CAF50' },
+  packName: { fontSize: 18, fontWeight: '600' },
+  packMeta: { fontSize: 14, marginTop: 4 },
+  packProgress: { fontSize: 16, fontWeight: '600' },
 });
 ```
-
-<!-- can flatlists ensure that the puzzle progress/puzzle compeltions tate is properly progated, so if soemone clicks back from the puzzle board/puzzle player after its compelted, it shows compelted state? -->
 
 ---
 
@@ -943,14 +1104,18 @@ const styles = StyleSheet.create({
 
 Grid of puzzle cells within a pack. Shows completion state for each.
 
+Same `useFocusEffect` pattern as HomeScreen to ensure completion state updates on back navigation.
+
 ### `src/screens/PackScreen.tsx`
 
 ```tsx
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Text, Pressable, FlatList, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getPack } from '../packs';
 import { getProgress } from '../storage';
+import { useTheme } from '../theme';
 import type { RootStackParams } from '../navigation';
 
 type Props = NativeStackScreenProps<RootStackParams, 'Pack'>;
@@ -958,6 +1123,15 @@ type Props = NativeStackScreenProps<RootStackParams, 'Pack'>;
 export function PackScreen({ route, navigation }: Props) {
   const { packId } = route.params;
   const pack = getPack(packId);
+  const theme = useTheme();
+
+  // Force re-render on focus so completion states stay fresh
+  const [, setFocusCount] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setFocusCount(c => c + 1);
+    }, []),
+  );
 
   React.useEffect(() => {
     if (pack) navigation.setOptions({ title: pack.name });
@@ -972,17 +1146,22 @@ export function PackScreen({ route, navigation }: Props) {
 
     return (
       <Pressable
-        style={[styles.puzzleCell, isCompleted && styles.completed]}
+        style={[
+          styles.puzzleCell,
+          { backgroundColor: isCompleted ? theme.accent + '20' : theme.card },
+        ]}
         onPress={() =>
           navigation.navigate('Puzzle', { packId, puzzleIndex: index })
         }
       >
         <Text
-          style={[styles.puzzleNumber, isCompleted && styles.completedText]}
+          style={[
+            styles.puzzleNumber,
+            { color: isCompleted ? theme.accent : theme.text },
+          ]}
         >
           {index + 1}
         </Text>
-        {isCompleted && <Text style={styles.checkmark}>✓</Text>}
       </Pressable>
     );
   };
@@ -994,6 +1173,7 @@ export function PackScreen({ route, navigation }: Props) {
       renderItem={renderPuzzle}
       numColumns={5}
       contentContainerStyle={styles.grid}
+      style={{ backgroundColor: theme.bg }}
     />
   );
 }
@@ -1004,7 +1184,6 @@ const styles = StyleSheet.create({
     flex: 1,
     aspectRatio: 1,
     margin: 6,
-    backgroundColor: '#FFF',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1014,10 +1193,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
-  completed: { backgroundColor: '#E8F5E9' },
-  puzzleNumber: { fontSize: 18, fontWeight: '600', color: '#333' },
-  completedText: { color: '#4CAF50' },
-  checkmark: { fontSize: 12, color: '#4CAF50', marginTop: 2 },
+  puzzleNumber: { fontSize: 18, fontWeight: '600' },
 });
 ```
 
@@ -1027,7 +1203,7 @@ const styles = StyleSheet.create({
 
 ### `src/theme.ts`
 
-Follow system theme by default. Light/dark only.
+Follow system theme by default. Light/dark only. All component colors reference theme values — no hardcoded color strings in components.
 
 ```typescript
 import { useColorScheme } from 'react-native';
@@ -1042,9 +1218,9 @@ export type Theme = {
   innerBorder: string;
   cellBg: string;
   starColor: string;
+  starErrorColor: string;
   markColor: string;
   accent: string;
-  error: string;
 };
 
 const light: Theme = {
@@ -1056,9 +1232,9 @@ const light: Theme = {
   innerBorder: '#CCCCCC',
   cellBg: '#FFFFFF',
   starColor: '#F9A825',
+  starErrorColor: '#EF4444',
   markColor: '#9E9E9E',
   accent: '#4CAF50',
-  error: '#FFCDD2',
 };
 
 const dark: Theme = {
@@ -1070,9 +1246,9 @@ const dark: Theme = {
   innerBorder: '#444444',
   cellBg: '#2A2A2A',
   starColor: '#FFD54F',
+  starErrorColor: '#F87171',
   markColor: '#757575',
   accent: '#66BB6A',
-  error: '#4E342E',
 };
 
 export function useTheme(): Theme {
@@ -1085,7 +1261,7 @@ export function useTheme(): Theme {
 }
 ```
 
-Thread `useTheme()` through all components. Replace hardcoded colors with theme values.
+Thread `useTheme()` through all components. No hardcoded colors in components — everything references theme values.
 
 ### `App.tsx`
 
