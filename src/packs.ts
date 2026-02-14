@@ -5,7 +5,7 @@ import eightStar from '../packs/1star-8x8.json';
 import tenStar from '../packs/2star-10x10.json';
 import type { Pack } from './types/puzzle';
 
-// currently a static array. Once cloud storage is set up this will become async fetches, likely with caching
+// Static for now — will be replaced with async cloud fetches
 const PACKS: Pack[] = [
   introData as Pack,
   fiveStar as Pack,
