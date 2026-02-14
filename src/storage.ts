@@ -22,6 +22,7 @@ const KEYS = {
 const DEFAULT_SETTINGS: UserSettings = {
   autoXNeighbors: true,
   autoXRowsCols: false,
+  autoXRegions: false,
   highlightErrors: true,
   showTimer: true,
   theme: 'system',

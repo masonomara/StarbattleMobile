@@ -43,9 +43,10 @@ function computeAutoXForStar(
   settings: UserSettings,
   starRow: number,
   starCol: number,
-): { neighborMarks: number[]; rowColMarks: number[] } {
+): { neighborMarks: number[]; rowColMarks: number[]; regionMarks: number[] } {
   const neighborMarks: number[] = [];
   const rowColMarks: number[] = [];
+  const regionMarks: number[] = [];
 
   if (settings.autoXNeighbors) {
     for (let dr = -1; dr <= 1; dr++) {
@@ -73,8 +74,9 @@ function computeAutoXForStar(
     for (let r = 0; r < boardSize; r++)
       colIndices.push(r * boardSize + starCol);
     rowColMarks.push(...collectZoneMarks(cells, colIndices, puzzle.stars));
+  }
 
-    // Region
+  if (settings.autoXRegions) {
     const region = puzzle.regions[starRow][starCol];
     const regionIndices: number[] = [];
     for (let r = 0; r < boardSize; r++) {
@@ -83,10 +85,10 @@ function computeAutoXForStar(
           regionIndices.push(r * boardSize + c);
       }
     }
-    rowColMarks.push(...collectZoneMarks(cells, regionIndices, puzzle.stars));
+    regionMarks.push(...collectZoneMarks(cells, regionIndices, puzzle.stars));
   }
 
-  return { neighborMarks, rowColMarks };
+  return { neighborMarks, rowColMarks, regionMarks };
 }
 
 /** Apply marks to cells, record changes, add indices to the tracking set. */
@@ -105,14 +107,15 @@ function applyMarks(
   }
 }
 
-/** Clear all auto-marked cells from both sets, recording changes. */
+/** Clear all auto-marked cells from all sets, recording changes. */
 function clearAllAutoMarks(
   newCells: CellValue[],
   changes: CellChange[],
   neighbors: Set<number>,
   rowsCols: Set<number>,
+  regions: Set<number>,
 ): void {
-  for (const cellIdx of new Set([...neighbors, ...rowsCols])) {
+  for (const cellIdx of new Set([...neighbors, ...rowsCols, ...regions])) {
     if (newCells[cellIdx] === 2) {
       changes.push({ index: cellIdx, previousValue: 2 });
       newCells[cellIdx] = 0;
@@ -126,19 +129,21 @@ function rebuildAutoMarks(
   changes: CellChange[],
   oldNeighbors: Set<number>,
   oldRowsCols: Set<number>,
+  oldRegions: Set<number>,
   boardSize: number,
   puzzle: Puzzle,
   settings: UserSettings,
-): { neighbors: Set<number>; rowsCols: Set<number> } {
-  clearAllAutoMarks(newCells, changes, oldNeighbors, oldRowsCols);
+): { neighbors: Set<number>; rowsCols: Set<number>; regions: Set<number> } {
+  clearAllAutoMarks(newCells, changes, oldNeighbors, oldRowsCols, oldRegions);
   const neighbors = new Set<number>();
   const rowsCols = new Set<number>();
+  const regions = new Set<number>();
 
   for (let i = 0; i < newCells.length; i++) {
     if (newCells[i] === 1) {
       const sr = Math.floor(i / boardSize);
       const sc = i % boardSize;
-      const { neighborMarks, rowColMarks } = computeAutoXForStar(
+      const { neighborMarks, rowColMarks, regionMarks } = computeAutoXForStar(
         newCells,
         boardSize,
         puzzle,
@@ -148,10 +153,11 @@ function rebuildAutoMarks(
       );
       applyMarks(newCells, changes, neighbors, neighborMarks);
       applyMarks(newCells, changes, rowsCols, rowColMarks);
+      applyMarks(newCells, changes, regions, regionMarks);
     }
   }
 
-  return { neighbors, rowsCols };
+  return { neighbors, rowsCols, regions };
 }
 
 /** Find all stars that violate constraints (adjacency, row/col/region overflow). */
@@ -249,6 +255,7 @@ type PuzzleState = {
   cells: CellValue[];
   autoMarksNeighbors: Set<number>;
   autoMarksRowsCols: Set<number>;
+  autoMarksRegions: Set<number>;
   errorCells: Set<string>;
   completed: boolean;
   timeMs: number;
@@ -269,6 +276,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   cells: [],
   autoMarksNeighbors: new Set<number>(),
   autoMarksRowsCols: new Set<number>(),
+  autoMarksRegions: new Set<number>(),
   errorCells: new Set<string>(),
   completed: false,
   timeMs: 0,
@@ -284,6 +292,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: saved ? saved.cells : new Array<CellValue>(total).fill(0),
       autoMarksNeighbors: new Set(saved?.autoMarksNeighbors ?? []),
       autoMarksRowsCols: new Set(saved?.autoMarksRowsCols ?? []),
+      autoMarksRegions: new Set(saved?.autoMarksRegions ?? []),
       errorCells: new Set<string>(),
       completed: saved?.completed ?? false,
       timeMs: saved?.timeMs ?? 0,
@@ -299,6 +308,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       puzzle,
       autoMarksNeighbors,
       autoMarksRowsCols,
+      autoMarksRegions,
     } = get();
     if (completed || !puzzle) return;
 
@@ -310,8 +320,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const newCells = [...cells];
     const prevNeighbors = [...autoMarksNeighbors];
     const prevRowsCols = [...autoMarksRowsCols];
+    const prevRegions = [...autoMarksRegions];
     let newNeighbors = new Set(autoMarksNeighbors);
     let newRowsCols = new Set(autoMarksRowsCols);
+    let newRegions = new Set(autoMarksRegions);
 
     // Cycle: 0 (empty) -> 2 (mark) -> 1 (star) -> 0 (empty)
     const next: CellValue = current === 0 ? 2 : current === 2 ? 1 : 0;
@@ -321,10 +333,11 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     // If user taps an auto-marked cell, it's now user-controlled
     newNeighbors.delete(idx);
     newRowsCols.delete(idx);
+    newRegions.delete(idx);
 
     if (next === 1) {
       // PLACING A STAR
-      const { neighborMarks, rowColMarks } = computeAutoXForStar(
+      const { neighborMarks, rowColMarks, regionMarks } = computeAutoXForStar(
         newCells,
         boardSize,
         puzzle,
@@ -334,6 +347,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       );
       applyMarks(newCells, changes, newNeighbors, neighborMarks);
       applyMarks(newCells, changes, newRowsCols, rowColMarks);
+      applyMarks(newCells, changes, newRegions, regionMarks);
     } else if (current === 1 && next === 0) {
       // REMOVING A STAR — clear all auto-marks, recompute for remaining stars
       const rebuilt = rebuildAutoMarks(
@@ -341,12 +355,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
         changes,
         newNeighbors,
         newRowsCols,
+        newRegions,
         boardSize,
         puzzle,
         settings,
       );
       newNeighbors = rebuilt.neighbors;
       newRowsCols = rebuilt.rowsCols;
+      newRegions = rebuilt.regions;
     }
 
     if (settings.haptics) hapticLight();
@@ -359,6 +375,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarksNeighbors: newNeighbors,
       autoMarksRowsCols: newRowsCols,
+      autoMarksRegions: newRegions,
       errorCells: newErrors,
       moveLog: [
         ...state.moveLog,
@@ -366,6 +383,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
           changes,
           prevAutoMarksNeighbors: prevNeighbors,
           prevAutoMarksRowsCols: prevRowsCols,
+          prevAutoMarksRegions: prevRegions,
         },
       ],
       redoStack: [],
@@ -389,6 +407,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       completed,
       autoMarksNeighbors,
       autoMarksRowsCols,
+      autoMarksRegions,
     } = get();
     if (!puzzle || completed) return;
 
@@ -397,12 +416,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const newCells = [...cells];
     const prevNeighbors = [...autoMarksNeighbors];
     const prevRowsCols = [...autoMarksRowsCols];
+    const prevRegions = [...autoMarksRegions];
 
-    const { neighbors: newNeighbors, rowsCols: newRowsCols } = rebuildAutoMarks(
+    const { neighbors: newNeighbors, rowsCols: newRowsCols, regions: newRegions } = rebuildAutoMarks(
       newCells,
       changes,
       autoMarksNeighbors,
       autoMarksRowsCols,
+      autoMarksRegions,
       boardSize,
       puzzle,
       settings,
@@ -414,12 +435,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarksNeighbors: newNeighbors,
       autoMarksRowsCols: newRowsCols,
+      autoMarksRegions: newRegions,
       moveLog: [
         ...state.moveLog,
         {
           changes,
           prevAutoMarksNeighbors: prevNeighbors,
           prevAutoMarksRowsCols: prevRowsCols,
+          prevAutoMarksRegions: prevRegions,
         },
       ],
       redoStack: [],
@@ -428,7 +451,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   undo: () => {
-    const { moveLog, cells, autoMarksNeighbors, autoMarksRowsCols } = get();
+    const { moveLog, cells, autoMarksNeighbors, autoMarksRowsCols, autoMarksRegions } = get();
     if (moveLog.length === 0) return;
 
     const lastMove = moveLog[moveLog.length - 1];
@@ -441,6 +464,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       })),
       autoMarksNeighbors: [...autoMarksNeighbors],
       autoMarksRowsCols: [...autoMarksRowsCols],
+      autoMarksRegions: [...autoMarksRegions],
     };
 
     const newCells = [...cells];
@@ -462,6 +486,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarksNeighbors: new Set(lastMove.prevAutoMarksNeighbors),
       autoMarksRowsCols: new Set(lastMove.prevAutoMarksRowsCols),
+      autoMarksRegions: new Set(lastMove.prevAutoMarksRegions),
       errorCells: undoErrors,
       moveLog: moveLog.slice(0, -1),
       redoStack: [...state.redoStack, redoEntry],
@@ -470,7 +495,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   redo: () => {
-    const { redoStack, cells, autoMarksNeighbors, autoMarksRowsCols, completed } = get();
+    const { redoStack, cells, autoMarksNeighbors, autoMarksRowsCols, autoMarksRegions, completed } = get();
     if (redoStack.length === 0 || completed) return;
 
     const entry = redoStack[redoStack.length - 1];
@@ -482,6 +507,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     }));
     const prevNeighbors = [...autoMarksNeighbors];
     const prevRowsCols = [...autoMarksRowsCols];
+    const prevRegions = [...autoMarksRegions];
 
     // Apply forward values
     const newCells = [...cells];
@@ -502,6 +528,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarksNeighbors: new Set(entry.autoMarksNeighbors),
       autoMarksRowsCols: new Set(entry.autoMarksRowsCols),
+      autoMarksRegions: new Set(entry.autoMarksRegions),
       errorCells: redoErrors,
       moveLog: [
         ...state.moveLog,
@@ -509,6 +536,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
           changes,
           prevAutoMarksNeighbors: prevNeighbors,
           prevAutoMarksRowsCols: prevRowsCols,
+          prevAutoMarksRegions: prevRegions,
         },
       ],
       redoStack: redoStack.slice(0, -1),
@@ -523,7 +551,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   clearBoard: () => {
-    const { cells, completed, puzzle, boardSize, autoMarksNeighbors, autoMarksRowsCols } = get();
+    const { cells, completed, puzzle, boardSize, autoMarksNeighbors, autoMarksRowsCols, autoMarksRegions } = get();
     if (completed || !puzzle) return;
 
     // Collect all non-empty cells as changes
@@ -537,6 +565,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
     const prevNeighbors = [...autoMarksNeighbors];
     const prevRowsCols = [...autoMarksRowsCols];
+    const prevRegions = [...autoMarksRegions];
     const newCells = new Array<CellValue>(cells.length).fill(0) as CellValue[];
 
     const settings = useUserStore.getState().settings;
@@ -546,6 +575,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarksNeighbors: new Set<number>(),
       autoMarksRowsCols: new Set<number>(),
+      autoMarksRegions: new Set<number>(),
       errorCells: new Set<string>(),
       moveLog: [
         ...state.moveLog,
@@ -553,6 +583,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
           changes,
           prevAutoMarksNeighbors: prevNeighbors,
           prevAutoMarksRowsCols: prevRowsCols,
+          prevAutoMarksRegions: prevRegions,
         },
       ],
       redoStack: [],
@@ -574,6 +605,7 @@ function persistProgress(state: PuzzleState, justCompleted: boolean): void {
     cells: state.cells,
     autoMarksNeighbors: [...state.autoMarksNeighbors],
     autoMarksRowsCols: [...state.autoMarksRowsCols],
+    autoMarksRegions: [...state.autoMarksRegions],
     timeMs: state.timeMs,
     completed: state.completed,
     completedAt: state.completed ? Date.now() : undefined,

@@ -5,6 +5,7 @@ export type Progress = {
   cells: CellValue[];
   autoMarksNeighbors?: number[];
   autoMarksRowsCols?: number[];
+  autoMarksRegions?: number[];
   timeMs: number;
   completed: boolean;
   completedAt?: number;
@@ -26,6 +27,7 @@ export type UserProfile = {
 export type UserSettings = {
   autoXNeighbors: boolean;
   autoXRowsCols: boolean;
+  autoXRegions: boolean;
   highlightErrors: boolean;
   showTimer: boolean;
   theme: 'system' | 'light' | 'dark';
@@ -41,10 +43,12 @@ export type Move = {
   changes: CellChange[];
   prevAutoMarksNeighbors: number[];
   prevAutoMarksRowsCols: number[];
+  prevAutoMarksRegions: number[];
 };
 
 export type RedoEntry = {
   cellValues: { index: number; value: CellValue }[];
   autoMarksNeighbors: number[];
   autoMarksRowsCols: number[];
+  autoMarksRegions: number[];
 };

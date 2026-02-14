@@ -19,15 +19,6 @@ import type {
   Progress,
 } from '../types/state';
 
-const DEFAULT_SETTINGS: UserSettings = {
-  autoXNeighbors: true,
-  autoXRowsCols: false,
-  highlightErrors: true,
-  showTimer: true,
-  theme: 'system',
-  haptics: true,
-};
-
 type UserState = {
   profile: UserProfile;
   settings: UserSettings;
@@ -44,7 +35,7 @@ type UserState = {
 
 export const useUserStore = create<UserState>((set, get) => ({
   profile: { id: 'local', isAnonymous: true },
-  settings: DEFAULT_SETTINGS,
+  settings: getSettings(),
   packProgress: {},
 
   initialize: () => {

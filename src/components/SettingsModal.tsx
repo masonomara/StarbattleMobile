@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Switch,
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useUserStore } from '../stores/userStore';
 import { useTheme } from '../utils/useTheme';
@@ -88,9 +81,15 @@ export function SettingsModal({ visible, onClose }: Props) {
             theme={theme}
           />
           <ToggleRow
-            label="Auto-X Rows & Cols"
+            label="Auto-X Rows & Columns"
             value={settings.autoXRowsCols}
             onToggle={v => updateSettings({ autoXRowsCols: v })}
+            theme={theme}
+          />
+          <ToggleRow
+            label="Auto-X Regions"
+            value={settings.autoXRegions}
+            onToggle={v => updateSettings({ autoXRegions: v })}
             theme={theme}
           />
           <ToggleRow
