@@ -8,8 +8,8 @@ import {
   INNER_BORDER_WIDTH,
   BORDER_STYLE,
   CELL_SIZE,
-  STAR_ICON_SIZE_RATIO,
-  MARK_ICON_SIZE_RATIO,
+  STAR_ICON_SIZE,
+  MARK_ICON_SIZE,
 } from '../utils/constants';
 import type { Borders } from '../types/puzzle';
 import type { Theme } from '../utils/useTheme';
@@ -77,13 +77,15 @@ export const CellView = memo(function CellView({
     >
       {value === 1 && (
         <Star
-          size={CELL_SIZE * STAR_ICON_SIZE_RATIO}
+          size={STAR_ICON_SIZE}
           color={starColor}
           fill={starColor}
           strokeWidth={0}
         />
       )}
-      {value === 2 && <X size={16} color={theme.markColor} strokeWidth={2.5} />}
+      {value === 2 && (
+        <X size={MARK_ICON_SIZE} color={theme.markColor} strokeWidth={2.5} />
+      )}
     </Pressable>
   );
 });

@@ -61,11 +61,10 @@ export const INNER_BORDER_WIDTH = 0.5;
 export const BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
 
 // Star icon
-export const STAR_ICON_SIZE_RATIO = 0.6;
+export const STAR_ICON_SIZE = 24;
 
 // Mark (X) icon
-export const MARK_ICON_SIZE_RATIO = 0.4;
-
+export const MARK_ICON_SIZE = 16
 // Pinch-to-zoom limits
-export const MIN_ZOOM = 0.5;
-export const MAX_ZOOM = 5;
+export const MIN_ZOOM = 1;
+export const MAX_ZOOM = 3;
