@@ -66,5 +66,9 @@ export const STAR_ICON_SIZE = 22;
 export const MARK_ICON_SIZE = 14;
 
 // Pinch-to-zoom limits
-export const MIN_ZOOM = 1;
+export const DEFAULT_ZOOM = 1;
+export const MIN_ZOOM = 0.67;
 export const MAX_ZOOM = 3;
+
+// Pan bounds
+export const PAN_PADDING = 30;

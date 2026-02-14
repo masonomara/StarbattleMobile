@@ -1,17 +1,19 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Text, Button, StyleSheet } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from '../store';
+import { getPack } from '../packs';
 import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../utils/useTheme';
+import type { RootStackParams } from '../navigation';
 import {
   SPACING_XS,
-  SPACING_MD,
   SPACING_XL,
   FONT_SIZE_MD,
   FONT_SIZE_XL,
   FONT_WEIGHT_BOLD,
-  WIN_BANNER_SLIDE_DISTANCE,
 } from '../utils/constants';
 
 function WinTime({ color }: { color: string }) {
@@ -21,28 +23,49 @@ function WinTime({ color }: { color: string }) {
 
 export function WinBanner() {
   const completed = usePuzzleStore(s => s.completed);
+  const puzzleId = usePuzzleStore(s => s.puzzle?.id);
   const theme = useTheme();
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParams>>();
 
-  const bannerTranslateY = useRef(
-    new Animated.Value(WIN_BANNER_SLIDE_DISTANCE),
-  ).current;
+  const packId = puzzleId?.split(':')[0] ?? '';
+  const puzzleIndex = Number(puzzleId?.split(':')[1] ?? 0);
+  const pack = getPack(packId);
+  const isLastPuzzle = !pack || puzzleIndex >= pack.puzzles.length - 1;
+
+  const [bannerHeight, setBannerHeight] = useState(0);
+  const bannerTranslateY = useRef(new Animated.Value(0)).current;
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    setBannerHeight(e.nativeEvent.layout.height);
+  };
 
   useEffect(() => {
+    if (!bannerHeight) return;
     if (completed) {
+      bannerTranslateY.setValue(bannerHeight);
       Animated.spring(bannerTranslateY, {
         toValue: 0,
         useNativeDriver: true,
       }).start();
     } else {
-      bannerTranslateY.setValue(WIN_BANNER_SLIDE_DISTANCE);
+      bannerTranslateY.setValue(bannerHeight);
     }
-  }, [completed, bannerTranslateY]);
+  }, [completed, bannerHeight, bannerTranslateY]);
 
   if (!completed) return null;
 
+  const handleNext = () => {
+    if (isLastPuzzle) {
+      navigation.goBack();
+    } else {
+      navigation.replace('Puzzle', { packId, puzzleIndex: puzzleIndex + 1 });
+    }
+  };
+
   return (
     <Animated.View
+      onLayout={onLayout}
       style={[
         styles.winBanner,
         { backgroundColor: theme.accent },
@@ -51,12 +74,11 @@ export function WinBanner() {
     >
       <Text style={[styles.winText, { color: theme.onAccent }]}>Solved!</Text>
       <WinTime color={theme.onAccent} />
-      <Text
-        onPress={() => navigation.goBack()}
-        style={[styles.nextButton, { color: theme.onAccent }]}
-      >
-        Continue
-      </Text>
+      <Button
+        title={isLastPuzzle ? `Back to ${pack?.name ?? 'Pack'}` : 'Next Puzzle'}
+        onPress={handleNext}
+        color={theme.onAccent}
+      />
     </Animated.View>
   );
 }
@@ -64,7 +86,7 @@ export function WinBanner() {
 const styles = StyleSheet.create({
   winBanner: {
     position: 'absolute',
-    bottom: -120,
+    bottom: 0,
     left: 0,
     right: 0,
     padding: SPACING_XL,
@@ -74,10 +96,4 @@ const styles = StyleSheet.create({
   },
   winText: { fontSize: FONT_SIZE_XL, fontWeight: FONT_WEIGHT_BOLD },
   winTime: { fontSize: FONT_SIZE_MD, marginTop: SPACING_XS },
-  nextButton: {
-    fontSize: FONT_SIZE_MD,
-    marginTop: SPACING_MD,
-    textDecorationLine: 'underline',
-    marginBottom: 120,
-  },
 });

@@ -27,7 +27,7 @@ export function PuzzleScreen({ route, navigation }: Props) {
   const puzzle = usePuzzleStore(s => s.puzzle);
 
   const { gesture, scale, translateX, translateY, isZoomed, handleZoomReset } =
-    useZoom();
+    useZoom(pack?.gridSize ?? 5);
 
   useEffect(() => {
     if (!rawPuzzle) return;
@@ -51,12 +51,14 @@ export function PuzzleScreen({ route, navigation }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
       <GestureDetector gesture={gesture}>
-        <BoardView
-          puzzle={puzzle}
-          scale={scale}
-          translateX={translateX}
-          translateY={translateY}
-        />
+        <View style={styles.boardArea}>
+          <BoardView
+            puzzle={puzzle}
+            scale={scale}
+            translateX={translateX}
+            translateY={translateY}
+          />
+        </View>
       </GestureDetector>
       <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
       <WinBanner />

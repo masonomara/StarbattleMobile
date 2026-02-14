@@ -61,7 +61,7 @@ export const RegionBordersSvg = memo(function RegionBordersSvg({
     <Svg
       width={boardPx}
       height={boardPx}
-      style={{ position: 'absolute', top: 0, left: 0 }}
+      style={{ position: 'absolute', top: 0, left: 0, outlineWidth: 1.5 }}
       pointerEvents="none"
     >
       {segments.map((seg, i) => (
