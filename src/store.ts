@@ -7,6 +7,7 @@ import type {
   Move,
   CellChange,
   UserSettings,
+  RedoEntry,
 } from './types/state';
 import type { Puzzle } from './types/puzzle';
 
@@ -252,10 +253,13 @@ type PuzzleState = {
   completed: boolean;
   timeMs: number;
   moveLog: Move[];
+  redoStack: RedoEntry[];
   loadPuzzle: (puzzle: Puzzle) => void;
   tapCell: (row: number, col: number) => void;
   recomputeAutoMarks: () => void;
   undo: () => void;
+  redo: () => void;
+  clearBoard: () => void;
   tick: () => void;
 };
 
@@ -269,6 +273,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   completed: false,
   timeMs: 0,
   moveLog: [],
+  redoStack: [],
 
   loadPuzzle: (puzzle: Puzzle) => {
     const total = puzzle.size * puzzle.size;
@@ -363,6 +368,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
           prevAutoMarksRowsCols: prevRowsCols,
         },
       ],
+      redoStack: [],
     }));
 
     const won = next === 1 && checkWin(newCells, boardSize, puzzle);
@@ -416,17 +422,28 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
           prevAutoMarksRowsCols: prevRowsCols,
         },
       ],
+      redoStack: [],
     }));
     persistProgress(get(), false);
   },
 
   undo: () => {
-    const { moveLog, cells } = get();
+    const { moveLog, cells, autoMarksNeighbors, autoMarksRowsCols } = get();
     if (moveLog.length === 0) return;
 
     const lastMove = moveLog[moveLog.length - 1];
-    const newCells = [...cells];
 
+    // Capture current state for redo before reverting
+    const redoEntry: RedoEntry = {
+      cellValues: lastMove.changes.map(c => ({
+        index: c.index,
+        value: cells[c.index],
+      })),
+      autoMarksNeighbors: [...autoMarksNeighbors],
+      autoMarksRowsCols: [...autoMarksRowsCols],
+    };
+
+    const newCells = [...cells];
     for (let i = lastMove.changes.length - 1; i >= 0; i--) {
       const { index, previousValue } = lastMove.changes[i];
       newCells[index] = previousValue;
@@ -441,13 +458,105 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
         ? computeErrors(newCells, boardSize, puzzle)
         : new Set<string>();
 
-    set({
+    set(state => ({
       cells: newCells,
       autoMarksNeighbors: new Set(lastMove.prevAutoMarksNeighbors),
       autoMarksRowsCols: new Set(lastMove.prevAutoMarksRowsCols),
       errorCells: undoErrors,
       moveLog: moveLog.slice(0, -1),
-    });
+      redoStack: [...state.redoStack, redoEntry],
+    }));
+    persistProgress(get(), false);
+  },
+
+  redo: () => {
+    const { redoStack, cells, autoMarksNeighbors, autoMarksRowsCols, completed } = get();
+    if (redoStack.length === 0 || completed) return;
+
+    const entry = redoStack[redoStack.length - 1];
+
+    // Build an undo move from the current state
+    const changes: CellChange[] = entry.cellValues.map(cv => ({
+      index: cv.index,
+      previousValue: cells[cv.index],
+    }));
+    const prevNeighbors = [...autoMarksNeighbors];
+    const prevRowsCols = [...autoMarksRowsCols];
+
+    // Apply forward values
+    const newCells = [...cells];
+    for (const cv of entry.cellValues) {
+      newCells[cv.index] = cv.value;
+    }
+
+    const settings = useUserStore.getState().settings;
+    if (settings.haptics) hapticLight();
+
+    const { puzzle, boardSize } = get();
+    const redoErrors =
+      settings.highlightErrors && puzzle
+        ? computeErrors(newCells, boardSize, puzzle)
+        : new Set<string>();
+
+    set(state => ({
+      cells: newCells,
+      autoMarksNeighbors: new Set(entry.autoMarksNeighbors),
+      autoMarksRowsCols: new Set(entry.autoMarksRowsCols),
+      errorCells: redoErrors,
+      moveLog: [
+        ...state.moveLog,
+        {
+          changes,
+          prevAutoMarksNeighbors: prevNeighbors,
+          prevAutoMarksRowsCols: prevRowsCols,
+        },
+      ],
+      redoStack: redoStack.slice(0, -1),
+    }));
+
+    const won = checkWin(newCells, boardSize, puzzle!);
+    if (won) {
+      if (settings.haptics) hapticSuccess();
+      set({ completed: true });
+    }
+    persistProgress(get(), won);
+  },
+
+  clearBoard: () => {
+    const { cells, completed, puzzle, boardSize, autoMarksNeighbors, autoMarksRowsCols } = get();
+    if (completed || !puzzle) return;
+
+    // Collect all non-empty cells as changes
+    const changes: CellChange[] = [];
+    for (let i = 0; i < cells.length; i++) {
+      if (cells[i] !== 0) {
+        changes.push({ index: i, previousValue: cells[i] });
+      }
+    }
+    if (changes.length === 0) return;
+
+    const prevNeighbors = [...autoMarksNeighbors];
+    const prevRowsCols = [...autoMarksRowsCols];
+    const newCells = new Array<CellValue>(cells.length).fill(0) as CellValue[];
+
+    const settings = useUserStore.getState().settings;
+    if (settings.haptics) hapticLight();
+
+    set(state => ({
+      cells: newCells,
+      autoMarksNeighbors: new Set<number>(),
+      autoMarksRowsCols: new Set<number>(),
+      errorCells: new Set<string>(),
+      moveLog: [
+        ...state.moveLog,
+        {
+          changes,
+          prevAutoMarksNeighbors: prevNeighbors,
+          prevAutoMarksRowsCols: prevRowsCols,
+        },
+      ],
+      redoStack: [],
+    }));
     persistProgress(get(), false);
   },
 

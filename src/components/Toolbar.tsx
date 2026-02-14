@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { Undo2, Minimize2 } from 'lucide-react-native';
+import { Undo2, Redo2, Minimize2, Trash2 } from 'lucide-react-native';
 import { usePuzzleStore } from '../store';
 import {
   SPACING_LG,
@@ -21,9 +21,15 @@ type Props = {
 export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
   const theme = useTheme();
   const undo = usePuzzleStore(s => s.undo);
+  const redo = usePuzzleStore(s => s.redo);
+  const clearBoard = usePuzzleStore(s => s.clearBoard);
   const completed = usePuzzleStore(s => s.completed);
   const canUndo = usePuzzleStore(s => s.moveLog.length > 0);
+  const canRedo = usePuzzleStore(s => s.redoStack.length > 0);
+  const hasContent = usePuzzleStore(s => s.cells.some(c => c !== 0));
   const undoDisabled = !canUndo || completed;
+  const redoDisabled = !canRedo || completed;
+  const clearDisabled = !hasContent || completed;
   const zoomDisabled = !isZoomed;
 
   return (
@@ -50,6 +56,30 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
         ]}
       >
         <Undo2 size={TOOLBAR_ICON_SIZE} color={theme.text} />
+      </Pressable>
+
+      <Pressable
+        onPress={redo}
+        disabled={redoDisabled}
+        style={[
+          styles.button,
+          { backgroundColor: theme.card, shadowColor: theme.shadow },
+          redoDisabled && styles.disabled,
+        ]}
+      >
+        <Redo2 size={TOOLBAR_ICON_SIZE} color={theme.text} />
+      </Pressable>
+
+      <Pressable
+        onPress={clearBoard}
+        disabled={clearDisabled}
+        style={[
+          styles.button,
+          { backgroundColor: theme.card, shadowColor: theme.shadow },
+          clearDisabled && styles.disabled,
+        ]}
+      >
+        <Trash2 size={TOOLBAR_ICON_SIZE} color={theme.text} />
       </Pressable>
     </View>
   );

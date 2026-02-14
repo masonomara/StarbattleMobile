@@ -42,3 +42,9 @@ export type Move = {
   prevAutoMarksNeighbors: number[];
   prevAutoMarksRowsCols: number[];
 };
+
+export type RedoEntry = {
+  cellValues: { index: number; value: CellValue }[];
+  autoMarksNeighbors: number[];
+  autoMarksRowsCols: number[];
+};
