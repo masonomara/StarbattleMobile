@@ -21,7 +21,7 @@ Everything a player needs to download the app, open it, pick a puzzle, play it t
 Install what we need. Nothing else.
 
 ```bash
-npm install react-native-mmkv react-native-haptic-feedback react-native-gesture-handler react-native-reanimated zustand lucide-react-native
+npm install react-native-mmkv react-native-haptic-feedback react-native-gesture-handler zustand lucide-react-native react-native-nitro-modules
 cd ios && pod install && cd ..
 ```
 
@@ -31,7 +31,7 @@ cd ios && pod install && cd ..
 
 **react-native-gesture-handler** — already a transitive dependency of React Navigation but we need it explicitly for tap handling, pinch-to-zoom, and pan gestures on the board.
 
-**react-native-reanimated** — UI-thread animations for pinch-to-zoom transforms, pan gestures, and the win banner slide-up. Required by the Gesture API (v2) from gesture-handler.
+**react-native-nitro-modules** — required peer dependency for react-native-mmkv v4.
 
 **zustand** — lightweight state management with selectors. Each cell subscribes to its own slice of state, so tapping one cell only re-renders that cell (and its auto-X neighbors), not the entire board. Zustand is state management, not rendering — standard React Native Views handle grids up to 10x10 (100 cells) with no issues, and cell-level subscriptions keep re-renders minimal. If Phase 2's larger grids (14x14+) show rendering bottlenecks, the board renderer (BoardView/CellView) can be swapped to react-native-skia without changing the state management layer.
 
@@ -129,10 +129,10 @@ export type Move = {
 Thin wrapper over MMKV. All reads are synchronous. All writes are fire-and-forget (MMKV is crash-safe).
 
 ```typescript
-import { MMKV } from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
 import type { UserSettings, Progress, PackProgress } from './types/state';
 
-const storage = new MMKV();
+const storage = createMMKV({ id: 'starbattle' });
 
 const KEYS = {
   settings: 'user_settings',
@@ -200,11 +200,11 @@ import tenStar from '../packs/2star-10x10.json';
 import type { Pack } from './types/puzzle';
 
 const PACKS: Pack[] = [
-  introData as Pack,
-  fiveStar as Pack,
-  sixStar as Pack,
-  eightStar as Pack,
-  tenStar as Pack,
+  introData as unknown as Pack,
+  fiveStar as unknown as Pack,
+  sixStar as unknown as Pack,
+  eightStar as unknown as Pack,
+  tenStar as unknown as Pack,
 ];
 
 export function getAllPacks(): Pack[] {
@@ -287,140 +287,9 @@ export const INNER_BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
 
 ### `src/components/BoardView.tsx`
 
-```tsx
-import React, { useMemo, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import { CellView } from './CellView';
-import { CELL_SIZE } from '../constants/board';
-import type { Puzzle, Borders } from '../types/puzzle';
+Uses RN's built-in `Animated` API (react-native-reanimated is incompatible with RN 0.84). Pinch-to-zoom and pan use gesture-handler's Gesture API with `Animated.Value` refs.
 
-type Props = {
-  puzzle: Puzzle;
-  onCellPress: (row: number, col: number) => void;
-  zoomResetRef?: React.MutableRefObject<(() => void) | null>;
-  onZoomChange?: (isZoomed: boolean) => void;
-};
-
-export function BoardView({
-  puzzle,
-  onCellPress,
-  zoomResetRef,
-  onZoomChange,
-}: Props) {
-  const boardSize = CELL_SIZE * puzzle.size;
-
-  // Zoom and pan state (UI thread via reanimated)
-  const scale = useSharedValue(1);
-  const savedScale = useSharedValue(1);
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const savedTranslateX = useSharedValue(0);
-  const savedTranslateY = useSharedValue(0);
-
-  // Expose zoom reset to parent via ref
-  const resetZoom = useCallback(() => {
-    scale.value = withSpring(1);
-    savedScale.value = 1;
-    translateX.value = withSpring(0);
-    translateY.value = withSpring(0);
-    savedTranslateX.value = 0;
-    savedTranslateY.value = 0;
-    onZoomChange?.(false);
-  }, []);
-
-  if (zoomResetRef) zoomResetRef.current = resetZoom;
-
-  const pinchGesture = Gesture.Pinch()
-    .onUpdate(e => {
-      scale.value = savedScale.value * e.scale;
-    })
-    .onEnd(() => {
-      savedScale.value = Math.max(1, Math.min(scale.value, 3));
-      scale.value = withSpring(savedScale.value);
-      onZoomChange?.(savedScale.value !== 1);
-    });
-
-  const panGesture = Gesture.Pan()
-    .onUpdate(e => {
-      translateX.value = savedTranslateX.value + e.translationX;
-      translateY.value = savedTranslateY.value + e.translationY;
-    })
-    .onEnd(() => {
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
-    });
-
-  const composed = Gesture.Simultaneous(pinchGesture, panGesture);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-  }));
-
-  // Pre-compute border info for each cell (only runs when puzzle changes)
-  const cellBorders = useMemo(() => {
-    const borders: Borders[] = [];
-    for (let row = 0; row < puzzle.size; row++) {
-      for (let col = 0; col < puzzle.size; col++) {
-        const region = puzzle.regions[row][col];
-        borders.push({
-          top: row === 0 || puzzle.regions[row - 1][col] !== region,
-          bottom:
-            row === puzzle.size - 1 || puzzle.regions[row + 1][col] !== region,
-          left: col === 0 || puzzle.regions[row][col - 1] !== region,
-          right:
-            col === puzzle.size - 1 || puzzle.regions[row][col + 1] !== region,
-        });
-      }
-    }
-    return borders;
-  }, [puzzle]);
-
-  return (
-    <GestureDetector gesture={composed}>
-      <Animated.View
-        style={[
-          styles.board,
-          { width: boardSize, height: boardSize },
-          animatedStyle,
-        ]}
-      >
-        {cellBorders.map((borders, i) => {
-          const row = Math.floor(i / puzzle.size);
-          const col = i % puzzle.size;
-          return (
-            <CellView
-              key={i}
-              row={row}
-              col={col}
-              size={CELL_SIZE}
-              borders={borders}
-              onPress={onCellPress}
-            />
-          );
-        })}
-      </Animated.View>
-    </GestureDetector>
-  );
-}
-
-const styles = StyleSheet.create({
-  board: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-});
-```
+See `src/components/BoardView.tsx` for the full implementation.
 
 ### `src/components/CellView.tsx`
 
@@ -774,154 +643,9 @@ export function formatTime(ms: number): string {
 
 ### `src/screens/PuzzleScreen.tsx`
 
-```tsx
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BoardView } from '../components/BoardView';
-import { Toolbar } from '../components/Toolbar';
-import { parsePuzzle } from '../puzzle-parser';
-import { getPack } from '../packs';
-import { usePuzzleStore } from '../store';
-import { useTheme } from '../theme';
-import { formatTime } from '../utils/formatTime';
-import type { RootStackParams } from '../navigation';
+Uses RN's built-in `Animated` API for the win banner slide-up spring animation. Wires `BoardView`, `Toolbar`, store actions, timer interval, and navigation header.
 
-type Props = NativeStackScreenProps<RootStackParams, 'Puzzle'>;
-
-export function PuzzleScreen({ route, navigation }: Props) {
-  const { packId, puzzleIndex } = route.params;
-  const pack = getPack(packId);
-  const rawPuzzle = pack?.puzzles[puzzleIndex];
-  const theme = useTheme();
-
-  const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
-  const tapCell = usePuzzleStore(s => s.tapCell);
-  const undo = usePuzzleStore(s => s.undo);
-  const tick = usePuzzleStore(s => s.tick);
-  const completed = usePuzzleStore(s => s.completed);
-  const timeMs = usePuzzleStore(s => s.timeMs);
-  const canUndo = usePuzzleStore(s => s.moveLog.length > 0);
-  const puzzle = usePuzzleStore(s => s.puzzle);
-
-  // Zoom reset coordination between board and toolbar
-  const zoomResetRef = useRef<(() => void) | null>(null);
-  const [isZoomed, setIsZoomed] = React.useState(false);
-
-  // Win banner slide-up animation
-  const bannerTranslateY = useSharedValue(200);
-  const bannerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: bannerTranslateY.value }],
-  }));
-
-  // Load puzzle into store
-  useEffect(() => {
-    if (!rawPuzzle || !pack) return;
-    const puzzleId = `${packId}:${puzzleIndex}`;
-    const parsed = parsePuzzle(rawPuzzle, puzzleId);
-    loadPuzzle(parsed);
-  }, [rawPuzzle, pack, packId, puzzleIndex, loadPuzzle]);
-
-  // Timer
-  useEffect(() => {
-    if (completed) return;
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [completed, tick]);
-
-  // Animate win banner on completion
-  useEffect(() => {
-    if (completed) {
-      bannerTranslateY.value = withSpring(0);
-    } else {
-      bannerTranslateY.value = 200;
-    }
-  }, [completed]);
-
-  // Configure navigation header
-  useEffect(() => {
-    navigation.setOptions({
-      title: pack?.name ?? '',
-      headerRight: () => (
-        <Text style={[styles.timer, { color: theme.textSecondary }]}>
-          {formatTime(timeMs)}
-        </Text>
-      ),
-    });
-  }, [navigation, pack, timeMs, theme]);
-
-  if (!puzzle) return null;
-
-  return (
-    <View style={[styles.container, { backgroundColor: theme.bg }]}>
-      <View style={styles.boardArea}>
-        <BoardView
-          puzzle={puzzle}
-          onCellPress={tapCell}
-          zoomResetRef={zoomResetRef}
-          onZoomChange={setIsZoomed}
-        />
-      </View>
-
-      <Toolbar
-        onUndo={undo}
-        canUndo={canUndo}
-        completed={completed}
-        isZoomed={isZoomed}
-        onZoomReset={() => zoomResetRef.current?.()}
-      />
-
-      {completed && (
-        <Animated.View
-          style={[
-            styles.winBanner,
-            { backgroundColor: theme.accent },
-            bannerStyle,
-          ]}
-        >
-          <Text style={styles.winText}>Solved!</Text>
-          <Text style={styles.winTime}>{formatTime(timeMs)}</Text>
-          <Text onPress={() => navigation.goBack()} style={styles.nextButton}>
-            Continue
-          </Text>
-        </Animated.View>
-      )}
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  boardArea: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  timer: { fontSize: 16, fontVariant: ['tabular-nums'] },
-  winBanner: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-    alignItems: 'center',
-  },
-  winText: { fontSize: 28, fontWeight: '700', color: '#FFF' },
-  winTime: { fontSize: 16, color: '#FFF', marginTop: 4 },
-  nextButton: {
-    fontSize: 16,
-    color: '#FFF',
-    marginTop: 12,
-    textDecorationLine: 'underline',
-  },
-});
-```
+See `src/screens/PuzzleScreen.tsx` for the full implementation.
 
 ### `src/haptics.ts`
 
@@ -1053,7 +777,7 @@ export function Navigation() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerBackTitleVisible: false,
+          headerBackButtonDisplayMode: 'minimal',
         }}
       >
         <Stack.Screen
@@ -1069,7 +793,7 @@ export function Navigation() {
 }
 ```
 
-Home header is hidden — the home screen manages its own layout. Pack and Puzzle screens use standard headers with back buttons handled automatically by React Navigation. Back buttons show only the chevron icon, no text label. Screen titles set dynamically via `navigation.setOptions` in each screen.
+Home header is hidden — the home screen manages its own layout. Pack and Puzzle screens use standard headers with back buttons handled automatically by React Navigation. Back buttons use `headerBackButtonDisplayMode: 'minimal'` for icon-only display. Screen titles set dynamically via `navigation.setOptions` in each screen.
 
 ---
 
@@ -1364,78 +1088,77 @@ This plan covers Phase 1. Every task below maps to a step above.
 
 #### Step 1: Dependencies
 
-- [ ] Install runtime deps: `react-native-mmkv`, `react-native-haptic-feedback`, `react-native-gesture-handler`, `react-native-reanimated`, `zustand`, `lucide-react-native`
-- [ ] Run `cd ios && pod install && cd ..`
-- [ ] Add `react-native-reanimated/plugin` to `babel.config.js`
-- [ ] Verify clean build on iOS simulator
-- [ ] Verify clean build on Android emulator
+- [x] Install runtime deps: `react-native-mmkv`, `react-native-haptic-feedback`, `react-native-gesture-handler`, `zustand`, `lucide-react-native`, `react-native-nitro-modules`
+- [x] Run `cd ios && pod install && cd ..`
+- [x] Verify clean build on iOS simulator
+- [x] Verify clean build on Android emulator
 
 #### Step 2: Types and Data Layer
 
-- [ ] Create `src/types/` directory
-- [ ] Create `src/types/puzzle.ts` — `Coord`, `RawPuzzle`, `Puzzle`, `Pack`, `Borders`
-- [ ] Create `src/types/state.ts` — `CellValue`, `Progress`, `UserSettings`, `PackProgress`, `CellChange`, `Move`
-- [ ] Create `src/storage.ts` — MMKV instance, `DEFAULT_SETTINGS`, `getSettings`, `saveSettings`, `getProgress`, `saveProgress`, `getPackProgress`, `markPuzzleCompleted`
-- [ ] Create `src/packs.ts` — static JSON imports, `getAllPacks()`, `getPack(id)`
-- [ ] Confirm Metro resolves JSON imports from `/packs/` without config changes
+- [x] Create `src/types/` directory
+- [x] Create `src/types/puzzle.ts` — `Coord`, `RawPuzzle`, `Puzzle`, `Pack`, `Borders`
+- [x] Create `src/types/state.ts` — `CellValue`, `Progress`, `UserSettings`, `PackProgress`, `CellChange`, `Move`
+- [x] Create `src/storage.ts` — MMKV instance via `createMMKV`, `DEFAULT_SETTINGS`, `getSettings`, `saveSettings`, `getProgress`, `saveProgress`, `getPackProgress`, `markPuzzleCompleted`
+- [x] Create `src/packs.ts` — static JSON imports, `getAllPacks()`, `getPack(id)`
+- [x] Confirm Metro resolves JSON imports from `/packs/` without config changes
 
 #### Step 3: Puzzle Parser
 
-- [ ] Create `src/puzzle-parser.ts` — `parsePuzzle(raw, puzzleId)` → `Puzzle`
-- [ ] Manually verify parser output against a known puzzle (check regions grid, size, stars, solution)
+- [x] Create `src/puzzle-parser.ts` — `parsePuzzle(raw, puzzleId)` → `Puzzle`
+- [x] Manually verify parser output against a known puzzle (check regions grid, size, stars, solution)
 
 #### Step 4: Board Renderer
 
-- [ ] Create `src/constants/board.ts` — `CELL_SIZE`, `REGION_BORDER_WIDTH`, `INNER_BORDER_WIDTH`, `INNER_BORDER_STYLE`
-- [ ] Create `src/components/CellView.tsx` — memo'd component, Zustand cell-level subscription, border rendering, theme colors, star/mark/empty states, error star color
-- [ ] Create `src/components/BoardView.tsx` — cell grid with `flexWrap`, pre-computed `cellBorders` memo, pinch gesture, pan gesture, `Gesture.Simultaneous`, animated transform style, zoom reset via ref, `onZoomChange` callback
-- [ ] Render a hardcoded puzzle on screen to visually verify grid, region borders, cell sizing
+- [x] Create `src/constants/board.ts` — `CELL_SIZE`, `REGION_BORDER_WIDTH`, `INNER_BORDER_WIDTH`, `INNER_BORDER_STYLE`
+- [x] Create `src/components/CellView.tsx` — memo'd component, Zustand cell-level subscription, border rendering, theme colors, star/mark/empty states, error star color
+- [x] Create `src/components/BoardView.tsx` — cell grid with `flexWrap`, pre-computed `cellBorders` memo, pinch gesture, pan gesture, `Gesture.Simultaneous`, RN `Animated` transforms, zoom reset via ref, `onZoomChange` callback
+- [ ] Render a puzzle on device to visually verify grid, region borders, cell sizing
 
 #### Step 5: Game State
 
-- [ ] Create `src/haptics.ts` — `triggerHaptic` wrapper
-- [ ] Create `src/store.ts` — Zustand store with `PuzzleState` type
-- [ ] Implement `loadPuzzle` — parse saved progress or initialize empty cells
-- [ ] Implement `tapCell` — mark-first cycle (empty → mark → star → empty)
-- [ ] Implement `autoXNeighbors` — mark 8 adjacent empty cells when placing a star
-- [ ] Implement `autoXRowsCols` — mark remaining empty cells in row, column, and region when star count reaches required count
-- [ ] Implement move log — record `CellChange[]` for tapped cell and all auto-X side effects
-- [ ] Implement `undo` — pop last move, restore all `previousValue`s in reverse
-- [ ] Implement `tick` — increment `timeMs` by 1000 when not completed
-- [ ] Implement win detection — compare placed stars against solution set
-- [ ] Implement `persistProgress` — save to MMKV after every tap and undo
-- [ ] Implement haptic feedback — `impactLight` on tap/undo, `notificationSuccess` on win
+- [x] Create `src/haptics.ts` — `triggerHaptic` wrapper
+- [x] Create `src/store.ts` — Zustand store with `PuzzleState` type
+- [x] Implement `loadPuzzle` — parse saved progress or initialize empty cells
+- [x] Implement `tapCell` — mark-first cycle (empty → mark → star → empty)
+- [x] Implement `autoXNeighbors` — mark 8 adjacent empty cells when placing a star
+- [x] Implement `autoXRowsCols` — mark remaining empty cells in row, column, and region when star count reaches required count
+- [x] Implement move log — record `CellChange[]` for tapped cell and all auto-X side effects
+- [x] Implement `undo` — pop last move, restore all `previousValue`s in reverse
+- [x] Implement `tick` — increment `timeMs` by 1000 when not completed
+- [x] Implement win detection — compare placed stars against solution set
+- [x] Implement `persistProgress` — save to MMKV after every tap and undo
+- [x] Implement haptic feedback — `impactLight` on tap/undo, `notificationSuccess` on win
 
 #### Step 6: Game Screen
 
-- [ ] Create `src/utils/formatTime.ts` — `formatTime(ms)` → `"M:SS"`
-- [ ] Create `src/components/Toolbar.tsx` — zoom reset (`Minimize2`) and undo (`Undo2`) buttons, absolute positioning, disabled states
-- [ ] Create `src/screens/PuzzleScreen.tsx` — wire `BoardView`, `Toolbar`, store actions, timer interval, navigation header with title and timer, zoom reset ref coordination
-- [ ] Implement win banner — `Animated.View` that slides up with spring animation on completion, shows "Solved!", time, and "Continue" button
+- [x] Create `src/utils/formatTime.ts` — `formatTime(ms)` → `"M:SS"`
+- [x] Create `src/components/Toolbar.tsx` — zoom reset (`Minimize2`) and undo (`Undo2`) buttons, absolute positioning, disabled states
+- [x] Create `src/screens/PuzzleScreen.tsx` — wire `BoardView`, `Toolbar`, store actions, timer interval, navigation header with title and timer, zoom reset ref coordination
+- [x] Implement win banner — `Animated.View` that slides up with spring animation on completion, shows "Solved!", time, and "Continue" button
 
 #### Step 7: Navigation
 
-- [ ] Create `src/navigation.tsx` — `RootStackParams` type, `createNativeStackNavigator`, three screens
-- [ ] Configure Home with `headerShown: false`
-- [ ] Configure global `headerBackTitleVisible: false`
+- [x] Create `src/navigation.tsx` — `RootStackParams` type, `createNativeStackNavigator`, three screens
+- [x] Configure Home with `headerShown: false`
+- [x] Configure global `headerBackButtonDisplayMode: 'minimal'`
 
 #### Step 8: Home Screen
 
-- [ ] Create `src/screens/HomeScreen.tsx` — `FlatList` of packs
-- [ ] Render pack cards with name, grid size, and completion count (`completed/total`)
-- [ ] Implement `useFocusEffect` to force re-render on back navigation
+- [x] Create `src/screens/HomeScreen.tsx` — `FlatList` of packs
+- [x] Render pack cards with name, grid size, and completion count (`completed/total`)
+- [x] Implement `useFocusEffect` to force re-render on back navigation
 
 #### Step 9: Pack Screen
 
-- [ ] Create `src/screens/PackScreen.tsx` — `FlatList` grid (`numColumns={5}`) of puzzle cells
-- [ ] Render puzzle number with completed/incomplete styling
-- [ ] Set screen title dynamically from pack name
-- [ ] Implement `useFocusEffect` to force re-render on back navigation
+- [x] Create `src/screens/PackScreen.tsx` — `FlatList` grid (`numColumns={5}`) of puzzle cells
+- [x] Render puzzle number with completed/incomplete styling
+- [x] Set screen title dynamically from pack name
+- [x] Implement `useFocusEffect` to force re-render on back navigation
 
 #### Step 10: Theme + Wire Up App.tsx
 
-- [ ] Create `src/theme.ts` — `Theme` type (11 color properties), `light` and `dark` objects, `useTheme()` hook respecting system/user preference
-- [ ] Replace `App.tsx` — `GestureHandlerRootView` > `SafeAreaProvider` > `StatusBar` > `Navigation`
+- [x] Create `src/theme.ts` — `Theme` type (11 color properties), `light` and `dark` objects, `useTheme()` hook respecting system/user preference
+- [x] Replace `App.tsx` — `GestureHandlerRootView` > `SafeAreaProvider` > `StatusBar` > `Navigation`
 - [ ] Verify light theme renders correctly
 - [ ] Verify dark theme renders correctly
 - [ ] Verify system theme switching works
