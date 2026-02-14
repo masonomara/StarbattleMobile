@@ -18,11 +18,6 @@ export type UserSettings = {
   haptics: boolean;
 };
 
-export type PackProgress = {
-  packId: string;
-  completedPuzzleIds: string[];
-};
-
 export type CellChange = {
   index: number;
   previousValue: CellValue;
