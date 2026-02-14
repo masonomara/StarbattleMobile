@@ -1,0 +1,75 @@
+import type { ViewStyle } from 'react-native';
+
+// Spacing scale
+export const SPACING_XS = 4;
+export const SPACING_SM = 6;
+export const SPACING_MD = 12;
+export const SPACING_LG = 16;
+export const SPACING_XL = 24;
+export const SPACING_XXL = 48;
+
+// Border radii
+export const RADIUS_SM = 8;
+export const RADIUS_MD = 12;
+export const RADIUS_LG = 24;
+
+// Font sizes
+export const FONT_SIZE_SM = 14;
+export const FONT_SIZE_MD = 16;
+export const FONT_SIZE_LG = 18;
+export const FONT_SIZE_XL = 28;
+
+// Font weights
+export const FONT_WEIGHT_SEMIBOLD = '600' as const;
+export const FONT_WEIGHT_BOLD = '700' as const;
+
+// Toolbar
+export const TOOLBAR_BUTTON_SIZE = 48;
+export const TOOLBAR_BOTTOM = 48;
+export const TOOLBAR_ICON_SIZE = 20;
+
+// Pack grid
+export const GRID_COLUMNS = 5;
+
+// Win banner
+export const WIN_BANNER_SLIDE_DISTANCE = 200;
+
+// Opacity
+export const DISABLED_OPACITY = 0.3;
+
+// Shadow presets
+export const SHADOW_SM: ViewStyle = {
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.06,
+  shadowRadius: 2,
+  elevation: 1,
+};
+
+export const SHADOW_MD: ViewStyle = {
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 2,
+};
+
+// Cell dimensions
+export const CELL_SIZE = 38;
+
+// Border widths
+export const REGION_BORDER_WIDTH = 1.5;
+export const INNER_BORDER_WIDTH = 0.5;
+export const INNER_BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
+
+// Star glyph
+export const STAR_SYMBOL = '★';
+export const STAR_FONT_SIZE_RATIO = 0.5;
+export const STAR_FONT_WEIGHT = '700' as const;
+
+// Mark (X) glyph
+export const MARK_SYMBOL = '✕';
+export const MARK_FONT_SIZE_RATIO = 0.4;
+export const MARK_FONT_WEIGHT = '300' as const;
+
+// Pinch-to-zoom limits
+export const MIN_ZOOM = 1;
+export const MAX_ZOOM = 3;
