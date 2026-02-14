@@ -5,7 +5,12 @@ import { CellView } from './CellView';
 import { usePuzzleStore } from '../store';
 
 import type { Puzzle, Borders } from '../types/puzzle';
-import { CELL_SIZE, MAX_ZOOM, MIN_ZOOM } from '../utils/constants';
+import {
+  CELL_SIZE,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  REGION_BORDER_WIDTH,
+} from '../utils/constants';
 import { useTheme } from '../utils/useTheme';
 
 type Props = {
@@ -126,5 +131,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
+    outlineWidth: REGION_BORDER_WIDTH,
   },
 });
