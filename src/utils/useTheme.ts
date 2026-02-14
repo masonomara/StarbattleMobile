@@ -28,19 +28,19 @@ export function useTheme(): Theme {
 }
 
 const light: Theme = {
-  bg: '#FAFAFA',
-  card: '#FFFFFF',
-  text: '#1A1A1A',
+  bg: '#eeece7',
+  card: '#eeece7',
+  text: '#000000',
   textSecondary: '#888888',
   regionBorder: '#000000',
-  innerBorder: '#bdbdbd',
-  cellBg: '#FFFFFF',
+  innerBorder: '#000000',
+  cellBg: '#eeece7',
   starColor: '#1A1A1A',
-  starErrorColor: '#EF4444',
-  markColor: '#EF4444',
+  starErrorColor: '#B7404E',
+  markColor: '#B7404E',
   accent: '#4CAF50',
   accentMuted: '#4CAF5020',
-  onAccent: '#FFFFFF',
+  onAccent: '#eeece7',
   shadow: '#000000',
 };
 

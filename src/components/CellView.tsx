@@ -76,28 +76,14 @@ export const CellView = memo(function CellView({
       ]}
     >
       {value === 1 && (
-        <Text
-          style={[
-            styles.star,
-            { fontSize: CELL_SIZE * STAR_FONT_SIZE_RATIO, color: starColor },
-          ]}
-        >
-          {STAR_SYMBOL}
-        </Text>
+        <Star
+          size={CELL_SIZE * STAR_ICON_SIZE_RATIO}
+          color={starColor}
+          fill={starColor}
+          strokeWidth={0}
+        />
       )}
-      {value === 2 && (
-        <Text
-          style={[
-            styles.mark,
-            {
-              fontSize: CELL_SIZE * MARK_FONT_SIZE_RATIO,
-              color: theme.markColor,
-            },
-          ]}
-        >
-          {MARK_SYMBOL}
-        </Text>
-      )}
+      {value === 2 && <X size={16} color={theme.markColor} strokeWidth={2.5} />}
     </Pressable>
   );
 });
@@ -106,11 +92,5 @@ const styles = StyleSheet.create({
   cell: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  star: {
-    fontWeight: STAR_FONT_WEIGHT,
-  },
-  mark: {
-    fontWeight: MARK_FONT_WEIGHT,
   },
 });

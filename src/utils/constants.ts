@@ -60,16 +60,12 @@ export const REGION_BORDER_WIDTH = 1.5;
 export const INNER_BORDER_WIDTH = 0.5;
 export const BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
 
-// Star glyph
-export const STAR_SYMBOL = '★';
-export const STAR_FONT_SIZE_RATIO = 0.5;
-export const STAR_FONT_WEIGHT = '700' as const;
+// Star icon
+export const STAR_ICON_SIZE_RATIO = 0.6;
 
-// Mark (X) glyph
-export const MARK_SYMBOL = '✕';
-export const MARK_FONT_SIZE_RATIO = 0.4;
-export const MARK_FONT_WEIGHT = '700' as const;
+// Mark (X) icon
+export const MARK_ICON_SIZE_RATIO = 0.4;
 
 // Pinch-to-zoom limits
-export const MIN_ZOOM = .5;
+export const MIN_ZOOM = 0.5;
 export const MAX_ZOOM = 5;
