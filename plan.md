@@ -99,7 +99,8 @@ export type Progress = {
 };
 
 export type UserSettings = {
-  autoX: boolean;
+  autoXNeighbors: boolean;
+  autoXRowsCols: boolean;
   highlightErrors: boolean;
   showTimer: boolean;
   theme: 'system' | 'light' | 'dark';
@@ -117,13 +118,11 @@ export type CellChange = {
   previousValue: CellValue;
 };
 
-// One player action (tap). Contains the tapped cell change plus any auto-X cells that were marked as a side effect. On undo, iterate changes in reverse and restore each previousValue.
+// One player action (tap). Contains the tapped cell change plus any auto-X cells that were marked as a side effect. Auto-X neighbors (adjacent cells) is controlled by `autoXNeighbors` (default on). Auto-X for completed rows/columns/regions is controlled by `autoXRowsCols` (default off). On undo, iterate changes in reverse and restore each previousValue — both neighbor marks and row/col/region marks are reverted.
 export type Move = {
   changes: CellChange[];
 };
 ```
-
-<!-- Auto x Neighbors and auto x rows/columns need to be seperate optiosn in user settings, ont eh settings UI screen, and perfrom different action ont eh baord editor, auto x neighbors is default on. Auto x rows/columns is deafult off. -->
 
 ### `src/storage.ts`
 
@@ -142,7 +141,8 @@ const KEYS = {
 } as const;
 
 const DEFAULT_SETTINGS: UserSettings = {
-  autoX: true,
+  autoXNeighbors: true,
+  autoXRowsCols: false,
   highlightErrors: true,
   showTimer: true,
   theme: 'system',
@@ -274,6 +274,17 @@ The core visual. A grid of cells where each cell owns its own border rendering.
 - Cell size is fixed at 38px. Does not change during gameplay. Players can pinch-to-zoom with two fingers and pan to navigate larger boards.
 - Errors are represented by changing the star color to red — cell backgrounds never change for errors.
 
+### `src/constants/board.ts`
+
+Board style constants — adjust these during development to iterate on the board look. Colors come from the theme (light/dark aware). Dimensions and structure live here.
+
+```typescript
+export const CELL_SIZE = 38;
+export const REGION_BORDER_WIDTH = 3;
+export const INNER_BORDER_WIDTH = 1;
+export const INNER_BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
+```
+
 ### `src/components/BoardView.tsx`
 
 ```tsx
@@ -286,6 +297,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { CellView } from './CellView';
+import { CELL_SIZE } from '../constants/board';
 import type { Puzzle, Borders } from '../types/puzzle';
 
 type Props = {
@@ -294,8 +306,6 @@ type Props = {
   zoomResetRef?: React.MutableRefObject<(() => void) | null>;
   onZoomChange?: (isZoomed: boolean) => void;
 };
-
-const CELL_SIZE = 38;
 
 export function BoardView({
   puzzle,
@@ -412,8 +422,6 @@ const styles = StyleSheet.create({
 });
 ```
 
-<!-- as we are in development and i plan on iterating/making board style very customizable, can you make sure the variabels for board style design like Border Width, Border COlor, Inner Border Width, innder Boarder Dashes, inner baorder color, cell size are all variabels that we can easily adjust client side. The cell size is a good start -->
-
 ### `src/components/CellView.tsx`
 
 Each cell subscribes to its own slice of the Zustand store. When cell 42 changes, only cell 42 (and its auto-X neighbors) re-render. The board never re-renders.
@@ -427,10 +435,12 @@ import React, { memo, useCallback } from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
 import { usePuzzleStore } from '../store';
 import { useTheme } from '../theme';
+import {
+  REGION_BORDER_WIDTH,
+  INNER_BORDER_WIDTH,
+  INNER_BORDER_STYLE,
+} from '../constants/board';
 import type { Borders } from '../types/puzzle';
-
-const REGION_BORDER = 3;
-const INNER_BORDER = 1;
 
 type Props = {
   row: number;
@@ -464,10 +474,11 @@ export const CellView = memo(function CellView({
           width: size,
           height: size,
           backgroundColor: theme.cellBg,
-          borderTopWidth: borders.top ? REGION_BORDER : INNER_BORDER,
-          borderBottomWidth: borders.bottom ? REGION_BORDER : INNER_BORDER,
-          borderLeftWidth: borders.left ? REGION_BORDER : INNER_BORDER,
-          borderRightWidth: borders.right ? REGION_BORDER : INNER_BORDER,
+          borderTopWidth: borders.top ? REGION_BORDER_WIDTH : INNER_BORDER_WIDTH,
+          borderBottomWidth: borders.bottom ? REGION_BORDER_WIDTH : INNER_BORDER_WIDTH,
+          borderLeftWidth: borders.left ? REGION_BORDER_WIDTH : INNER_BORDER_WIDTH,
+          borderRightWidth: borders.right ? REGION_BORDER_WIDTH : INNER_BORDER_WIDTH,
+          borderStyle: INNER_BORDER_STYLE,
           borderTopColor: borders.top ? theme.regionBorder : theme.innerBorder,
           borderBottomColor: borders.bottom
             ? theme.regionBorder
@@ -597,7 +608,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     newCells[idx] = next;
 
     // Auto-X neighbors when placing a star
-    if (next === 1 && settings.autoX) {
+    if (next === 1 && settings.autoXNeighbors) {
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
           if (dr === 0 && dc === 0) continue;
@@ -608,6 +619,63 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
             if (newCells[nIdx] === 0) {
               changes.push({ index: nIdx, previousValue: newCells[nIdx] });
               newCells[nIdx] = 2;
+            }
+          }
+        }
+      }
+    }
+
+    // Auto-X completed rows/columns/regions when placing a star
+    if (next === 1 && settings.autoXRowsCols) {
+      // Check if row now has all required stars
+      let rowStars = 0;
+      for (let c = 0; c < boardSize; c++) {
+        if (newCells[row * boardSize + c] === 1) rowStars++;
+      }
+      if (rowStars === puzzle.stars) {
+        for (let c = 0; c < boardSize; c++) {
+          const rIdx = row * boardSize + c;
+          if (newCells[rIdx] === 0) {
+            changes.push({ index: rIdx, previousValue: newCells[rIdx] });
+            newCells[rIdx] = 2;
+          }
+        }
+      }
+
+      // Check if column now has all required stars
+      let colStars = 0;
+      for (let r = 0; r < boardSize; r++) {
+        if (newCells[r * boardSize + col] === 1) colStars++;
+      }
+      if (colStars === puzzle.stars) {
+        for (let r = 0; r < boardSize; r++) {
+          const cIdx = r * boardSize + col;
+          if (newCells[cIdx] === 0) {
+            changes.push({ index: cIdx, previousValue: newCells[cIdx] });
+            newCells[cIdx] = 2;
+          }
+        }
+      }
+
+      // Check if region now has all required stars
+      const placedRegion = puzzle.regions[row][col];
+      let regionStars = 0;
+      for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+          if (puzzle.regions[r][c] === placedRegion && newCells[r * boardSize + c] === 1) {
+            regionStars++;
+          }
+        }
+      }
+      if (regionStars === puzzle.stars) {
+        for (let r = 0; r < boardSize; r++) {
+          for (let c = 0; c < boardSize; c++) {
+            if (puzzle.regions[r][c] === placedRegion) {
+              const regIdx = r * boardSize + c;
+              if (newCells[regIdx] === 0) {
+                changes.push({ index: regIdx, previousValue: newCells[regIdx] });
+                newCells[regIdx] = 2;
+              }
             }
           }
         }
@@ -684,8 +752,6 @@ function persistProgress(state: PuzzleState): void {
   saveProgress(progress);
 }
 ```
-
-<!-- again on the autoX neighbors and autoX rows/columns, same rules shoudl apply and seperate fucntiosn should exist - neighbors and rows/columns caused by the sr palcement are removed when the star is removed. -->
 
 ---
 
@@ -1287,3 +1353,136 @@ export default function App() {
   );
 }
 ```
+
+---
+
+## Todo List
+
+### Phase 1: Playable Game
+
+This plan covers Phase 1. Every task below maps to a step above.
+
+#### Step 1: Dependencies
+
+- [ ] Install runtime deps: `react-native-mmkv`, `react-native-haptic-feedback`, `react-native-gesture-handler`, `react-native-reanimated`, `zustand`, `lucide-react-native`
+- [ ] Run `cd ios && pod install && cd ..`
+- [ ] Add `react-native-reanimated/plugin` to `babel.config.js`
+- [ ] Verify clean build on iOS simulator
+- [ ] Verify clean build on Android emulator
+
+#### Step 2: Types and Data Layer
+
+- [ ] Create `src/types/` directory
+- [ ] Create `src/types/puzzle.ts` — `Coord`, `RawPuzzle`, `Puzzle`, `Pack`, `Borders`
+- [ ] Create `src/types/state.ts` — `CellValue`, `Progress`, `UserSettings`, `PackProgress`, `CellChange`, `Move`
+- [ ] Create `src/storage.ts` — MMKV instance, `DEFAULT_SETTINGS`, `getSettings`, `saveSettings`, `getProgress`, `saveProgress`, `getPackProgress`, `markPuzzleCompleted`
+- [ ] Create `src/packs.ts` — static JSON imports, `getAllPacks()`, `getPack(id)`
+- [ ] Confirm Metro resolves JSON imports from `/packs/` without config changes
+
+#### Step 3: Puzzle Parser
+
+- [ ] Create `src/puzzle-parser.ts` — `parsePuzzle(raw, puzzleId)` → `Puzzle`
+- [ ] Manually verify parser output against a known puzzle (check regions grid, size, stars, solution)
+
+#### Step 4: Board Renderer
+
+- [ ] Create `src/constants/board.ts` — `CELL_SIZE`, `REGION_BORDER_WIDTH`, `INNER_BORDER_WIDTH`, `INNER_BORDER_STYLE`
+- [ ] Create `src/components/CellView.tsx` — memo'd component, Zustand cell-level subscription, border rendering, theme colors, star/mark/empty states, error star color
+- [ ] Create `src/components/BoardView.tsx` — cell grid with `flexWrap`, pre-computed `cellBorders` memo, pinch gesture, pan gesture, `Gesture.Simultaneous`, animated transform style, zoom reset via ref, `onZoomChange` callback
+- [ ] Render a hardcoded puzzle on screen to visually verify grid, region borders, cell sizing
+
+#### Step 5: Game State
+
+- [ ] Create `src/haptics.ts` — `triggerHaptic` wrapper
+- [ ] Create `src/store.ts` — Zustand store with `PuzzleState` type
+- [ ] Implement `loadPuzzle` — parse saved progress or initialize empty cells
+- [ ] Implement `tapCell` — mark-first cycle (empty → mark → star → empty)
+- [ ] Implement `autoXNeighbors` — mark 8 adjacent empty cells when placing a star
+- [ ] Implement `autoXRowsCols` — mark remaining empty cells in row, column, and region when star count reaches required count
+- [ ] Implement move log — record `CellChange[]` for tapped cell and all auto-X side effects
+- [ ] Implement `undo` — pop last move, restore all `previousValue`s in reverse
+- [ ] Implement `tick` — increment `timeMs` by 1000 when not completed
+- [ ] Implement win detection — compare placed stars against solution set
+- [ ] Implement `persistProgress` — save to MMKV after every tap and undo
+- [ ] Implement haptic feedback — `impactLight` on tap/undo, `notificationSuccess` on win
+
+#### Step 6: Game Screen
+
+- [ ] Create `src/utils/formatTime.ts` — `formatTime(ms)` → `"M:SS"`
+- [ ] Create `src/components/Toolbar.tsx` — zoom reset (`Minimize2`) and undo (`Undo2`) buttons, absolute positioning, disabled states
+- [ ] Create `src/screens/PuzzleScreen.tsx` — wire `BoardView`, `Toolbar`, store actions, timer interval, navigation header with title and timer, zoom reset ref coordination
+- [ ] Implement win banner — `Animated.View` that slides up with spring animation on completion, shows "Solved!", time, and "Continue" button
+
+#### Step 7: Navigation
+
+- [ ] Create `src/navigation.tsx` — `RootStackParams` type, `createNativeStackNavigator`, three screens
+- [ ] Configure Home with `headerShown: false`
+- [ ] Configure global `headerBackTitleVisible: false`
+
+#### Step 8: Home Screen
+
+- [ ] Create `src/screens/HomeScreen.tsx` — `FlatList` of packs
+- [ ] Render pack cards with name, grid size, and completion count (`completed/total`)
+- [ ] Implement `useFocusEffect` to force re-render on back navigation
+
+#### Step 9: Pack Screen
+
+- [ ] Create `src/screens/PackScreen.tsx` — `FlatList` grid (`numColumns={5}`) of puzzle cells
+- [ ] Render puzzle number with completed/incomplete styling
+- [ ] Set screen title dynamically from pack name
+- [ ] Implement `useFocusEffect` to force re-render on back navigation
+
+#### Step 10: Theme + Wire Up App.tsx
+
+- [ ] Create `src/theme.ts` — `Theme` type (11 color properties), `light` and `dark` objects, `useTheme()` hook respecting system/user preference
+- [ ] Replace `App.tsx` — `GestureHandlerRootView` > `SafeAreaProvider` > `StatusBar` > `Navigation`
+- [ ] Verify light theme renders correctly
+- [ ] Verify dark theme renders correctly
+- [ ] Verify system theme switching works
+
+#### End-to-End Validation
+
+- [ ] Play through intro pack puzzle 1 start to finish
+- [ ] Verify undo reverts tap + auto-X neighbors in one step
+- [ ] Verify win detection triggers on correct solution
+- [ ] Verify win banner animation
+- [ ] Verify progress persists across app restart
+- [ ] Verify completion state shows on pack screen and home screen after back navigation
+- [ ] Verify pinch-to-zoom and pan on 8x8 and 10x10 boards
+- [ ] Verify zoom reset button works
+- [ ] Test on physical iOS device
+- [ ] Test on physical Android device
+
+---
+
+### Phase 2: Retention (post-Phase 1)
+
+Daily habit formation. Still local-only.
+
+- [ ] Daily puzzle — serve from pre-generated set
+- [ ] Daily streak tracking — local, UTC-based
+- [ ] Hint button — free, unlimited, reads pre-computed hint metadata from puzzle data
+- [ ] Pack progression tracking
+- [ ] Error highlighting toggle
+- [ ] Privacy policy (required before store submission)
+
+### Phase 3: Monetization (post-Phase 2)
+
+- [ ] Terms of service
+- [ ] Unlock-all-puzzles IAP (one-time purchase)
+- [ ] RevenueCat integration (client-side receipt validation)
+- [ ] App Store submission
+
+### Phase 4: Cloud (conditional — post-Phase 3)
+
+Only if Phases 1-3 prove retention and revenue.
+
+- [ ] Shared types package
+- [ ] Cloudflare Worker + D1 database
+- [ ] BetterAuth integration
+- [ ] Rate limiting on auth endpoints
+- [ ] Cloud sync (last-write-wins)
+- [ ] R2 puzzle storage for paid packs
+- [ ] Paid puzzle packs
+- [ ] RevenueCat webhook with HMAC verification
+- [ ] Purchase recovery flow
