@@ -1,5 +1,5 @@
 import { useColorScheme } from 'react-native';
-import { getSettings } from '../storage';
+import { useUserStore } from '../stores/userStore';
 
 export type Theme = {
   bg: string;
@@ -17,12 +17,13 @@ export type Theme = {
   onAccent: string;
   shadow: string;
 };
+
 export function useTheme(): Theme {
   const systemScheme = useColorScheme();
-  const settings = getSettings();
+  const themePref = useUserStore(s => s.settings.theme);
 
-  if (settings.theme === 'light') return light;
-  if (settings.theme === 'dark') return dark;
+  if (themePref === 'light') return light;
+  if (themePref === 'dark') return dark;
   return systemScheme === 'dark' ? dark : light;
 }
 

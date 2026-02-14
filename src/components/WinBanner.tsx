@@ -64,11 +64,13 @@ export function WinBanner() {
 const styles = StyleSheet.create({
   winBanner: {
     position: 'absolute',
-    bottom: 0,
+    bottom: -120,
     left: 0,
     right: 0,
     padding: SPACING_XL,
     alignItems: 'center',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   winText: { fontSize: FONT_SIZE_XL, fontWeight: FONT_WEIGHT_BOLD },
   winTime: { fontSize: FONT_SIZE_MD, marginTop: SPACING_XS },
@@ -76,5 +78,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE_MD,
     marginTop: SPACING_MD,
     textDecorationLine: 'underline',
+    marginBottom: 120,
   },
 });

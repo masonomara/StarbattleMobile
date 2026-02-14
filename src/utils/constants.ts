@@ -56,9 +56,9 @@ export const SHADOW_MD: ViewStyle = {
 export const CELL_SIZE = 38;
 
 // Border widths
-export const REGION_BORDER_WIDTH = 1.5;
+export const REGION_BORDER_WIDTH = 1;
 export const INNER_BORDER_WIDTH = 0.5;
-export const INNER_BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
+export const BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
 
 // Star glyph
 export const STAR_SYMBOL = '★';
@@ -68,7 +68,7 @@ export const STAR_FONT_WEIGHT = '700' as const;
 // Mark (X) glyph
 export const MARK_SYMBOL = '✕';
 export const MARK_FONT_SIZE_RATIO = 0.4;
-export const MARK_FONT_WEIGHT = '300' as const;
+export const MARK_FONT_WEIGHT = '700' as const;
 
 // Pinch-to-zoom limits
 export const MIN_ZOOM = 1;

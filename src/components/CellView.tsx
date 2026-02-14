@@ -5,7 +5,7 @@ import { usePuzzleStore } from '../store';
 import {
   REGION_BORDER_WIDTH,
   INNER_BORDER_WIDTH,
-  INNER_BORDER_STYLE,
+  BORDER_STYLE,
   CELL_SIZE,
   STAR_SYMBOL,
   STAR_FONT_SIZE_RATIO,
@@ -64,7 +64,7 @@ export const CellView = memo(function CellView({
           borderRightWidth: borders.right
             ? REGION_BORDER_WIDTH
             : INNER_BORDER_WIDTH,
-          borderStyle: INNER_BORDER_STYLE,
+          borderStyle: BORDER_STYLE,
           borderTopColor: borders.top ? theme.regionBorder : theme.innerBorder,
           borderBottomColor: borders.bottom
             ? theme.regionBorder
