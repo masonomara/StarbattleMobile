@@ -48,8 +48,6 @@ Local-only. No server, no auth, no sync, no purchases, no ads.
 
 10. **Undo button.**
 
-11. **Hint button.** Free, unlimited. Reads pre-computed hints from puzzle metadata. No solver on device.
-
 12. **Auto-X toggle.** When placing a star, automatically X out conflicting cells.
 
 13. **Light/dark theme.** Follow system default.
@@ -69,6 +67,8 @@ Still local-only. The goal is daily habit formation.
 16. **Daily puzzle.** Serve from the pre-generated set (Phase 0, step 2).
 
 17. **Daily streak tracking.** Local, UTC-based.
+
+11. **Hint button.** Free, unlimited. Reads pre-computed hints from puzzle metadata. No solver on device.
 
 18. **Pack progression tracking.** Local. Track completion percentage per pack.
 
