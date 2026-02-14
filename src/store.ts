@@ -153,6 +153,76 @@ function rebuildAutoMarks(
   return { neighbors, rowsCols };
 }
 
+/** Find all stars that violate constraints (adjacency, row/col/region overflow). */
+function computeErrors(
+  cells: CellValue[],
+  boardSize: number,
+  puzzle: Puzzle,
+): Set<string> {
+  const errors = new Set<string>();
+
+  // Collect star positions
+  const stars: { r: number; c: number }[] = [];
+  for (let i = 0; i < cells.length; i++) {
+    if (cells[i] === 1) {
+      stars.push({ r: Math.floor(i / boardSize), c: i % boardSize });
+    }
+  }
+
+  // Check adjacency — any two stars touching (including diagonals)
+  for (let i = 0; i < stars.length; i++) {
+    for (let j = i + 1; j < stars.length; j++) {
+      const dr = Math.abs(stars[i].r - stars[j].r);
+      const dc = Math.abs(stars[i].c - stars[j].c);
+      if (dr <= 1 && dc <= 1) {
+        errors.add(`${stars[i].r},${stars[i].c}`);
+        errors.add(`${stars[j].r},${stars[j].c}`);
+      }
+    }
+  }
+
+  // Check rows
+  for (let r = 0; r < boardSize; r++) {
+    const rowStars: number[] = [];
+    for (let c = 0; c < boardSize; c++) {
+      if (cells[r * boardSize + c] === 1) rowStars.push(c);
+    }
+    if (rowStars.length > puzzle.stars) {
+      for (const c of rowStars) errors.add(`${r},${c}`);
+    }
+  }
+
+  // Check columns
+  for (let c = 0; c < boardSize; c++) {
+    const colStars: number[] = [];
+    for (let r = 0; r < boardSize; r++) {
+      if (cells[r * boardSize + c] === 1) colStars.push(r);
+    }
+    if (colStars.length > puzzle.stars) {
+      for (const r of colStars) errors.add(`${r},${c}`);
+    }
+  }
+
+  // Check regions
+  const regionMap = new Map<number, { r: number; c: number }[]>();
+  for (let r = 0; r < boardSize; r++) {
+    for (let c = 0; c < boardSize; c++) {
+      if (cells[r * boardSize + c] === 1) {
+        const region = puzzle.regions[r][c];
+        if (!regionMap.has(region)) regionMap.set(region, []);
+        regionMap.get(region)!.push({ r, c });
+      }
+    }
+  }
+  for (const regionStars of regionMap.values()) {
+    if (regionStars.length > puzzle.stars) {
+      for (const { r, c } of regionStars) errors.add(`${r},${c}`);
+    }
+  }
+
+  return errors;
+}
+
 /** Check if every star is on a solution coordinate. */
 function checkWin(
   cells: CellValue[],
@@ -276,10 +346,15 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
     if (settings.haptics) hapticLight();
 
+    const newErrors = settings.highlightErrors
+      ? computeErrors(newCells, boardSize, puzzle)
+      : new Set<string>();
+
     set(state => ({
       cells: newCells,
       autoMarksNeighbors: newNeighbors,
       autoMarksRowsCols: newRowsCols,
+      errorCells: newErrors,
       moveLog: [
         ...state.moveLog,
         {
@@ -360,10 +435,17 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const settings = useUserStore.getState().settings;
     if (settings.haptics) hapticLight();
 
+    const { puzzle, boardSize } = get();
+    const undoErrors =
+      settings.highlightErrors && puzzle
+        ? computeErrors(newCells, boardSize, puzzle)
+        : new Set<string>();
+
     set({
       cells: newCells,
       autoMarksNeighbors: new Set(lastMove.prevAutoMarksNeighbors),
       autoMarksRowsCols: new Set(lastMove.prevAutoMarksRowsCols),
+      errorCells: undoErrors,
       moveLog: moveLog.slice(0, -1),
     });
     persistProgress(get(), false);

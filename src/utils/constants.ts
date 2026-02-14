@@ -53,18 +53,18 @@ export const SHADOW_MD: ViewStyle = {
 };
 
 // Cell dimensions
-export const CELL_SIZE = 38;
+export const CELL_SIZE = 32;
 
 // Border widths
-export const REGION_BORDER_WIDTH = 1.5;
+export const REGION_BORDER_WIDTH = 3;
 export const INNER_BORDER_WIDTH = 0.5;
-export const BORDER_STYLE: 'solid' | 'dashed' | 'dotted' = 'solid';
 
 // Star icon
-export const STAR_ICON_SIZE = 24;
+export const STAR_ICON_SIZE = 22;
 
 // Mark (X) icon
-export const MARK_ICON_SIZE = 16
+export const MARK_ICON_SIZE = 14;
+
 // Pinch-to-zoom limits
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 3;

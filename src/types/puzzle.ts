@@ -23,10 +23,3 @@ export type Pack = {
   stars: number;
   puzzles: RawPuzzle[];
 };
-
-export type Borders = {
-  top: boolean;
-  bottom: boolean;
-  left: boolean;
-  right: boolean;
-};

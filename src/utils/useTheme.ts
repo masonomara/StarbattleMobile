@@ -28,20 +28,20 @@ export function useTheme(): Theme {
 }
 
 const light: Theme = {
-  bg: '#eeece7',
-  card: '#eeece7',
-  text: '#000000',
-  textSecondary: '#888888',
-  regionBorder: '#000000',
-  innerBorder: '#000000',
-  cellBg: '#eeece7',
-  starColor: '#1A1A1A',
-  starErrorColor: '#B7404E',
-  markColor: '#B7404E',
+  bg: '#fff',
+  card: '#fff',
+  text: '#0C0F14',
+  textSecondary: '#8D8D8D',
+  regionBorder: '#0C0F14',
+  innerBorder: '#858689',
+  cellBg: '#fff',
+  starColor: '#0C0F14',
+  starErrorColor: '#BC261A',
+  markColor: '#BC261A',
   accent: '#4CAF50',
   accentMuted: '#4CAF5020',
-  onAccent: '#eeece7',
-  shadow: '#000000',
+  onAccent: '#fff',
+  shadow: '#0C0F14',
 };
 
 const dark: Theme = {

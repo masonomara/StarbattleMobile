@@ -35,8 +35,12 @@ export function Navigation() {
           name="Puzzle"
           component={PuzzleScreen}
           options={{
-            headerTransparent: true,
+            // headerTransparent: true,
             title: '',
+            headerTransparent: true,
+            headerShadowVisible: false,
+            headerBlurEffect: 'light',
+            headerTintColor: '#000000',
           }}
         />
       </Stack.Navigator>

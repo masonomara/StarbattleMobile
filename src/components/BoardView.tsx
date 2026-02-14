@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { CellView } from './CellView';
+import { CellGridSvg } from './CellGridSvg';
+import { RegionBordersSvg } from './RegionBordersSvg';
 import { usePuzzleStore } from '../store';
-
-import type { Puzzle, Borders } from '../types/puzzle';
-import { CELL_SIZE, REGION_BORDER_WIDTH } from '../utils/constants';
+import type { Puzzle } from '../types/puzzle';
+import { CELL_SIZE } from '../utils/constants';
 import { useTheme } from '../utils/useTheme';
 
 type Props = {
@@ -19,49 +20,42 @@ export function BoardView({ puzzle, scale, translateX, translateY }: Props) {
   const tapCell = usePuzzleStore(s => s.tapCell);
   const boardSize = CELL_SIZE * puzzle.size;
 
-  const cellBorders = useMemo(() => {
-    const borders: Borders[] = [];
-    for (let row = 0; row < puzzle.size; row++) {
-      for (let col = 0; col < puzzle.size; col++) {
-        const region = puzzle.regions[row][col];
-        borders.push({
-          top: row === 0 || puzzle.regions[row - 1][col] !== region,
-          bottom:
-            row === puzzle.size - 1 || puzzle.regions[row + 1][col] !== region,
-          left: col === 0 || puzzle.regions[row][col - 1] !== region,
-          right:
-            col === puzzle.size - 1 || puzzle.regions[row][col + 1] !== region,
-        });
-      }
-    }
-    return borders;
-  }, [puzzle]);
+  const cells: number[] = [];
+  for (let i = 0; i < puzzle.size * puzzle.size; i++) {
+    cells.push(i);
+  }
 
   return (
     <Animated.View
-        style={[
-          styles.board,
-          {
-            width: boardSize,
-            height: boardSize,
-            transform: [{ translateX }, { translateY }, { scale }],
-          },
-        ]}
-      >
-        {cellBorders.map((borders, i) => {
-          const row = Math.floor(i / puzzle.size);
-          const col = i % puzzle.size;
-          return (
-            <CellView
-              key={i}
-              row={row}
-              col={col}
-              borders={borders}
-              theme={theme}
-              onPress={tapCell}
-            />
-          );
-        })}
+      style={[
+        styles.board,
+        {
+          width: boardSize,
+          height: boardSize,
+          transform: [{ translateX }, { translateY }, { scale }],
+        },
+      ]}
+    >
+      {cells.map(i => {
+        const row = Math.floor(i / puzzle.size);
+        const col = i % puzzle.size;
+        return (
+          <CellView
+            key={i}
+            row={row}
+            col={col}
+            theme={theme}
+            onPress={tapCell}
+          />
+        );
+      })}
+      <CellGridSvg size={puzzle.size} theme={theme} />
+
+      <RegionBordersSvg
+        size={puzzle.size}
+        regions={puzzle.regions}
+        theme={theme}
+      />
     </Animated.View>
   );
 }
@@ -71,6 +65,5 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    outlineWidth: REGION_BORDER_WIDTH,
   },
 });
