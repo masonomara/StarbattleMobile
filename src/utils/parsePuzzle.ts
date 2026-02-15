@@ -1,4 +1,4 @@
-import type { RawPuzzle, Puzzle } from '../types/puzzle';
+import type { RawPuzzle, Puzzle, HintStep } from '../types/puzzle';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
@@ -27,5 +27,6 @@ export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
     stars,
     regions,
     solution: raw.solution,
+    hints: (raw.hints ?? []) as HintStep[],
   };
 }

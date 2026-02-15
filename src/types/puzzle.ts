@@ -1,9 +1,16 @@
 export type Coord = [number, number];
 
+export type HintStep = {
+  rule: string;
+  level: number;
+  placements: Coord[];
+  marks: Coord[];
+};
+
 export type RawPuzzle = {
   sbn: string;
   solution: Coord[];
-  hints?: unknown; // Hints aren't used yet, will be installed later
+  hints?: HintStep[];
 };
 
 export type Puzzle = {
@@ -12,6 +19,7 @@ export type Puzzle = {
   stars: number;
   regions: number[][];
   solution: Coord[];
+  hints: HintStep[];
 };
 
 export type Pack = {

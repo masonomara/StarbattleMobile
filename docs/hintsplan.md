@@ -333,18 +333,18 @@ No new files needed. No changes to the solver or pack JSON format.
 
 ## TODO
 
-### Phase 1: Types & Parsing
+### Phase 1: Types & Parsing ✓
 
 **`src/types/puzzle.ts`**
 
-- [ ] Add `HintStep` type: `{ rule: string; level: number; placements: Coord[]; marks: Coord[] }`
-- [ ] Change `RawPuzzle.hints` from `hints?: unknown` to `hints?: HintStep[]`
-- [ ] Add `hints: HintStep[]` to `Puzzle` type (required, not optional)
+- [x] Add `HintStep` type: `{ rule: string; level: number; placements: Coord[]; marks: Coord[] }`
+- [x] Change `RawPuzzle.hints` from `hints?: unknown` to `hints?: HintStep[]`
+- [x] Add `hints: HintStep[]` to `Puzzle` type (required, not optional)
 
 **`src/utils/parsePuzzle.ts`**
 
-- [ ] Import `HintStep` from `../types/puzzle`
-- [ ] Add `hints: (raw.hints ?? []) as HintStep[]` to the returned `Puzzle` object
+- [x] Import `HintStep` from `../types/puzzle`
+- [x] Add `hints: (raw.hints ?? []) as HintStep[]` to the returned `Puzzle` object
 
 ### Phase 2: Store State & Actions
 
