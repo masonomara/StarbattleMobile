@@ -23,7 +23,7 @@ type Props = NativeStackScreenProps<RootStackParams, 'Home'>;
 export function HomeScreen({ navigation }: Props) {
   const packs = getAllPacks();
   const theme = useTheme();
-  const packProgress = useUserStore(s => s.packProgress);
+  const getCompletedCount = useUserStore(s => s.getCompletedCount);
 
   const [focusCount, setFocusCount] = useState(0);
   useFocusEffect(
@@ -34,7 +34,7 @@ export function HomeScreen({ navigation }: Props) {
 
   const renderPack = ({ item }: { item: Pack }) => {
     const total = item.puzzles.length;
-    const completed = packProgress[item.id]?.completedCount ?? 0;
+    const completed = getCompletedCount(item.id, total);
 
     return (
       <Pressable

@@ -34,6 +34,7 @@ export function PuzzleScreen({ route, navigation }: Props) {
   const timeMs = usePuzzleStore(s => s.timeMs);
   const tick = usePuzzleStore(s => s.tick);
   const showTimer = useUserStore(s => s.settings.showTimer);
+  const hideToolbar = useUserStore(s => s.settings.hideToolbar);
 
   const gridSize = pack?.gridSize ?? 5;
 
@@ -93,9 +94,7 @@ export function PuzzleScreen({ route, navigation }: Props) {
         useUserStore.getState().saveProgress({
           puzzleId: state.puzzle.id,
           cells: state.cells,
-          autoMarksNeighbors: [...state.autoMarksNeighbors],
-          autoMarksRowsCols: [...state.autoMarksRowsCols],
-          autoMarksRegions: [...state.autoMarksRegions],
+          autoMarks: [...state.autoMarks],
           timeMs: state.timeMs,
           completed: false,
           updatedAt: Date.now(),
@@ -153,7 +152,7 @@ export function PuzzleScreen({ route, navigation }: Props) {
           />
         </View>
       </GestureDetector>
-      <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
+      {!hideToolbar && <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />}
       <WinBanner />
       <SettingsModal
         visible={settingsVisible}

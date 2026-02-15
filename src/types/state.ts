@@ -5,25 +5,11 @@ export type TapMode = 'cycle' | 'mark' | 'star' | 'erase';
 export type Progress = {
   puzzleId: string;
   cells: CellValue[];
-  autoMarksNeighbors?: number[];
-  autoMarksRowsCols?: number[];
-  autoMarksRegions?: number[];
+  autoMarks?: number[];
   timeMs: number;
   completed: boolean;
   completedAt?: number;
   updatedAt: number;
-};
-
-export type PackProgress = {
-  packId: string;
-  completedCount: number;
-  totalCount: number;
-  updatedAt: number;
-};
-
-export type UserProfile = {
-  id: string;
-  isAnonymous: boolean;
 };
 
 export type UserSettings = {
@@ -32,6 +18,7 @@ export type UserSettings = {
   autoXRegions: boolean;
   highlightErrors: boolean;
   showTimer: boolean;
+  hideToolbar: boolean;
   theme: 'system' | 'light' | 'dark';
   haptics: boolean;
 };
@@ -43,14 +30,10 @@ export type CellChange = {
 
 export type Move = {
   changes: CellChange[];
-  prevAutoMarksNeighbors: number[];
-  prevAutoMarksRowsCols: number[];
-  prevAutoMarksRegions: number[];
+  prevAutoMarks: number[];
 };
 
 export type RedoEntry = {
   cellValues: { index: number; value: CellValue }[];
-  autoMarksNeighbors: number[];
-  autoMarksRowsCols: number[];
-  autoMarksRegions: number[];
+  autoMarks: number[];
 };

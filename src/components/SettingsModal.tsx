@@ -112,6 +112,12 @@ export function SettingsModal({ visible, onClose }: Props) {
             theme={theme}
           />
           <ToggleRow
+            label="Hide Toolbar"
+            value={settings.hideToolbar}
+            onToggle={v => updateSettings({ hideToolbar: v })}
+            theme={theme}
+          />
+          <ToggleRow
             label="Haptics"
             value={settings.haptics}
             onToggle={v => updateSettings({ haptics: v })}
