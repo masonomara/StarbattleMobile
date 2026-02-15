@@ -53,7 +53,7 @@ export function useDrawGesture(
 
   const markCell = useCallback((row: number, col: number) => {
     const state = usePuzzleStore.getState();
-    const idx = row * state.boardSize + col;
+    const idx = row * state.puzzle!.size + col;
 
     if (visitedCells.current.has(idx)) return;
     visitedCells.current.add(idx);
@@ -61,20 +61,18 @@ export function useDrawGesture(
     const isErase = state.tapMode === 'erase';
 
     if (isErase) {
-      // Erase mode: clear non-empty cells
       if (state.cells[idx] === 0) return;
-      strokeChanges.current.push({ index: idx, previousValue: state.cells[idx] });
-      usePuzzleStore.setState(prev => {
-        const newCells = [...prev.cells];
+      strokeChanges.current.push({ index: idx, prev: state.cells[idx], next: 0 });
+      usePuzzleStore.setState(s => {
+        const newCells = [...s.cells];
         newCells[idx] = 0;
         return { cells: newCells };
       });
     } else {
-      // All other modes: mark empty cells
       if (state.cells[idx] !== 0) return;
-      strokeChanges.current.push({ index: idx, previousValue: 0 });
-      usePuzzleStore.setState(prev => {
-        const newCells = [...prev.cells];
+      strokeChanges.current.push({ index: idx, prev: 0, next: 2 });
+      usePuzzleStore.setState(s => {
+        const newCells = [...s.cells];
         newCells[idx] = 2;
         return { cells: newCells };
       });
@@ -90,7 +88,7 @@ export function useDrawGesture(
     usePuzzleStore.setState(prev => {
       const newCells = [...prev.cells];
       for (const change of changes) {
-        newCells[change.index] = change.previousValue;
+        newCells[change.index] = change.prev;
       }
       return { cells: newCells };
     });
@@ -122,8 +120,6 @@ export function useDrawGesture(
       if (changes.length > 0) {
         usePuzzleStore.getState().applyDrawStroke(changes);
       }
-      strokeChanges.current = [];
-      visitedCells.current = new Set();
     })
     .onFinalize(() => {
       // If onEnd didn't fire (gesture cancelled), revert preview

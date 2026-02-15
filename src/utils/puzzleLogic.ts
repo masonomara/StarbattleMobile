@@ -77,7 +77,7 @@ export function applyMarks(
 ): void {
   for (const markIdx of marks) {
     if (newCells[markIdx] === 0) {
-      changes.push({ index: markIdx, previousValue: 0 });
+      changes.push({ index: markIdx, prev: 0, next: 2 });
       newCells[markIdx] = 2;
     }
     markSet.add(markIdx);
@@ -91,7 +91,7 @@ export function clearAutoMarks(
 ): void {
   for (const cellIdx of autoMarks) {
     if (newCells[cellIdx] === 2) {
-      changes.push({ index: cellIdx, previousValue: 2 });
+      changes.push({ index: cellIdx, prev: 2, next: 0 });
       newCells[cellIdx] = 0;
     }
   }

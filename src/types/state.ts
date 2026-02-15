@@ -25,15 +25,11 @@ export type UserSettings = {
 
 export type CellChange = {
   index: number;
-  previousValue: CellValue;
+  prev: CellValue;
+  next: CellValue;
 };
 
 export type Move = {
   changes: CellChange[];
-  prevAutoMarks: number[];
-};
-
-export type RedoEntry = {
-  cellValues: { index: number; value: CellValue }[];
   autoMarks: number[];
 };

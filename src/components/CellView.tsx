@@ -21,10 +21,13 @@ export const CellView = memo(function CellView({
   onPress,
 }: Props) {
   const { value, hasError } = usePuzzleStore(
-    useShallow(s => ({
-      value: s.cells[row * s.boardSize + col],
-      hasError: s.errorCells.has(`${row},${col}`),
-    })),
+    useShallow(s => {
+      const idx = row * s.puzzle!.size + col;
+      return {
+        value: s.cells[idx],
+        hasError: s.errorCells.has(`${row},${col}`),
+      };
+    }),
   );
 
   const handlePress = useCallback(() => onPress(row, col), [onPress, row, col]);

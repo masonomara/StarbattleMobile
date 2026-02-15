@@ -9,25 +9,18 @@ import {
   checkWin,
 } from './utils/puzzleLogic';
 import { persistProgress } from './utils/persistProgress';
-import type {
-  CellValue,
-  Move,
-  CellChange,
-  RedoEntry,
-  TapMode,
-} from './types/state';
+import type { CellValue, Move, CellChange, TapMode } from './types/state';
 import type { Puzzle } from './types/puzzle';
 
 type PuzzleState = {
   puzzle: Puzzle | null;
-  boardSize: number;
   cells: CellValue[];
   autoMarks: Set<number>;
   errorCells: Set<string>;
   completed: boolean;
   timeMs: number;
   moveLog: Move[];
-  redoStack: RedoEntry[];
+  redoStack: Move[];
   tapMode: TapMode;
   loadPuzzle: (puzzle: Puzzle) => void;
   tapCell: (row: number, col: number) => void;
@@ -42,7 +35,6 @@ type PuzzleState = {
 
 export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   puzzle: null,
-  boardSize: 0,
   cells: [],
   autoMarks: new Set<number>(),
   errorCells: new Set<string>(),
@@ -57,27 +49,28 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const saved = useUserStore.getState().getProgress(puzzle.id);
     set({
       puzzle,
-      boardSize: puzzle.size,
       cells: saved ? saved.cells : new Array<CellValue>(total).fill(0),
       autoMarks: new Set(saved?.autoMarks ?? []),
       errorCells: new Set<string>(),
       completed: saved?.completed ?? false,
       timeMs: saved?.timeMs ?? 0,
       moveLog: [],
+      redoStack: [],
     });
   },
 
   tapCell: (row: number, col: number) => {
-    const { cells, boardSize, completed, puzzle, tapMode, autoMarks } = get();
+    const { cells, completed, puzzle, tapMode, autoMarks } = get();
     if (completed || !puzzle) return;
 
+    const size = puzzle.size;
     const settings = useUserStore.getState().settings;
-    const idx = row * boardSize + col;
+    const idx = row * size + col;
     const current = cells[idx];
 
     const changes: CellChange[] = [];
     const newCells = [...cells];
-    const prevAutoMarks = [...autoMarks];
+    const savedAutoMarks = [...autoMarks];
     let newAutoMarks = new Set(autoMarks);
 
     let next: CellValue;
@@ -96,33 +89,33 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
         next = current === 0 ? 2 : current === 2 ? 1 : 0;
         break;
     }
-    changes.push({ index: idx, previousValue: current });
+    changes.push({ index: idx, prev: current, next });
     newCells[idx] = next;
 
     newAutoMarks.delete(idx);
 
     if (next === 1) {
-      const marks = computeAutoXForStar(newCells, boardSize, puzzle, settings, row, col);
+      const marks = computeAutoXForStar(newCells, size, puzzle, settings, row, col);
       applyMarks(newCells, changes, newAutoMarks, marks);
     } else if (current === 1 && next === 0) {
-      newAutoMarks = rebuildAutoMarks(newCells, changes, newAutoMarks, boardSize, puzzle, settings);
+      newAutoMarks = rebuildAutoMarks(newCells, changes, newAutoMarks, size, puzzle, settings);
     }
 
     if (settings.haptics) hapticLight();
 
     const newErrors = settings.highlightErrors
-      ? computeErrors(newCells, boardSize, puzzle)
+      ? computeErrors(newCells, size, puzzle)
       : new Set<string>();
 
     set(state => ({
       cells: newCells,
       autoMarks: newAutoMarks,
       errorCells: newErrors,
-      moveLog: [...state.moveLog, { changes, prevAutoMarks }],
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }],
       redoStack: [],
     }));
 
-    const won = checkWin(newCells, boardSize, puzzle);
+    const won = checkWin(newCells, size, puzzle);
     if (won) {
       if (settings.haptics) hapticSuccess();
       set({ completed: true });
@@ -140,22 +133,23 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   recomputeAutoMarks: () => {
-    const { cells, boardSize, puzzle, completed, autoMarks } = get();
+    const { cells, puzzle, completed, autoMarks } = get();
     if (!puzzle || completed) return;
 
+    const size = puzzle.size;
     const settings = useUserStore.getState().settings;
     const changes: CellChange[] = [];
     const newCells = [...cells];
-    const prevAutoMarks = [...autoMarks];
+    const savedAutoMarks = [...autoMarks];
 
-    const newAutoMarks = rebuildAutoMarks(newCells, changes, autoMarks, boardSize, puzzle, settings);
+    const newAutoMarks = rebuildAutoMarks(newCells, changes, autoMarks, size, puzzle, settings);
 
     if (changes.length === 0) return;
 
     set(state => ({
       cells: newCells,
       autoMarks: newAutoMarks,
-      moveLog: [...state.moveLog, { changes, prevAutoMarks }],
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }],
       redoStack: [],
     }));
     const s = get();
@@ -168,35 +162,35 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
     const lastMove = moveLog[moveLog.length - 1];
 
-    const redoEntry: RedoEntry = {
-      cellValues: lastMove.changes.map(c => ({
+    const redoMove: Move = {
+      changes: lastMove.changes.map(c => ({
         index: c.index,
-        value: cells[c.index],
+        prev: cells[c.index],
+        next: c.prev,
       })),
       autoMarks: [...autoMarks],
     };
 
     const newCells = [...cells];
     for (let i = lastMove.changes.length - 1; i >= 0; i--) {
-      const { index, previousValue } = lastMove.changes[i];
-      newCells[index] = previousValue;
+      newCells[lastMove.changes[i].index] = lastMove.changes[i].prev;
     }
 
     const settings = useUserStore.getState().settings;
     if (settings.haptics) hapticLight();
 
-    const { puzzle, boardSize } = get();
+    const { puzzle } = get();
     const undoErrors =
       settings.highlightErrors && puzzle
-        ? computeErrors(newCells, boardSize, puzzle)
+        ? computeErrors(newCells, puzzle.size, puzzle)
         : new Set<string>();
 
     set(state => ({
       cells: newCells,
-      autoMarks: new Set(lastMove.prevAutoMarks),
+      autoMarks: new Set(lastMove.autoMarks),
       errorCells: undoErrors,
       moveLog: moveLog.slice(0, -1),
-      redoStack: [...state.redoStack, redoEntry],
+      redoStack: [...state.redoStack, redoMove],
     }));
     const s = get();
     persistProgress(s.puzzle, s.cells, s.autoMarks, s.timeMs, s.completed, false);
@@ -208,35 +202,38 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
     const entry = redoStack[redoStack.length - 1];
 
-    const changes: CellChange[] = entry.cellValues.map(cv => ({
-      index: cv.index,
-      previousValue: cells[cv.index],
-    }));
-    const prevAutoMarks = [...autoMarks];
+    const undoMove: Move = {
+      changes: entry.changes.map(c => ({
+        index: c.index,
+        prev: cells[c.index],
+        next: c.prev,
+      })),
+      autoMarks: [...autoMarks],
+    };
 
     const newCells = [...cells];
-    for (const cv of entry.cellValues) {
-      newCells[cv.index] = cv.value;
+    for (const c of entry.changes) {
+      newCells[c.index] = c.prev;
     }
 
     const settings = useUserStore.getState().settings;
     if (settings.haptics) hapticLight();
 
-    const { puzzle, boardSize } = get();
+    const { puzzle } = get();
     const redoErrors =
       settings.highlightErrors && puzzle
-        ? computeErrors(newCells, boardSize, puzzle)
+        ? computeErrors(newCells, puzzle!.size, puzzle!)
         : new Set<string>();
 
     set(state => ({
       cells: newCells,
       autoMarks: new Set(entry.autoMarks),
       errorCells: redoErrors,
-      moveLog: [...state.moveLog, { changes, prevAutoMarks }],
+      moveLog: [...state.moveLog, undoMove],
       redoStack: redoStack.slice(0, -1),
     }));
 
-    const won = checkWin(newCells, boardSize, puzzle!);
+    const won = checkWin(newCells, puzzle!.size, puzzle!);
     if (won) {
       if (settings.haptics) hapticSuccess();
       set({ completed: true });
@@ -246,20 +243,27 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   applyDrawStroke: (changes: CellChange[]) => {
-    const { completed, puzzle, boardSize } = get();
+    const { completed, puzzle } = get();
     if (completed || !puzzle || changes.length === 0) return;
 
+    const size = puzzle.size;
     const settings = useUserStore.getState().settings;
 
     set(state => {
+      const newAutoMarks = new Set(state.autoMarks);
+      for (const c of changes) {
+        if (state.cells[c.index] !== 2) newAutoMarks.delete(c.index);
+      }
+
       const currentErrors = settings.highlightErrors
-        ? computeErrors(state.cells, boardSize, puzzle)
+        ? computeErrors(state.cells, size, puzzle)
         : new Set<string>();
       return {
+        autoMarks: newAutoMarks,
         errorCells: currentErrors,
         moveLog: [
           ...state.moveLog,
-          { changes, prevAutoMarks: [...state.autoMarks] },
+          { changes, autoMarks: [...state.autoMarks] },
         ],
         redoStack: [],
       };
@@ -276,19 +280,19 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const changes: CellChange[] = [];
     for (let i = 0; i < cells.length; i++) {
       if (cells[i] !== 0) {
-        changes.push({ index: i, previousValue: cells[i] });
+        changes.push({ index: i, prev: cells[i], next: 0 });
       }
     }
     if (changes.length === 0) return;
 
-    const prevAutoMarks = [...autoMarks];
+    const savedAutoMarks = [...autoMarks];
     const newCells = new Array<CellValue>(cells.length).fill(0) as CellValue[];
 
     set(state => ({
       cells: newCells,
       autoMarks: new Set<number>(),
       errorCells: new Set<string>(),
-      moveLog: [...state.moveLog, { changes, prevAutoMarks }],
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }],
       redoStack: [],
     }));
     const s = get();

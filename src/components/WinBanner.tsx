@@ -102,7 +102,7 @@ export function WinBanner() {
 const styles = StyleSheet.create({
   winBanner: {
     position: 'absolute',
-    bottom: 0,
+    bottom: -80,
     left: 0,
     right: 0,
     paddingTop: WIN_BANNER_PADDING,
