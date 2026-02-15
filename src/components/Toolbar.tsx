@@ -12,6 +12,8 @@ import {
   Eraser,
 } from 'lucide-react-native';
 import { usePuzzleStore } from '../store';
+import { hapticMedium } from '../haptics';
+import { useUserStore } from '../stores/userStore';
 import type { TapMode } from '../types/state';
 import { RADIUS_LG, SHADOW_MD, DISABLED_OPACITY } from '../utils/constants';
 import { useTheme } from '../utils/useTheme';
@@ -30,6 +32,7 @@ type Props = {
 
 export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
   const theme = useTheme();
+  const hapticsEnabled = useUserStore(s => s.settings.haptics);
   const undo = usePuzzleStore(s => s.undo);
   const redo = usePuzzleStore(s => s.redo);
   const clearBoard = usePuzzleStore(s => s.clearBoard);
@@ -47,7 +50,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
   return (
     <View style={styles.toolbar}>
       <Pressable
-        onPress={onZoomReset}
+        onPress={() => { if (hapticsEnabled) hapticMedium(); onZoomReset(); }}
         disabled={zoomDisabled}
         style={[
           styles.button,
@@ -59,12 +62,13 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
       </Pressable>
 
       <Pressable
-        onPress={() =>
+        onPress={() => {
+          if (hapticsEnabled) hapticMedium();
           Alert.alert(
             "Don't be a cheater.",
             'Just kidding, free hints are coming soon!',
-          )
-        }
+          );
+        }}
         style={[
           styles.button,
           { backgroundColor: theme.card, shadowColor: theme.shadow },
@@ -74,7 +78,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
       </Pressable>
 
       <Pressable
-        onPress={cycleTapMode}
+        onPress={() => { if (hapticsEnabled) hapticMedium(); cycleTapMode(); }}
         disabled={completed}
         style={[
           styles.button,
@@ -89,7 +93,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
       </Pressable>
 
       <Pressable
-        onPress={undo}
+        onPress={() => { if (hapticsEnabled) hapticMedium(); undo(); }}
         disabled={undoDisabled}
         style={[
           styles.button,
@@ -101,7 +105,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
       </Pressable>
 
       <Pressable
-        onPress={redo}
+        onPress={() => { if (hapticsEnabled) hapticMedium(); redo(); }}
         disabled={redoDisabled}
         style={[
           styles.button,
@@ -113,7 +117,8 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
       </Pressable>
 
       <Pressable
-        onPress={() =>
+        onPress={() => {
+          if (hapticsEnabled) hapticMedium();
           Alert.alert(
             'Clear Board',
             'Are you sure you want to clear the board?',
@@ -121,8 +126,8 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
               { text: 'Cancel', style: 'cancel' },
               { text: 'Clear', style: 'destructive', onPress: clearBoard },
             ],
-          )
-        }
+          );
+        }}
         disabled={clearDisabled}
         style={[
           styles.button,
@@ -139,12 +144,12 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
 const styles = StyleSheet.create({
   toolbar: {
     position: 'absolute',
-    bottom: 88,
+    bottom: 56,
     left: 0,
     right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 16,
+    gap: 12,
   },
   button: {
     width: 44,

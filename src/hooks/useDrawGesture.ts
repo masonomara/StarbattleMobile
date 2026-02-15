@@ -7,8 +7,6 @@ import { CELL_SIZE } from '../utils/constants';
 import type { CellChange } from '../types/state';
 
 type BoardLayout = {
-  x: number;
-  y: number;
   width: number;
   height: number;
 };
@@ -24,8 +22,8 @@ export function useDrawGesture(
   const visitedCells = useRef(new Set<number>());
   const committed = useRef(false);
 
-  const screenToCell = useCallback(
-    (absoluteX: number, absoluteY: number): { row: number; col: number } | null => {
+  const viewToCell = useCallback(
+    (x: number, y: number): { row: number; col: number } | null => {
       const layout = boardLayout.current;
       if (!layout) return null;
 
@@ -34,9 +32,9 @@ export function useDrawGesture(
       const ty = savedTranslateY.current;
       const boardPixels = CELL_SIZE * puzzleSize;
 
-      // Touch relative to board-area center
-      const relX = absoluteX - layout.x - layout.width / 2;
-      const relY = absoluteY - layout.y - layout.height / 2;
+      // Touch relative to board-area center (x,y are already view-relative)
+      const relX = x - layout.width / 2;
+      const relY = y - layout.height / 2;
 
       // Reverse transform: subtract translate, divide by scale, shift to top-left origin
       const bx = (relX - tx) / sc + boardPixels / 2;
@@ -109,13 +107,13 @@ export function useDrawGesture(
 
       if (usePuzzleStore.getState().completed) return;
 
-      const cell = screenToCell(e.absoluteX, e.absoluteY);
+      const cell = viewToCell(e.x, e.y);
       if (cell) markCell(cell.row, cell.col);
     })
     .onUpdate(e => {
       if (usePuzzleStore.getState().completed) return;
 
-      const cell = screenToCell(e.absoluteX, e.absoluteY);
+      const cell = viewToCell(e.x, e.y);
       if (cell) markCell(cell.row, cell.col);
     })
     .onEnd(() => {

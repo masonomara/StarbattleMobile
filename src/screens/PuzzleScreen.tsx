@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Ellipsis } from 'lucide-react-native';
@@ -50,11 +51,10 @@ export function PuzzleScreen({ route, navigation }: Props) {
   } = useZoom(gridSize);
 
   const boardAreaRef = useRef<View>(null);
-  const boardLayout = useRef({ x: 0, y: 0, width: 0, height: 0 });
-  const handleBoardAreaLayout = useCallback(() => {
-    boardAreaRef.current?.measureInWindow((x, y, w, h) => {
-      boardLayout.current = { x, y, width: w, height: h };
-    });
+  const boardLayout = useRef({ width: 0, height: 0 });
+  const handleBoardAreaLayout = useCallback((e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    boardLayout.current = { width, height };
   }, []);
 
   const { drawGesture } = useDrawGesture(

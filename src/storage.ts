@@ -46,6 +46,12 @@ export function getProgress(puzzleId: string): Progress | null {
 }
 
 export function saveProgress(progress: Progress): void {
+  if (progress.completedAt === undefined) {
+    const existing = getProgress(progress.puzzleId);
+    if (existing?.completedAt) {
+      progress = { ...progress, completedAt: existing.completedAt };
+    }
+  }
   storage.set(KEYS.progress(progress.puzzleId), JSON.stringify(progress));
 }
 

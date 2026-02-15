@@ -410,7 +410,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       redoStack: [],
     }));
 
-    const won = next === 1 && checkWin(newCells, boardSize, puzzle);
+    const won = checkWin(newCells, boardSize, puzzle);
     if (won) {
       if (settings.haptics) hapticSuccess();
       set({ completed: true });
@@ -446,7 +446,11 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const prevRowsCols = [...autoMarksRowsCols];
     const prevRegions = [...autoMarksRegions];
 
-    const { neighbors: newNeighbors, rowsCols: newRowsCols, regions: newRegions } = rebuildAutoMarks(
+    const {
+      neighbors: newNeighbors,
+      rowsCols: newRowsCols,
+      regions: newRegions,
+    } = rebuildAutoMarks(
       newCells,
       changes,
       autoMarksNeighbors,
@@ -479,8 +483,15 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   undo: () => {
-    const { moveLog, cells, autoMarksNeighbors, autoMarksRowsCols, autoMarksRegions } = get();
-    if (moveLog.length === 0) return;
+    const {
+      moveLog,
+      cells,
+      completed,
+      autoMarksNeighbors,
+      autoMarksRowsCols,
+      autoMarksRegions,
+    } = get();
+    if (moveLog.length === 0 || completed) return;
 
     const lastMove = moveLog[moveLog.length - 1];
 
@@ -523,7 +534,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   redo: () => {
-    const { redoStack, cells, autoMarksNeighbors, autoMarksRowsCols, autoMarksRegions, completed } = get();
+    const {
+      redoStack,
+      cells,
+      autoMarksNeighbors,
+      autoMarksRowsCols,
+      autoMarksRegions,
+      completed,
+    } = get();
     if (redoStack.length === 0 || completed) return;
 
     const entry = redoStack[redoStack.length - 1];
@@ -579,41 +597,42 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   applyDrawStroke: (changes: CellChange[]) => {
-    const {
-      completed,
-      puzzle,
-      boardSize,
-      cells,
-      autoMarksNeighbors,
-      autoMarksRowsCols,
-      autoMarksRegions,
-    } = get();
+    const { completed, puzzle, boardSize } = get();
     if (completed || !puzzle || changes.length === 0) return;
 
     const settings = useUserStore.getState().settings;
-    const newErrors = settings.highlightErrors
-      ? computeErrors(cells, boardSize, puzzle)
-      : new Set<string>();
 
-    set(state => ({
-      errorCells: newErrors,
-      moveLog: [
-        ...state.moveLog,
-        {
-          changes,
-          prevAutoMarksNeighbors: [...autoMarksNeighbors],
-          prevAutoMarksRowsCols: [...autoMarksRowsCols],
-          prevAutoMarksRegions: [...autoMarksRegions],
-        },
-      ],
-      redoStack: [],
-    }));
+    set(state => {
+      const currentErrors = settings.highlightErrors
+        ? computeErrors(state.cells, boardSize, puzzle)
+        : new Set<string>();
+      return {
+        errorCells: currentErrors,
+        moveLog: [
+          ...state.moveLog,
+          {
+            changes,
+            prevAutoMarksNeighbors: [...state.autoMarksNeighbors],
+            prevAutoMarksRowsCols: [...state.autoMarksRowsCols],
+            prevAutoMarksRegions: [...state.autoMarksRegions],
+          },
+        ],
+        redoStack: [],
+      };
+    });
 
     persistProgress(get(), false);
   },
 
   clearBoard: () => {
-    const { cells, completed, puzzle, boardSize, autoMarksNeighbors, autoMarksRowsCols, autoMarksRegions } = get();
+    const {
+      cells,
+      completed,
+      puzzle,
+      autoMarksNeighbors,
+      autoMarksRowsCols,
+      autoMarksRegions,
+    } = get();
     if (completed || !puzzle) return;
 
     // Collect all non-empty cells as changes
@@ -629,9 +648,6 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const prevRowsCols = [...autoMarksRowsCols];
     const prevRegions = [...autoMarksRegions];
     const newCells = new Array<CellValue>(cells.length).fill(0) as CellValue[];
-
-    const settings = useUserStore.getState().settings;
-    if (settings.haptics) hapticLight();
 
     set(state => ({
       cells: newCells,
@@ -670,7 +686,7 @@ function persistProgress(state: PuzzleState, justCompleted: boolean): void {
     autoMarksRegions: [...state.autoMarksRegions],
     timeMs: state.timeMs,
     completed: state.completed,
-    completedAt: state.completed ? Date.now() : undefined,
+    completedAt: justCompleted ? Date.now() : undefined,
     updatedAt: Date.now(),
   };
   useUserStore.getState().saveProgress(progress);

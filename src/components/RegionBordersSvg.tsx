@@ -55,13 +55,15 @@ export const RegionBordersSvg = memo(function RegionBordersSvg({
   theme,
 }: Props) {
   const boardPx = CELL_SIZE * size;
+  const half = REGION_BORDER_WIDTH / 2;
   const segments = buildSegments(size, regions);
 
   return (
     <Svg
-      width={boardPx}
-      height={boardPx}
-      style={{ position: 'absolute', top: 0, left: 0 }}
+      width={boardPx + REGION_BORDER_WIDTH}
+      height={boardPx + REGION_BORDER_WIDTH}
+      viewBox={`${-half} ${-half} ${boardPx + REGION_BORDER_WIDTH} ${boardPx + REGION_BORDER_WIDTH}`}
+      style={{ position: 'absolute', top: -half, left: -half }}
       pointerEvents="none"
     >
       {segments.map((seg, i) => (

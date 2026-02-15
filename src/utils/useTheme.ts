@@ -2,6 +2,7 @@ import { useColorScheme } from 'react-native';
 import { useUserStore } from '../stores/userStore';
 
 export type Theme = {
+  isDark: boolean;
   bg: string;
   card: string;
   text: string;
@@ -28,6 +29,7 @@ export function useTheme(): Theme {
 }
 
 const light: Theme = {
+  isDark: false,
   bg: '#fff',
   card: '#fff',
   text: '#0C0F14',
@@ -45,6 +47,7 @@ const light: Theme = {
 };
 
 const dark: Theme = {
+  isDark: true,
   bg: '#121212',
   card: '#1E1E1E',
   text: '#E0E0E0',

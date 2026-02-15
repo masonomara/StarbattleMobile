@@ -18,6 +18,7 @@ export function Navigation() {
       <Stack.Navigator
         screenOptions={{
           headerBackButtonDisplayMode: 'default',
+          statusBarStyle: theme.isDark ? 'light' : 'dark',
         }}
       >
         <Stack.Screen

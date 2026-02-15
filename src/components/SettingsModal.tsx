@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useUserStore } from '../stores/userStore';
+import { usePuzzleStore } from '../store';
 import { useTheme } from '../utils/useTheme';
 import type { Theme } from '../utils/useTheme';
 import type { UserSettings } from '../types/state';
@@ -77,19 +78,19 @@ export function SettingsModal({ visible, onClose }: Props) {
           <ToggleRow
             label="Auto-X Neighbors"
             value={settings.autoXNeighbors}
-            onToggle={v => updateSettings({ autoXNeighbors: v })}
+            onToggle={v => { updateSettings({ autoXNeighbors: v }); usePuzzleStore.getState().recomputeAutoMarks(); }}
             theme={theme}
           />
           <ToggleRow
             label="Auto-X Rows & Columns"
             value={settings.autoXRowsCols}
-            onToggle={v => updateSettings({ autoXRowsCols: v })}
+            onToggle={v => { updateSettings({ autoXRowsCols: v }); usePuzzleStore.getState().recomputeAutoMarks(); }}
             theme={theme}
           />
           <ToggleRow
             label="Auto-X Regions"
             value={settings.autoXRegions}
-            onToggle={v => updateSettings({ autoXRegions: v })}
+            onToggle={v => { updateSettings({ autoXRegions: v }); usePuzzleStore.getState().recomputeAutoMarks(); }}
             theme={theme}
           />
           <ToggleRow
