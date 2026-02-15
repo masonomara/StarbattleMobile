@@ -23,11 +23,6 @@ export const FONT_SIZE_XL = 34;
 export const FONT_WEIGHT_SEMIBOLD = '600' as const;
 export const FONT_WEIGHT_BOLD = '700' as const;
 
-// Toolbar
-export const TOOLBAR_BUTTON_SIZE = 48;
-export const TOOLBAR_BOTTOM = 48;
-export const TOOLBAR_ICON_SIZE = 20;
-
 // Pack grid
 export const GRID_COLUMNS = 5;
 

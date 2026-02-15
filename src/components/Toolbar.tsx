@@ -13,15 +13,7 @@ import {
 } from 'lucide-react-native';
 import { usePuzzleStore } from '../store';
 import type { TapMode } from '../types/state';
-import {
-  SPACING_LG,
-  TOOLBAR_BUTTON_SIZE,
-  TOOLBAR_BOTTOM,
-  TOOLBAR_ICON_SIZE,
-  RADIUS_LG,
-  SHADOW_MD,
-  DISABLED_OPACITY,
-} from '../utils/constants';
+import { RADIUS_LG, SHADOW_MD, DISABLED_OPACITY } from '../utils/constants';
 import { useTheme } from '../utils/useTheme';
 
 const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
@@ -63,7 +55,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           zoomDisabled && styles.disabled,
         ]}
       >
-        <Minimize2 size={TOOLBAR_ICON_SIZE} color={theme.text} />
+        <Minimize2 size={22} color={theme.text} />
       </Pressable>
 
       <Pressable
@@ -78,7 +70,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           { backgroundColor: theme.card, shadowColor: theme.shadow },
         ]}
       >
-        <Lightbulb size={TOOLBAR_ICON_SIZE} color={theme.text} />
+        <Lightbulb size={22} color={theme.text} />
       </Pressable>
 
       <Pressable
@@ -91,7 +83,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
         ]}
       >
         {React.createElement(TAP_MODE_ICONS[tapMode], {
-          size: TOOLBAR_ICON_SIZE,
+          size: 22,
           color: theme.text,
         })}
       </Pressable>
@@ -105,7 +97,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           undoDisabled && styles.disabled,
         ]}
       >
-        <Undo2 size={TOOLBAR_ICON_SIZE} color={theme.text} />
+        <Undo2 size={22} color={theme.text} />
       </Pressable>
 
       <Pressable
@@ -117,7 +109,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           redoDisabled && styles.disabled,
         ]}
       >
-        <Redo2 size={TOOLBAR_ICON_SIZE} color={theme.text} />
+        <Redo2 size={22} color={theme.text} />
       </Pressable>
 
       <Pressable
@@ -138,7 +130,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           clearDisabled && styles.disabled,
         ]}
       >
-        <Trash2 size={TOOLBAR_ICON_SIZE} color={theme.text} />
+        <Trash2 size={22} color={theme.text} />
       </Pressable>
     </View>
   );
@@ -147,16 +139,16 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
 const styles = StyleSheet.create({
   toolbar: {
     position: 'absolute',
-    bottom: TOOLBAR_BOTTOM,
+    bottom: 88,
     left: 0,
     right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: SPACING_LG,
+    gap: 16,
   },
   button: {
-    width: TOOLBAR_BUTTON_SIZE,
-    height: TOOLBAR_BUTTON_SIZE,
+    width: 44,
+    height: 44,
     borderRadius: RADIUS_LG,
     alignItems: 'center',
     justifyContent: 'center',
