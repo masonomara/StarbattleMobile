@@ -399,36 +399,36 @@ Every task needed to ship the plan. Checked off as completed.
 
 ### Phase 2 — Remove Over-Engineering
 
-- [ ] **2.1a** Delete `userId` variable, `setUserId`, `getUserId` from `storage.ts`
-- [ ] **2.1b** Hardcode `'local'` directly in KEYS object in `storage.ts` (preserves existing data)
-- [ ] **2.1c** Delete `migrateUserData` and `deleteUserData` from `storage.ts`
-- [ ] **2.1d** Delete `switchUser` and `migrateFromAnonymous` actions from `userStore.ts`
-- [ ] **2.1e** Remove `profile` field from `userStore.ts` state
-- [ ] **2.1f** Delete `UserProfile` type from `src/types/state.ts`
-- [ ] **2.2a** Delete `getPackProgress` and `savePackProgress` from `storage.ts`
-- [ ] **2.2b** Delete `PackProgress` type from `src/types/state.ts`
-- [ ] **2.2c** Remove `packProgress` state, `refreshPackProgress`, `incrementPackCompleted` from `userStore.ts`
-- [ ] **2.2d** Add `getCompletedCount(packId, total)` method to `userStore.ts` that calls `computeCompletedCount`
-- [ ] **2.2e** Simplify `initialize` in `userStore.ts` — remove pack progress cache building
-- [ ] **2.2f** Remove `incrementPackCompleted` call from `persistProgress` in `store.ts`
-- [ ] **2.2g** Update `HomeScreen.tsx` to call `getCompletedCount` per pack instead of subscribing to `packProgress`
-- [ ] **2.3a** Replace `autoMarksNeighbors?`, `autoMarksRowsCols?`, `autoMarksRegions?` with `autoMarks?: number[]` in `Progress` type
-- [ ] **2.3b** Replace `prevAutoMarksNeighbors`, `prevAutoMarksRowsCols`, `prevAutoMarksRegions` with `prevAutoMarks: number[]` in `Move` type
-- [ ] **2.3c** Replace `autoMarksNeighbors`, `autoMarksRowsCols`, `autoMarksRegions` with `autoMarks: number[]` in `RedoEntry` type
-- [ ] **2.3d** Replace three `autoMarks*` state fields with single `autoMarks: Set<number>` in `store.ts`
-- [ ] **2.3e** Simplify `computeAutoXForStar` to return flat `number[]` in `store.ts`
-- [ ] **2.3f** Simplify `applyMarks`, `clearAllAutoMarks`, `rebuildAutoMarks` to use one set in `store.ts`
-- [ ] **2.3g** Update `loadPuzzle` to restore single `autoMarks` set
-- [ ] **2.3h** Update `tapCell` — snapshot/restore single `prevAutoMarks` array
-- [ ] **2.3i** Update `undo` — restore single `autoMarks` set from move
-- [ ] **2.3j** Update `redo` — snapshot/restore single `autoMarks` array
-- [ ] **2.3k** Update `recomputeAutoMarks` — use single set
-- [ ] **2.3l** Update `applyDrawStroke` — snapshot single `autoMarks` array
-- [ ] **2.3m** Update `clearBoard` — snapshot and reset single `autoMarks` set
-- [ ] **2.3n** Update `persistProgress` — serialize single `autoMarks` array
-- [ ] **2.4a** Delete `src/components/UserProvider.tsx`
-- [ ] **2.4b** Remove `<UserProvider>` wrapper from `App.tsx`
-- [ ] **2.4c** Add `useEffect(() => { useUserStore.getState().initialize(); }, [])` in `App.tsx`
+- [x] **2.1a** Delete `userId` variable, `setUserId`, `getUserId` from `storage.ts`
+- [x] **2.1b** Hardcode `'local'` directly in KEYS object in `storage.ts` (preserves existing data)
+- [x] **2.1c** Delete `migrateUserData` and `deleteUserData` from `storage.ts`
+- [x] **2.1d** Delete `switchUser` and `migrateFromAnonymous` actions from `userStore.ts`
+- [x] **2.1e** Remove `profile` field from `userStore.ts` state
+- [x] **2.1f** Delete `UserProfile` type from `src/types/state.ts`
+- [x] **2.2a** Delete `getPackProgress` and `savePackProgress` from `storage.ts`
+- [x] **2.2b** Delete `PackProgress` type from `src/types/state.ts`
+- [x] **2.2c** Remove `packProgress` state, `refreshPackProgress`, `incrementPackCompleted` from `userStore.ts`
+- [x] **2.2d** Add `getCompletedCount(packId, total)` method to `userStore.ts` that calls `computeCompletedCount`
+- [x] **2.2e** Simplify `initialize` in `userStore.ts` — remove pack progress cache building
+- [x] **2.2f** Remove `incrementPackCompleted` call from `persistProgress` in `store.ts`
+- [x] **2.2g** Update `HomeScreen.tsx` to call `getCompletedCount` per pack instead of subscribing to `packProgress`
+- [x] **2.3a** Replace `autoMarksNeighbors?`, `autoMarksRowsCols?`, `autoMarksRegions?` with `autoMarks?: number[]` in `Progress` type
+- [x] **2.3b** Replace `prevAutoMarksNeighbors`, `prevAutoMarksRowsCols`, `prevAutoMarksRegions` with `prevAutoMarks: number[]` in `Move` type
+- [x] **2.3c** Replace `autoMarksNeighbors`, `autoMarksRowsCols`, `autoMarksRegions` with `autoMarks: number[]` in `RedoEntry` type
+- [x] **2.3d** Replace three `autoMarks*` state fields with single `autoMarks: Set<number>` in `store.ts`
+- [x] **2.3e** Simplify `computeAutoXForStar` to return flat `number[]` in `store.ts`
+- [x] **2.3f** Simplify `applyMarks`, `clearAllAutoMarks`, `rebuildAutoMarks` to use one set in `store.ts`
+- [x] **2.3g** Update `loadPuzzle` to restore single `autoMarks` set
+- [x] **2.3h** Update `tapCell` — snapshot/restore single `prevAutoMarks` array
+- [x] **2.3i** Update `undo` — restore single `autoMarks` set from move
+- [x] **2.3j** Update `redo` — snapshot/restore single `autoMarks` array
+- [x] **2.3k** Update `recomputeAutoMarks` — use single set
+- [x] **2.3l** Update `applyDrawStroke` — snapshot single `autoMarks` array
+- [x] **2.3m** Update `clearBoard` — snapshot and reset single `autoMarks` set
+- [x] **2.3n** Update `persistProgress` — serialize single `autoMarks` array
+- [x] **2.4a** Delete `src/components/UserProvider.tsx`
+- [x] **2.4b** Remove `<UserProvider>` wrapper from `App.tsx`
+- [x] **2.4c** Add `useEffect(() => { useUserStore.getState().initialize(); }, [])` in `App.tsx`
 
 ### Phase 3 — Refactor `store.ts`
 
