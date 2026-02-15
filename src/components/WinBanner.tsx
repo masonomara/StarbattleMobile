@@ -9,7 +9,11 @@ import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../hooks/useTheme';
 import { parsePuzzleId } from '../utils/puzzleId';
 import type { RootStackParams } from '../types/navigation';
-import { FONT_SIZE_MD, FONT_WEIGHT_SEMIBOLD, SPACING_XL } from '../utils/constants';
+import {
+  FONT_SIZE_MD,
+  FONT_WEIGHT_SEMIBOLD,
+  SPACING_XL,
+} from '../utils/constants';
 
 export function WinBanner() {
   const completed = usePuzzleStore(s => s.completed);
@@ -67,10 +71,10 @@ export function WinBanner() {
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      <Text style={[styles.winInfo, { color: theme.onAccent }]}>
+      <Text style={[styles.winInfo, { color: theme.text }]}>
         {pack?.name} #{puzzleIndex + 1}
       </Text>
-      <Text style={[styles.winText, { color: theme.onAccent }]}>
+      <Text style={[styles.winText, { color: theme.text }]}>
         Solved in {formatTime(timeMs)}
       </Text>
 
@@ -79,7 +83,7 @@ export function WinBanner() {
         activeOpacity={0.8}
         style={[styles.winButton, { backgroundColor: theme.onAccent }]}
       >
-        <Text style={[styles.winButtonText, { color: theme.accent }]}>
+        <Text style={[styles.winButtonText, { color: theme.text }]}>
           {isLastPuzzle ? `Back to ${pack?.name ?? 'Pack'}` : 'Next Puzzle'}
         </Text>
       </TouchableOpacity>
@@ -99,6 +103,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
   },
   winText: {
     fontSize: 31,
