@@ -21,7 +21,7 @@ export const CellGridSvg = memo(function CellGridSvg({ size, theme }: Props) {
         y1={y}
         x2={boardPx}
         y2={y}
-        stroke={theme.regionBorder}
+        stroke={theme.innerBorder}
         strokeWidth={1}
       />,
     );
@@ -36,7 +36,7 @@ export const CellGridSvg = memo(function CellGridSvg({ size, theme }: Props) {
         y1={0}
         x2={x}
         y2={boardPx}
-        stroke={theme.regionBorder}
+        stroke={theme.innerBorder}
         strokeWidth={1}
       />,
     );
