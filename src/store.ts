@@ -23,6 +23,8 @@ type PuzzleState = {
   moveLog: Move[];
   redoStack: Move[];
   tapMode: TapMode;
+  hintGhosts: Map<number, 'star' | 'mark'>;
+  hintStepIndex: number;
   loadPuzzle: (puzzle: Puzzle) => void;
   tapCell: (row: number, col: number) => void;
   cycleTapMode: () => void;
@@ -32,6 +34,8 @@ type PuzzleState = {
   applyDrawStroke: (changes: CellChange[]) => void;
   clearBoard: () => void;
   tick: () => void;
+  showHint: () => void;
+  dismissHint: () => void;
 };
 
 export const usePuzzleStore = create<PuzzleState>((set, get) => ({
@@ -44,6 +48,8 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   moveLog: [],
   redoStack: [],
   tapMode: 'cycle' as TapMode,
+  hintGhosts: new Map<number, 'star' | 'mark'>(),
+  hintStepIndex: -1,
 
   loadPuzzle: (puzzle: Puzzle) => {
     const total = puzzle.size * puzzle.size;
@@ -57,12 +63,18 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       timeMs: saved?.timeMs ?? 0,
       moveLog: [],
       redoStack: [],
+      hintGhosts: new Map(),
+      hintStepIndex: -1,
     });
   },
 
   tapCell: (row: number, col: number) => {
     const { cells, completed, puzzle, tapMode, autoMarks } = get();
     if (completed || !puzzle) return;
+
+    if (get().hintGhosts.size > 0) {
+      set({ hintGhosts: new Map(), hintStepIndex: -1 });
+    }
 
     const size = puzzle.size;
     const settings = useUserStore.getState().settings;
@@ -189,6 +201,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const { moveLog, cells, completed, autoMarks } = get();
     if (moveLog.length === 0 || completed) return;
 
+    if (get().hintGhosts.size > 0) {
+      set({ hintGhosts: new Map(), hintStepIndex: -1 });
+    }
+
     const lastMove = moveLog[moveLog.length - 1];
 
     const redoMove: Move = {
@@ -236,6 +252,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const { redoStack, cells, autoMarks, completed } = get();
     if (redoStack.length === 0 || completed) return;
 
+    if (get().hintGhosts.size > 0) {
+      set({ hintGhosts: new Map(), hintStepIndex: -1 });
+    }
+
     const entry = redoStack[redoStack.length - 1];
 
     const undoMove: Move = {
@@ -282,6 +302,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const { completed, puzzle } = get();
     if (completed || !puzzle || changes.length === 0) return;
 
+    if (get().hintGhosts.size > 0) {
+      set({ hintGhosts: new Map(), hintStepIndex: -1 });
+    }
+
     const size = puzzle.size;
     const settings = useUserStore.getState().settings;
 
@@ -320,6 +344,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const { cells, completed, puzzle, autoMarks } = get();
     if (completed || !puzzle) return;
 
+    if (get().hintGhosts.size > 0) {
+      set({ hintGhosts: new Map(), hintStepIndex: -1 });
+    }
+
     const changes: CellChange[] = [];
     for (let i = 0; i < cells.length; i++) {
       if (cells[i] !== 0) {
@@ -347,6 +375,40 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       s.completed,
       false,
     );
+  },
+
+  showHint: () => {
+    const { puzzle, cells, completed, hintGhosts } = get();
+    if (!puzzle || completed) return;
+
+    if (hintGhosts.size > 0) {
+      set({ hintGhosts: new Map(), hintStepIndex: -1 });
+      return;
+    }
+
+    const size = puzzle.size;
+    for (let i = 0; i < puzzle.hints.length; i++) {
+      const step = puzzle.hints[i];
+      const ghosts = new Map<number, 'star' | 'mark'>();
+
+      for (const [r, c] of step.placements) {
+        const idx = r * size + c;
+        if (cells[idx] !== 1) ghosts.set(idx, 'star');
+      }
+      for (const [r, c] of step.marks) {
+        const idx = r * size + c;
+        if (cells[idx] !== 2) ghosts.set(idx, 'mark');
+      }
+
+      if (ghosts.size > 0) {
+        set({ hintGhosts: ghosts, hintStepIndex: i });
+        return;
+      }
+    }
+  },
+
+  dismissHint: () => {
+    set({ hintGhosts: new Map(), hintStepIndex: -1 });
   },
 
   tick: () => {

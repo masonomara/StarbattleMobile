@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 import { StarIcon } from './icons/StarIcon';
 import { MarkIcon } from './icons/MarkIcon';
@@ -20,12 +20,13 @@ export const CellView = memo(function CellView({
   theme,
   onPress,
 }: Props) {
-  const { value, hasError } = usePuzzleStore(
+  const { value, hasError, ghost } = usePuzzleStore(
     useShallow(s => {
       const idx = row * s.puzzle!.size + col;
       return {
         value: s.cells[idx],
         hasError: s.errorCells.has(idx),
+        ghost: s.hintGhosts.get(idx) ?? null,
       };
     }),
   );
@@ -50,6 +51,16 @@ export const CellView = memo(function CellView({
       {value === 2 && (
         <MarkIcon size={14} color={theme.markColor} />
       )}
+      {ghost === 'star' && value !== 1 && (
+        <View style={styles.ghost}>
+          <StarIcon size={22} color={theme.accent} />
+        </View>
+      )}
+      {ghost === 'mark' && value !== 2 && (
+        <View style={styles.ghost}>
+          <MarkIcon size={14} color={theme.accent} />
+        </View>
+      )}
     </Pressable>
   );
 });
@@ -58,5 +69,13 @@ const styles = StyleSheet.create({
   cell: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  ghost: {
+    position: 'absolute',
+    opacity: 0.3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
 });
