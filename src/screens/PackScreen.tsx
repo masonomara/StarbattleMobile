@@ -13,7 +13,7 @@ import {
   GRID_COLUMNS,
   SHADOW_SM,
 } from '../utils/constants';
-import type { RootStackParams } from '../navigation';
+import type { RootStackParams } from '../types/navigation';
 import type { RawPuzzle } from '../types/puzzle';
 import { useTheme } from '../utils/useTheme';
 

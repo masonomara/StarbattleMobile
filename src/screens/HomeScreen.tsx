@@ -15,7 +15,7 @@ import {
   FONT_WEIGHT_SEMIBOLD,
 } from '../utils/constants';
 import type { Pack } from '../types/puzzle';
-import type { RootStackParams } from '../navigation';
+import type { RootStackParams } from '../types/navigation';
 import { useTheme } from '../utils/useTheme';
 
 type Props = NativeStackScreenProps<RootStackParams, 'Home'>;

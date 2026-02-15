@@ -11,7 +11,7 @@ import { parsePuzzle } from '../utils/parsePuzzle';
 import { getPack } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
-import type { RootStackParams } from '../navigation';
+import type { RootStackParams } from '../types/navigation';
 import { useTheme } from '../utils/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';

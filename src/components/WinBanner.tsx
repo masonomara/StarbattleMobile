@@ -7,7 +7,7 @@ import { usePuzzleStore } from '../store';
 import { getPack } from '../packs';
 import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../utils/useTheme';
-import type { RootStackParams } from '../navigation';
+import type { RootStackParams } from '../types/navigation';
 
 export function WinBanner() {
   const completed = usePuzzleStore(s => s.completed);
