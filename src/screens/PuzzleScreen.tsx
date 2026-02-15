@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Ellipsis } from 'lucide-react-native';
 import { BoardView } from '../components/BoardView';
+import { HeaderTimer } from '../components/HeaderTimer';
 import { SettingsModal } from '../components/SettingsModal';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
@@ -12,12 +13,12 @@ import { parsePuzzle } from '../utils/parsePuzzle';
 import { getPack } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
+import { persistProgress as persistProgressUtil } from '../utils/persistProgress';
 import type { RootStackParams } from '../types/navigation';
 import { useTheme } from '../utils/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
-import { formatTime } from '../utils/formatTime';
-import { FONT_SIZE_SM } from '../utils/constants';
+import { makePuzzleId } from '../utils/puzzleId';
 
 type Props = NativeStackScreenProps<RootStackParams, 'Puzzle'>;
 
@@ -31,9 +32,7 @@ export function PuzzleScreen({ route, navigation }: Props) {
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
   const completed = usePuzzleStore(s => s.completed);
-  const timeMs = usePuzzleStore(s => s.timeMs);
   const tick = usePuzzleStore(s => s.tick);
-  const showTimer = useUserStore(s => s.settings.showTimer);
   const hideToolbar = useUserStore(s => s.settings.hideToolbar);
 
   const gridSize = pack?.gridSize ?? 5;
@@ -80,25 +79,19 @@ export function PuzzleScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     if (!rawPuzzle) return;
-    const puzzleId = `${packId}:${puzzleIndex}`;
+    const puzzleId = makePuzzleId(packId, puzzleIndex);
     const parsed = parsePuzzle(rawPuzzle, puzzleId);
     loadPuzzle(parsed);
   }, [rawPuzzle, packId, puzzleIndex, loadPuzzle, navigation, pack?.name]);
 
-  // Persist time periodically and on unmount so it survives backgrounding/navigation
   useEffect(() => {
     if (completed || !puzzle) return;
     const persistTime = () => {
       const state = usePuzzleStore.getState();
       if (!state.completed && state.puzzle) {
-        useUserStore.getState().saveProgress({
-          puzzleId: state.puzzle.id,
-          cells: state.cells,
-          autoMarks: [...state.autoMarks],
-          timeMs: state.timeMs,
-          completed: false,
-          updatedAt: Date.now(),
-        });
+        persistProgressUtil(
+          state.puzzle, state.cells, state.autoMarks, state.timeMs, state.completed, false,
+        );
       }
     };
     const id = setInterval(persistTime, 5000);
@@ -107,16 +100,6 @@ export function PuzzleScreen({ route, navigation }: Props) {
       persistTime();
     };
   }, [completed, puzzle]);
-
-  const renderHeaderTitle = useCallback(
-    () =>
-      showTimer && !completed ? (
-        <Text style={[styles.headerTimer, { color: theme.text }]}>
-          {formatTime(timeMs)}
-        </Text>
-      ) : null,
-    [showTimer, completed, theme.text, timeMs],
-  );
 
   const renderHeaderRight = useCallback(
     () => (
@@ -129,10 +112,10 @@ export function PuzzleScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: renderHeaderTitle,
+      headerTitle: () => <HeaderTimer />,
       headerRight: renderHeaderRight,
     });
-  }, [navigation, renderHeaderTitle, renderHeaderRight]);
+  }, [navigation, renderHeaderRight]);
 
   if (!puzzle) return null;
 
@@ -168,9 +151,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  headerTimer: {
-    fontSize: FONT_SIZE_SM,
-    fontVariant: ['tabular-nums'],
   },
 });

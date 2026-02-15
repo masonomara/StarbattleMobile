@@ -27,7 +27,14 @@ export const FONT_WEIGHT_BOLD = '700' as const;
 export const GRID_COLUMNS = 5;
 
 // Win banner
-export const WIN_BANNER_SLIDE_DISTANCE = 200;
+export const WIN_BANNER_PADDING = 24;
+export const WIN_BANNER_BORDER_RADIUS = 40;
+export const WIN_BANNER_BUTTON_HEIGHT = 40;
+export const WIN_BANNER_BUTTON_RADIUS = 120;
+export const WIN_BANNER_TITLE_SIZE = 31;
+export const WIN_BANNER_TITLE_LINE_HEIGHT = 39;
+export const WIN_BANNER_INFO_SIZE = 16;
+export const WIN_BANNER_INFO_LINE_HEIGHT = 20;
 
 // Opacity
 export const DISABLED_OPACITY = 0.3;

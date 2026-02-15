@@ -432,36 +432,36 @@ Every task needed to ship the plan. Checked off as completed.
 
 ### Phase 3 — Refactor `store.ts`
 
-- [ ] **3.1a** Create `src/utils/puzzleLogic.ts`
-- [ ] **3.1b** Move `collectZoneMarks` to `puzzleLogic.ts`
-- [ ] **3.1c** Move `computeAutoXForStar` to `puzzleLogic.ts`
-- [ ] **3.1d** Move `applyMarks` to `puzzleLogic.ts`
-- [ ] **3.1e** Move `clearAutoMarks` / `rebuildAutoMarks` to `puzzleLogic.ts`
-- [ ] **3.1f** Move `computeErrors` to `puzzleLogic.ts`
-- [ ] **3.1g** Move `checkWin` to `puzzleLogic.ts`
-- [ ] **3.1h** Update `store.ts` to import all moved functions from `puzzleLogic.ts`
-- [ ] **3.2a** Create `src/utils/persistProgress.ts`
-- [ ] **3.2b** Move `persistProgress` function from `store.ts` to `persistProgress.ts`
-- [ ] **3.2c** Update `store.ts` to import `persistProgress` from the new file
-- [ ] **3.3** Review `store.ts` — confirm each action is a thin coordinator calling extracted functions, target ~200 lines
-- [ ] **3.4a** Remove `useUserStore(s => s.getProgress)` subscription from `PackScreen.tsx`
-- [ ] **3.4b** Call `useUserStore.getState().getProgress(puzzleId)` directly inside `renderPuzzle`
+- [x] **3.1a** Create `src/utils/puzzleLogic.ts`
+- [x] **3.1b** Move `collectZoneMarks` to `puzzleLogic.ts`
+- [x] **3.1c** Move `computeAutoXForStar` to `puzzleLogic.ts`
+- [x] **3.1d** Move `applyMarks` to `puzzleLogic.ts`
+- [x] **3.1e** Move `clearAutoMarks` / `rebuildAutoMarks` to `puzzleLogic.ts`
+- [x] **3.1f** Move `computeErrors` to `puzzleLogic.ts`
+- [x] **3.1g** Move `checkWin` to `puzzleLogic.ts`
+- [x] **3.1h** Update `store.ts` to import all moved functions from `puzzleLogic.ts`
+- [x] **3.2a** Create `src/utils/persistProgress.ts`
+- [x] **3.2b** Move `persistProgress` function from `store.ts` to `persistProgress.ts`
+- [x] **3.2c** Update `store.ts` to import `persistProgress` from the new file
+- [x] **3.3** Review `store.ts` — confirm each action is a thin coordinator calling extracted functions, target ~200 lines
+- [x] **3.4a** Remove `useUserStore(s => s.getProgress)` subscription from `PackScreen.tsx`
+- [x] **3.4b** Call `useUserStore.getState().getProgress(puzzleId)` directly inside `renderPuzzle`
 
 ### Phase 4 — Component Cleanup
 
-- [ ] **4.1a** Create `src/components/HeaderTimer.tsx` that subscribes to `timeMs`, `completed`, and `showTimer` from stores
-- [ ] **4.1b** In `PuzzleScreen.tsx`, remove `timeMs` and `showTimer` subscriptions
-- [ ] **4.1c** Pass `HeaderTimer` component to `navigation.setOptions({ headerTitle })` once
-- [ ] **4.1d** Remove `renderHeaderTitle` callback and its deps from `PuzzleScreen.tsx`
-- [ ] **4.2** Replace cell index loop in `BoardView.tsx` with `useMemo` keyed on `puzzle.size`
-- [ ] **4.3a** In `HomeScreen.tsx`, delete `focusCount` state and `useState` import; use `useFocusEffect` to set an `extraData` timestamp
-- [ ] **4.3b** In `PackScreen.tsx`, delete `focusCount` state and `useState` import; use `useFocusEffect` to set an `extraData` timestamp
-- [ ] **4.4a** Wrap `renderPack` in `useCallback` in `HomeScreen.tsx`
-- [ ] **4.4b** Wrap `renderPuzzle` in `useCallback` in `PackScreen.tsx`
-- [ ] **4.5a** Add missing design tokens to `utils/constants.ts` for WinBanner values (padding, font sizes, button height, border radius)
-- [ ] **4.5b** Replace all hardcoded numbers in `WinBanner.tsx` styles with constants
-- [ ] **4.5c** Replace `bottom: -160` / `marginBottom: 160` pattern with `bannerHeight`-based positioning
-- [ ] **4.6a** Create `src/utils/puzzleId.ts` with `parsePuzzleId` and `makePuzzleId`
-- [ ] **4.6b** Replace string splitting in `WinBanner.tsx` with `parsePuzzleId`
-- [ ] **4.6c** Replace string splitting in `persistProgress.ts` with `parsePuzzleId`
-- [ ] **4.6d** Replace string concatenation in `PuzzleScreen.tsx` with `makePuzzleId`
+- [x] **4.1a** Create `src/components/HeaderTimer.tsx` that subscribes to `timeMs`, `completed`, and `showTimer` from stores
+- [x] **4.1b** In `PuzzleScreen.tsx`, remove `timeMs` and `showTimer` subscriptions
+- [x] **4.1c** Pass `HeaderTimer` component to `navigation.setOptions({ headerTitle })` once
+- [x] **4.1d** Remove `renderHeaderTitle` callback and its deps from `PuzzleScreen.tsx`
+- [x] **4.2** Replace cell index loop in `BoardView.tsx` with `useMemo` keyed on `puzzle.size`
+- [x] **4.3a** In `HomeScreen.tsx`, delete `focusCount` state and `useState` import; use `useFocusEffect` to set an `extraData` timestamp
+- [x] **4.3b** In `PackScreen.tsx`, delete `focusCount` state and `useState` import; use `useFocusEffect` to set an `extraData` timestamp
+- [x] **4.4a** Wrap `renderPack` in `useCallback` in `HomeScreen.tsx`
+- [x] **4.4b** Wrap `renderPuzzle` in `useCallback` in `PackScreen.tsx`
+- [x] **4.5a** Add missing design tokens to `utils/constants.ts` for WinBanner values (padding, font sizes, button height, border radius)
+- [x] **4.5b** Replace all hardcoded numbers in `WinBanner.tsx` styles with constants
+- [x] **4.5c** Replace `bottom: -160` / `marginBottom: 160` pattern with `bannerHeight`-based positioning
+- [x] **4.6a** Create `src/utils/puzzleId.ts` with `parsePuzzleId` and `makePuzzleId`
+- [x] **4.6b** Replace string splitting in `WinBanner.tsx` with `parsePuzzleId`
+- [x] **4.6c** N/A — `persistProgress.ts` doesn't split puzzleId
+- [x] **4.6d** Replace string concatenation in `PuzzleScreen.tsx` with `makePuzzleId`

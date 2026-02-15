@@ -10,6 +10,7 @@ import type { UserSettings, Progress } from '../types/state';
 
 type UserState = {
   settings: UserSettings;
+  progressVersion: number;
   initialize: () => void;
   updateSettings: (update: Partial<UserSettings>) => void;
   getProgress: (puzzleId: string) => Progress | null;
@@ -19,6 +20,7 @@ type UserState = {
 
 export const useUserStore = create<UserState>((set) => ({
   settings: getSettings(),
+  progressVersion: 0,
 
   initialize: () => {
     const settings = getSettings();
@@ -38,6 +40,7 @@ export const useUserStore = create<UserState>((set) => ({
 
   saveProgress: (progress: Progress) => {
     storageSaveProgress(progress);
+    set(state => ({ progressVersion: state.progressVersion + 1 }));
   },
 
   getCompletedCount: (packId: string, total: number) => {

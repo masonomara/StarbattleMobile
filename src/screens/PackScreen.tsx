@@ -1,6 +1,5 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { Text, Pressable, FlatList, StyleSheet } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getPack } from '../packs';
 import { useUserStore } from '../stores/userStore';
@@ -16,6 +15,7 @@ import {
 import type { RootStackParams } from '../types/navigation';
 import type { RawPuzzle } from '../types/puzzle';
 import { useTheme } from '../utils/useTheme';
+import { makePuzzleId } from '../utils/puzzleId';
 
 type Props = NativeStackScreenProps<RootStackParams, 'Pack'>;
 
@@ -23,14 +23,7 @@ export function PackScreen({ route, navigation }: Props) {
   const { packId } = route.params;
   const pack = getPack(packId);
   const theme = useTheme();
-  const userGetProgress = useUserStore(s => s.getProgress);
-
-  const [focusCount, setFocusCount] = useState(0);
-  useFocusEffect(
-    useCallback(() => {
-      setFocusCount(c => c + 1);
-    }, []),
-  );
+  const progressVersion = useUserStore(s => s.progressVersion);
 
   React.useEffect(() => {
     if (pack) navigation.setOptions({ title: pack.name });
@@ -38,15 +31,15 @@ export function PackScreen({ route, navigation }: Props) {
 
   if (!pack) return null;
 
-  const renderPuzzle = ({
+  const renderPuzzle = useCallback(({
     item: _item,
     index,
   }: {
     item: RawPuzzle;
     index: number;
   }) => {
-    const puzzleId = `${packId}:${index}`;
-    const progress = userGetProgress(puzzleId);
+    const puzzleId = makePuzzleId(packId, index);
+    const progress = useUserStore.getState().getProgress(puzzleId);
     const isCompleted = progress?.completed ?? false;
 
     return (
@@ -72,12 +65,12 @@ export function PackScreen({ route, navigation }: Props) {
         </Text>
       </Pressable>
     );
-  };
+  }, [packId, theme, navigation]);
 
   return (
     <FlatList
       data={pack.puzzles}
-      extraData={focusCount}
+      extraData={progressVersion}
       keyExtractor={(_, i) => String(i)}
       renderItem={renderPuzzle}
       numColumns={GRID_COLUMNS}

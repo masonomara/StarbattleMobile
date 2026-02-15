@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { CellView } from './CellView';
 import { CellGridSvg } from './CellGridSvg';
@@ -20,10 +20,10 @@ export function BoardView({ puzzle, scale, translateX, translateY }: Props) {
   const tapCell = usePuzzleStore(s => s.tapCell);
   const boardSize = CELL_SIZE * puzzle.size;
 
-  const cells: number[] = [];
-  for (let i = 0; i < puzzle.size * puzzle.size; i++) {
-    cells.push(i);
-  }
+  const cells = useMemo(
+    () => Array.from({ length: puzzle.size * puzzle.size }, (_, i) => i),
+    [puzzle.size],
+  );
 
   return (
     <Animated.View
