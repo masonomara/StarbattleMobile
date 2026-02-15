@@ -2,7 +2,7 @@
 
 ## Goal
 
-Tapping the Lightbulb button in the Toolbar shows ghost previews (low-opacity stars and marks) on the board for the next unplaced hint step. The user taps a ghost cell to confirm and actually place it. Tapping the Lightbulb again while ghosts are showing dismisses them.
+Tapping the Lightbulb button in the Toolbar shows ghost previews (low-opacity stars and marks) on the board for the next unplaced hint step. Ghosts are purely visual guidance — tapping any cell (ghost or not) runs normal tap logic and dismisses all ghosts. Tapping the Lightbulb again while ghosts are showing dismisses them.
 
 ---
 
@@ -20,7 +20,7 @@ Pack JSON (hints: HintStep[])
   → Passed into puzzle store as typed HintStep[]
   → showHint action computes next visible ghosts
   → CellView renders ghost stars/marks at low opacity
-  → User taps ghost cell → confirmHintCell applies it for real
+  → User taps any cell → normal tapCell runs, ghosts dismissed
 ```
 
 ---
@@ -99,14 +99,13 @@ New actions:
 ```ts
 showHint: () => void;
 dismissHint: () => void;
-confirmHintCell: (row: number, col: number) => void;
 ```
 
 ### `showHint` logic
 
 ```ts
 showHint: () => {
-  const { puzzle, cells, boardSize, completed, hintGhosts } = get();
+  const { puzzle, cells, completed, hintGhosts } = get();
   if (!puzzle || completed) return;
 
   // If ghosts are already showing, dismiss them
@@ -116,16 +115,17 @@ showHint: () => {
   }
 
   // Walk hints to find the next step with unplaced cells
+  const size = puzzle.size;
   for (let i = 0; i < puzzle.hints.length; i++) {
     const step = puzzle.hints[i];
     const ghosts = new Map<number, 'star' | 'mark'>();
 
     for (const [r, c] of step.placements) {
-      const idx = r * boardSize + c;
+      const idx = r * size + c;
       if (cells[idx] !== 1) ghosts.set(idx, 'star');
     }
     for (const [r, c] of step.marks) {
-      const idx = r * boardSize + c;
+      const idx = r * size + c;
       if (cells[idx] !== 2) ghosts.set(idx, 'mark');
     }
 
@@ -188,11 +188,14 @@ export const CellView = memo(function CellView({
   onPress,
 }: Props) {
   const { value, hasError, ghost } = usePuzzleStore(
-    useShallow(s => ({
-      value: s.cells[row * s.boardSize + col],
-      hasError: s.errorCells.has(`${row},${col}`),
-      ghost: s.hintGhosts.get(row * s.boardSize + col) ?? null,
-    })),
+    useShallow(s => {
+      const idx = row * s.puzzle!.size + col;
+      return {
+        value: s.cells[idx],
+        hasError: s.errorCells.has(idx),
+        ghost: s.hintGhosts.get(idx) ?? null,
+      };
+    }),
   );
 
   const handlePress = useCallback(() => onPress(row, col), [onPress, row, col]);
@@ -287,44 +290,17 @@ When ghosts are active, the Lightbulb button gets accent background so the user 
 
 ---
 
-## Step 6: Handle Ghost Cell Taps
+## Step 6: Ghost Cell Tap Behavior
 
-**File: `src/components/BoardView.tsx`** (or `CellView.tsx` onPress)
+No special tap routing needed. Tapping any cell — ghost or not — calls the same `onPress` → `tapCell` path. The `tapCell` dismissal guard (Step 3) clears all ghosts on any board interaction. The user's current tap mode (cycle, mark, star, erase) determines what gets placed, independent of what the ghost was showing.
 
-The `tapCell` in the store already dismisses ghosts on manual interaction. For ghost taps, we need CellView to call a different action when a ghost is present:
-
-**File: `src/components/CellView.tsx`** — update handlePress:
+`handlePress` in CellView stays unchanged:
 
 ```ts
-const confirmHintCell = usePuzzleStore(s => s.confirmHintCell);
-
-const handlePress = useCallback(() => {
-  if (ghost) {
-    confirmHintCell(row, col);
-  } else {
-    onPress(row, col);
-  }
-}, [onPress, confirmHintCell, row, col, ghost]);
+const handlePress = useCallback(() => onPress(row, col), [onPress, row, col]);
 ```
 
-When the user taps a ghost cell, it confirms that single cell. When they tap a non-ghost cell, normal tap behavior runs (which also dismisses all remaining ghosts via the dismissal in `tapCell`).
-
----
-
-## Step 7: Auto-X Interaction
-
-When a ghost star is confirmed and auto-X settings are on, `computeAutoXForStar` already runs inside `confirmHintCell`. If a ghost mark cell gets auto-X'd by a confirmed star (the auto-X places a mark on a cell that also had a ghost mark), both resolve naturally — the ghost is cosmetic and the real cell value takes over.
-
-One edge to handle: if auto-X from a confirmed star happens to fill a cell that also has a ghost mark, remove that ghost from the map too:
-
-```ts
-// After applying auto-X marks in confirmHintCell:
-for (const change of changes) {
-  if (change.index !== idx) {
-    newGhosts.delete(change.index);
-  }
-}
-```
+This keeps CellView simple and avoids any coupling between ghost state and tap logic.
 
 ---
 
@@ -334,10 +310,9 @@ for (const change of changes) {
 | -------------------------------------- | ---------------------------------------------------------------- |
 | Tap Lightbulb (no ghosts)              | Compute next hint step, show ghost cells                         |
 | Tap Lightbulb (ghosts showing)         | Dismiss all ghosts                                               |
-| Tap a ghost cell                       | Confirm that cell (place star/mark for real), remove from ghosts |
-| Tap a non-ghost cell while ghosts show | Normal tap, all ghosts dismissed                                 |
+| Tap any cell while ghosts show         | Normal tap (respects current tap mode), all ghosts dismissed     |
 | Undo/redo/clear while ghosts show      | Ghosts dismissed                                                 |
-| All ghost cells confirmed              | Hint state auto-clears                                           |
+| Draw gesture while ghosts show         | Normal draw, all ghosts dismissed                                |
 | All hint steps already placed          | Lightbulb is a no-op                                             |
 
 ---
@@ -348,8 +323,125 @@ for (const change of changes) {
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/types/puzzle.ts`         | Add `HintStep` type, make `hints` required on `Puzzle`                                                                                                    |
 | `src/utils/parsePuzzle.ts`    | Thread `raw.hints` into parsed `Puzzle`                                                                                                                   |
-| `src/store.ts`                | Add `hintGhosts`, `hintStepIndex`, `showHint`, `dismissHint`, `confirmHintCell`; dismiss ghosts in `tapCell`/`undo`/`redo`/`clearBoard`/`applyDrawStroke` |
-| `src/components/CellView.tsx` | Subscribe to `hintGhosts`, render ghost overlay, route taps to `confirmHintCell`                                                                          |
+| `src/store.ts`                | Add `hintGhosts`, `hintStepIndex`, `showHint`, `dismissHint`; dismiss ghosts in `tapCell`/`undo`/`redo`/`clearBoard`/`applyDrawStroke`                    |
+| `src/components/CellView.tsx` | Subscribe to `hintGhosts`, render ghost overlay (no tap logic changes)                                                                                    |
 | `src/components/Toolbar.tsx`  | Wire Lightbulb to `showHint`, visual active state                                                                                                         |
 
 No new files needed. No changes to the solver or pack JSON format.
+
+---
+
+## TODO
+
+### Phase 1: Types & Parsing
+
+**`src/types/puzzle.ts`**
+
+- [ ] Add `HintStep` type: `{ rule: string; level: number; placements: Coord[]; marks: Coord[] }`
+- [ ] Change `RawPuzzle.hints` from `hints?: unknown` to `hints?: HintStep[]`
+- [ ] Add `hints: HintStep[]` to `Puzzle` type (required, not optional)
+
+**`src/utils/parsePuzzle.ts`**
+
+- [ ] Import `HintStep` from `../types/puzzle`
+- [ ] Add `hints: (raw.hints ?? []) as HintStep[]` to the returned `Puzzle` object
+
+### Phase 2: Store State & Actions
+
+**`src/store.ts` — PuzzleState type**
+
+- [ ] Add `hintGhosts: Map<number, 'star' | 'mark'>` to `PuzzleState`
+- [ ] Add `hintStepIndex: number` to `PuzzleState`
+- [ ] Add `showHint: () => void` to `PuzzleState`
+- [ ] Add `dismissHint: () => void` to `PuzzleState`
+
+**`src/store.ts` — initial state**
+
+- [ ] Add `hintGhosts: new Map()` to store defaults (next to `errorCells`)
+- [ ] Add `hintStepIndex: -1` to store defaults
+
+**`src/store.ts` — loadPuzzle**
+
+- [ ] Reset `hintGhosts: new Map()` in `loadPuzzle`'s `set()` call
+- [ ] Reset `hintStepIndex: -1` in `loadPuzzle`'s `set()` call
+
+**`src/store.ts` — showHint action**
+
+- [ ] Implement `showHint`: early-return if `!puzzle || completed`
+- [ ] Toggle off: if `hintGhosts.size > 0`, set both to empty/`-1` and return
+- [ ] Walk `puzzle.hints` from index 0: for each step, build a `Map<number, 'star' | 'mark'>` of unplaced cells
+- [ ] Use `puzzle.size` (not `boardSize` — store has no `boardSize` field) for index math: `r * puzzle.size + c`
+- [ ] Compare `cells[idx] !== 1` for placements, `cells[idx] !== 2` for marks
+- [ ] On first step with non-empty ghosts map, `set({ hintGhosts: ghosts, hintStepIndex: i })` and return
+
+**`src/store.ts` — dismissHint action**
+
+- [ ] Implement `dismissHint`: `set({ hintGhosts: new Map(), hintStepIndex: -1 })`
+
+**`src/store.ts` — ghost dismissal guards**
+
+Add this guard at the top of each action, before any other logic:
+
+```ts
+if (get().hintGhosts.size > 0) {
+  set({ hintGhosts: new Map(), hintStepIndex: -1 });
+}
+```
+
+- [ ] Add guard to `tapCell` (after the `completed` early-return)
+- [ ] Add guard to `undo` (after the `moveLog.length === 0` early-return)
+- [ ] Add guard to `redo` (after the `redoStack.length === 0` early-return)
+- [ ] Add guard to `clearBoard` (after the `completed` early-return)
+- [ ] Add guard to `applyDrawStroke` (after the `completed` early-return)
+
+### Phase 3: CellView Ghost Rendering
+
+**`src/components/CellView.tsx` — imports**
+
+- [ ] Add `View` to the `react-native` import
+- [ ] Add `STAR_ICON_SIZE` and `MARK_ICON_SIZE` to the `../utils/constants` import (currently hard-coded as `22` and `14`)
+
+**`src/components/CellView.tsx` — selector**
+
+- [ ] Add `ghost` to the `useShallow` selector: `ghost: s.hintGhosts.get(idx) ?? null`
+- [ ] Note: current selector uses `row * s.puzzle!.size + col` — keep that pattern (no `boardSize`)
+
+**`src/components/CellView.tsx` — JSX**
+
+- [ ] Render ghost star overlay: `ghost === 'star' && value !== 1` → `<View style={styles.ghost}><StarIcon ... color={theme.accent} /></View>`
+- [ ] Render ghost mark overlay: `ghost === 'mark' && value !== 2` → `<View style={styles.ghost}><MarkIcon ... color={theme.accent} /></View>`
+- [ ] Place ghost elements after the real value elements (ghosts sit on top visually but opacity makes them recessive)
+
+**`src/components/CellView.tsx` — stylesheet**
+
+- [ ] Add `ghost` style: `{ position: 'absolute', opacity: 0.3, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }`
+
+### Phase 4: Toolbar Wiring
+
+**`src/components/Toolbar.tsx` — selectors**
+
+- [ ] Add `showHint` selector: `usePuzzleStore(s => s.showHint)`
+- [ ] Add `hasGhosts` selector: `usePuzzleStore(s => s.hintGhosts.size > 0)`
+- [ ] Add `hasHints` selector: `usePuzzleStore(s => (s.puzzle?.hints.length ?? 0) > 0)`
+- [ ] Compute `hintDisabled = completed || !hasHints`
+
+**`src/components/Toolbar.tsx` — Lightbulb button**
+
+- [ ] Replace `Alert.alert(...)` with `showHint()` call
+- [ ] Set `disabled={hintDisabled}` on the Pressable
+- [ ] Dynamic background: `backgroundColor: hasGhosts ? theme.accent : theme.card`
+- [ ] Dynamic icon color: `color={hasGhosts ? theme.onAccent : theme.text}`
+- [ ] Add `hintDisabled && styles.disabled` to style array
+
+### Phase 5: Verify & Clean Up
+
+- [ ] Confirm `theme.accent` and `theme.onAccent` exist on the `Theme` type (check `src/types/theme.ts`)
+- [ ] Build iOS to verify no type errors
+- [ ] Test: tap Lightbulb on a puzzle with hints → ghosts appear
+- [ ] Test: tap Lightbulb again → ghosts dismiss
+- [ ] Test: tap a cell while ghosts show → normal tap mode fires, ghosts dismiss
+- [ ] Test: undo/redo/clear while ghosts show → ghosts dismiss
+- [ ] Test: draw gesture while ghosts show → ghosts dismiss
+- [ ] Test: puzzle with no hints → Lightbulb disabled
+- [ ] Test: completed puzzle → Lightbulb disabled
+- [ ] Test: board partially filled correctly → hint skips already-placed steps
