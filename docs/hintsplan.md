@@ -147,72 +147,9 @@ dismissHint: () => {
 },
 ```
 
-### `confirmHintCell` logic
+### No special ghost tap behavior
 
-When user taps a ghost cell, place it for real as a normal move (so it's undoable):
-
-```ts
-confirmHintCell: (row: number, col: number) => {
-  const { hintGhosts, boardSize, cells, completed, puzzle } = get();
-  if (!puzzle || completed) return;
-
-  const idx = row * boardSize + col;
-  const ghostType = hintGhosts.get(idx);
-  if (!ghostType) return;
-
-  const value: CellValue = ghostType === 'star' ? 1 : 2;
-  const changes: CellChange[] = [{ index: idx, previousValue: cells[idx] }];
-  const newCells = [...cells];
-  const prevAutoMarks = [...get().autoMarks];
-  let newAutoMarks = new Set(get().autoMarks);
-
-  newCells[idx] = value;
-  newAutoMarks.delete(idx);
-
-  // If placing a star, run auto-X logic
-  if (value === 1) {
-    const settings = useUserStore.getState().settings;
-    const marks = computeAutoXForStar(newCells, boardSize, puzzle, settings, row, col);
-    applyMarks(newCells, changes, newAutoMarks, marks);
-  }
-
-  const settings = useUserStore.getState().settings;
-  if (settings.haptics) hapticLight();
-
-  const newErrors = settings.highlightErrors
-    ? computeErrors(newCells, boardSize, puzzle)
-    : new Set<string>();
-
-  // Remove this cell from ghosts
-  const newGhosts = new Map(hintGhosts);
-  newGhosts.delete(idx);
-
-  set(state => ({
-    cells: newCells,
-    autoMarks: newAutoMarks,
-    errorCells: newErrors,
-    hintGhosts: newGhosts,
-    moveLog: [...state.moveLog, { changes, prevAutoMarks }],
-    redoStack: [],
-  }));
-
-  // If all ghosts consumed, clear hint state
-  if (newGhosts.size === 0) {
-    set({ hintStepIndex: -1 });
-  }
-
-  const won = checkWin(newCells, boardSize, puzzle);
-  if (won) {
-    if (settings.haptics) hapticSuccess();
-    set({ completed: true });
-  }
-
-  const s = get();
-  persistProgress(s.puzzle, s.cells, s.autoMarks, s.timeMs, s.completed, won);
-},
-```
-
-<!-- pressign the "ghost" shouldnt automatically place what the hinted mark shoudl do, the beahivior should do whatever the actual press does absent of the hint (if "cycle" the first tap shoudl place a mark, if just stars it shoudl place a star, etc) -->
+Tapping a ghost cell does **not** auto-place the hinted value. It runs the normal `tapCell` logic — respecting the current tap mode (cycle, mark, star, erase). The ghosts are purely visual guidance. Any board interaction (including tapping a ghost cell) dismisses all ghosts via the guard in `tapCell`.
 
 ### Reset on puzzle load
 
