@@ -65,7 +65,7 @@ export function WinBanner() {
       ]}
     >
       <Text style={[styles.winInfo, { color: theme.onAccent }]}>
-        {pack?.name} #{puzzleIndex}
+        {pack?.name} #{puzzleIndex + 1}
       </Text>
       <Text style={[styles.winText, { color: theme.onAccent }]}>
         Solved in {formatTime(timeMs)}
