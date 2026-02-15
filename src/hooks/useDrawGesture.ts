@@ -99,9 +99,8 @@ export function useDrawGesture(
   }, []);
 
   const drawGesture = Gesture.Pan()
-    .activateAfterLongPress(
-      100
-    )
+    .maxPointers(1)
+    .activateAfterLongPress(100)
     .minDistance(0)
     .onStart(e => {
       strokeChanges.current = [];
