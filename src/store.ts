@@ -266,6 +266,7 @@ type PuzzleState = {
   recomputeAutoMarks: () => void;
   undo: () => void;
   redo: () => void;
+  applyDrawStroke: (changes: CellChange[]) => void;
   clearBoard: () => void;
   tick: () => void;
 };
@@ -548,6 +549,40 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       set({ completed: true });
     }
     persistProgress(get(), won);
+  },
+
+  applyDrawStroke: (changes: CellChange[]) => {
+    const {
+      completed,
+      puzzle,
+      boardSize,
+      cells,
+      autoMarksNeighbors,
+      autoMarksRowsCols,
+      autoMarksRegions,
+    } = get();
+    if (completed || !puzzle || changes.length === 0) return;
+
+    const settings = useUserStore.getState().settings;
+    const newErrors = settings.highlightErrors
+      ? computeErrors(cells, boardSize, puzzle)
+      : new Set<string>();
+
+    set(state => ({
+      errorCells: newErrors,
+      moveLog: [
+        ...state.moveLog,
+        {
+          changes,
+          prevAutoMarksNeighbors: [...autoMarksNeighbors],
+          prevAutoMarksRowsCols: [...autoMarksRowsCols],
+          prevAutoMarksRegions: [...autoMarksRegions],
+        },
+      ],
+      redoStack: [],
+    }));
+
+    persistProgress(get(), false);
   },
 
   clearBoard: () => {

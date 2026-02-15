@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Settings } from 'lucide-react-native';
 import { BoardView } from '../components/BoardView';
 import { SettingsModal } from '../components/SettingsModal';
@@ -14,6 +14,7 @@ import { useUserStore } from '../stores/userStore';
 import type { RootStackParams } from '../navigation';
 import { useTheme } from '../utils/useTheme';
 import { useZoom } from '../hooks/useZoom';
+import { useDrawGesture } from '../hooks/useDrawGesture';
 import { formatTime } from '../utils/formatTime';
 import { FONT_SIZE_SM } from '../utils/constants';
 
@@ -33,8 +34,41 @@ export function PuzzleScreen({ route, navigation }: Props) {
   const tick = usePuzzleStore(s => s.tick);
   const showTimer = useUserStore(s => s.settings.showTimer);
 
-  const { gesture, scale, translateX, translateY, isZoomed, handleZoomReset } =
-    useZoom(pack?.gridSize ?? 5);
+  const gridSize = pack?.gridSize ?? 5;
+
+  const {
+    pinchGesture,
+    panGesture,
+    scale,
+    translateX,
+    translateY,
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
+    isZoomed,
+    handleZoomReset,
+  } = useZoom(gridSize);
+
+  const boardAreaRef = useRef<View>(null);
+  const boardLayout = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const handleBoardAreaLayout = useCallback(() => {
+    boardAreaRef.current?.measureInWindow((x, y, w, h) => {
+      boardLayout.current = { x, y, width: w, height: h };
+    });
+  }, []);
+
+  const { drawGesture } = useDrawGesture(
+    gridSize,
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
+    boardLayout,
+  );
+
+  const gesture = Gesture.Simultaneous(
+    pinchGesture,
+    Gesture.Race(drawGesture, panGesture),
+  );
 
   // Drive the timer — tick every second while puzzle is active
   useEffect(() => {
@@ -106,7 +140,7 @@ export function PuzzleScreen({ route, navigation }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
       <GestureDetector gesture={gesture}>
-        <View style={styles.boardArea}>
+        <View ref={boardAreaRef} style={styles.boardArea} onLayout={handleBoardAreaLayout}>
           <BoardView
             puzzle={puzzle}
             scale={scale}

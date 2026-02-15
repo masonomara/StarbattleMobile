@@ -114,7 +114,16 @@ export function useZoom(puzzleSize: number) {
       }
     });
 
-  const gesture = Gesture.Simultaneous(pinchGesture, panGesture);
-
-  return { gesture, scale, translateX, translateY, isZoomed, handleZoomReset };
+  return {
+    pinchGesture,
+    panGesture,
+    scale,
+    translateX,
+    translateY,
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
+    isZoomed,
+    handleZoomReset,
+  };
 }
