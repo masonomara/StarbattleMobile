@@ -22,6 +22,3 @@ export function getPack(id: string): Pack | undefined {
   return PACKS.find(p => p.id === id);
 }
 
-export function getPuzzle(packId: string, index: number) {
-  return getPack(packId)?.puzzles[index];
-}
