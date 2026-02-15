@@ -1,5 +1,7 @@
 export type CellValue = 0 | 1 | 2; // 0=empty, 1=star, 2=marked
 
+export type TapMode = 'cycle' | 'mark' | 'star' | 'erase';
+
 export type Progress = {
   puzzleId: string;
   cells: CellValue[];

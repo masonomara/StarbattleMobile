@@ -1,7 +1,18 @@
 import React, { memo } from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
-import { Undo2, Redo2, Minimize2, Trash2 } from 'lucide-react-native';
+import { Alert, View, Pressable, StyleSheet } from 'react-native';
+import {
+  Undo2,
+  Redo2,
+  Minimize2,
+  Trash2,
+  Lightbulb,
+  Pencil,
+  X,
+  Star,
+  Eraser,
+} from 'lucide-react-native';
 import { usePuzzleStore } from '../store';
+import type { TapMode } from '../types/state';
 import {
   SPACING_LG,
   TOOLBAR_BUTTON_SIZE,
@@ -13,6 +24,13 @@ import {
 } from '../utils/constants';
 import { useTheme } from '../utils/useTheme';
 
+const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
+  cycle: Pencil,
+  mark: X,
+  star: Star,
+  erase: Eraser,
+};
+
 type Props = {
   isZoomed: boolean;
   onZoomReset: () => void;
@@ -23,6 +41,8 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
   const undo = usePuzzleStore(s => s.undo);
   const redo = usePuzzleStore(s => s.redo);
   const clearBoard = usePuzzleStore(s => s.clearBoard);
+  const cycleTapMode = usePuzzleStore(s => s.cycleTapMode);
+  const tapMode = usePuzzleStore(s => s.tapMode);
   const completed = usePuzzleStore(s => s.completed);
   const canUndo = usePuzzleStore(s => s.moveLog.length > 0);
   const canRedo = usePuzzleStore(s => s.redoStack.length > 0);
@@ -44,6 +64,36 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
         ]}
       >
         <Minimize2 size={TOOLBAR_ICON_SIZE} color={theme.text} />
+      </Pressable>
+
+      <Pressable
+        onPress={() =>
+          Alert.alert(
+            "Don't be a cheater.",
+            'Just kidding, free hints are coming soon!',
+          )
+        }
+        style={[
+          styles.button,
+          { backgroundColor: theme.card, shadowColor: theme.shadow },
+        ]}
+      >
+        <Lightbulb size={TOOLBAR_ICON_SIZE} color={theme.text} />
+      </Pressable>
+
+      <Pressable
+        onPress={cycleTapMode}
+        disabled={completed}
+        style={[
+          styles.button,
+          { backgroundColor: theme.card, shadowColor: theme.shadow },
+          completed && styles.disabled,
+        ]}
+      >
+        {React.createElement(TAP_MODE_ICONS[tapMode], {
+          size: TOOLBAR_ICON_SIZE,
+          color: theme.text,
+        })}
       </Pressable>
 
       <Pressable
@@ -71,7 +121,16 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
       </Pressable>
 
       <Pressable
-        onPress={clearBoard}
+        onPress={() =>
+          Alert.alert(
+            'Clear Board',
+            'Are you sure you want to clear the board?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Clear', style: 'destructive', onPress: clearBoard },
+            ],
+          )
+        }
         disabled={clearDisabled}
         style={[
           styles.button,

@@ -8,6 +8,7 @@ import type {
   CellChange,
   UserSettings,
   RedoEntry,
+  TapMode,
 } from './types/state';
 import type { Puzzle } from './types/puzzle';
 
@@ -261,8 +262,10 @@ type PuzzleState = {
   timeMs: number;
   moveLog: Move[];
   redoStack: RedoEntry[];
+  tapMode: TapMode;
   loadPuzzle: (puzzle: Puzzle) => void;
   tapCell: (row: number, col: number) => void;
+  cycleTapMode: () => void;
   recomputeAutoMarks: () => void;
   undo: () => void;
   redo: () => void;
@@ -283,6 +286,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   timeMs: 0,
   moveLog: [],
   redoStack: [],
+  tapMode: 'cycle' as TapMode,
 
   loadPuzzle: (puzzle: Puzzle) => {
     const total = puzzle.size * puzzle.size;
@@ -307,6 +311,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       boardSize,
       completed,
       puzzle,
+      tapMode,
       autoMarksNeighbors,
       autoMarksRowsCols,
       autoMarksRegions,
@@ -326,8 +331,23 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     let newRowsCols = new Set(autoMarksRowsCols);
     let newRegions = new Set(autoMarksRegions);
 
-    // Cycle: 0 (empty) -> 2 (mark) -> 1 (star) -> 0 (empty)
-    const next: CellValue = current === 0 ? 2 : current === 2 ? 1 : 0;
+    let next: CellValue;
+    switch (tapMode) {
+      case 'mark':
+        next = current === 2 ? 0 : 2;
+        break;
+      case 'star':
+        next = current === 1 ? 0 : 1;
+        break;
+      case 'erase':
+        if (current === 0) return;
+        next = 0;
+        break;
+      default:
+        // cycle: 0 (empty) -> 2 (mark) -> 1 (star) -> 0 (empty)
+        next = current === 0 ? 2 : current === 2 ? 1 : 0;
+        break;
+    }
     changes.push({ index: idx, previousValue: current });
     newCells[idx] = next;
 
@@ -397,6 +417,13 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     }
 
     persistProgress(get(), won);
+  },
+
+  cycleTapMode: () => {
+    const order: TapMode[] = ['cycle', 'mark', 'star', 'erase'];
+    const current = get().tapMode;
+    const nextIdx = (order.indexOf(current) + 1) % order.length;
+    set({ tapMode: order[nextIdx] });
   },
 
   /** Call after saving settings to sync auto-marks with current toggles. */

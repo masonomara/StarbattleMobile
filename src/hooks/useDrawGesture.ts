@@ -60,17 +60,27 @@ export function useDrawGesture(
     if (visitedCells.current.has(idx)) return;
     visitedCells.current.add(idx);
 
-    // Only mark empty cells
-    if (state.cells[idx] !== 0) return;
+    const isErase = state.tapMode === 'erase';
 
-    strokeChanges.current.push({ index: idx, previousValue: 0 });
-
-    // Preview: set cell to X immediately for visual feedback
-    usePuzzleStore.setState(prev => {
-      const newCells = [...prev.cells];
-      newCells[idx] = 2;
-      return { cells: newCells };
-    });
+    if (isErase) {
+      // Erase mode: clear non-empty cells
+      if (state.cells[idx] === 0) return;
+      strokeChanges.current.push({ index: idx, previousValue: state.cells[idx] });
+      usePuzzleStore.setState(prev => {
+        const newCells = [...prev.cells];
+        newCells[idx] = 0;
+        return { cells: newCells };
+      });
+    } else {
+      // All other modes: mark empty cells
+      if (state.cells[idx] !== 0) return;
+      strokeChanges.current.push({ index: idx, previousValue: 0 });
+      usePuzzleStore.setState(prev => {
+        const newCells = [...prev.cells];
+        newCells[idx] = 2;
+        return { cells: newCells };
+      });
+    }
 
     const settings = useUserStore.getState().settings;
     if (settings.haptics) hapticLight();
@@ -89,7 +99,9 @@ export function useDrawGesture(
   }, []);
 
   const drawGesture = Gesture.Pan()
-    .activateAfterLongPress(350)
+    .activateAfterLongPress(
+      100
+    )
     .minDistance(0)
     .onStart(e => {
       strokeChanges.current = [];
