@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { Settings } from 'lucide-react-native';
+import { Ellipsis } from 'lucide-react-native';
 import { BoardView } from '../components/BoardView';
 import { SettingsModal } from '../components/SettingsModal';
 import { Toolbar } from '../components/Toolbar';
@@ -121,14 +121,9 @@ export function PuzzleScreen({ route, navigation }: Props) {
 
   const renderHeaderRight = useCallback(
     () => (
-      <>
       <Pressable onPress={() => setSettingsVisible(true)} hitSlop={8}>
-        <Settings size={20} color={theme.text} />
+        <Ellipsis size={20} color={theme.text} />
       </Pressable>
-      <Pressable onPress={() => setSettingsVisible(true)} hitSlop={8}>
-        <Settings size={20} color={theme.text} />
-      </Pressable>
-      </>
     ),
     [theme.text],
   );
@@ -145,7 +140,11 @@ export function PuzzleScreen({ route, navigation }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
       <GestureDetector gesture={gesture}>
-        <View ref={boardAreaRef} style={styles.boardArea} onLayout={handleBoardAreaLayout}>
+        <View
+          ref={boardAreaRef}
+          style={styles.boardArea}
+          onLayout={handleBoardAreaLayout}
+        >
           <BoardView
             puzzle={puzzle}
             scale={scale}
