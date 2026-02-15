@@ -394,7 +394,7 @@ Every task needed to ship the plan. Checked off as completed.
 - [x] **1.9b** Update imports in `navigation.tsx`, `HomeScreen.tsx`, `PackScreen.tsx`, `PuzzleScreen.tsx`, `WinBanner.tsx`
 - [x] **1.10** Add `.maxPointers(1)` to the draw gesture Pan in `useDrawGesture.ts`
 - [x] **1.11** Remove `next === 1 &&` guard from win check in `tapCell` in `store.ts` — call `checkWin` unconditionally
-- [ ] **1.12a** Import `usePuzzleStore` in `SettingsModal.tsx`
+- [x] **1.12a** Import `usePuzzleStore` in `SettingsModal.tsx`
 - [x] **1.12b** After each auto-X toggle's `updateSettings` call, add `usePuzzleStore.getState().recomputeAutoMarks()`
 
 ### Phase 2 — Remove Over-Engineering
