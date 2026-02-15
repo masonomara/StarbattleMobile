@@ -5,15 +5,14 @@ import { HomeScreen } from './screens/HomeScreen';
 import { PackScreen } from './screens/PackScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
 
-export type RootStackParams = {
-  Home: undefined;
-  Pack: { packId: string };
-  Puzzle: { packId: string; puzzleIndex: number };
-};
+import type { RootStackParams } from './types/navigation';
+import { useTheme } from './utils/useTheme';
 
 const Stack = createNativeStackNavigator<RootStackParams>();
 
 export function Navigation() {
+  const theme = useTheme();
+
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -24,22 +23,22 @@ export function Navigation() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ headerShown: false }}
+          options={{ headerShown: false, headerTintColor: theme.text }}
         />
         <Stack.Screen
           name="Pack"
           component={PackScreen}
-          options={{ headerTransparent: true }}
+          options={{ headerTransparent: true, headerTintColor: theme.text }}
         />
         <Stack.Screen
           name="Puzzle"
           component={PuzzleScreen}
           options={{
-            // headerTransparent: true,
             title: '',
-                headerTransparent: true,
+            headerTintColor: theme.text,
+
+            headerTransparent: true,
             headerShadowVisible: false,
-            headerTintColor: '#000000',
           }}
         />
       </Stack.Navigator>
