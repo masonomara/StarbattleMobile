@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Text, Button, StyleSheet } from 'react-native';
+import { Animated, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,12 +8,6 @@ import { getPack } from '../packs';
 import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../utils/useTheme';
 import type { RootStackParams } from '../navigation';
-import {
-  SPACING_XS,
-  FONT_SIZE_MD,
-  FONT_SIZE_XL,
-  FONT_WEIGHT_BOLD,
-} from '../utils/constants';
 
 export function WinBanner() {
   const completed = usePuzzleStore(s => s.completed);
@@ -41,6 +35,8 @@ export function WinBanner() {
       bannerTranslateY.setValue(bannerHeight);
       Animated.spring(bannerTranslateY, {
         toValue: 0,
+        damping: 30,
+        stiffness: 300,
         useNativeDriver: true,
       }).start();
     } else {
@@ -64,17 +60,26 @@ export function WinBanner() {
       style={[
         styles.winBanner,
         { backgroundColor: theme.accent },
+        { opacity: bannerHeight ? 1 : 0 },
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      <Text style={[styles.winText, { color: theme.onAccent }]}>Solved in {formatTime(timeMs)}</Text>
-    
-      <Button
-        title={isLastPuzzle ? `Back to ${pack?.name ?? 'Pack'}` : 'Next Puzzle'}
+      <Text style={[styles.winInfo, { color: theme.onAccent }]}>
+        {pack?.name} #{puzzleIndex}
+      </Text>
+      <Text style={[styles.winText, { color: theme.onAccent }]}>
+        Solved in {formatTime(timeMs)}
+      </Text>
+
+      <TouchableOpacity
         onPress={handleNext}
-        color={theme.onAccent}
-        style={[styles.winButton, {backgroundColor: theme.onAccent}]}
-      />
+        activeOpacity={0.8}
+        style={[styles.winButton, { backgroundColor: theme.onAccent }]}
+      >
+        <Text style={[styles.winButtonText, { color: theme.accent }]}>
+          {isLastPuzzle ? `Back to ${pack?.name ?? 'Pack'}` : 'Next Puzzle'}
+        </Text>
+      </TouchableOpacity>
     </Animated.View>
   );
 }
@@ -82,18 +87,41 @@ export function WinBanner() {
 const styles = StyleSheet.create({
   winBanner: {
     position: 'absolute',
-    bottom: 0,
+    bottom: -160,
     left: 0,
     right: 0,
     paddingTop: 24,
-    paddingLeft: 16,
-    paddingRight: 16,
-    paddingBottom: 16,
+    paddingLeft: 24,
+    paddingRight: 24,
+    paddingBottom: 24,
     alignItems: 'center',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
   },
-  winText: { fontSize: FONT_SIZE_XL, fontWeight: FONT_WEIGHT_BOLD },
-  winTime: { fontSize: FONT_SIZE_MD, marginTop: SPACING_XS },
-  winButton: { height: 44, width: '100%', borderRadius: 16,}
+  winText: {
+    fontSize: 31,
+    lineHeight: 39,
+    fontWeight: 600,
+    letterSpacing: -0.2,
+  },
+  winInfo: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: 600,
+    letterSpacing: -0.1,
+  },
+
+  winButton: {
+    height: 40,
+    width: '100%',
+    borderRadius: 120,
+    marginBottom: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  winButtonText: {
+    fontSize: 16,
+    fontWeight: 600,
+  },
 });
