@@ -6,22 +6,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from '../store';
 import { getPack } from '../packs';
 import { formatTime } from '../utils/formatTime';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../hooks/useTheme';
 import { parsePuzzleId } from '../utils/puzzleId';
 import type { RootStackParams } from '../types/navigation';
-import {
-  FONT_SIZE_MD,
-  FONT_WEIGHT_SEMIBOLD,
-  SPACING_XL,
-  WIN_BANNER_PADDING,
-  WIN_BANNER_BORDER_RADIUS,
-  WIN_BANNER_BUTTON_HEIGHT,
-  WIN_BANNER_BUTTON_RADIUS,
-  WIN_BANNER_TITLE_SIZE,
-  WIN_BANNER_TITLE_LINE_HEIGHT,
-  WIN_BANNER_INFO_SIZE,
-  WIN_BANNER_INFO_LINE_HEIGHT,
-} from '../utils/constants';
+import { FONT_SIZE_MD, FONT_WEIGHT_SEMIBOLD, SPACING_XL } from '../utils/constants';
 
 export function WinBanner() {
   const completed = usePuzzleStore(s => s.completed);
@@ -102,32 +90,32 @@ export function WinBanner() {
 const styles = StyleSheet.create({
   winBanner: {
     position: 'absolute',
-    bottom: -80,
+    bottom: -56,
     left: 0,
     right: 0,
-    paddingTop: WIN_BANNER_PADDING,
-    paddingHorizontal: WIN_BANNER_PADDING,
+    paddingTop: 24,
+    paddingHorizontal: 24,
     paddingBottom: 80,
     alignItems: 'center',
-    borderTopLeftRadius: WIN_BANNER_BORDER_RADIUS,
-    borderTopRightRadius: WIN_BANNER_BORDER_RADIUS,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
   },
   winText: {
-    fontSize: WIN_BANNER_TITLE_SIZE,
-    lineHeight: WIN_BANNER_TITLE_LINE_HEIGHT,
+    fontSize: 31,
+    lineHeight: 39,
     fontWeight: FONT_WEIGHT_SEMIBOLD,
     letterSpacing: -0.2,
   },
   winInfo: {
-    fontSize: WIN_BANNER_INFO_SIZE,
-    lineHeight: WIN_BANNER_INFO_LINE_HEIGHT,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: FONT_WEIGHT_SEMIBOLD,
     letterSpacing: -0.1,
   },
   winButton: {
-    height: WIN_BANNER_BUTTON_HEIGHT,
+    height: 40,
     width: '100%',
-    borderRadius: WIN_BANNER_BUTTON_RADIUS,
+    borderRadius: 120,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: SPACING_XL,

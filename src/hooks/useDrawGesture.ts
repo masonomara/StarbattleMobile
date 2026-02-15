@@ -5,11 +5,7 @@ import { useUserStore } from '../stores/userStore';
 import { hapticLight } from '../haptics';
 import { CELL_SIZE } from '../utils/constants';
 import type { CellChange } from '../types/state';
-
-type BoardLayout = {
-  width: number;
-  height: number;
-};
+import type { BoardLayout } from '../types/board';
 
 export function useDrawGesture(
   puzzleSize: number,

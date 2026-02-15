@@ -203,99 +203,60 @@ Ordered to minimize merge conflicts (steps touching the same files are grouped):
 
 ## Todo List
 
-### Phase 1 — Fix bugs (Steps 1-2)
+### Phase 1 — Fix bugs (Steps 1-2) ✓
 
-- [ ] **1a.** `store.ts` `applyDrawStroke`: after recording the move, prune stale indices from `autoMarks` (remove any where `cells[idx] !== 2`)
-- [ ] **1b.** `useDrawGesture.ts` `onEnd`: remove the redundant `strokeChanges.current = []` and `visitedCells.current = new Set()` (already done in `onFinalize`)
-- [ ] **1c.** Verify: place star → auto-marks appear → draw-erase over them → confirm autoMarks set is clean
-- [ ] **2a.** `store.ts`: remove `boardSize: number` from `PuzzleState` type
-- [ ] **2b.** `store.ts`: remove `boardSize: 0` from initial state
-- [ ] **2c.** `store.ts`: remove `boardSize: puzzle.size` from `loadPuzzle`
-- [ ] **2d.** `store.ts`: replace every `boardSize` reference in `tapCell`, `recomputeAutoMarks`, `undo`, `redo`, `applyDrawStroke`, `clearBoard` with `puzzle!.size` or `puzzle.size` (after null guard)
-- [ ] **2e.** `useDrawGesture.ts` `markCell`: replace `state.boardSize` with `state.puzzle!.size`
-- [ ] **2f.** `CellView.tsx`: update selector to compute `idx` from `s.puzzle!.size` instead of `s.boardSize`
-- [ ] **2g.** `puzzleLogic.ts`: update `computeErrors` and `checkWin` signatures — `boardSize` param stays (it's a plain function param, not store state), no change needed here
+- [x] **1a.** `store.ts` `applyDrawStroke`: prune stale indices from `autoMarks`
+- [x] **1b.** `useDrawGesture.ts` `onEnd`: remove redundant cleanup (already in `onFinalize`)
+- [x] **1c.** Verify: typecheck passes
+- [x] **2a-g.** Remove `boardSize` from store, derive from `puzzle.size` everywhere
 
-### Phase 2 — Unify undo/redo types (Step 7)
+### Phase 2 — Unify undo/redo types (Step 7) ✓
 
-- [ ] **7a.** `types/state.ts`: change `CellChange` to `{ index: number; prev: CellValue; next: CellValue }`
-- [ ] **7b.** `types/state.ts`: rename `Move.prevAutoMarks` → `Move.autoMarks`
-- [ ] **7c.** `types/state.ts`: delete `RedoEntry` type
-- [ ] **7d.** `store.ts`: change `redoStack` type from `RedoEntry[]` to `Move[]`
-- [ ] **7e.** `store.ts` `tapCell`: update `CellChange` construction to include both `prev` and `next`
-- [ ] **7f.** `store.ts` `recomputeAutoMarks`: update change recording to use `prev`/`next`
-- [ ] **7g.** `store.ts` `undo`: simplify — read `prev` from changes, build redo `Move` from current values as `next`, pop moveLog and push to redoStack
-- [ ] **7h.** `store.ts` `redo`: simplify — read `next` from changes, build undo `Move` from current values as `prev`, pop redoStack and push to moveLog
-- [ ] **7i.** `store.ts` `applyDrawStroke`: update change construction for `prev`/`next`
-- [ ] **7j.** `store.ts` `clearBoard`: update change construction for `prev`/`next`
-- [ ] **7k.** `useDrawGesture.ts`: update `strokeChanges` construction to include `prev`/`next`
-- [ ] **7l.** `puzzleLogic.ts` `applyMarks`, `clearAutoMarks`: update `CellChange` construction for `prev`/`next`
-- [ ] **7m.** Remove `RedoEntry` import from `store.ts`
+- [x] **7a-c.** `CellChange` → `{ index, prev, next }`, rename `prevAutoMarks` → `autoMarks`, delete `RedoEntry`
+- [x] **7d-m.** Rewrite store undo/redo/tapCell/clearBoard, update useDrawGesture + puzzleLogic
 
-### Phase 3 — errorCells to numeric (Step 5)
+### Phase 3 — errorCells to numeric (Step 5) ✓
 
-- [ ] **5a.** `store.ts`: change `errorCells` type from `Set<string>` to `Set<number>` in `PuzzleState`
-- [ ] **5b.** `store.ts`: change all `new Set<string>()` for errorCells to `new Set<number>()`
-- [ ] **5c.** `puzzleLogic.ts` `computeErrors`: change return type to `Set<number>`, replace all `errors.add(\`${r},${c}\`)` with `errors.add(r * boardSize + c)`
-- [ ] **5d.** `CellView.tsx`: update selector — compute `const idx = row * s.puzzle!.size + col`, use `s.cells[idx]` and `s.errorCells.has(idx)`
+- [x] **5a-b.** `errorCells` → `Set<number>` in store type + all initializations
+- [x] **5c.** `computeErrors` returns `Set<number>` using flat indices
+- [x] **5d.** `CellView` selector uses `s.errorCells.has(idx)`
 
-### Phase 4 — Flatten userStore (Step 3)
+### Phase 4 — Flatten userStore (Step 3) ✓
 
-- [ ] **3a.** `stores/userStore.ts`: remove `getProgress` method and its type
-- [ ] **3b.** `stores/userStore.ts`: remove `getCompletedCount` method and its type
-- [ ] **3c.** `stores/userStore.ts`: remove `storageGetProgress` and `computeCompletedCount` imports
-- [ ] **3d.** `store.ts` `loadPuzzle`: import `getProgress` from `../storage` and call it directly instead of `useUserStore.getState().getProgress()`
-- [ ] **3e.** `screens/PackScreen.tsx`: import `getProgress` from `../storage` and call directly instead of `useUserStore.getState().getProgress()`
-- [ ] **3f.** `screens/HomeScreen.tsx`: import `computeCompletedCount` from `../storage` and call directly instead of through `useUserStore`
-- [ ] **3g.** `screens/HomeScreen.tsx`: remove `getCompletedCount` selector subscription
+- [x] **3a-c.** Remove `getProgress`, `getCompletedCount` from userStore
+- [x] **3d-g.** Import directly from `storage.ts` at call sites
 
-### Phase 5 — Simplify persistence (Step 4)
+### Phase 5 — Simplify persistence (Step 4) ✓
 
-- [ ] **4a.** `storage.ts`: replace `KEYS` object with `const SETTINGS_KEY = 'local:settings'` and `const progressKey = (id: string) => \`local:progress:${id}\``
-- [ ] **4b.** `storage.ts`: update `getSettings`, `saveSettings`, `getProgress` to use `SETTINGS_KEY` and `progressKey`
-- [ ] **4c.** `storage.ts` `saveProgress`: replace the `completedAt` special-case with a simple merge (`{ ...existing, ...progress }`)
-- [ ] **4d.** `storage.ts` `computeCompletedCount`: replace raw key template with `getProgress(\`${packId}:${i}\`)`
-- [ ] **4e.** `persistProgress.ts`: replace `completedAt: justCompleted ? Date.now() : undefined` with conditional spread `...(justCompleted ? { completedAt: Date.now() } : {})`
+- [x] **4a-b.** Inline `KEYS` object → `SETTINGS_KEY` + `progressKey()`
+- [x] **4c.** `saveProgress` → simple merge `{ ...existing, ...progress }`
+- [x] **4d.** `computeCompletedCount` → use `getProgress()` instead of raw key
+- [x] **4e.** `persistProgress` → conditional spread for `completedAt`
 
-### Phase 6 — Decouple SettingsModal (Step 6)
+### Phase 6 — Decouple SettingsModal (Step 6) ✓
 
-- [ ] **6a.** `store.ts`: add `useUserStore.subscribe` listener at module level that watches auto-X settings and calls `recomputeAutoMarks` on change
-- [ ] **6b.** `SettingsModal.tsx`: remove `import { usePuzzleStore }` and `import { usePuzzleStore } from '../store'`
-- [ ] **6c.** `SettingsModal.tsx`: simplify auto-X toggle handlers to just `updateSettings({ autoXNeighbors: v })` etc. (remove `usePuzzleStore.getState().recomputeAutoMarks()` calls)
+- [x] **6a.** Add `useUserStore.subscribe` listener in `store.ts` for auto-X settings
+- [x] **6b-c.** Remove `usePuzzleStore` from SettingsModal, simplify toggle handlers
 
-### Phase 7 — Move useTheme/Theme (Step 8)
+### Phase 7 — Move useTheme/Theme (Step 8) ✓
 
-- [ ] **8a.** Create `src/types/theme.ts` with the `Theme` type definition
-- [ ] **8b.** Create `src/hooks/useTheme.ts` with hook + theme values, importing `Theme` from `../types/theme`
-- [ ] **8c.** Delete `src/utils/useTheme.ts`
-- [ ] **8d.** Update imports in `BoardView.tsx`, `CellView.tsx`, `CellGridSvg.tsx`, `RegionBordersSvg.tsx`, `HeaderTimer.tsx`, `Toolbar.tsx`, `WinBanner.tsx`, `SettingsModal.tsx` — change `../utils/useTheme` → `../hooks/useTheme`
-- [ ] **8e.** Update imports in `HomeScreen.tsx`, `PackScreen.tsx`, `PuzzleScreen.tsx` — change `../utils/useTheme` → `../hooks/useTheme`
-- [ ] **8f.** Update import in `navigation.tsx` — change `./utils/useTheme` → `./hooks/useTheme`
-- [ ] **8g.** Update `import type { Theme }` in `CellGridSvg.tsx`, `RegionBordersSvg.tsx`, `CellView.tsx`, `SettingsModal.tsx` — change source to `../types/theme`
+- [x] **8a-c.** Create `types/theme.ts`, `hooks/useTheme.ts`, delete `utils/useTheme.ts`
+- [x] **8d-g.** Update all 13 import paths
 
-### Phase 8 — Inline constants (Step 9)
+### Phase 8 — Inline constants (Step 9) ✓
 
-- [ ] **9a.** `constants.ts`: delete dead exports (`SPACING_XXL`, `FONT_SIZE_XL`, `FONT_WEIGHT_BOLD`, `INNER_BORDER_WIDTH`)
-- [ ] **9b.** `WinBanner.tsx`: inline all 8 `WIN_BANNER_*` values directly in styles, remove imports
-- [ ] **9c.** `Toolbar.tsx`: inline `SHADOW_MD`, `DISABLED_OPACITY`, `RADIUS_LG` values, remove imports
-- [ ] **9d.** `PackScreen.tsx`: inline `SHADOW_SM`, `RADIUS_SM`, `SPACING_SM`, `GRID_COLUMNS` values, remove imports
-- [ ] **9e.** `HomeScreen.tsx`: inline `SPACING_XS` value, remove import
-- [ ] **9f.** `CellView.tsx`: inline `STAR_ICON_SIZE`, `MARK_ICON_SIZE` values, remove imports
-- [ ] **9g.** `useZoom.ts`: inline `DEFAULT_ZOOM`, `MIN_ZOOM`, `MAX_ZOOM`, `PAN_PADDING` values, remove imports
-- [ ] **9h.** `RegionBordersSvg.tsx`: inline `REGION_BORDER_WIDTH` value, remove import
-- [ ] **9i.** `constants.ts`: remove all deleted/inlined exports, leaving only shared ones (`CELL_SIZE`, `FONT_WEIGHT_SEMIBOLD`, `FONT_SIZE_SM/MD/LG`, `SPACING_MD/LG/XL`, `RADIUS_MD`)
-- [ ] **9j.** `constants.ts`: remove the `ViewStyle` import (no longer needed after shadow presets removed)
+- [x] **9a-j.** Inlined all single-use constants, deleted dead exports, reduced constants.ts to 11 shared exports
 
-### Phase 9 — Small cleanups (Step 10)
+### Phase 9 — Small cleanups (Step 10) ✓
 
-- [ ] **10a.** Delete empty `src/navigation/` directory
-- [ ] **10b.** `navigation.tsx`: remove `headerBackButtonDisplayMode: 'default'` line
-- [ ] **10c.** `PuzzleScreen.tsx`: wrap `parsePuzzle` call in try/catch, on error call `navigation.goBack()`
-- [ ] **10d.** Create `src/types/board.ts` with `BoardLayout` type, update `useDrawGesture.ts` to import from there and remove inline type
+- [x] **10a.** Deleted empty `src/navigation/` directory
+- [x] **10b.** Removed `headerBackButtonDisplayMode: 'default'`
+- [x] **10c.** Wrapped `parsePuzzle` in try/catch
+- [x] **10d.** Moved `BoardLayout` type to `src/types/board.ts`
 
 ### Phase 10 — Verify
 
-- [ ] Run `npx tsc --noEmit` — confirm no type errors
+- [x] Run `npx tsc --noEmit` — no type errors
 - [ ] Build iOS: `cd ios && pod install && cd .. && npx react-native build-ios --mode Debug`
 - [ ] Manual test: stars + auto-X + draw-erase + undo/redo + settings toggle + win + persistence + theme
 

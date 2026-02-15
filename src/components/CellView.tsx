@@ -4,8 +4,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { StarIcon } from './icons/StarIcon';
 import { MarkIcon } from './icons/MarkIcon';
 import { usePuzzleStore } from '../store';
-import { CELL_SIZE, STAR_ICON_SIZE, MARK_ICON_SIZE } from '../utils/constants';
-import type { Theme } from '../utils/useTheme';
+import { CELL_SIZE } from '../utils/constants';
+import type { Theme } from '../types/theme';
 
 type Props = {
   row: number;
@@ -25,7 +25,7 @@ export const CellView = memo(function CellView({
       const idx = row * s.puzzle!.size + col;
       return {
         value: s.cells[idx],
-        hasError: s.errorCells.has(`${row},${col}`),
+        hasError: s.errorCells.has(idx),
       };
     }),
   );
@@ -46,9 +46,9 @@ export const CellView = memo(function CellView({
         },
       ]}
     >
-      {value === 1 && <StarIcon size={STAR_ICON_SIZE} color={starColor} />}
+      {value === 1 && <StarIcon size={22} color={starColor} />}
       {value === 2 && (
-        <MarkIcon size={MARK_ICON_SIZE} color={theme.markColor} />
+        <MarkIcon size={14} color={theme.markColor} />
       )}
     </Pressable>
   );

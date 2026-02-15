@@ -17,8 +17,8 @@ export function persistProgress(
     autoMarks: [...autoMarks],
     timeMs,
     completed,
-    completedAt: justCompleted ? Date.now() : undefined,
     updatedAt: Date.now(),
+    ...(justCompleted ? { completedAt: Date.now() } : {}),
   };
   useUserStore.getState().saveProgress(progress);
 }

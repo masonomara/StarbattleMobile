@@ -3,7 +3,7 @@ import { Text, StyleSheet } from 'react-native';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { formatTime } from '../utils/formatTime';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../hooks/useTheme';
 import { FONT_SIZE_SM } from '../utils/constants';
 
 export function HeaderTimer() {

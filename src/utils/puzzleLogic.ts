@@ -131,23 +131,23 @@ export function computeErrors(
   cells: CellValue[],
   boardSize: number,
   puzzle: Puzzle,
-): Set<string> {
-  const errors = new Set<string>();
+): Set<number> {
+  const errors = new Set<number>();
 
-  const stars: { r: number; c: number }[] = [];
+  const starIndices: number[] = [];
   for (let i = 0; i < cells.length; i++) {
-    if (cells[i] === 1) {
-      stars.push({ r: Math.floor(i / boardSize), c: i % boardSize });
-    }
+    if (cells[i] === 1) starIndices.push(i);
   }
 
-  for (let i = 0; i < stars.length; i++) {
-    for (let j = i + 1; j < stars.length; j++) {
-      const dr = Math.abs(stars[i].r - stars[j].r);
-      const dc = Math.abs(stars[i].c - stars[j].c);
-      if (dr <= 1 && dc <= 1) {
-        errors.add(`${stars[i].r},${stars[i].c}`);
-        errors.add(`${stars[j].r},${stars[j].c}`);
+  for (let i = 0; i < starIndices.length; i++) {
+    for (let j = i + 1; j < starIndices.length; j++) {
+      const ri = Math.floor(starIndices[i] / boardSize);
+      const ci = starIndices[i] % boardSize;
+      const rj = Math.floor(starIndices[j] / boardSize);
+      const cj = starIndices[j] % boardSize;
+      if (Math.abs(ri - rj) <= 1 && Math.abs(ci - cj) <= 1) {
+        errors.add(starIndices[i]);
+        errors.add(starIndices[j]);
       }
     }
   }
@@ -155,36 +155,39 @@ export function computeErrors(
   for (let r = 0; r < boardSize; r++) {
     const rowStars: number[] = [];
     for (let c = 0; c < boardSize; c++) {
-      if (cells[r * boardSize + c] === 1) rowStars.push(c);
+      const idx = r * boardSize + c;
+      if (cells[idx] === 1) rowStars.push(idx);
     }
     if (rowStars.length > puzzle.stars) {
-      for (const c of rowStars) errors.add(`${r},${c}`);
+      for (const idx of rowStars) errors.add(idx);
     }
   }
 
   for (let c = 0; c < boardSize; c++) {
     const colStars: number[] = [];
     for (let r = 0; r < boardSize; r++) {
-      if (cells[r * boardSize + c] === 1) colStars.push(r);
+      const idx = r * boardSize + c;
+      if (cells[idx] === 1) colStars.push(idx);
     }
     if (colStars.length > puzzle.stars) {
-      for (const r of colStars) errors.add(`${r},${c}`);
+      for (const idx of colStars) errors.add(idx);
     }
   }
 
-  const regionMap = new Map<number, { r: number; c: number }[]>();
+  const regionMap = new Map<number, number[]>();
   for (let r = 0; r < boardSize; r++) {
     for (let c = 0; c < boardSize; c++) {
-      if (cells[r * boardSize + c] === 1) {
+      const idx = r * boardSize + c;
+      if (cells[idx] === 1) {
         const region = puzzle.regions[r][c];
         if (!regionMap.has(region)) regionMap.set(region, []);
-        regionMap.get(region)!.push({ r, c });
+        regionMap.get(region)!.push(idx);
       }
     }
   }
   for (const regionStars of regionMap.values()) {
     if (regionStars.length > puzzle.stars) {
-      for (const { r, c } of regionStars) errors.add(`${r},${c}`);
+      for (const idx of regionStars) errors.add(idx);
     }
   }
 

@@ -3,18 +3,15 @@ import { Text, Pressable, FlatList, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getPack } from '../packs';
 import { useUserStore } from '../stores/userStore';
+import { getProgress } from '../storage';
 import {
-  SPACING_SM,
   SPACING_LG,
-  RADIUS_SM,
   FONT_SIZE_LG,
   FONT_WEIGHT_SEMIBOLD,
-  GRID_COLUMNS,
-  SHADOW_SM,
 } from '../utils/constants';
 import type { RootStackParams } from '../types/navigation';
 import type { RawPuzzle } from '../types/puzzle';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../hooks/useTheme';
 import { makePuzzleId } from '../utils/puzzleId';
 
 type Props = NativeStackScreenProps<RootStackParams, 'Pack'>;
@@ -39,7 +36,7 @@ export function PackScreen({ route, navigation }: Props) {
     index: number;
   }) => {
     const puzzleId = makePuzzleId(packId, index);
-    const progress = useUserStore.getState().getProgress(puzzleId);
+    const progress = getProgress(puzzleId);
     const isCompleted = progress?.completed ?? false;
 
     return (
@@ -73,7 +70,7 @@ export function PackScreen({ route, navigation }: Props) {
       extraData={progressVersion}
       keyExtractor={(_, i) => String(i)}
       renderItem={renderPuzzle}
-      numColumns={GRID_COLUMNS}
+      numColumns={5}
       contentContainerStyle={styles.grid}
       style={{ backgroundColor: theme.bg }}
     />
@@ -85,11 +82,14 @@ const styles = StyleSheet.create({
   puzzleCell: {
     flex: 1,
     aspectRatio: 1,
-    margin: SPACING_SM,
-    borderRadius: RADIUS_SM,
+    margin: 6,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOW_SM,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
   puzzleNumber: { fontSize: FONT_SIZE_LG, fontWeight: FONT_WEIGHT_SEMIBOLD },
 });

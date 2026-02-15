@@ -15,7 +15,7 @@ import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { persistProgress as persistProgressUtil } from '../utils/persistProgress';
 import type { RootStackParams } from '../types/navigation';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { makePuzzleId } from '../utils/puzzleId';
@@ -79,9 +79,13 @@ export function PuzzleScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     if (!rawPuzzle) return;
-    const puzzleId = makePuzzleId(packId, puzzleIndex);
-    const parsed = parsePuzzle(rawPuzzle, puzzleId);
-    loadPuzzle(parsed);
+    try {
+      const puzzleId = makePuzzleId(packId, puzzleIndex);
+      const parsed = parsePuzzle(rawPuzzle, puzzleId);
+      loadPuzzle(parsed);
+    } catch {
+      navigation.goBack();
+    }
   }, [rawPuzzle, packId, puzzleIndex, loadPuzzle, navigation, pack?.name]);
 
   useEffect(() => {

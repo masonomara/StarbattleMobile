@@ -3,8 +3,8 @@ import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getAllPacks } from '../packs';
 import { useUserStore } from '../stores/userStore';
+import { computeCompletedCount } from '../storage';
 import {
-  SPACING_XS,
   SPACING_MD,
   SPACING_XL,
   RADIUS_MD,
@@ -15,19 +15,18 @@ import {
 } from '../utils/constants';
 import type { Pack } from '../types/puzzle';
 import type { RootStackParams } from '../types/navigation';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../hooks/useTheme';
 
 type Props = NativeStackScreenProps<RootStackParams, 'Home'>;
 
 export function HomeScreen({ navigation }: Props) {
   const packs = getAllPacks();
   const theme = useTheme();
-  const getCompletedCount = useUserStore(s => s.getCompletedCount);
   const progressVersion = useUserStore(s => s.progressVersion);
 
   const renderPack = useCallback(({ item }: { item: Pack }) => {
     const total = item.puzzles.length;
-    const completed = getCompletedCount(item.id, total);
+    const completed = computeCompletedCount(item.id, total);
 
     return (
       <Pressable
@@ -50,7 +49,7 @@ export function HomeScreen({ navigation }: Props) {
         </Text>
       </Pressable>
     );
-  }, [theme, navigation, getCompletedCount]);
+  }, [theme, navigation]);
 
   return (
     <FlatList
@@ -76,6 +75,6 @@ const styles = StyleSheet.create({
   },
   packInfo: { flex: 1 },
   packName: { fontSize: FONT_SIZE_LG, fontWeight: FONT_WEIGHT_SEMIBOLD },
-  packMeta: { fontSize: FONT_SIZE_SM, marginTop: SPACING_XS },
+  packMeta: { fontSize: FONT_SIZE_SM, marginTop: 4 },
   packProgress: { fontSize: FONT_SIZE_MD, fontWeight: FONT_WEIGHT_SEMIBOLD },
 });

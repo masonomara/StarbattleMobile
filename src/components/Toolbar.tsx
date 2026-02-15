@@ -15,8 +15,7 @@ import { usePuzzleStore } from '../store';
 import { hapticMedium } from '../haptics';
 import { useUserStore } from '../stores/userStore';
 import type { TapMode } from '../types/state';
-import { RADIUS_LG, SHADOW_MD, DISABLED_OPACITY } from '../utils/constants';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../hooks/useTheme';
 
 const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   cycle: Pencil,
@@ -144,7 +143,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
 const styles = StyleSheet.create({
   toolbar: {
     position: 'absolute',
-    bottom: 56,
+    bottom: 28,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -154,10 +153,13 @@ const styles = StyleSheet.create({
   button: {
     width: 44,
     height: 44,
-    borderRadius: RADIUS_LG,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOW_MD,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  disabled: { opacity: DISABLED_OPACITY },
+  disabled: { opacity: 0.3 },
 });

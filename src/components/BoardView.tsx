@@ -6,7 +6,7 @@ import { RegionBordersSvg } from './RegionBordersSvg';
 import { usePuzzleStore } from '../store';
 import type { Puzzle } from '../types/puzzle';
 import { CELL_SIZE } from '../utils/constants';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../hooks/useTheme';
 
 type Props = {
   puzzle: Puzzle;

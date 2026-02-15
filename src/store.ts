@@ -9,6 +9,7 @@ import {
   checkWin,
 } from './utils/puzzleLogic';
 import { persistProgress } from './utils/persistProgress';
+import { getProgress } from './storage';
 import type { CellValue, Move, CellChange, TapMode } from './types/state';
 import type { Puzzle } from './types/puzzle';
 
@@ -16,7 +17,7 @@ type PuzzleState = {
   puzzle: Puzzle | null;
   cells: CellValue[];
   autoMarks: Set<number>;
-  errorCells: Set<string>;
+  errorCells: Set<number>;
   completed: boolean;
   timeMs: number;
   moveLog: Move[];
@@ -37,7 +38,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   puzzle: null,
   cells: [],
   autoMarks: new Set<number>(),
-  errorCells: new Set<string>(),
+  errorCells: new Set<number>(),
   completed: false,
   timeMs: 0,
   moveLog: [],
@@ -46,12 +47,12 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
   loadPuzzle: (puzzle: Puzzle) => {
     const total = puzzle.size * puzzle.size;
-    const saved = useUserStore.getState().getProgress(puzzle.id);
+    const saved = getProgress(puzzle.id);
     set({
       puzzle,
       cells: saved ? saved.cells : new Array<CellValue>(total).fill(0),
       autoMarks: new Set(saved?.autoMarks ?? []),
-      errorCells: new Set<string>(),
+      errorCells: new Set<number>(),
       completed: saved?.completed ?? false,
       timeMs: saved?.timeMs ?? 0,
       moveLog: [],
@@ -95,17 +96,31 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     newAutoMarks.delete(idx);
 
     if (next === 1) {
-      const marks = computeAutoXForStar(newCells, size, puzzle, settings, row, col);
+      const marks = computeAutoXForStar(
+        newCells,
+        size,
+        puzzle,
+        settings,
+        row,
+        col,
+      );
       applyMarks(newCells, changes, newAutoMarks, marks);
     } else if (current === 1 && next === 0) {
-      newAutoMarks = rebuildAutoMarks(newCells, changes, newAutoMarks, size, puzzle, settings);
+      newAutoMarks = rebuildAutoMarks(
+        newCells,
+        changes,
+        newAutoMarks,
+        size,
+        puzzle,
+        settings,
+      );
     }
 
     if (settings.haptics) hapticLight();
 
     const newErrors = settings.highlightErrors
       ? computeErrors(newCells, size, puzzle)
-      : new Set<string>();
+      : new Set<number>();
 
     set(state => ({
       cells: newCells,
@@ -142,7 +157,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const newCells = [...cells];
     const savedAutoMarks = [...autoMarks];
 
-    const newAutoMarks = rebuildAutoMarks(newCells, changes, autoMarks, size, puzzle, settings);
+    const newAutoMarks = rebuildAutoMarks(
+      newCells,
+      changes,
+      autoMarks,
+      size,
+      puzzle,
+      settings,
+    );
 
     if (changes.length === 0) return;
 
@@ -153,7 +175,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       redoStack: [],
     }));
     const s = get();
-    persistProgress(s.puzzle, s.cells, s.autoMarks, s.timeMs, s.completed, false);
+    persistProgress(
+      s.puzzle,
+      s.cells,
+      s.autoMarks,
+      s.timeMs,
+      s.completed,
+      false,
+    );
   },
 
   undo: () => {
@@ -183,7 +212,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const undoErrors =
       settings.highlightErrors && puzzle
         ? computeErrors(newCells, puzzle.size, puzzle)
-        : new Set<string>();
+        : new Set<number>();
 
     set(state => ({
       cells: newCells,
@@ -193,7 +222,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       redoStack: [...state.redoStack, redoMove],
     }));
     const s = get();
-    persistProgress(s.puzzle, s.cells, s.autoMarks, s.timeMs, s.completed, false);
+    persistProgress(
+      s.puzzle,
+      s.cells,
+      s.autoMarks,
+      s.timeMs,
+      s.completed,
+      false,
+    );
   },
 
   redo: () => {
@@ -223,7 +259,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const redoErrors =
       settings.highlightErrors && puzzle
         ? computeErrors(newCells, puzzle!.size, puzzle!)
-        : new Set<string>();
+        : new Set<number>();
 
     set(state => ({
       cells: newCells,
@@ -257,7 +293,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
       const currentErrors = settings.highlightErrors
         ? computeErrors(state.cells, size, puzzle)
-        : new Set<string>();
+        : new Set<number>();
       return {
         autoMarks: newAutoMarks,
         errorCells: currentErrors,
@@ -270,7 +306,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     });
 
     const s = get();
-    persistProgress(s.puzzle, s.cells, s.autoMarks, s.timeMs, s.completed, false);
+    persistProgress(
+      s.puzzle,
+      s.cells,
+      s.autoMarks,
+      s.timeMs,
+      s.completed,
+      false,
+    );
   },
 
   clearBoard: () => {
@@ -291,12 +334,19 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     set(state => ({
       cells: newCells,
       autoMarks: new Set<number>(),
-      errorCells: new Set<string>(),
+      errorCells: new Set<number>(),
       moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }],
       redoStack: [],
     }));
     const s = get();
-    persistProgress(s.puzzle, s.cells, s.autoMarks, s.timeMs, s.completed, false);
+    persistProgress(
+      s.puzzle,
+      s.cells,
+      s.autoMarks,
+      s.timeMs,
+      s.completed,
+      false,
+    );
   },
 
   tick: () => {
@@ -305,3 +355,20 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     set(state => ({ timeMs: state.timeMs + 1000 }));
   },
 }));
+
+let prevAutoX = {
+  n: useUserStore.getState().settings.autoXNeighbors,
+  rc: useUserStore.getState().settings.autoXRowsCols,
+  rg: useUserStore.getState().settings.autoXRegions,
+};
+useUserStore.subscribe(state => {
+  const {
+    autoXNeighbors: n,
+    autoXRowsCols: rc,
+    autoXRegions: rg,
+  } = state.settings;
+  if (n !== prevAutoX.n || rc !== prevAutoX.rc || rg !== prevAutoX.rg) {
+    prevAutoX = { n, rc, rg };
+    usePuzzleStore.getState().recomputeAutoMarks();
+  }
+});

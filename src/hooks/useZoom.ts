@@ -1,13 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { Animated, useWindowDimensions } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
-import {
-  CELL_SIZE,
-  DEFAULT_ZOOM,
-  MAX_ZOOM,
-  MIN_ZOOM,
-  PAN_PADDING,
-} from '../utils/constants';
+import { CELL_SIZE } from '../utils/constants';
+
+const DEFAULT_ZOOM = 1;
+const MIN_ZOOM = 0.67;
+const MAX_ZOOM = 3;
+const PAN_PADDING = 30;
 
 const SPRING_CONFIG = { friction: 19, tension: 90, useNativeDriver: true } as const;
 

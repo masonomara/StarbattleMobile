@@ -6,7 +6,7 @@ import { PackScreen } from './screens/PackScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
 
 import type { RootStackParams } from './types/navigation';
-import { useTheme } from './utils/useTheme';
+import { useTheme } from './hooks/useTheme';
 
 const Stack = createNativeStackNavigator<RootStackParams>();
 
@@ -17,7 +17,6 @@ export function Navigation() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerBackButtonDisplayMode: 'default',
           statusBarStyle: theme.isDark ? 'light' : 'dark',
         }}
       >

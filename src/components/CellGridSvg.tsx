@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import Svg, { Line } from 'react-native-svg';
 import { CELL_SIZE } from '../utils/constants';
-import type { Theme } from '../utils/useTheme';
+import type { Theme } from '../types/theme';
 
 type Props = {
   size: number;
