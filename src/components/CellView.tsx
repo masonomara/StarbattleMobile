@@ -48,17 +48,15 @@ export const CellView = memo(function CellView({
       ]}
     >
       {value === 1 && <StarIcon size={22} color={starColor} />}
-      {value === 2 && (
-        <MarkIcon size={14} color={theme.markColor} />
-      )}
+      {value === 2 && <MarkIcon size={14} color={theme.markColor} />}
       {ghost === 'star' && value !== 1 && (
         <View style={styles.ghost}>
-          <StarIcon size={22} color={theme.accent} />
+          <StarIcon size={22} color={theme.starColor} />
         </View>
       )}
       {ghost === 'mark' && value !== 2 && (
         <View style={styles.ghost}>
-          <MarkIcon size={14} color={theme.accent} />
+          <MarkIcon size={14} color={theme.markColor} />
         </View>
       )}
     </Pressable>

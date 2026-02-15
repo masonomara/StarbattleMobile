@@ -416,27 +416,27 @@ if (get().hintGhosts.size > 0) {
 
 - [x] Add `ghost` style: `{ position: 'absolute', opacity: 0.3, alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }`
 
-### Phase 4: Toolbar Wiring
+### Phase 4: Toolbar Wiring ✓
 
 **`src/components/Toolbar.tsx` — selectors**
 
-- [ ] Add `showHint` selector: `usePuzzleStore(s => s.showHint)`
-- [ ] Add `hasGhosts` selector: `usePuzzleStore(s => s.hintGhosts.size > 0)`
-- [ ] Add `hasHints` selector: `usePuzzleStore(s => (s.puzzle?.hints.length ?? 0) > 0)`
-- [ ] Compute `hintDisabled = completed || !hasHints`
+- [x] Add `showHint` selector: `usePuzzleStore(s => s.showHint)`
+- [x] Add `hasGhosts` selector: `usePuzzleStore(s => s.hintGhosts.size > 0)`
+- [x] Add `hasHints` selector: `usePuzzleStore(s => (s.puzzle?.hints.length ?? 0) > 0)`
+- [x] Compute `hintDisabled = completed || !hasHints`
 
 **`src/components/Toolbar.tsx` — Lightbulb button**
 
-- [ ] Replace `Alert.alert(...)` with `showHint()` call
-- [ ] Set `disabled={hintDisabled}` on the Pressable
-- [ ] Dynamic background: `backgroundColor: hasGhosts ? theme.accent : theme.card`
-- [ ] Dynamic icon color: `color={hasGhosts ? theme.onAccent : theme.text}`
-- [ ] Add `hintDisabled && styles.disabled` to style array
+- [x] Replace `Alert.alert(...)` with `showHint()` call
+- [x] Set `disabled={hintDisabled}` on the Pressable
+- [x] Dynamic background: `backgroundColor: hasGhosts ? theme.accent : theme.card`
+- [x] Dynamic icon color: `color={hasGhosts ? theme.onAccent : theme.text}`
+- [x] Add `hintDisabled && styles.disabled` to style array
 
-### Phase 5: Verify & Clean Up
+### Phase 5: Verify & Clean Up ✓
 
-- [ ] Confirm `theme.accent` and `theme.onAccent` exist on the `Theme` type (check `src/types/theme.ts`)
-- [ ] Build iOS to verify no type errors
+- [x] Confirm `theme.accent` and `theme.onAccent` exist on the `Theme` type (check `src/types/theme.ts`)
+- [x] TypeScript compiles with zero errors (`npx tsc --noEmit` clean)
 - [ ] Test: tap Lightbulb on a puzzle with hints → ghosts appear
 - [ ] Test: tap Lightbulb again → ghosts dismiss
 - [ ] Test: tap a cell while ghosts show → normal tap mode fires, ghosts dismiss

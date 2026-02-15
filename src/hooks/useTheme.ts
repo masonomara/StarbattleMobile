@@ -23,7 +23,7 @@ const light: Theme = {
   starColor: '#0C0F14',
   starErrorColor: '#BC261A',
   markColor: '#BC261A',
-  accent: '#3266CC',
+  accent: '#F4F4F4',
   accentMuted: '#4CAF5020',
   onAccent: '#fff',
   shadow: '#0C0F14',
