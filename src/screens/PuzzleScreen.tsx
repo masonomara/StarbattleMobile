@@ -121,9 +121,14 @@ export function PuzzleScreen({ route, navigation }: Props) {
 
   const renderHeaderRight = useCallback(
     () => (
+      <>
       <Pressable onPress={() => setSettingsVisible(true)} hitSlop={8}>
         <Settings size={20} color={theme.text} />
       </Pressable>
+      <Pressable onPress={() => setSettingsVisible(true)} hitSlop={8}>
+        <Settings size={20} color={theme.text} />
+      </Pressable>
+      </>
     ),
     [theme.text],
   );

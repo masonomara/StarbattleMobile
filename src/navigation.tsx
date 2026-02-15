@@ -18,7 +18,7 @@ export function Navigation() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerBackButtonDisplayMode: 'minimal',
+          headerBackButtonDisplayMode: 'default',
         }}
       >
         <Stack.Screen
@@ -37,9 +37,8 @@ export function Navigation() {
           options={{
             // headerTransparent: true,
             title: '',
-            headerTransparent: true,
+                headerTransparent: true,
             headerShadowVisible: false,
-            headerBlurEffect: 'light',
             headerTintColor: '#000000',
           }}
         />
