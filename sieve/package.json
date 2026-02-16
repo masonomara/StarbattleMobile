@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "solve": "tsx src/cli.ts",
+    "pack-gen": "tsx src/pack-gen.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

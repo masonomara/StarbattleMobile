@@ -11,8 +11,7 @@ Stack, system diagram, and file structure.
 | API / Auth / Sync | Cloudflare Workers     |
 | Database          | Cloudflare D1 (SQLite) |
 | Puzzle Storage    | Cloudflare R2          |
-| Hints              | Client-side (solver + templates bundled in app) |
-| Purchases         | RevenueCat             |
+| Hints              | Client-side (pre-computed metadata bundled in puzzle files) |
 | Client Storage    | MMKV (React Native)    |
 
 ---
@@ -26,7 +25,7 @@ Stack, system diagram, and file structure.
 │  │  Local Storage (MMKV)                                 │  │
 │  │  - Cached puzzles (fetched from R2)                   │  │
 │  │  - User progress (source of truth when offline)       │  │
-│  │  - Settings, streaks, hint count                      │  │
+│  │  - Settings, streaks                      │  │
 │  │  - Offline queue for pending syncs                    │  │
 │  └───────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
@@ -62,7 +61,7 @@ worker/
     auth.ts           # /auth/* handlers
     sync.ts           # /sync handlers
     puzzles.ts        # /puzzles/* handlers (R2 access)
-    webhook.ts        # /webhook/revenuecat
+    webhook.ts        # /webhook/revenuecat (post-v1: unlock-all only)
     db.ts             # D1 queries
     types.ts          # Shared types
   wrangler.toml       # Cloudflare config (binds D1, R2)
@@ -86,7 +85,7 @@ app/
       storage.ts      # MMKV wrapper
       sync.ts         # Sync logic + offline queue
       puzzles.ts      # Puzzle fetching + caching
-      hint.ts         # Solver + explanation templates (client-side)
+      hint.ts         # Explanation templates (reads pre-computed metadata from puzzle files)
 ```
 
 ---
@@ -97,7 +96,7 @@ All resolved.
 
 - [x] **Fetch strategy** — All free packs download on first launch; paid packs download on purchase
 - [x] **Cache invalidation** — Version-based: each pack has a version number, client checks on app open, re-downloads if server version is newer
-- [x] **Paid pack gating** — RevenueCat webhook → Worker → D1. Worker checks D1 purchases table before serving paid packs from R2
+- [x] **Paid pack gating** — Post-v1. RevenueCat webhook → Worker → D1. Worker checks D1 purchases table before serving paid packs from R2
 - [x] **Puzzle versioning** — No versioning for dailies/weeklies/monthlies. If one's broken, leave it.
 - [x] **Offline limits** — No limits. Packs are ~9KB, dailies ~300 bytes. Cache everything.
 - [x] **Anonymous cleanup** — Not needed for v1. Revisit at scale.

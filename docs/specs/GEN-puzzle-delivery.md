@@ -29,7 +29,7 @@ puzzles/
     1star-8x8.json       # Free
     2star-10x10.json     # Free
     3star-14x14.json     # Free
-    expert-25x25.json    # Paid pack (future)
+    expert-25x25.json    # Paid pack (post-v1)
   daily/
     2025-01-30.sbn
     2025-01-31.sbn

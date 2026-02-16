@@ -18,10 +18,9 @@ For reliable daily/weekly/monthly puzzles and ability to run ads, I either neede
 
 ## Monetization
 
-- Ads exist - always shown at bottom of screen
-- Remove ads one-time purchase ($2.99)
-- No video ads
-- Architecture decision for ads/monetization will follow UX & product decisions. What is easiest to get up and running and App Store compliant?
+- No ads (decided: no banner ads, no AdMob, no ad SDKs)
+- Unlock all puzzles (one-time purchase) — the only v1 IAP
+- Paid puzzle packs — future, post-v1
 
 ## Features
 

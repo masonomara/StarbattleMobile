@@ -6,21 +6,21 @@
 
 ---
 
-## Before you start: Three decisions to make now
+## Three decisions (resolved)
 
-1. **Krazydad content.** The solver was built against Krazydad's Two Not Touch puzzles. Logic techniques aren't copyrightable, but specific puzzle layouts are. Confirm every shipped puzzle is independently generated. Strip `KD_TNT_` from production IDs.
+1. **Krazydad content — decided.** Every shipped puzzle is independently generated. Strip `KD_TNT_` from production IDs. Logic techniques aren't copyrightable; specific layouts are. The solver was built against Krazydad's Two Not Touch puzzles for reference only.
 
-2. **COPPA stance.** Puzzle games attract kids. Before you touch ads or the App Store, pick one: age-gate the app, configure ad SDKs for mixed audiences, or declare 13+ in the store listing. This gates everything in Phase 2.
+2. **COPPA — decided.** No ads, no data collection from minors. Declare 13+ in store listing. No ad SDKs means no mixed-audience configuration needed.
 
-3. **Hint monetization.** Free hints = simpler architecture, better differentiator, zero server dependency. Paid hints = four states (free count, purchased count, subscription unlimited, bundle unlimited), server-authoritative counts, RevenueCat webhooks. Decide now. Recommendation: keep hints free.
+3. **Hints — decided: free.** Unlimited, free, no server dependency. Pre-computed hint metadata bundled in puzzle files. No hint tracking, no hint monetization, no hint-related server logic.
 
 ---
 
 ## Phase 0: Content Pipeline
 
-No app code yet. Build the thing that feeds the app.
+No app code yet. Build the thing that feeds the app. All types for puzzle output, hint metadata, pack files, and app state are defined in `GEN-types.md`.
 
-1. **Write the pack generation script.** Take the 1000-puzzle corpus, curate it into packs with difficulty curves, output bundled JSON. Each puzzle includes pre-computed hint metadata (rule name, affected cells, explanation) so the solver never runs on-device.
+1. **Write the pack generation script.** Take the 1000-puzzle corpus, curate it into packs with difficulty curves, output bundled JSON matching the `PackFile` / `BundledPuzzle` types in `GEN-types.md`. Each puzzle includes pre-computed hint metadata (rule name, affected cells) so the solver never runs on-device.
 
 2. **Pre-generate daily puzzles.** Generate and solver-validate a year's worth. Every daily must be confirmed solvable -- the solver fails 1/1000, and a broken daily with strict streaks will lose users.
 
@@ -48,15 +48,18 @@ Local-only. No server, no auth, no sync, no purchases, no ads.
 
 10. **Undo button.**
 
-11. **Hint button.** Free, unlimited. Reads pre-computed hints from puzzle metadata. No solver on device.
+11. **Auto-X toggle.** When placing a star, automatically X out conflicting cells.
 
-12. **Auto-X toggle.** When placing a star, automatically X out conflicting cells.
+12. **Light/dark theme.** Follow system default.
 
-13. **Light/dark theme.** Follow system default.
+13. **Timer.** Display elapsed time, persist across sessions.
 
-14. **Timer.** Display elapsed time, persist across sessions.
+14. **Local storage with MMKV.** Save puzzle progress. Handle write errors gracefully -- crash during write or storage pressure shouldn't corrupt state.
+15.
+16. **Hint button.** Free, unlimited. Reads pre-computed hints from puzzle metadata. No solver on device. -- Defered to later phase
+17. **Pack progression tracking.** Local. Track completion percentage per pack.
 
-15. **Local storage with MMKV.** Save puzzle progress. Handle write errors gracefully -- crash during write or storage pressure shouldn't corrupt state.
+18. **Error highlighting toggle.** Optional: show when placed stars violate constraints.
 
 **Phase 1 is done when:** You can hand your phone to someone and they can play through a puzzle pack start to finish with no issues.
 
@@ -68,15 +71,9 @@ Still local-only. The goal is daily habit formation.
 
 16. **Daily puzzle.** Serve from the pre-generated set (Phase 0, step 2).
 
-17. **Daily streak tracking.** Local, UTC-based. If the COPPA decision allows a grace mechanic for verified-unsolvable dailies, add it.
+17. **Daily streak tracking.** Local, UTC-based.
 
-18. **Pack progression tracking.** Local. Track completion percentage per pack.
-
-19. **Error highlighting toggle.** Optional: show when placed stars violate constraints.
-
-20. **Privacy policy.** Apple and Google both reject apps without one. Write it before anything else in this phase. Cover: what data is stored locally, that nothing is collected server-side yet, your COPPA stance, and future plans for cloud sync if applicable.
-
-21. **Banner ads (AdMob).** Only after the privacy policy is live and COPPA decision is implemented. This is the first revenue.
+18. **Privacy policy.** Apple and Google both reject apps without one. Write it before anything else in this phase. Cover: what data is stored locally, that nothing is collected server-side yet, and future plans for cloud sync if applicable.
 
 **Phase 2 is done when:** Users open the app daily, play the daily puzzle, and maintain streaks.
 
@@ -88,13 +85,13 @@ Requires terms of service before any IAP goes live.
 
 22. **Terms of service.** Cover: limitation of liability, dispute resolution, content ownership, refund policy (defer to app stores).
 
-23. **Remove-ads IAP.**
+23. **Unlock-all-puzzles IAP.** One-time purchase. Bypasses sequential unlock within free packs. This is the only v1 IAP.
 
-24. **RevenueCat integration.** Client-side receipt validation. This handles the App Store / Play Store purchase flow.
+24. **RevenueCat integration.** Client-side receipt validation for unlock-all entitlement. Single entitlement, single product.
 
 25. **App Store submission.** Polish, test on physical devices, submit for review.
 
-**Phase 3 is done when:** The app is live in stores, making money from ads and a remove-ads purchase.
+**Phase 3 is done when:** The app is live in stores with the unlock-all purchase available.
 
 ---
 
@@ -102,7 +99,7 @@ Requires terms of service before any IAP goes live.
 
 **Only build this if Phase 1-3 prove the app has retention and revenue.** This is where auth, sync, paid packs, and server infrastructure live.
 
-26. **Shared types package.** Single `.ts` file defining `UserSettings`, `PuzzleProgress`, `SyncPayload`, etc. Used by both the Cloudflare Worker and the app. Prevents type drift.
+26. **Shared types package.** Single `.ts` file implementing the types from `GEN-types.md` (`UserSettings`, `PuzzleProgress`, `SyncPayload`, etc.). Used by both the Cloudflare Worker and the app. Prevents type drift.
 
 27. **Cloudflare Worker + D1.** Auth tables (BetterAuth) + app tables (progress, settings, purchases). Include `DELETE /account` endpoint from day one (GDPR Article 17, CCPA, app store requirements).
 
@@ -112,15 +109,13 @@ Requires terms of service before any IAP goes live.
 
 30. **Cloud sync.** Last-write-wins with client timestamps. Known limitation: clock skew can cause overwrites. Acceptable for puzzle progress. Offline queue capped at N pending changes in MMKV -- oldest pruned when exceeded.
 
-31. **Server-authoritative hint count** (only if hints are monetized). Reject sync payloads where `hints_remaining` increased without a purchase event.
+31. **R2 puzzle storage + server-side delivery.** For paid puzzle packs.
 
-32. **R2 puzzle storage + server-side delivery.** For paid puzzle packs.
+32. **Paid puzzle packs.**
 
-33. **Paid puzzle packs.**
+33. **RevenueCat webhook with HMAC verification.** Specify the header, algorithm, and shared secret. A spoofed webhook grants free entitlements.
 
-34. **RevenueCat webhook with HMAC verification.** Specify the header, algorithm, and shared secret. A spoofed webhook grants free entitlements.
-
-35. **Purchase recovery.** Prompt anonymous users to create an account before purchasing. If they skip it and lose their phone: RevenueCat receipt restoration recovers entitlements but not progress. Document this tradeoff; don't over-engineer it.
+34. **Purchase recovery.** Prompt anonymous users to create an account before purchasing. If they skip it and lose their phone: RevenueCat receipt restoration recovers the unlock-all entitlement but not progress. Document this tradeoff; don't over-engineer it.
 
 ---
 

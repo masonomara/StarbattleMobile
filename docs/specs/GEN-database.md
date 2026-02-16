@@ -51,9 +51,6 @@ CREATE TABLE user_settings (
   sound INTEGER NOT NULL DEFAULT 1,            -- 0 or 1
   haptics INTEGER NOT NULL DEFAULT 1,          -- 0 or 1
 
-  -- Hints
-  hints_remaining INTEGER NOT NULL DEFAULT 3,
-
   -- Streaks (UTC-based)
   streak_daily INTEGER NOT NULL DEFAULT 0,
   streak_weekly INTEGER NOT NULL DEFAULT 0,
@@ -79,10 +76,7 @@ CREATE INDEX idx_pack_progress_user ON pack_progress(user_id);
 -- Purchases (synced from RevenueCat webhooks)
 CREATE TABLE purchases (
   user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  remove_ads INTEGER NOT NULL DEFAULT 0,       -- 0 or 1
   unlock_all INTEGER NOT NULL DEFAULT 0,       -- 0 or 1
-  unlimited_hints INTEGER NOT NULL DEFAULT 0,  -- 0 or 1
-  pro_bundle INTEGER NOT NULL DEFAULT 0,       -- 0 or 1
   updated_at INTEGER NOT NULL
 );
 ```
