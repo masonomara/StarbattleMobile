@@ -9,18 +9,42 @@ import { HeaderTimer } from '../components/HeaderTimer';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
 import { parsePuzzle } from '../utils/parsePuzzle';
-import { packs } from '../packs';
+import { packs, streakPacks } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { persistProgress } from '../utils/persistProgress';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
+import { getCurrentKey, getPuzzleIndex } from '../utils/streakDate';
+import type { StreakType } from '../types/state';
 
 export function PuzzleScreen({ route, navigation }: any) {
-  const { packId, puzzleIndex } = route.params;
-  const pack = packs.find(p => p.id === packId);
-  const rawPuzzle = pack?.puzzles[puzzleIndex];
+  const { packId, puzzleIndex, streakType } = route.params;
+
+  const { rawPuzzle, puzzleId, gridSize, packName, isLastPuzzle } = (() => {
+    if (streakType) {
+      const pack = streakPacks[streakType as StreakType];
+      const key = getCurrentKey(streakType as StreakType);
+      const idx = getPuzzleIndex(streakType as StreakType, pack.puzzles.length);
+      return {
+        rawPuzzle: pack.puzzles[idx],
+        puzzleId: `${streakType}:${key}`,
+        gridSize: pack.gridSize,
+        packName: pack.name,
+        isLastPuzzle: true,
+      };
+    }
+    const pack = packs.find(p => p.id === packId)!;
+    return {
+      rawPuzzle: pack.puzzles[puzzleIndex],
+      puzzleId: `${packId}:${puzzleIndex}`,
+      gridSize: pack.gridSize,
+      packName: pack.name,
+      isLastPuzzle: puzzleIndex >= pack.puzzles.length - 1,
+    };
+  })();
+
   const theme = useTheme();
   const styles = createStyles(theme);
 
@@ -28,8 +52,6 @@ export function PuzzleScreen({ route, navigation }: any) {
   const puzzle = usePuzzleStore(s => s.puzzle);
   const completed = usePuzzleStore(s => s.completed);
   const hideToolbar = useUserStore(s => s.settings.hideToolbar);
-
-  const gridSize = pack?.gridSize ?? 5;
 
   const {
     pinchGesture,
@@ -67,13 +89,12 @@ export function PuzzleScreen({ route, navigation }: any) {
   useEffect(() => {
     if (!rawPuzzle) return;
     try {
-      const puzzleId = `${packId}:${puzzleIndex}`;
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
       loadPuzzle(parsed);
     } catch {
       navigation.goBack();
     }
-  }, [rawPuzzle, packId, puzzleIndex, loadPuzzle, navigation]);
+  }, [rawPuzzle, puzzleId, loadPuzzle, navigation]);
 
   useEffect(() => {
     if (completed || !puzzle) return;
@@ -131,7 +152,13 @@ export function PuzzleScreen({ route, navigation }: any) {
       {!hideToolbar && (
         <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
       )}
-      <WinBanner packId={packId} puzzleIndex={puzzleIndex} packName={pack?.name ?? ''} isLastPuzzle={!pack || puzzleIndex >= pack.puzzles.length - 1} />
+      <WinBanner
+        packId={packId}
+        puzzleIndex={puzzleIndex}
+        packName={packName}
+        isLastPuzzle={isLastPuzzle}
+        streakType={streakType}
+      />
     </View>
   );
 }

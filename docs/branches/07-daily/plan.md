@@ -541,19 +541,19 @@ The sieve CLI's stdin mode (`echo grid | cli --stars N`) runs `traceBoard`, whic
 
 ### Phase 3 — Screen Integration
 
-- [ ] **3.1** Edit `src/screens/PuzzleScreen.tsx` — import `streakPacks` from `../packs`, import date utils and `StreakType`, add `streakType` to route params destructuring, add the streak branch for resolving `rawPuzzle`/`puzzleId`/`gridSize`
-- [ ] **3.2** Edit `src/screens/PuzzleScreen.tsx` — pass `streakType` prop through to `WinBanner`
-- [ ] **3.3** Edit `src/components/WinBanner.tsx` — add optional `streakType` prop, import `useUserStore`, `getActiveStreak`, date utils
-- [ ] **3.4** Edit `src/components/WinBanner.tsx` — add streak subscription (`useUserStore` selector), add `useEffect` to call `recordStreak` on completion
-- [ ] **3.5** Edit `src/components/WinBanner.tsx` — add streak win render branch (streak display, "Back to Home" button)
-- [ ] **3.6** Edit `src/screens/HomeScreen.tsx` — import `streakPacks`, date utils, `StreakType`
-- [ ] **3.7** Edit `src/screens/HomeScreen.tsx` — add `STREAK_TYPES` array, `STREAK_LABELS` record, subscribe to `streaks` and `completedPuzzles` from userStore
-- [ ] **3.8** Edit `src/screens/HomeScreen.tsx` — add streak card row above existing pack list (map over types, compute completion/streak, render Pressables)
-- [ ] **3.9** Edit `src/screens/HomeScreen.tsx` — add streak card styles to `createStyles`
+- [x] **3.1** Edit `src/screens/PuzzleScreen.tsx` — import `streakPacks` from `../packs`, import date utils and `StreakType`, add `streakType` to route params destructuring, add the streak branch for resolving `rawPuzzle`/`puzzleId`/`gridSize`
+- [x] **3.2** Edit `src/screens/PuzzleScreen.tsx` — pass `streakType` prop through to `WinBanner`
+- [x] **3.3** Edit `src/components/WinBanner.tsx` — add optional `streakType` prop, import `useUserStore`, `getActiveStreak`, date utils
+- [x] **3.4** Edit `src/components/WinBanner.tsx` — add streak subscription (`useUserStore` selector), add `useEffect` to call `recordStreak` on completion
+- [x] **3.5** Edit `src/components/WinBanner.tsx` — add streak win render branch (streak display, "Back to Home" button)
+- [x] **3.6** Edit `src/screens/HomeScreen.tsx` — import `streakPacks`, date utils, `StreakType`
+- [x] **3.7** Edit `src/screens/HomeScreen.tsx` — add `STREAK_TYPES` array, `STREAK_LABELS` record, subscribe to `streaks` and `completedPuzzles` from userStore
+- [x] **3.8** Edit `src/screens/HomeScreen.tsx` — add streak card row above existing pack list (map over types, compute completion/streak, render Pressables)
+- [x] **3.9** Edit `src/screens/HomeScreen.tsx` — add streak card styles to `createStyles`
 
 ### Phase 4 — Verify
 
-- [ ] **4.1** TypeScript check — run `npx tsc --noEmit`, fix any type errors
+- [x] **4.1** TypeScript check — run `npx tsc --noEmit`, fix any type errors
 - [ ] **4.2** Build iOS — `cd ios && pod install && cd .. && npx react-native build-ios --mode Debug`
 - [ ] **4.3** Manual test — open app, verify three streak cards render on home screen
 - [ ] **4.4** Manual test — tap a streak card, verify puzzle loads and is playable

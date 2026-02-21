@@ -1,18 +1,58 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { packs } from '../packs';
+import { packs, streakPacks } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
 import { useTheme, type Theme } from '../hooks/useTheme';
+import { getCurrentKey, getActiveStreak } from '../utils/streakDate';
+import type { StreakType } from '../types/state';
+
+const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
+
+const STREAK_LABELS: Record<StreakType, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+};
 
 export function HomeScreen({ navigation }: any) {
-  const styles = createStyles(useTheme());
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const completedPerPack = useUserStore(s => s.progress.completedPerPack);
+  const streaks = useUserStore(s => s.streaks);
+  const completedPuzzles = useUserStore(s => s.progress.completedPuzzles);
 
   return (
     <View style={styles.container}>
       <Header center={<Text style={styles.title}>Star Battle</Text>} />
-      <ScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.streakRow}>
+          {STREAK_TYPES.map(type => {
+            const pack = streakPacks[type];
+            const key = getCurrentKey(type);
+            const puzzleId = `${type}:${key}`;
+            const isCompleted = completedPuzzles.has(puzzleId);
+            const found = streaks.find(s => s.type === type);
+            const streakCount = found ? getActiveStreak(found, type) : 0;
+
+            return (
+              <Pressable
+                key={type}
+                style={[styles.streakCard, isCompleted && styles.streakCardCompleted]}
+                onPress={() => navigation.navigate('Puzzle', { streakType: type })}
+              >
+                <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                <Text style={styles.streakMeta}>
+                  {pack.gridSize}x{pack.gridSize}
+                </Text>
+                {isCompleted && (
+                  <Text style={styles.streakCount}>Streak: {streakCount}</Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+
         {packs.map(pack => (
           <Pressable
             key={pack.id}
@@ -37,10 +77,44 @@ export function HomeScreen({ navigation }: any) {
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
+    scrollContent: {
+      paddingHorizontal: theme.spacingXl,
+    },
     title: {
       fontSize: theme.fontSizeLg,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
+    },
+    streakRow: {
+      flexDirection: 'row',
+      gap: theme.spacingMd,
+      marginBottom: theme.spacingXl,
+    },
+    streakCard: {
+      flex: 1,
+      padding: theme.spacingLg,
+      borderRadius: theme.radiusMd,
+      backgroundColor: theme.card,
+      alignItems: 'center',
+    },
+    streakCardCompleted: {
+      opacity: 0.6,
+    },
+    streakLabel: {
+      fontSize: theme.fontSizeMd,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.text,
+    },
+    streakMeta: {
+      fontSize: theme.fontSizeSm,
+      color: theme.textSecondary,
+      marginTop: 4,
+    },
+    streakCount: {
+      fontSize: theme.fontSizeSm,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.accent,
+      marginTop: 4,
     },
     packCard: {
       flexDirection: 'row',

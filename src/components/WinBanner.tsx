@@ -3,22 +3,32 @@ import { Animated, Text, Pressable, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { usePuzzleStore } from '../store';
+import { useUserStore } from '../stores/userStore';
 import { formatTime } from '../utils/formatTime';
+import { getActiveStreak } from '../utils/streakDate';
 import { useTheme, type Theme } from '../hooks/useTheme';
+import type { StreakType } from '../types/state';
 
 export function WinBanner({
   packId,
   puzzleIndex,
   packName,
   isLastPuzzle,
+  streakType,
 }: {
   packId: string;
   puzzleIndex: number;
   packName: string;
   isLastPuzzle: boolean;
+  streakType?: StreakType;
 }) {
   const completed = usePuzzleStore(s => s.completed);
   const timeMs = usePuzzleStore(s => s.timeMs);
+  const streak = useUserStore(s => {
+    if (!streakType) return 0;
+    const found = s.streaks.find(st => st.type === streakType);
+    return found ? getActiveStreak(found, streakType) : 0;
+  });
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation = useNavigation<any>();
@@ -29,6 +39,12 @@ export function WinBanner({
   const onLayout = (e: LayoutChangeEvent) => {
     setBannerHeight(e.nativeEvent.layout.height);
   };
+
+  useEffect(() => {
+    if (completed && streakType) {
+      useUserStore.getState().recordStreak(streakType);
+    }
+  }, [completed, streakType]);
 
   useEffect(() => {
     if (!bannerHeight) return;
@@ -47,13 +63,27 @@ export function WinBanner({
 
   if (!completed) return null;
 
-  const handleNext = () => {
-    if (isLastPuzzle) {
+  const info = streakType
+    ? `${streakType.charAt(0).toUpperCase() + streakType.slice(1)} Challenge`
+    : `${packName} #${puzzleIndex + 1}`;
+
+  const headline = streakType
+    ? `Streak: ${streak}`
+    : `Solved in ${formatTime(timeMs)}`;
+
+  const handlePress = () => {
+    if (streakType || isLastPuzzle) {
       navigation.goBack();
     } else {
       navigation.replace('Puzzle', { packId, puzzleIndex: puzzleIndex + 1 });
     }
   };
+
+  const buttonLabel = streakType
+    ? 'Back to Home'
+    : isLastPuzzle
+      ? `Back to ${packName || 'Pack'}`
+      : 'Next Puzzle';
 
   return (
     <Animated.View
@@ -64,20 +94,13 @@ export function WinBanner({
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      <Text style={styles.winInfo}>
-        {packName} #{puzzleIndex + 1}
-      </Text>
-      <Text style={styles.winText}>
-        Solved in {formatTime(timeMs)}
-      </Text>
-
-      <Pressable
-        onPress={handleNext}
-        style={styles.winButton}
-      >
-        <Text style={styles.winButtonText}>
-          {isLastPuzzle ? `Back to ${packName || 'Pack'}` : 'Next Puzzle'}
-        </Text>
+      <Text style={styles.winInfo}>{info}</Text>
+      <Text style={styles.winText}>{headline}</Text>
+      {streakType && (
+        <Text style={styles.winTime}>Solved in {formatTime(timeMs)}</Text>
+      )}
+      <Pressable onPress={handlePress} style={styles.winButton}>
+        <Text style={styles.winButtonText}>{buttonLabel}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -115,6 +138,14 @@ const createStyles = (theme: Theme) =>
       fontWeight: theme.fontWeightSemibold,
       letterSpacing: -0.1,
       color: theme.text,
+    },
+    winTime: {
+      fontSize: 16,
+      lineHeight: 20,
+      fontWeight: theme.fontWeightSemibold,
+      letterSpacing: -0.1,
+      color: theme.text,
+      marginTop: 4,
     },
     winButton: {
       height: 40,
