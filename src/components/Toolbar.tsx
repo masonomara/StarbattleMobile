@@ -10,7 +10,7 @@ import {
   Eraser,
 } from 'lucide-react-native';
 import { usePuzzleStore } from '../store';
-import { hapticMedium } from '../haptics';
+import { hapticMedium } from '../utils/haptics';
 import { useUserStore } from '../stores/userStore';
 import type { TapMode } from '../types/state';
 import { useTheme, type Theme } from '../hooks/useTheme';
