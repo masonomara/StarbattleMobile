@@ -88,12 +88,6 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
     let next: CellValue;
     switch (tapMode) {
-      case 'mark':
-        next = current === 2 ? 0 : 2;
-        break;
-      case 'star':
-        next = current === 1 ? 0 : 1;
-        break;
       case 'erase':
         if (current === 0) return;
         next = 0;
@@ -153,7 +147,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   cycleTapMode: () => {
-    const order: TapMode[] = ['cycle', 'mark', 'star', 'erase'];
+    const order: TapMode[] = ['cycle', 'erase'];
     const current = get().tapMode;
     const nextIdx = (order.indexOf(current) + 1) % order.length;
     set({ tapMode: order[nextIdx] });
