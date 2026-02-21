@@ -12,7 +12,7 @@ import { parsePuzzle } from '../utils/parsePuzzle';
 import { packs } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
-import { persistProgress as persistProgressUtil } from '../utils/persistProgress';
+import { persistProgress } from '../utils/persistProgress';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
@@ -44,7 +44,6 @@ export function PuzzleScreen({ route, navigation }: any) {
     handleZoomReset,
   } = useZoom(gridSize, theme.cellSize);
 
-  const boardAreaRef = useRef<View>(null);
   const boardLayout = useRef({ width: 0, height: 0 });
   const handleBoardAreaLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -74,14 +73,14 @@ export function PuzzleScreen({ route, navigation }: any) {
     } catch {
       navigation.goBack();
     }
-  }, [rawPuzzle, packId, puzzleIndex, loadPuzzle, navigation, pack?.name]);
+  }, [rawPuzzle, packId, puzzleIndex, loadPuzzle, navigation]);
 
   useEffect(() => {
     if (completed || !puzzle) return;
     const persistTime = () => {
       const state = usePuzzleStore.getState();
       if (!state.completed && state.puzzle) {
-        persistProgressUtil(
+        persistProgress(
           state.puzzle,
           state.cells,
           state.autoMarks,
@@ -117,7 +116,6 @@ export function PuzzleScreen({ route, navigation }: any) {
       />
       <GestureDetector gesture={gesture}>
         <View
-          ref={boardAreaRef}
           style={styles.boardArea}
           onLayout={handleBoardAreaLayout}
         >

@@ -48,13 +48,14 @@ function PuzzleCell({
         </View>
       )}
       <Text
-        style={
+        style={[
+          styles.puzzleNumber,
           status === 'completed'
             ? styles.puzzleNumberCompleted
             : status === 'locked'
             ? styles.puzzleNumberLocked
-            : styles.puzzleNumberActive
-        }
+            : styles.puzzleNumberActive,
+        ]}
       >
         {index + 1}
       </Text>
@@ -88,7 +89,6 @@ export function PackScreen({ route, navigation }: any) {
       />
       <FlatList
         data={pack.puzzles}
-        keyExtractor={(_, i) => String(i)}
         renderItem={({ index }) => (
           <PuzzleCell
             packId={packId}
@@ -113,7 +113,6 @@ export function PackScreen({ route, navigation }: any) {
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
-    title: { fontSize: theme.fontSizeLg, fontWeight: theme.fontWeightSemibold },
     grid: {
       padding: theme.spacingLg,
       flex: 1,
@@ -139,17 +138,9 @@ const createStyles = (theme: Theme) =>
       opacity: 0.3,
     },
     puzzleNumber: { fontSize: 18, fontWeight: 700 },
-    puzzleNumberCompleted: {
-      fontSize: 18,
-      fontWeight: 700,
-      color: theme.accent,
-    },
-    puzzleNumberActive: { fontSize: 18, fontWeight: 700, color: theme.text },
-    puzzleNumberLocked: {
-      fontSize: 18,
-      fontWeight: 700,
-      color: theme.textSecondary,
-    },
+    puzzleNumberCompleted: { color: theme.accent },
+    puzzleNumberActive: { color: theme.text },
+    puzzleNumberLocked: { color: theme.textSecondary },
     locked: { opacity: 0.5 },
     headerButton: {
       width: 36,
