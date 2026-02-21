@@ -123,7 +123,6 @@ export function PuzzleScreen({ route, navigation }: any) {
   return (
     <View style={styles.container}>
       <Header
-        absolute
         left={
           <Pressable
             style={styles.headerButton}
@@ -136,10 +135,7 @@ export function PuzzleScreen({ route, navigation }: any) {
         center={<HeaderTimer />}
       />
       <GestureDetector gesture={gesture}>
-        <View
-          style={styles.boardArea}
-          onLayout={handleBoardAreaLayout}
-        >
+        <View style={styles.boardArea} onLayout={handleBoardAreaLayout}>
           <BoardView
             puzzle={puzzle}
             theme={theme}

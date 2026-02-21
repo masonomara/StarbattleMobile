@@ -75,7 +75,6 @@ export function PackScreen({ route, navigation }: any) {
   return (
     <View style={styles.container}>
       <Header
-        absolute
         left={
           <Pressable
             style={styles.headerButton}

@@ -9,10 +9,9 @@ type HeaderProps = {
   left?: React.ReactNode;
   center?: React.ReactNode;
   right?: React.ReactNode;
-  absolute?: boolean;
 };
 
-export function Header({ left, center, right, absolute }: HeaderProps) {
+export function Header({ left, center, right }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -24,7 +23,6 @@ export function Header({ left, center, right, absolute }: HeaderProps) {
         pointerEvents="box-none"
         style={[
           styles.header,
-          absolute && styles.absolute,
           { paddingTop: insets.top, height: 48 + insets.top },
         ]}
       >
@@ -60,8 +58,7 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: 14,
       minHeight: 48,
       zIndex: 100,
-    },
-    absolute: {
+
       position: 'absolute',
       left: 0,
       right: 0,
