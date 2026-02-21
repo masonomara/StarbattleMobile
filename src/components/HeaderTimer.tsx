@@ -8,11 +8,10 @@ import { FONT_SIZE_SM } from '../utils/constants';
 
 export function HeaderTimer() {
   const timeMs = usePuzzleStore(s => s.timeMs);
-  const completed = usePuzzleStore(s => s.completed);
   const showTimer = useUserStore(s => s.settings.showTimer);
   const theme = useTheme();
 
-  if (!showTimer || completed) return null;
+  if (!showTimer) return null;
 
   return (
     <Text style={[styles.timer, { color: theme.text }]}>
@@ -25,5 +24,6 @@ const styles = StyleSheet.create({
   timer: {
     fontSize: FONT_SIZE_SM,
     fontVariant: ['tabular-nums'],
+    fontWeight: 600,
   },
 });
