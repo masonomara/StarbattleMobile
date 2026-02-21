@@ -3,12 +3,12 @@ import { Gesture } from 'react-native-gesture-handler';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { hapticLight } from '../haptics';
-import { CELL_SIZE } from '../utils/constants';
 import type { CellChange } from '../types/state';
 import type { BoardLayout } from '../types/board';
 
 export function useDrawGesture(
   puzzleSize: number,
+  cellSize: number,
   savedScale: React.RefObject<number>,
   savedTranslateX: React.RefObject<number>,
   savedTranslateY: React.RefObject<number>,
@@ -26,7 +26,7 @@ export function useDrawGesture(
       const sc = savedScale.current;
       const tx = savedTranslateX.current;
       const ty = savedTranslateY.current;
-      const boardPixels = CELL_SIZE * puzzleSize;
+      const boardPixels = cellSize * puzzleSize;
 
       // Touch relative to board-area center (x,y are already view-relative)
       const relX = x - layout.width / 2;
@@ -36,8 +36,8 @@ export function useDrawGesture(
       const bx = (relX - tx) / sc + boardPixels / 2;
       const by = (relY - ty) / sc + boardPixels / 2;
 
-      const col = Math.floor(bx / CELL_SIZE);
-      const row = Math.floor(by / CELL_SIZE);
+      const col = Math.floor(bx / cellSize);
+      const row = Math.floor(by / cellSize);
 
       if (row < 0 || row >= puzzleSize || col < 0 || col >= puzzleSize) {
         return null;

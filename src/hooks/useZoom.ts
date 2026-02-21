@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Animated, useWindowDimensions } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
-import { CELL_SIZE } from '../utils/constants';
 
 const DEFAULT_ZOOM = 1;
 const MIN_ZOOM = 0.67;
@@ -10,7 +9,7 @@ const PAN_PADDING = 30;
 
 const SPRING_CONFIG = { friction: 19, tension: 90, useNativeDriver: true } as const;
 
-export function useZoom(puzzleSize: number) {
+export function useZoom(puzzleSize: number, cellSize: number) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const scale = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
@@ -22,7 +21,7 @@ export function useZoom(puzzleSize: number) {
 
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const boardPixels = CELL_SIZE * puzzleSize;
+  const boardPixels = cellSize * puzzleSize;
 
   const clampTranslate = useCallback(
     (tx: number, ty: number, currentScale: number) => {

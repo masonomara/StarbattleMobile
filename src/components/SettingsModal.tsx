@@ -5,15 +5,6 @@ import { useUserStore } from '../stores/userStore';
 import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../types/theme';
 import type { UserSettings } from '../types/state';
-import {
-  SPACING_MD,
-  SPACING_LG,
-  SPACING_XL,
-  RADIUS_MD,
-  FONT_SIZE_SM,
-  FONT_SIZE_LG,
-  FONT_WEIGHT_SEMIBOLD,
-} from '../utils/constants';
 
 type Props = {
   visible: boolean;
@@ -163,66 +154,66 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: SPACING_XL,
-      paddingTop: SPACING_XL,
+      paddingHorizontal: theme.spacingXl,
+      paddingTop: theme.spacingXl,
       backgroundColor: theme.bg,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: SPACING_XL,
+      marginBottom: theme.spacingXl,
     },
     title: {
-      fontSize: FONT_SIZE_LG,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontSize: theme.fontSizeLg,
+      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     section: {
-      marginBottom: SPACING_XL,
+      marginBottom: theme.spacingXl,
     },
     sectionTitle: {
-      fontSize: FONT_SIZE_SM,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontSize: theme.fontSizeSm,
+      fontWeight: theme.fontWeightSemibold,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
-      marginBottom: SPACING_MD,
+      marginBottom: theme.spacingMd,
       color: theme.textSecondary,
     },
     row: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: SPACING_MD,
+      paddingVertical: theme.spacingMd,
     },
     rowLabel: {
-      fontSize: FONT_SIZE_LG,
+      fontSize: theme.fontSizeLg,
       color: theme.text,
     },
     themeButtons: {
       flexDirection: 'row',
-      gap: SPACING_MD,
+      gap: theme.spacingMd,
     },
     themeButtonActive: {
-      paddingHorizontal: SPACING_LG,
-      paddingVertical: SPACING_MD,
-      borderRadius: RADIUS_MD,
+      paddingHorizontal: theme.spacingLg,
+      paddingVertical: theme.spacingMd,
+      borderRadius: theme.radiusMd,
       backgroundColor: theme.accent,
     },
     themeButtonInactive: {
-      paddingHorizontal: SPACING_LG,
-      paddingVertical: SPACING_MD,
-      borderRadius: RADIUS_MD,
+      paddingHorizontal: theme.spacingLg,
+      paddingVertical: theme.spacingMd,
+      borderRadius: theme.radiusMd,
       backgroundColor: theme.innerBorder,
     },
     themeButtonTextActive: {
-      fontSize: FONT_SIZE_SM,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontSize: theme.fontSizeSm,
+      fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
     },
     themeButtonTextInactive: {
-      fontSize: FONT_SIZE_SM,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontSize: theme.fontSizeSm,
+      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
   });

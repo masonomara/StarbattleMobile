@@ -1,6 +1,5 @@
 import React, { memo } from 'react';
 import Svg, { Line } from 'react-native-svg';
-import { CELL_SIZE } from '../utils/constants';
 import type { Theme } from '../types/theme';
 
 type Props = {
@@ -9,11 +8,11 @@ type Props = {
 };
 
 export const CellGridSvg = memo(function CellGridSvg({ size, theme }: Props) {
-  const boardPx = CELL_SIZE * size;
+  const boardPx = theme.cellSize * size;
   const lines: React.ReactElement[] = [];
 
   for (let row = 1; row < size; row++) {
-    const y = row * CELL_SIZE;
+    const y = row * theme.cellSize;
     lines.push(
       <Line
         key={`h${row}`}
@@ -28,7 +27,7 @@ export const CellGridSvg = memo(function CellGridSvg({ size, theme }: Props) {
   }
 
   for (let col = 1; col < size; col++) {
-    const x = col * CELL_SIZE;
+    const x = col * theme.cellSize;
     lines.push(
       <Line
         key={`v${col}`}

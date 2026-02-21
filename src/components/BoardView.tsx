@@ -6,8 +6,6 @@ import { RegionBordersSvg } from './RegionBordersSvg';
 import { usePuzzleStore } from '../store';
 import type { Puzzle } from '../types/puzzle';
 import type { Theme } from '../types/theme';
-import { CELL_SIZE } from '../utils/constants';
-
 type Props = {
   puzzle: Puzzle;
   theme: Theme;
@@ -18,7 +16,7 @@ type Props = {
 
 export function BoardView({ puzzle, theme, scale, translateX, translateY }: Props) {
   const tapCell = usePuzzleStore(s => s.tapCell);
-  const boardSize = CELL_SIZE * puzzle.size;
+  const boardSize = theme.cellSize * puzzle.size;
 
   const cells = useMemo(
     () => Array.from({ length: puzzle.size * puzzle.size }, (_, i) => i),

@@ -7,11 +7,6 @@ import { getPack } from '../packs';
 import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../hooks/useTheme';
 import { parsePuzzleId } from '../utils/puzzleId';
-import {
-  FONT_SIZE_MD,
-  FONT_WEIGHT_SEMIBOLD,
-  SPACING_XL,
-} from '../utils/constants';
 import type { Theme } from '../types/theme';
 
 export function WinBanner() {
@@ -111,14 +106,14 @@ const createStyles = (theme: Theme) =>
     winText: {
       fontSize: 31,
       lineHeight: 39,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontWeight: theme.fontWeightSemibold,
       letterSpacing: -0.2,
       color: theme.text,
     },
     winInfo: {
       fontSize: 16,
       lineHeight: 20,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontWeight: theme.fontWeightSemibold,
       letterSpacing: -0.1,
       color: theme.text,
     },
@@ -128,12 +123,12 @@ const createStyles = (theme: Theme) =>
       borderRadius: 120,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: SPACING_XL,
+      marginTop: theme.spacingXl,
       backgroundColor: theme.onAccent,
     },
     winButtonText: {
-      fontSize: FONT_SIZE_MD,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontSize: theme.fontSizeMd,
+      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
   });

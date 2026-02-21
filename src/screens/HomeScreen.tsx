@@ -3,15 +3,6 @@ import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import { getAllPacks } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
-import {
-  SPACING_MD,
-  SPACING_XL,
-  RADIUS_MD,
-  FONT_SIZE_SM,
-  FONT_SIZE_MD,
-  FONT_SIZE_LG,
-  FONT_WEIGHT_SEMIBOLD,
-} from '../utils/constants';
 import type { Pack } from '../types/puzzle';
 import type { Theme } from '../types/theme';
 import { useTheme } from '../hooks/useTheme';
@@ -81,8 +72,8 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
     title: {
-      fontSize: FONT_SIZE_LG,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontSize: theme.fontSizeLg,
+      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     list: { padding: 0 },
@@ -90,26 +81,26 @@ const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: SPACING_XL,
-      borderRadius: RADIUS_MD,
-      marginBottom: SPACING_MD,
+      padding: theme.spacingXl,
+      borderRadius: theme.radiusMd,
+      marginBottom: theme.spacingMd,
       backgroundColor: theme.card,
       shadowColor: theme.shadow,
     },
     packInfo: { flex: 1 },
     packName: {
-      fontSize: FONT_SIZE_LG,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontSize: theme.fontSizeLg,
+      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     packMeta: {
-      fontSize: FONT_SIZE_SM,
+      fontSize: theme.fontSizeSm,
       marginTop: 4,
       color: theme.textSecondary,
     },
     packProgress: {
-      fontSize: FONT_SIZE_MD,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      fontSize: theme.fontSizeMd,
+      fontWeight: theme.fontWeightSemibold,
       color: theme.accent,
     },
   });

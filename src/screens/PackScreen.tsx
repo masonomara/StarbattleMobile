@@ -4,11 +4,6 @@ import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { getPack } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
-import {
-  SPACING_LG,
-  FONT_SIZE_LG,
-  FONT_WEIGHT_SEMIBOLD,
-} from '../utils/constants';
 import type { Theme } from '../types/theme';
 import { useTheme } from '../hooks/useTheme';
 import { makePuzzleId } from '../utils/puzzleId';
@@ -125,9 +120,9 @@ export function PackScreen({ route, navigation }: any) {
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
-    title: { fontSize: FONT_SIZE_LG, fontWeight: FONT_WEIGHT_SEMIBOLD },
+    title: { fontSize: theme.fontSizeLg, fontWeight: theme.fontWeightSemibold },
     grid: {
-      padding: SPACING_LG,
+      padding: theme.spacingLg,
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',

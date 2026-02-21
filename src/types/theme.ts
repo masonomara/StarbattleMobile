@@ -12,4 +12,13 @@ export type Theme = {
   highlight: string;
   onHighlight: string;
   shadow: string;
+  spacingMd: number;
+  spacingLg: number;
+  spacingXl: number;
+  radiusMd: number;
+  fontSizeSm: number;
+  fontSizeMd: number;
+  fontSizeLg: number;
+  fontWeightSemibold: '600';
+  cellSize: number;
 };

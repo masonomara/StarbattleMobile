@@ -44,7 +44,7 @@ export function PuzzleScreen({ route, navigation }: any) {
     savedTranslateY,
     isZoomed,
     handleZoomReset,
-  } = useZoom(gridSize);
+  } = useZoom(gridSize, theme.cellSize);
 
   const boardAreaRef = useRef<View>(null);
   const boardLayout = useRef({ width: 0, height: 0 });
@@ -55,6 +55,7 @@ export function PuzzleScreen({ route, navigation }: any) {
 
   const { drawGesture } = useDrawGesture(
     gridSize,
+    theme.cellSize,
     savedScale,
     savedTranslateX,
     savedTranslateY,

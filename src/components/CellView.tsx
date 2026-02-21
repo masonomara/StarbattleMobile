@@ -4,7 +4,6 @@ import { useShallow } from 'zustand/react/shallow';
 import { StarIcon } from './icons/StarIcon';
 import { MarkIcon } from './icons/MarkIcon';
 import { usePuzzleStore } from '../store';
-import { CELL_SIZE } from '../utils/constants';
 import type { Theme } from '../types/theme';
 
 type Props = {
@@ -41,8 +40,8 @@ export const CellView = memo(function CellView({
       style={[
         styles.cell,
         {
-          width: CELL_SIZE,
-          height: CELL_SIZE,
+          width: theme.cellSize,
+          height: theme.cellSize,
           backgroundColor: theme.bg,
         },
       ]}

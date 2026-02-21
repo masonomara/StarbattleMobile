@@ -4,7 +4,6 @@ import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../hooks/useTheme';
-import { FONT_SIZE_SM } from '../utils/constants';
 import type { Theme } from '../types/theme';
 
 export function HeaderTimer() {
@@ -21,7 +20,7 @@ export function HeaderTimer() {
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     timer: {
-      fontSize: FONT_SIZE_SM,
+      fontSize: theme.fontSizeSm,
       fontVariant: ['tabular-nums'],
       fontWeight: 600,
       color: theme.text,
