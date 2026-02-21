@@ -7,34 +7,28 @@ import { useTheme, type Theme } from '../hooks/useTheme';
 
 export function HomeScreen({ navigation }: any) {
   const styles = createStyles(useTheme());
-  const completedPuzzles = useUserStore(s => s.completedPuzzles);
+  const completedPerPack = useUserStore(s => s.progress.completedPerPack);
 
   return (
     <View style={styles.container}>
       <Header center={<Text style={styles.title}>Star Battle</Text>} />
       <ScrollView>
-        {packs.map(pack => {
-          let completed = 0;
-          for (const id of completedPuzzles)
-            if (id.startsWith(pack.id + ':')) completed++;
-
-          return (
-            <Pressable
-              key={pack.id}
-              style={styles.packCard}
-              onPress={() => navigation.navigate('Pack', { packId: pack.id })}>
-              <View style={styles.packInfo}>
-                <Text style={styles.packName}>{pack.name}</Text>
-                <Text style={styles.packMeta}>
-                  {pack.gridSize}x{pack.gridSize}
-                </Text>
-              </View>
-              <Text style={styles.packProgress}>
-                {completed}/{pack.puzzles.length}
+        {packs.map(pack => (
+          <Pressable
+            key={pack.id}
+            style={styles.packCard}
+            onPress={() => navigation.navigate('Pack', { packId: pack.id })}>
+            <View style={styles.packInfo}>
+              <Text style={styles.packName}>{pack.name}</Text>
+              <Text style={styles.packMeta}>
+                {pack.gridSize}x{pack.gridSize}
               </Text>
-            </Pressable>
-          );
-        })}
+            </View>
+            <Text style={styles.packProgress}>
+              {completedPerPack[pack.id] ?? 0}/{pack.puzzles.length}
+            </Text>
+          </Pressable>
+        ))}
       </ScrollView>
     </View>
   );

@@ -6,7 +6,6 @@ import { usePuzzleStore } from '../store';
 import { packs } from '../packs';
 import { formatTime } from '../utils/formatTime';
 import { useTheme, type Theme } from '../hooks/useTheme';
-import { parsePuzzleId } from '../utils/puzzleId';
 
 export function WinBanner() {
   const completed = usePuzzleStore(s => s.completed);
@@ -16,9 +15,9 @@ export function WinBanner() {
   const styles = createStyles(theme);
   const navigation = useNavigation<any>();
 
-  const { packId, index: puzzleIndex } = puzzleId
-    ? parsePuzzleId(puzzleId)
-    : { packId: '', index: 0 };
+  const [packId, puzzleIndex] = puzzleId
+    ? [puzzleId.split(':')[0], Number(puzzleId.split(':')[1])]
+    : ['', 0];
   const pack = packs.find(p => p.id === packId);
   const isLastPuzzle = !pack || puzzleIndex >= pack.puzzles.length - 1;
 

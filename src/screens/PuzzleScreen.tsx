@@ -16,7 +16,6 @@ import { persistProgress as persistProgressUtil } from '../utils/persistProgress
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
-import { makePuzzleId } from '../utils/puzzleId';
 
 export function PuzzleScreen({ route, navigation }: any) {
   const { packId, puzzleIndex } = route.params;
@@ -69,7 +68,7 @@ export function PuzzleScreen({ route, navigation }: any) {
   useEffect(() => {
     if (!rawPuzzle) return;
     try {
-      const puzzleId = makePuzzleId(packId, puzzleIndex);
+      const puzzleId = `${packId}:${puzzleIndex}`;
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
       loadPuzzle(parsed);
     } catch {

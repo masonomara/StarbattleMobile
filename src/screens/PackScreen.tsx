@@ -5,7 +5,6 @@ import { packs } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
 import { useTheme, type Theme } from '../hooks/useTheme';
-import { makePuzzleId } from '../utils/puzzleId';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function PuzzleCell({
@@ -21,10 +20,10 @@ function PuzzleCell({
   styles: any;
   theme: Theme;
 }) {
-  const puzzleId = makePuzzleId(packId, index);
-  const isCompleted = useUserStore(s => s.completedPuzzles.has(puzzleId));
+  const puzzleId = `${packId}:${index}`;
+  const isCompleted = useUserStore(s => s.progress.completedPuzzles.has(puzzleId));
   const prevCompleted = useUserStore(
-    s => index === 0 || s.completedPuzzles.has(makePuzzleId(packId, index - 1)),
+    s => index === 0 || s.progress.completedPuzzles.has(`${packId}:${index - 1}`),
   );
 
   const status: 'completed' | 'active' | 'locked' = isCompleted
@@ -94,7 +93,9 @@ export function PackScreen({ route, navigation }: any) {
           <PuzzleCell
             packId={packId}
             index={index}
-            onPress={index => navigation.navigate('Puzzle', { packId, puzzleIndex: index })}
+            onPress={i =>
+              navigation.navigate('Puzzle', { packId, puzzleIndex: i })
+            }
             styles={styles}
             theme={theme}
           />
@@ -138,9 +139,17 @@ const createStyles = (theme: Theme) =>
       opacity: 0.3,
     },
     puzzleNumber: { fontSize: 18, fontWeight: 700 },
-    puzzleNumberCompleted: { fontSize: 18, fontWeight: 700, color: theme.accent },
+    puzzleNumberCompleted: {
+      fontSize: 18,
+      fontWeight: 700,
+      color: theme.accent,
+    },
     puzzleNumberActive: { fontSize: 18, fontWeight: 700, color: theme.text },
-    puzzleNumberLocked: { fontSize: 18, fontWeight: 700, color: theme.textSecondary },
+    puzzleNumberLocked: {
+      fontSize: 18,
+      fontWeight: 700,
+      color: theme.textSecondary,
+    },
     locked: { opacity: 0.5 },
     headerButton: {
       width: 36,

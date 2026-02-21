@@ -34,9 +34,14 @@ export type Move = {
   autoMarks: number[];
 };
 
+export type ProgressState = {
+  completedPuzzles: Set<string>;
+  completedPerPack: Record<string, number>;
+};
+
 export type UserState = {
   settings: UserSettings;
-  completedPuzzles: Set<string>;
+  progress: ProgressState;
   initialize: () => void;
   updateSettings: (update: Partial<UserSettings>) => void;
   saveProgress: (progress: Progress) => void;
