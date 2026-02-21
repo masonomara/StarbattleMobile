@@ -3,23 +3,25 @@ import { Animated, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { usePuzzleStore } from '../store';
-import { packs } from '../packs';
 import { formatTime } from '../utils/formatTime';
 import { useTheme, type Theme } from '../hooks/useTheme';
 
-export function WinBanner() {
+export function WinBanner({
+  packId,
+  puzzleIndex,
+  packName,
+  isLastPuzzle,
+}: {
+  packId: string;
+  puzzleIndex: number;
+  packName: string;
+  isLastPuzzle: boolean;
+}) {
   const completed = usePuzzleStore(s => s.completed);
-  const puzzleId = usePuzzleStore(s => s.puzzle?.id);
   const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation = useNavigation<any>();
-
-  const [packId, puzzleIndex] = puzzleId
-    ? [puzzleId.split(':')[0], Number(puzzleId.split(':')[1])]
-    : ['', 0];
-  const pack = packs.find(p => p.id === packId);
-  const isLastPuzzle = !pack || puzzleIndex >= pack.puzzles.length - 1;
 
   const [bannerHeight, setBannerHeight] = useState(0);
   const bannerTranslateY = useRef(new Animated.Value(0)).current;
@@ -63,7 +65,7 @@ export function WinBanner() {
       ]}
     >
       <Text style={styles.winInfo}>
-        {pack?.name} #{puzzleIndex + 1}
+        {packName} #{puzzleIndex + 1}
       </Text>
       <Text style={styles.winText}>
         Solved in {formatTime(timeMs)}
@@ -75,7 +77,7 @@ export function WinBanner() {
         style={styles.winButton}
       >
         <Text style={styles.winButtonText}>
-          {isLastPuzzle ? `Back to ${pack?.name ?? 'Pack'}` : 'Next Puzzle'}
+          {isLastPuzzle ? `Back to ${packName || 'Pack'}` : 'Next Puzzle'}
         </Text>
       </TouchableOpacity>
     </Animated.View>

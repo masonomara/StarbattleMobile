@@ -131,7 +131,7 @@ export function PuzzleScreen({ route, navigation }: any) {
       {!hideToolbar && (
         <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
       )}
-      <WinBanner />
+      <WinBanner packId={packId} puzzleIndex={puzzleIndex} packName={pack?.name ?? ''} isLastPuzzle={!pack || puzzleIndex >= pack.puzzles.length - 1} />
     </View>
   );
 }
