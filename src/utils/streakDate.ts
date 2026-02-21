@@ -1,4 +1,4 @@
-import type { StreakType, Streak } from '../types/streak';
+import type { Streak, StreakType } from '../types/state';
 
 export function getCurrentKey(type: StreakType, now = new Date()): string {
   const y = now.getFullYear();

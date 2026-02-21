@@ -1,3 +1,12 @@
+export type StreakType = 'daily' | 'weekly' | 'monthly';
+
+export type Streak = {
+  type: StreakType;
+  current: number;
+  lastCompletedKey: string;
+};
+
+
 export type CellValue = 0 | 1 | 2; // 0=empty, 1=star, 2=marked
 
 export type TapMode = 'cycle' | 'erase';
@@ -42,7 +51,9 @@ export type ProgressState = {
 export type UserState = {
   settings: UserSettings;
   progress: ProgressState;
+  streaks: Streak[];
   initialize: () => void;
   updateSettings: (update: Partial<UserSettings>) => void;
   saveProgress: (progress: Progress) => void;
+  recordStreak: (type: StreakType) => void;
 };
