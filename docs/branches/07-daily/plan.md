@@ -534,10 +534,10 @@ The sieve CLI's stdin mode (`echo grid | cli --stars N`) runs `traceBoard`, whic
 
 ### Phase 2 — Data Layer
 
-- [ ] **2.1** Edit `src/packs.ts` — add imports for daily/weekly/monthly JSON, add `StreakType` import, export `streakPacks` record
-- [ ] **2.2** Edit `src/storage.ts` — add `StreakType`/`Streak` imports, `STREAKS_KEY`, `DEFAULT_STREAK`, `DEFAULT_STREAKS`, `getStreaks`, `saveStreak`
-- [ ] **2.3** Edit `src/types/state.ts` — add `streaks: Record<StreakType, Streak>` and `recordStreak: (type: StreakType) => void` to `UserState`
-- [ ] **2.4** Edit `src/stores/userStore.ts` — import streak storage + date utils, initialize `streaks: getStreaks()`, implement `recordStreak` action
+- [x] **2.1** Edit `src/packs.ts` — add imports for daily/weekly/monthly JSON, add `StreakType` import, export `streakPacks` record
+- [x] **2.2** Edit `src/storage.ts` — add `StreakType`/`Streak` imports, `STREAKS_KEY`, `DEFAULT_STREAK`, `DEFAULT_STREAKS`, `getStreaks`, `saveStreak`
+- [x] **2.3** Edit `src/types/state.ts` — add `streaks: Record<StreakType, Streak>` and `recordStreak: (type: StreakType) => void` to `UserState`
+- [x] **2.4** Edit `src/stores/userStore.ts` — import streak storage + date utils, initialize `streaks: getStreaks()`, implement `recordStreak` action
 
 ### Phase 3 — Screen Integration
 
