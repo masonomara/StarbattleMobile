@@ -17,30 +17,13 @@ export function Navigation() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
+          headerShown: false,
           statusBarStyle: theme.isDark ? 'light' : 'dark',
         }}
       >
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ headerShown: false, headerTintColor: theme.text }}
-        />
-        <Stack.Screen
-          name="Pack"
-          component={PackScreen}
-          options={{ headerTransparent: true, headerTintColor: theme.text }}
-        />
-        <Stack.Screen
-          name="Puzzle"
-          component={PuzzleScreen}
-          options={{
-            title: '',
-            headerTintColor: theme.text,
-
-            headerTransparent: true,
-            headerShadowVisible: false,
-          }}
-        />
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Pack" component={PackScreen} />
+        <Stack.Screen name="Puzzle" component={PuzzleScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
