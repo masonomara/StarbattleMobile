@@ -33,7 +33,7 @@ export const CellView = memo(function CellView({
 
   const handlePress = useCallback(() => onPress(row, col), [onPress, row, col]);
 
-  const starColor = hasError ? theme.starErrorColor : theme.starColor;
+  const regionBorder = hasError ? theme.markColor : theme.regionBorder;
 
   return (
     <Pressable
@@ -43,15 +43,15 @@ export const CellView = memo(function CellView({
         {
           width: CELL_SIZE,
           height: CELL_SIZE,
-          backgroundColor: theme.cellBg,
+          backgroundColor: theme.bg,
         },
       ]}
     >
-      {value === 1 && <StarIcon size={22} color={starColor} />}
+      {value === 1 && <StarIcon size={22} color={regionBorder} />}
       {value === 2 && <MarkIcon size={14} color={theme.markColor} />}
       {ghost === 'star' && value !== 1 && (
         <View style={styles.ghost}>
-          <StarIcon size={22} color={theme.starColor} />
+          <StarIcon size={22} color={theme.regionBorder} />
         </View>
       )}
       {ghost === 'mark' && value !== 2 && (

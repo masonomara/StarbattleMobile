@@ -6,12 +6,10 @@ export type Theme = {
   textSecondary: string;
   regionBorder: string;
   innerBorder: string;
-  cellBg: string;
-  starColor: string;
-  starErrorColor: string;
   markColor: string;
   accent: string;
-  accentMuted: string;
   onAccent: string;
+  highlight: string;
+  onHighlight: string;
   shadow: string;
 };
