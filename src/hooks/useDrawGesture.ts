@@ -4,7 +4,6 @@ import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { hapticLight } from '../haptics';
 import type { CellChange } from '../types/state';
-import type { BoardLayout } from '../types/board';
 
 export function useDrawGesture(
   puzzleSize: number,
@@ -12,7 +11,7 @@ export function useDrawGesture(
   savedScale: React.RefObject<number>,
   savedTranslateX: React.RefObject<number>,
   savedTranslateY: React.RefObject<number>,
-  boardLayout: React.RefObject<BoardLayout>,
+  boardLayout: React.RefObject<{ width: number; height: number }>,
 ) {
   const strokeChanges = useRef<CellChange[]>([]);
   const visitedCells = useRef(new Set<number>());
@@ -44,7 +43,7 @@ export function useDrawGesture(
       }
       return { row, col };
     },
-    [puzzleSize, savedScale, savedTranslateX, savedTranslateY, boardLayout],
+    [puzzleSize, savedScale, savedTranslateX, savedTranslateY, boardLayout, cellSize],
   );
 
   const markCell = useCallback((row: number, col: number) => {

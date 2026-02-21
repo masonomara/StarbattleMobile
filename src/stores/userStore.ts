@@ -6,7 +6,6 @@ import {
   getProgress,
 } from '../storage';
 import { packs } from '../packs';
-
 import type { UserSettings, Progress, ProgressState, UserState } from '../types/state';
 
 function buildProgress(): ProgressState {
