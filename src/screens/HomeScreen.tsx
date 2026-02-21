@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import { getAllPacks } from '../packs';
 import { useUserStore } from '../stores/userStore';
@@ -13,17 +13,19 @@ import {
   FONT_WEIGHT_SEMIBOLD,
 } from '../utils/constants';
 import type { Pack } from '../types/puzzle';
+import type { Theme } from '../types/theme';
 import { useTheme } from '../hooks/useTheme';
 import { makePuzzleId } from '../utils/puzzleId';
 
-const PackCard = memo(function PackCard({
+function PackCard({
   pack,
   onPress,
+  theme,
 }: {
   pack: Pack;
   onPress: (packId: string) => void;
+  theme: Theme;
 }) {
-  const theme = useTheme();
   const total = pack.puzzles.length;
   const completed = useUserStore(s => {
     let count = 0;
@@ -54,7 +56,7 @@ const PackCard = memo(function PackCard({
       </Text>
     </Pressable>
   );
-});
+}
 
 export function HomeScreen({ navigation }: any) {
   const packs = getAllPacks();
@@ -78,7 +80,7 @@ export function HomeScreen({ navigation }: any) {
         data={packs}
         keyExtractor={p => p.id}
         renderItem={({ item }) => (
-          <PackCard pack={item} onPress={handlePress} />
+          <PackCard pack={item} onPress={handlePress} theme={theme} />
         )}
         contentContainerStyle={styles.list}
       />
