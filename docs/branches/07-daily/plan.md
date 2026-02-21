@@ -2,23 +2,17 @@
 
 ## Overview
 
-Add three challenge modes to the home screen — daily, weekly, and monthly — each backed by its own placeholder puzzle pack. Tapping a challenge card navigates straight into the puzzle. The win banner shows the player's current streak. All challenge state is persisted to MMKV alongside existing progress.
+Add three challenge modes to the home screen — daily, weekly, and monthly — each backed by its own puzzle pack. Tapping a challenge card navigates straight into the puzzle. The win banner shows the player's current streak. All streak state is persisted to MMKV alongside existing progress.
 
 ---
 
 ## Step 0 — Convert Verified Puzzles into Pack JSONs
 
-The verified puzzles in `verified-puzzles.md` are space-separated letter grids. We need to convert each to an SBN string and wrap it in the Pack JSON format. The SBN format is `{size}x{stars}.{letters}` where letters are the grid cells concatenated without spaces.
-
-These puzzles don't have solver-generated solutions or hints yet, so we'll create placeholder packs with empty solutions and no hints. The puzzles will render and be playable, but win detection won't trigger until real solutions are added. (Alternatively, we can run them through the sieve to get solutions — but for now, placeholders.)
-
-**However**: the sieve `cli.ts` can produce the full output. If we want solutions, we run the sieve. For now, we'll create minimal packs with just the SBN strings and empty solutions so the grids render. We'll duplicate each puzzle a few times per pack to test rotation logic.
-
-<!-- we are 100% running thes epuzzles throguthe sive so we can have the full experience with hints compeltions etc -->
+The verified puzzles in `verified-puzzles.md` are space-separated letter grids. We need to convert each to an SBN string and run it through the sieve (`cli.ts`) to get full pack output with solutions and hints. The SBN format is `{size}x{stars}.{letters}` where letters are the grid cells concatenated without spaces.
 
 ### New files
 
-**`packs/daily.json`** — 3 copies of the daily puzzle (25x25, 6 stars):
+**`packs/daily.json`** — daily puzzle (25x25, 6 stars), run through sieve:
 ```json
 {
   "id": "daily",
@@ -28,14 +22,12 @@ These puzzles don't have solver-generated solutions or hints yet, so we'll creat
   "gridSize": 25,
   "stars": 6,
   "puzzles": [
-    { "sbn": "25x6.AAAAAGGGGGGGOOOOOSSSSSSSSAAAGGGGGGHGGGOOOOOOOSSSSSSAAAAAHH...<full>", "solution": [], "hints": [] },
-    { "sbn": "25x6.<same or variant>", "solution": [], "hints": [] },
-    { "sbn": "25x6.<same or variant>", "solution": [], "hints": [] }
+    { "sbn": "25x6.<full>", "solution": [...], "hints": [...] }
   ]
 }
 ```
 
-**`packs/weekly.json`** — 3 copies of the weekly puzzle (21x21, 5 stars):
+**`packs/weekly.json`** — weekly puzzle (21x21, 5 stars), run through sieve:
 ```json
 {
   "id": "weekly",
@@ -45,14 +37,12 @@ These puzzles don't have solver-generated solutions or hints yet, so we'll creat
   "gridSize": 21,
   "stars": 5,
   "puzzles": [
-    { "sbn": "21x5.<letters>", "solution": [], "hints": [] },
-    { "sbn": "21x5.<letters>", "solution": [], "hints": [] },
-    { "sbn": "21x5.<letters>", "solution": [], "hints": [] }
+    { "sbn": "21x5.<full>", "solution": [...], "hints": [...] }
   ]
 }
 ```
 
-**`packs/monthly.json`** — 3 copies of the monthly puzzle (17x17, 4 stars):
+**`packs/monthly.json`** — monthly puzzle (17x17, 4 stars), run through sieve:
 ```json
 {
   "id": "monthly",
@@ -62,9 +52,7 @@ These puzzles don't have solver-generated solutions or hints yet, so we'll creat
   "gridSize": 17,
   "stars": 4,
   "puzzles": [
-    { "sbn": "17x4.<letters>", "solution": [], "hints": [] },
-    { "sbn": "17x4.<letters>", "solution": [], "hints": [] },
-    { "sbn": "17x4.<letters>", "solution": [], "hints": [] }
+    { "sbn": "17x4.<full>", "solution": [...], "hints": [...] }
   ]
 }
 ```
@@ -87,10 +75,6 @@ export type ChallengeStreak = {
   current: number;
   lastCompletedKey: string; // e.g. "2026-02-21" or "2026-W08" or "2026-02"
 };
-
-export type ChallengeState = {
-  streaks: Record<ChallengeType, ChallengeStreak>;
-};
 ```
 
 The `lastCompletedKey` uses a date-derived string to track consecutive completions:
@@ -100,22 +84,17 @@ The `lastCompletedKey` uses a date-derived string to track consecutive completio
 
 A streak is "current" if `lastCompletedKey` equals the current period OR the immediately previous period. If you skip a period, the streak resets to 0.
 
-
-<!-- isnt having challenge state and Chalenge Streak as seperate types kind of redeundant? -->
-
-
 ---
 
 ## Step 2 — Challenge Date Utilities
 
 ### `src/utils/challengeDate.ts`
 
-Pure functions for computing which puzzle index to show and whether a streak is still active.
+Pure functions for computing which puzzle index to show and whether a streak is still active. All date functions use device-local time (`new Date()`), so challenges rotate based on the player's local timezone — your "day" is your local day.
 
 ```ts
 import type { ChallengeType, ChallengeStreak } from '../types/challenge';
 
-// Get the current period key for a challenge type
 export function getCurrentKey(type: ChallengeType, now = new Date()): string {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
@@ -131,7 +110,6 @@ export function getCurrentKey(type: ChallengeType, now = new Date()): string {
   }
 }
 
-// Get the previous period key (for streak continuity check)
 export function getPreviousKey(type: ChallengeType, now = new Date()): string {
   const prev = new Date(now);
   switch (type) {
@@ -148,8 +126,6 @@ export function getPreviousKey(type: ChallengeType, now = new Date()): string {
   return getCurrentKey(type, prev);
 }
 
-// Which puzzle index from the pack to use for the current period
-// Rotates through the pack based on a day/week/month counter
 export function getPuzzleIndex(type: ChallengeType, packSize: number, now = new Date()): number {
   const epoch = new Date('2025-01-01');
   const msPerDay = 86400000;
@@ -167,7 +143,6 @@ export function getPuzzleIndex(type: ChallengeType, packSize: number, now = new 
   }
 }
 
-// ISO week number helper
 function getISOWeek(date: Date): number {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -176,33 +151,31 @@ function getISOWeek(date: Date): number {
   return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
 }
 
-// Compute streak value from stored streak data
 export function getActiveStreak(streak: ChallengeStreak, type: ChallengeType): number {
   const currentKey = getCurrentKey(type);
   const prevKey = getPreviousKey(type);
   if (streak.lastCompletedKey === currentKey || streak.lastCompletedKey === prevKey) {
     return streak.current;
   }
-  return 0; // streak broken
+  return 0;
 }
 ```
 
-<!-- these look a little bloated but generally fine, i skimmed through, my only question is how will the international timezone/different timezones work -->
-
 ---
 
-## Step 3 — Challenge Packs + Index Map
+## Step 3 — Challenge Packs
 
-### `src/challengePacks.ts`
+### Changes to `src/packs.ts`
 
-Separate from the regular packs so the systems stay decoupled.
+Add challenge pack imports alongside the existing packs.
 
 ```ts
 import dailyData from '../packs/daily.json';
 import weeklyData from '../packs/weekly.json';
 import monthlyData from '../packs/monthly.json';
-import type { Pack } from './types/puzzle';
 import type { ChallengeType } from './types/challenge';
+
+// ...existing packs array...
 
 export const challengePacks: Record<ChallengeType, Pack> = {
   daily: dailyData as unknown as Pack,
@@ -211,113 +184,92 @@ export const challengePacks: Record<ChallengeType, Pack> = {
 };
 ```
 
-<!-- does this need to be seperate? -->
-
 ---
 
-## Step 4 — Storage for Challenge Streaks
+## Step 4 — Storage for Streaks
 
 ### Changes to `src/storage.ts`
 
 Add streak persistence alongside existing settings/progress storage.
 
 ```ts
-import type { ChallengeState, ChallengeType, ChallengeStreak } from './types/challenge';
+import type { ChallengeType, ChallengeStreak } from './types/challenge';
 
-const CHALLENGE_KEY = 'local:challenges';
+const STREAKS_KEY = 'local:streaks';
 
 const DEFAULT_STREAK: ChallengeStreak = { current: 0, lastCompletedKey: '' };
 
-const DEFAULT_CHALLENGE_STATE: ChallengeState = {
-  streaks: {
-    daily: { ...DEFAULT_STREAK },
-    weekly: { ...DEFAULT_STREAK },
-    monthly: { ...DEFAULT_STREAK },
-  },
+const DEFAULT_STREAKS: Record<ChallengeType, ChallengeStreak> = {
+  daily: { ...DEFAULT_STREAK },
+  weekly: { ...DEFAULT_STREAK },
+  monthly: { ...DEFAULT_STREAK },
 };
 
-export function getChallengeState(): ChallengeState {
-  const json = storage.getString(CHALLENGE_KEY);
-  if (!json) return DEFAULT_CHALLENGE_STATE;
-  return { ...DEFAULT_CHALLENGE_STATE, ...JSON.parse(json) };
+export function getStreaks(): Record<ChallengeType, ChallengeStreak> {
+  const json = storage.getString(STREAKS_KEY);
+  if (!json) return DEFAULT_STREAKS;
+  return { ...DEFAULT_STREAKS, ...JSON.parse(json) };
 }
 
-export function saveChallengeStreak(type: ChallengeType, streak: ChallengeStreak): void {
-  const state = getChallengeState();
-  state.streaks[type] = streak;
-  storage.set(CHALLENGE_KEY, JSON.stringify(state));
+export function saveStreak(type: ChallengeType, streak: ChallengeStreak): void {
+  const current = getStreaks();
+  storage.set(STREAKS_KEY, JSON.stringify({ ...current, [type]: streak }));
 }
 ```
 
 The puzzle ID for challenge puzzles follows the pattern `"daily:2026-02-21"`, `"weekly:2026-W08"`, `"monthly:2026-02"`. Progress is stored via the existing `getProgress`/`saveProgress` using these IDs.
 
-<!-- thsi is jsut mutating the json right? -->
-
 ---
 
-## Step 5 — Add Challenge State to userStore
+## Step 5 — Add Streak State to userStore
+
+### Changes to `src/types/state.ts`
+
+```ts
+import type { ChallengeType, ChallengeStreak } from './challenge';
+
+export type UserState = {
+  // ...existing fields...
+  streaks: Record<ChallengeType, ChallengeStreak>;
+  recordStreak: (type: ChallengeType) => void;
+};
+```
 
 ### Changes to `src/stores/userStore.ts`
 
-Add challenge streaks to the store, loaded from MMKV on init.
-
 ```ts
-import type { ChallengeType, ChallengeStreak, ChallengeState } from '../types/challenge';
-import { getChallengeState, saveChallengeStreak } from '../storage';
+import type { ChallengeType, ChallengeStreak } from '../types/challenge';
+import { getStreaks, saveStreak } from '../storage';
 import { getCurrentKey, getPreviousKey } from '../utils/challengeDate';
 
-// Add to UserState type (in src/types/state.ts):
-//   challenges: ChallengeState;
-//   completeChallenge: (type: ChallengeType) => void;
-
-// Inside the store:
 export const useUserStore = create<UserState>((set) => ({
   // ...existing...
-  challenges: getChallengeState(),
+  streaks: getStreaks(),
 
-  completeChallenge: (type: ChallengeType) => {
+  recordStreak: (type: ChallengeType) => {
     set(state => {
       const currentKey = getCurrentKey(type);
       const prevKey = getPreviousKey(type);
-      const existing = state.challenges.streaks[type];
+      const existing = state.streaks[type];
 
-      let newCurrent: number;
       if (existing.lastCompletedKey === currentKey) {
         return state; // already completed this period
-      } else if (existing.lastCompletedKey === prevKey) {
-        newCurrent = existing.current + 1; // consecutive
-      } else {
-        newCurrent = 1; // streak reset
       }
 
+      const newCurrent = existing.lastCompletedKey === prevKey
+        ? existing.current + 1
+        : 1;
+
       const newStreak: ChallengeStreak = { current: newCurrent, lastCompletedKey: currentKey };
-      saveChallengeStreak(type, newStreak);
+      saveStreak(type, newStreak);
 
       return {
-        challenges: {
-          streaks: { ...state.challenges.streaks, [type]: newStreak },
-        },
+        streaks: { ...state.streaks, [type]: newStreak },
       };
     });
   },
 }));
 ```
-
-### Changes to `src/types/state.ts`
-
-Add to `UserState`:
-```ts
-import type { ChallengeType, ChallengeState } from './challenge';
-
-export type UserState = {
-  // ...existing fields...
-  challenges: ChallengeState;
-  completeChallenge: (type: ChallengeType) => void;
-};
-```
-
-
-<!-- compelteChallendges, challenge types? Wee dont have challenges, jsut streaks -->
 
 ---
 
@@ -332,11 +284,9 @@ The Puzzle screen will accept either:
 - `{ challengeType }` — challenge puzzle flow
 
 ```ts
-// In PuzzleScreen:
 export function PuzzleScreen({ route, navigation }: any) {
   const { packId, puzzleIndex, challengeType } = route.params;
 
-  // Determine puzzle source
   let rawPuzzle: RawPuzzle | undefined;
   let puzzleId: string;
   let gridSize: number;
@@ -356,7 +306,6 @@ export function PuzzleScreen({ route, navigation }: any) {
   }
 
   // ...rest of component uses rawPuzzle, puzzleId, gridSize
-  // The loadPuzzle effect uses puzzleId instead of `${packId}:${puzzleIndex}`
 ```
 
 ### WinBanner changes
@@ -364,13 +313,12 @@ export function PuzzleScreen({ route, navigation }: any) {
 WinBanner needs to handle both flows. For challenges, show streak instead of "Next Puzzle".
 
 ```ts
-// WinBanner props change:
 export function WinBanner({
   packId,
   puzzleIndex,
   packName,
   isLastPuzzle,
-  challengeType, // new optional prop
+  challengeType,
 }: {
   packId: string;
   puzzleIndex: number;
@@ -381,24 +329,21 @@ export function WinBanner({
 ```
 
 For challenge wins:
-- Call `useUserStore.getState().completeChallenge(challengeType)` when completed flips to true
+- Call `useUserStore.getState().recordStreak(challengeType)` when completed flips to true
 - Display streak: "Daily Streak: 5" instead of pack info
 - Button says "Back to Home" and calls `navigation.goBack()`
 
 ```tsx
-// Inside WinBanner, when challengeType is set:
 const streak = useUserStore(s =>
-  challengeType ? getActiveStreak(s.challenges.streaks[challengeType], challengeType) : 0
+  challengeType ? getActiveStreak(s.streaks[challengeType], challengeType) : 0
 );
 
-// On completion effect:
 useEffect(() => {
   if (completed && challengeType) {
-    useUserStore.getState().completeChallenge(challengeType);
+    useUserStore.getState().recordStreak(challengeType);
   }
 }, [completed, challengeType]);
 
-// Render:
 if (challengeType) {
   return (
     <Animated.View ...>
@@ -427,10 +372,8 @@ if (challengeType) {
 Add three challenge preview cards above the pack list.
 
 ```tsx
-// src/screens/HomeScreen.tsx
-
-import { challengePacks } from '../challengePacks';
-import { getCurrentKey, getPuzzleIndex, getActiveStreak } from '../utils/challengeDate';
+import { challengePacks } from '../packs';
+import { getCurrentKey, getActiveStreak } from '../utils/challengeDate';
 import type { ChallengeType } from '../types/challenge';
 
 const CHALLENGE_TYPES: ChallengeType[] = ['daily', 'weekly', 'monthly'];
@@ -445,7 +388,7 @@ export function HomeScreen({ navigation }: any) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const completedPerPack = useUserStore(s => s.progress.completedPerPack);
-  const challenges = useUserStore(s => s.challenges);
+  const streaks = useUserStore(s => s.streaks);
   const completedPuzzles = useUserStore(s => s.progress.completedPuzzles);
 
   return (
@@ -460,7 +403,7 @@ export function HomeScreen({ navigation }: any) {
             const key = getCurrentKey(type);
             const puzzleId = `${type}:${key}`;
             const isCompleted = completedPuzzles.has(puzzleId);
-            const streak = getActiveStreak(challenges.streaks[type], type);
+            const streak = getActiveStreak(streaks[type], type);
 
             return (
               <Pressable
@@ -530,20 +473,19 @@ challengeStreak: {
 
 ---
 
-
 ## File Change Summary
 
 | File | Action |
 |---|---|
-| `packs/daily.json` | **Create** — placeholder daily pack (3 puzzles) |
-| `packs/weekly.json` | **Create** — placeholder weekly pack (3 puzzles) |
-| `packs/monthly.json` | **Create** — placeholder monthly pack (3 puzzles) |
-| `src/types/challenge.ts` | **Create** — ChallengeType, ChallengeStreak, ChallengeState |
-| `src/challengePacks.ts` | **Create** — imports + exports challenge packs by type |
+| `packs/daily.json` | **Create** — daily pack, run through sieve |
+| `packs/weekly.json` | **Create** — weekly pack, run through sieve |
+| `packs/monthly.json` | **Create** — monthly pack, run through sieve |
+| `src/types/challenge.ts` | **Create** — ChallengeType, ChallengeStreak |
 | `src/utils/challengeDate.ts` | **Create** — getCurrentKey, getPreviousKey, getPuzzleIndex, getActiveStreak, getISOWeek |
-| `src/types/state.ts` | **Edit** — add challenges + completeChallenge to UserState |
-| `src/storage.ts` | **Edit** — add getChallengeState, saveChallengeStreak; remove computeCompletedCount |
-| `src/stores/userStore.ts` | **Edit** — load challenge state on init, add completeChallenge action |
+| `src/packs.ts` | **Edit** — add challenge pack imports + `challengePacks` export |
+| `src/types/state.ts` | **Edit** — add streaks + recordStreak to UserState |
+| `src/storage.ts` | **Edit** — add getStreaks, saveStreak |
+| `src/stores/userStore.ts` | **Edit** — load streaks on init, add recordStreak action |
 | `src/screens/HomeScreen.tsx` | **Edit** — add challenge preview cards above pack list |
 | `src/screens/PuzzleScreen.tsx` | **Edit** — accept challengeType param, resolve puzzle from challenge pack |
 | `src/components/WinBanner.tsx` | **Edit** — accept challengeType prop, show streak on win |
@@ -552,15 +494,68 @@ challengeStreak: {
 
 ## Execution Order
 
-1. **Step 0**: Convert verified puzzle grids to SBN, create the 3 pack JSONs
+1. **Step 0**: Convert verified puzzle grids to SBN, run through sieve, create the 3 pack JSONs
 2. **Step 1**: Create `src/types/challenge.ts`
 3. **Step 2**: Create `src/utils/challengeDate.ts`
-4. **Step 3**: Create `src/challengePacks.ts`
-5. **Step 4**: Edit `src/storage.ts` (add challenge storage, remove dead code)
-6. **Step 5**: Edit `src/types/state.ts` + `src/stores/userStore.ts` (add challenge state)
+4. **Step 3**: Edit `src/packs.ts` (add challenge pack imports)
+5. **Step 4**: Edit `src/storage.ts` (add streak storage)
+6. **Step 5**: Edit `src/types/state.ts` + `src/stores/userStore.ts` (add streak state)
 7. **Step 6**: Edit `src/screens/PuzzleScreen.tsx` + `src/components/WinBanner.tsx` (dual entry + streak display)
 8. **Step 7**: Edit `src/screens/HomeScreen.tsx` (challenge cards)
 
 Each step is independently testable. The app should build and run after each step.
 
-Jsut keep it simple.
+---
+
+## Todo List
+
+### Phase 0 — Puzzle Data Pipeline
+
+The sieve CLI's stdin mode (`echo grid | cli --stars N`) runs `traceBoard`, which prints human-readable trace output — not JSON. We need to bridge from verified grids to pack JSON.
+
+- [ ] **0.1** Write a one-off script (`sieve/src/packify.ts`) that reads a space-separated grid from stdin, runs the solver, and outputs a single puzzle JSON object (`{ sbn, solution, hints }`)
+  - Reuse `parseGridFromStdin` from `cli.ts` to parse the grid
+  - Reuse `solve` with an `onStep` callback to collect `HintStep[]` (rule, level, placements, marks)
+  - Extract solution coords from the final solved board (cells with `star` state)
+  - Build the SBN string: `{size}x{stars}.{letters}` by reading the grid's region IDs back to letters
+  - Output JSON to stdout
+- [ ] **0.2** Run `packify.ts` on the daily grid (25x25, 6 stars) and capture the output
+- [ ] **0.3** Run `packify.ts` on the weekly grid (21x21, 5 stars) and capture the output
+- [ ] **0.4** Run `packify.ts` on the monthly grid (17x17, 4 stars) and capture the output
+- [ ] **0.5** Create `packs/daily.json` — wrap the daily puzzle output in the Pack structure (`id`, `name`, `version`, `free`, `gridSize`, `stars`, `puzzles`)
+- [ ] **0.6** Create `packs/weekly.json` — same structure, weekly puzzle
+- [ ] **0.7** Create `packs/monthly.json` — same structure, monthly puzzle
+- [ ] **0.8** Verify all three packs parse correctly (valid JSON, solution arrays are non-empty, hints arrays are non-empty)
+
+### Phase 1 — Types + Utilities
+
+- [ ] **1.1** Create `src/types/challenge.ts` with `ChallengeType` and `ChallengeStreak`
+- [ ] **1.2** Create `src/utils/challengeDate.ts` with all five functions: `getCurrentKey`, `getPreviousKey`, `getPuzzleIndex`, `getISOWeek`, `getActiveStreak`
+
+### Phase 2 — Data Layer
+
+- [ ] **2.1** Edit `src/packs.ts` — add imports for daily/weekly/monthly JSON, add `ChallengeType` import, export `challengePacks` record
+- [ ] **2.2** Edit `src/storage.ts` — add `ChallengeType`/`ChallengeStreak` imports, `STREAKS_KEY`, `DEFAULT_STREAK`, `DEFAULT_STREAKS`, `getStreaks`, `saveStreak`
+- [ ] **2.3** Edit `src/types/state.ts` — add `streaks: Record<ChallengeType, ChallengeStreak>` and `recordStreak: (type: ChallengeType) => void` to `UserState`
+- [ ] **2.4** Edit `src/stores/userStore.ts` — import streak storage + date utils, initialize `streaks: getStreaks()`, implement `recordStreak` action
+
+### Phase 3 — Screen Integration
+
+- [ ] **3.1** Edit `src/screens/PuzzleScreen.tsx` — import `challengePacks` from `../packs`, import date utils and `ChallengeType`, add `challengeType` to route params destructuring, add the challenge branch for resolving `rawPuzzle`/`puzzleId`/`gridSize`
+- [ ] **3.2** Edit `src/screens/PuzzleScreen.tsx` — pass `challengeType` prop through to `WinBanner`
+- [ ] **3.3** Edit `src/components/WinBanner.tsx` — add optional `challengeType` prop, import `useUserStore`, `getActiveStreak`, date utils
+- [ ] **3.4** Edit `src/components/WinBanner.tsx` — add streak subscription (`useUserStore` selector), add `useEffect` to call `recordStreak` on completion
+- [ ] **3.5** Edit `src/components/WinBanner.tsx` — add challenge win render branch (streak display, "Back to Home" button)
+- [ ] **3.6** Edit `src/screens/HomeScreen.tsx` — import `challengePacks`, date utils, `ChallengeType`
+- [ ] **3.7** Edit `src/screens/HomeScreen.tsx` — add `CHALLENGE_TYPES` array, `CHALLENGE_LABELS` record, subscribe to `streaks` and `completedPuzzles` from userStore
+- [ ] **3.8** Edit `src/screens/HomeScreen.tsx` — add challenge card row above existing pack list (map over types, compute completion/streak, render Pressables)
+- [ ] **3.9** Edit `src/screens/HomeScreen.tsx` — add challenge card styles to `createStyles`
+
+### Phase 4 — Verify
+
+- [ ] **4.1** TypeScript check — run `npx tsc --noEmit`, fix any type errors
+- [ ] **4.2** Build iOS — `cd ios && pod install && cd .. && npx react-native build-ios --mode Debug`
+- [ ] **4.3** Manual test — open app, verify three challenge cards render on home screen
+- [ ] **4.4** Manual test — tap a challenge card, verify puzzle loads and is playable
+- [ ] **4.5** Manual test — solve a challenge puzzle, verify win banner shows streak and "Back to Home" works
+- [ ] **4.6** Manual test — reopen app, verify streak persists and completed challenge shows streak count
