@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
-import { getAllPacks } from '../packs';
+import { packs } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
 import type { Pack } from '../types/puzzle';
@@ -42,16 +42,8 @@ function PackCard({
 }
 
 export function HomeScreen({ navigation }: any) {
-  const packs = getAllPacks();
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
-
-  const handlePress = useCallback(
-    (packId: string) => {
-      navigation.navigate('Pack', { packId });
-    },
-    [navigation],
-  );
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
@@ -60,7 +52,11 @@ export function HomeScreen({ navigation }: any) {
         data={packs}
         keyExtractor={p => p.id}
         renderItem={({ item }) => (
-          <PackCard pack={item} onPress={handlePress} styles={styles} />
+          <PackCard
+            pack={item}
+            onPress={packId => navigation.navigate('Pack', { packId })}
+            styles={styles}
+          />
         )}
         contentContainerStyle={styles.list}
       />

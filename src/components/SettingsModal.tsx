@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Modal, View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useUserStore } from '../stores/userStore';
@@ -45,7 +45,7 @@ function ToggleRow({
 
 export function SettingsModal({ visible, onClose }: Props) {
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = createStyles(theme);
   const settings = useUserStore(s => s.settings);
   const updateSettings = useUserStore(s => s.updateSettings);
 

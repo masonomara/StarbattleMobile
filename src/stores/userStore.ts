@@ -5,13 +5,13 @@ import {
   saveProgress as storageSaveProgress,
   getProgress,
 } from '../storage';
-import { getAllPacks } from '../packs';
+import { packs } from '../packs';
 import { makePuzzleId } from '../utils/puzzleId';
 import type { UserSettings, Progress, UserState } from '../types/state';
 
 function buildCompletedSet(): Set<string> {
   const completed = new Set<string>();
-  for (const pack of getAllPacks()) {
+  for (const pack of packs) {
     for (let i = 0; i < pack.puzzles.length; i++) {
       const id = makePuzzleId(pack.id, i);
       if (getProgress(id)?.completed) completed.add(id);

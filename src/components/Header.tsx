@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ellipsis } from 'lucide-react-native';
@@ -16,7 +16,7 @@ type HeaderProps = {
 export function Header({ left, center, right, absolute }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = createStyles(theme);
   const [settingsVisible, setSettingsVisible] = useState(false);
 
   return (

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -9,7 +9,7 @@ import { HeaderTimer } from '../components/HeaderTimer';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
 import { parsePuzzle } from '../utils/parsePuzzle';
-import { getPack } from '../packs';
+import { packs } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { persistProgress as persistProgressUtil } from '../utils/persistProgress';
@@ -21,10 +21,10 @@ import type { Theme } from '../types/theme';
 
 export function PuzzleScreen({ route, navigation }: any) {
   const { packId, puzzleIndex } = route.params;
-  const pack = getPack(packId);
+  const pack = packs.find(p => p.id === packId);
   const rawPuzzle = pack?.puzzles[puzzleIndex];
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = createStyles(theme);
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
@@ -48,10 +48,10 @@ export function PuzzleScreen({ route, navigation }: any) {
 
   const boardAreaRef = useRef<View>(null);
   const boardLayout = useRef({ width: 0, height: 0 });
-  const handleBoardAreaLayout = useCallback((e: LayoutChangeEvent) => {
+  const handleBoardAreaLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     boardLayout.current = { width, height };
-  }, []);
+  };
 
   const { drawGesture } = useDrawGesture(
     gridSize,

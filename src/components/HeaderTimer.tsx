@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
@@ -10,7 +10,7 @@ export function HeaderTimer() {
   const timeMs = usePuzzleStore(s => s.timeMs);
   const showTimer = useUserStore(s => s.settings.showTimer);
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = createStyles(theme);
 
   if (!showTimer) return null;
 

@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { usePuzzleStore } from '../store';
-import { getPack } from '../packs';
+import { packs } from '../packs';
 import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../hooks/useTheme';
 import { parsePuzzleId } from '../utils/puzzleId';
@@ -14,13 +14,13 @@ export function WinBanner() {
   const puzzleId = usePuzzleStore(s => s.puzzle?.id);
   const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = createStyles(theme);
   const navigation = useNavigation<any>();
 
   const { packId, index: puzzleIndex } = puzzleId
     ? parsePuzzleId(puzzleId)
     : { packId: '', index: 0 };
-  const pack = getPack(packId);
+  const pack = packs.find(p => p.id === packId);
   const isLastPuzzle = !pack || puzzleIndex >= pack.puzzles.length - 1;
 
   const [bannerHeight, setBannerHeight] = useState(0);

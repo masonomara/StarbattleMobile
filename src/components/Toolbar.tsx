@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React from 'react';
 import { Alert, View, Pressable, StyleSheet } from 'react-native';
 import {
   Undo2,
@@ -27,9 +27,9 @@ type Props = {
   onZoomReset: () => void;
 };
 
-export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
+export function Toolbar({ isZoomed, onZoomReset }: Props) {
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = createStyles(theme);
   const hapticsEnabled = useUserStore(s => s.settings.haptics);
   const undo = usePuzzleStore(s => s.undo);
   const redo = usePuzzleStore(s => s.redo);
@@ -133,7 +133,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
       </Pressable>
     </View>
   );
-});
+}
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({

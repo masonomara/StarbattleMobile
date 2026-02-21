@@ -1,7 +1,7 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React from 'react';
 import { View, Text, Pressable, FlatList, StyleSheet } from 'react-native';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
-import { getPack } from '../packs';
+import { packs } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
 import type { Theme } from '../types/theme';
@@ -9,7 +9,7 @@ import { useTheme } from '../hooks/useTheme';
 import { makePuzzleId } from '../utils/puzzleId';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const PuzzleCell = memo(function PuzzleCell({
+function PuzzleCell({
   packId,
   index,
   onPress,
@@ -62,21 +62,14 @@ const PuzzleCell = memo(function PuzzleCell({
       </Text>
     </Pressable>
   );
-});
+}
 
 export function PackScreen({ route, navigation }: any) {
   const { packId } = route.params;
-  const pack = getPack(packId);
+  const pack = packs.find(p => p.id === packId);
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
-
-  const handlePuzzlePress = useCallback(
-    (index: number) => {
-      navigation.navigate('Puzzle', { packId, puzzleIndex: index });
-    },
-    [navigation, packId],
-  );
 
   if (!pack) return null;
 
@@ -102,7 +95,7 @@ export function PackScreen({ route, navigation }: any) {
           <PuzzleCell
             packId={packId}
             index={index}
-            onPress={handlePuzzlePress}
+            onPress={index => navigation.navigate('Puzzle', { packId, puzzleIndex: index })}
             styles={styles}
             theme={theme}
           />
