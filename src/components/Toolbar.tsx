@@ -7,8 +7,6 @@ import {
   Trash2,
   Lightbulb,
   Pencil,
-  X,
-  Star,
   Eraser,
 } from 'lucide-react-native';
 import { usePuzzleStore } from '../store';
@@ -16,11 +14,10 @@ import { hapticMedium } from '../haptics';
 import { useUserStore } from '../stores/userStore';
 import type { TapMode } from '../types/state';
 import { useTheme } from '../hooks/useTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   cycle: Pencil,
-  mark: X,
-  star: Star,
   erase: Eraser,
 };
 
@@ -50,8 +47,10 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
   const zoomDisabled = !isZoomed;
   const hintDisabled = completed || !hasHints;
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.toolbar}>
+    <View style={[styles.toolbar, { bottom: 16 + insets.bottom }]}>
       <Pressable
         onPress={() => {
           if (hapticsEnabled) hapticMedium();
@@ -64,7 +63,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           zoomDisabled && styles.disabled,
         ]}
       >
-        <Minimize2 size={22} color={theme.text} />
+        <Minimize2 size={24} color={theme.text} />
       </Pressable>
 
       <Pressable
@@ -82,7 +81,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           hintDisabled && styles.disabled,
         ]}
       >
-        <Lightbulb size={22} color={theme.text} />
+        <Lightbulb size={24} color={theme.text} />
       </Pressable>
 
       <Pressable
@@ -98,7 +97,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
         ]}
       >
         {React.createElement(TAP_MODE_ICONS[tapMode], {
-          size: 22,
+          size: 24,
           color: theme.text,
         })}
       </Pressable>
@@ -115,7 +114,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           undoDisabled && styles.disabled,
         ]}
       >
-        <Undo2 size={22} color={theme.text} />
+        <Undo2 size={24} color={theme.text} />
       </Pressable>
 
       <Pressable
@@ -130,7 +129,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           redoDisabled && styles.disabled,
         ]}
       >
-        <Redo2 size={22} color={theme.text} />
+        <Redo2 size={24} color={theme.text} />
       </Pressable>
 
       <Pressable
@@ -152,7 +151,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           clearDisabled && styles.disabled,
         ]}
       >
-        <Trash2 size={22} color={theme.text} />
+        <Trash2 size={24} color={theme.text} />
       </Pressable>
     </View>
   );
@@ -161,23 +160,23 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
 const styles = StyleSheet.create({
   toolbar: {
     position: 'absolute',
-    bottom: 28,
     left: 0,
     right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
+    gap: 8,
   },
   button: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 8,
+    opacity: 0.97,
   },
   disabled: { opacity: 0.3 },
 });
