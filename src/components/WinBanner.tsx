@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Animated, Text, Pressable, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { usePuzzleStore } from '../store';
@@ -71,15 +71,14 @@ export function WinBanner({
         Solved in {formatTime(timeMs)}
       </Text>
 
-      <TouchableOpacity
+      <Pressable
         onPress={handleNext}
-        activeOpacity={0.8}
         style={styles.winButton}
       >
         <Text style={styles.winButtonText}>
           {isLastPuzzle ? `Back to ${packName || 'Pack'}` : 'Next Puzzle'}
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 }

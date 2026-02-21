@@ -70,7 +70,8 @@ export function Toolbar({ isZoomed, onZoomReset }: Props) {
         }}
         disabled={hintDisabled}
         style={[
-          hasGhosts ? styles.buttonHintActive : styles.button,
+          styles.button,
+          hasGhosts && { backgroundColor: theme.accent },
           hintDisabled && styles.disabled,
         ]}
       >
@@ -156,20 +157,6 @@ const createStyles = (theme: Theme) =>
       elevation: 8,
       opacity: 0.97,
       backgroundColor: theme.card,
-      shadowColor: theme.shadow,
-    },
-    buttonHintActive: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
-      elevation: 8,
-      opacity: 0.97,
-      backgroundColor: theme.accent,
       shadowColor: theme.shadow,
     },
     disabled: { opacity: 0.3 },

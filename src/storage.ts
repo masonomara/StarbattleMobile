@@ -39,14 +39,3 @@ export function saveProgress(progress: Progress): void {
   storage.set(progressKey(merged.puzzleId), JSON.stringify(merged));
 }
 
-export function computeCompletedCount(
-  packId: string,
-  puzzleCount: number,
-): number {
-  let count = 0;
-  for (let i = 0; i < puzzleCount; i++) {
-    const p = getProgress(`${packId}:${i}`);
-    if (p?.completed) count++;
-  }
-  return count;
-}
