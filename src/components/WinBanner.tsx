@@ -2,13 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from '../store';
 import { getPack } from '../packs';
 import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../hooks/useTheme';
 import { parsePuzzleId } from '../utils/puzzleId';
-import type { RootStackParams } from '../types/navigation';
 import {
   FONT_SIZE_MD,
   FONT_WEIGHT_SEMIBOLD,
@@ -20,8 +18,7 @@ export function WinBanner() {
   const puzzleId = usePuzzleStore(s => s.puzzle?.id);
   const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParams>>();
+  const navigation = useNavigation<any>();
 
   const { packId, index: puzzleIndex } = puzzleId
     ? parsePuzzleId(puzzleId)

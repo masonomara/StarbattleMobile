@@ -1,6 +1,5 @@
 import React, { memo, useCallback } from 'react';
 import { View, Text, Pressable, FlatList, StyleSheet } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { getPack } from '../packs';
 import { useUserStore } from '../stores/userStore';
@@ -10,12 +9,9 @@ import {
   FONT_SIZE_LG,
   FONT_WEIGHT_SEMIBOLD,
 } from '../utils/constants';
-import type { RootStackParams } from '../types/navigation';
 import { useTheme } from '../hooks/useTheme';
 import { makePuzzleId } from '../utils/puzzleId';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-type Props = NativeStackScreenProps<RootStackParams, 'Pack'>;
 
 const PuzzleCell = memo(function PuzzleCell({
   packId,
@@ -81,7 +77,7 @@ const PuzzleCell = memo(function PuzzleCell({
   );
 });
 
-export function PackScreen({ route, navigation }: Props) {
+export function PackScreen({ route, navigation }: any) {
   const { packId } = route.params;
   const pack = getPack(packId);
   const theme = useTheme();

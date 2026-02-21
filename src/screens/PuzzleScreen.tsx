@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { ChevronLeft } from 'lucide-react-native';
 import { Header } from '../components/Header';
@@ -14,15 +13,12 @@ import { getPack } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { persistProgress as persistProgressUtil } from '../utils/persistProgress';
-import type { RootStackParams } from '../types/navigation';
 import { useTheme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { makePuzzleId } from '../utils/puzzleId';
 
-type Props = NativeStackScreenProps<RootStackParams, 'Puzzle'>;
-
-export function PuzzleScreen({ route, navigation }: Props) {
+export function PuzzleScreen({ route, navigation }: any) {
   const { packId, puzzleIndex } = route.params;
   const pack = getPack(packId);
   const rawPuzzle = pack?.puzzles[puzzleIndex];

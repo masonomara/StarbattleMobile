@@ -1,6 +1,5 @@
 import React, { memo, useCallback } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getAllPacks } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
@@ -14,11 +13,8 @@ import {
   FONT_WEIGHT_SEMIBOLD,
 } from '../utils/constants';
 import type { Pack } from '../types/puzzle';
-import type { RootStackParams } from '../types/navigation';
 import { useTheme } from '../hooks/useTheme';
 import { makePuzzleId } from '../utils/puzzleId';
-
-type Props = NativeStackScreenProps<RootStackParams, 'Home'>;
 
 const PackCard = memo(function PackCard({
   pack,
@@ -60,7 +56,7 @@ const PackCard = memo(function PackCard({
   );
 });
 
-export function HomeScreen({ navigation }: Props) {
+export function HomeScreen({ navigation }: any) {
   const packs = getAllPacks();
   const theme = useTheme();
 

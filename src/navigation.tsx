@@ -5,10 +5,9 @@ import { HomeScreen } from './screens/HomeScreen';
 import { PackScreen } from './screens/PackScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
 
-import type { RootStackParams } from './types/navigation';
 import { useTheme } from './hooks/useTheme';
 
-const Stack = createNativeStackNavigator<RootStackParams>();
+const Stack = createNativeStackNavigator();
 
 export function Navigation() {
   const theme = useTheme();
