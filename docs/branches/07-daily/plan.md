@@ -513,19 +513,19 @@ Each step is independently testable. The app should build and run after each ste
 
 The sieve CLI's stdin mode (`echo grid | cli --stars N`) runs `traceBoard`, which prints human-readable trace output — not JSON. We need to bridge from verified grids to pack JSON.
 
-- [ ] **0.1** Write a one-off script (`sieve/src/packify.ts`) that reads a space-separated grid from stdin, runs the solver, and outputs a single puzzle JSON object (`{ sbn, solution, hints }`)
+- [x] **0.1** Write a one-off script (`sieve/src/packify.ts`) that reads a space-separated grid from stdin, runs the solver, and outputs a single puzzle JSON object (`{ sbn, solution, hints }`)
   - Reuse `parseGridFromStdin` from `cli.ts` to parse the grid
   - Reuse `solve` with an `onStep` callback to collect `HintStep[]` (rule, level, placements, marks)
   - Extract solution coords from the final solved board (cells with `star` state)
   - Build the SBN string: `{size}x{stars}.{letters}` by reading the grid's region IDs back to letters
   - Output JSON to stdout
-- [ ] **0.2** Run `packify.ts` on the daily grid (25x25, 6 stars) and capture the output
-- [ ] **0.3** Run `packify.ts` on the weekly grid (21x21, 5 stars) and capture the output
-- [ ] **0.4** Run `packify.ts` on the monthly grid (17x17, 4 stars) and capture the output
-- [ ] **0.5** Create `packs/daily.json` — wrap the daily puzzle output in the Pack structure (`id`, `name`, `version`, `free`, `gridSize`, `stars`, `puzzles`)
-- [ ] **0.6** Create `packs/weekly.json` — same structure, weekly puzzle
-- [ ] **0.7** Create `packs/monthly.json` — same structure, monthly puzzle
-- [ ] **0.8** Verify all three packs parse correctly (valid JSON, solution arrays are non-empty, hints arrays are non-empty)
+- [x] **0.2** Run `packify.ts` on the daily grid (25x25, 6 stars) and capture the output
+- [x] **0.3** Run `packify.ts` on the weekly grid (21x21, 5 stars) and capture the output
+- [x] **0.4** Run `packify.ts` on the monthly grid (17x17, 4 stars) and capture the output
+- [x] **0.5** Create `packs/daily.json` — wrap the daily puzzle output in the Pack structure (`id`, `name`, `version`, `free`, `gridSize`, `stars`, `puzzles`)
+- [x] **0.6** Create `packs/weekly.json` — same structure, weekly puzzle
+- [x] **0.7** Create `packs/monthly.json` — same structure, monthly puzzle
+- [x] **0.8** Verify all three packs parse correctly (valid JSON, solution arrays are non-empty, hints arrays are non-empty)
 
 ### Phase 1 — Types + Utilities
 
