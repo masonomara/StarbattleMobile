@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { Ellipsis } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
+import { Header } from '../components/Header';
 import { BoardView } from '../components/BoardView';
 import { HeaderTimer } from '../components/HeaderTimer';
-import { SettingsModal } from '../components/SettingsModal';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
 import { parsePuzzle } from '../utils/parsePuzzle';
@@ -27,12 +27,10 @@ export function PuzzleScreen({ route, navigation }: Props) {
   const pack = getPack(packId);
   const rawPuzzle = pack?.puzzles[puzzleIndex];
   const theme = useTheme();
-  const [settingsVisible, setSettingsVisible] = useState(false);
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
   const completed = usePuzzleStore(s => s.completed);
-  const tick = usePuzzleStore(s => s.tick);
   const hideToolbar = useUserStore(s => s.settings.hideToolbar);
 
   const gridSize = pack?.gridSize ?? 5;
@@ -70,13 +68,6 @@ export function PuzzleScreen({ route, navigation }: Props) {
     Gesture.Race(drawGesture, panGesture),
   );
 
-  // Drive the timer — tick every second while puzzle is active
-  useEffect(() => {
-    if (completed || !puzzle) return;
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [completed, puzzle, tick]);
-
   useEffect(() => {
     if (!rawPuzzle) return;
     try {
@@ -94,7 +85,12 @@ export function PuzzleScreen({ route, navigation }: Props) {
       const state = usePuzzleStore.getState();
       if (!state.completed && state.puzzle) {
         persistProgressUtil(
-          state.puzzle, state.cells, state.autoMarks, state.timeMs, state.completed, false,
+          state.puzzle,
+          state.cells,
+          state.autoMarks,
+          state.timeMs,
+          state.completed,
+          false,
         );
       }
     };
@@ -105,26 +101,26 @@ export function PuzzleScreen({ route, navigation }: Props) {
     };
   }, [completed, puzzle]);
 
-  const renderHeaderRight = useCallback(
-    () => (
-      <Pressable onPress={() => setSettingsVisible(true)} hitSlop={8}>
-        <Ellipsis size={20} color={theme.text} />
-      </Pressable>
-    ),
-    [theme.text],
-  );
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerTitle: () => <HeaderTimer />,
-      headerRight: renderHeaderRight,
-    });
-  }, [navigation, renderHeaderRight]);
-
   if (!puzzle) return null;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
+      <Header
+        absolute
+        left={
+          <Pressable
+            style={[
+              styles.headerButton,
+              { backgroundColor: theme.card, shadowColor: theme.shadow },
+            ]}
+            onPress={() => navigation.goBack()}
+            hitSlop={8}
+          >
+            <ChevronLeft size={26} color={theme.text} />
+          </Pressable>
+        }
+        center={<HeaderTimer />}
+      />
       <GestureDetector gesture={gesture}>
         <View
           ref={boardAreaRef}
@@ -139,12 +135,10 @@ export function PuzzleScreen({ route, navigation }: Props) {
           />
         </View>
       </GestureDetector>
-      {!hideToolbar && <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />}
+      {!hideToolbar && (
+        <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
+      )}
       <WinBanner />
-      <SettingsModal
-        visible={settingsVisible}
-        onClose={() => setSettingsVisible(false)}
-      />
     </View>
   );
 }
@@ -155,5 +149,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 8,
+    opacity: 0.97,
   },
 });

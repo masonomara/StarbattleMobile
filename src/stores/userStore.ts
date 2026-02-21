@@ -3,20 +3,26 @@ import {
   getSettings,
   saveSettings,
   saveProgress as storageSaveProgress,
+  getProgress,
 } from '../storage';
-import type { UserSettings, Progress } from '../types/state';
+import { getAllPacks } from '../packs';
+import { makePuzzleId } from '../utils/puzzleId';
+import type { UserSettings, Progress, UserState } from '../types/state';
 
-type UserState = {
-  settings: UserSettings;
-  progressVersion: number;
-  initialize: () => void;
-  updateSettings: (update: Partial<UserSettings>) => void;
-  saveProgress: (progress: Progress) => void;
-};
+function buildCompletedSet(): Set<string> {
+  const completed = new Set<string>();
+  for (const pack of getAllPacks()) {
+    for (let i = 0; i < pack.puzzles.length; i++) {
+      const id = makePuzzleId(pack.id, i);
+      if (getProgress(id)?.completed) completed.add(id);
+    }
+  }
+  return completed;
+}
 
 export const useUserStore = create<UserState>((set) => ({
   settings: getSettings(),
-  progressVersion: 0,
+  completedPuzzles: buildCompletedSet(),
 
   initialize: () => {
     const settings = getSettings();
@@ -32,6 +38,13 @@ export const useUserStore = create<UserState>((set) => ({
 
   saveProgress: (progress: Progress) => {
     storageSaveProgress(progress);
-    set(state => ({ progressVersion: state.progressVersion + 1 }));
+    if (progress.completed) {
+      set(state => {
+        if (state.completedPuzzles.has(progress.puzzleId)) return state;
+        const next = new Set(state.completedPuzzles);
+        next.add(progress.puzzleId);
+        return { completedPuzzles: next };
+      });
+    }
   },
 }));

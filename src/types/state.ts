@@ -33,3 +33,11 @@ export type Move = {
   changes: CellChange[];
   autoMarks: number[];
 };
+
+export type UserState = {
+  settings: UserSettings;
+  completedPuzzles: Set<string>;
+  initialize: () => void;
+  updateSettings: (update: Partial<UserSettings>) => void;
+  saveProgress: (progress: Progress) => void;
+};
