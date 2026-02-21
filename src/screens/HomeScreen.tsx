@@ -3,9 +3,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { packs } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
-import type { Theme } from '../types/theme';
-import { useTheme } from '../hooks/useTheme';
-import { makePuzzleId } from '../utils/puzzleId';
+import { useTheme, type Theme } from '../hooks/useTheme';
 
 export function HomeScreen({ navigation }: any) {
   const styles = createStyles(useTheme());
@@ -17,8 +15,8 @@ export function HomeScreen({ navigation }: any) {
       <ScrollView>
         {packs.map(pack => {
           let completed = 0;
-          for (let i = 0; i < pack.puzzles.length; i++)
-            if (completedPuzzles.has(makePuzzleId(pack.id, i))) completed++;
+          for (const id of completedPuzzles)
+            if (id.startsWith(pack.id + ':')) completed++;
 
           return (
             <Pressable

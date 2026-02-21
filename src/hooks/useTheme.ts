@@ -1,6 +1,30 @@
 import { useColorScheme } from 'react-native';
 import { useUserStore } from '../stores/userStore';
-import type { Theme } from '../types/theme';
+
+export type Theme = {
+  isDark: boolean;
+  bg: string;
+  card: string;
+  text: string;
+  textSecondary: string;
+  regionBorder: string;
+  innerBorder: string;
+  markColor: string;
+  accent: string;
+  onAccent: string;
+  highlight: string;
+  onHighlight: string;
+  shadow: string;
+  spacingMd: number;
+  spacingLg: number;
+  spacingXl: number;
+  radiusMd: number;
+  fontSizeSm: number;
+  fontSizeMd: number;
+  fontSizeLg: number;
+  fontWeightSemibold: '600';
+  cellSize: number;
+};
 
 export function useTheme(): Theme {
   const systemScheme = useColorScheme();

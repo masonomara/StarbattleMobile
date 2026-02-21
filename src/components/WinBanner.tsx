@@ -5,9 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { usePuzzleStore } from '../store';
 import { packs } from '../packs';
 import { formatTime } from '../utils/formatTime';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme, type Theme } from '../hooks/useTheme';
 import { parsePuzzleId } from '../utils/puzzleId';
-import type { Theme } from '../types/theme';
 
 export function WinBanner() {
   const completed = usePuzzleStore(s => s.completed);

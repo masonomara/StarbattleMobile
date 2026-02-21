@@ -3,8 +3,7 @@ import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ellipsis } from 'lucide-react-native';
 import { SettingsModal } from './SettingsModal';
-import { useTheme } from '../hooks/useTheme';
-import type { Theme } from '../types/theme';
+import { useTheme, type Theme } from '../hooks/useTheme';
 
 type HeaderProps = {
   left?: React.ReactNode;

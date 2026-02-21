@@ -13,11 +13,10 @@ import { packs } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
 import { persistProgress as persistProgressUtil } from '../utils/persistProgress';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { makePuzzleId } from '../utils/puzzleId';
-import type { Theme } from '../types/theme';
 
 export function PuzzleScreen({ route, navigation }: any) {
   const { packId, puzzleIndex } = route.params;

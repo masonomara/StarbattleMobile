@@ -13,9 +13,8 @@ import { usePuzzleStore } from '../store';
 import { hapticMedium } from '../haptics';
 import { useUserStore } from '../stores/userStore';
 import type { TapMode } from '../types/state';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme, type Theme } from '../hooks/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Theme } from '../types/theme';
 
 const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   cycle: Pencil,

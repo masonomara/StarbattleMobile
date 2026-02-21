@@ -4,8 +4,7 @@ import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { packs } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
-import type { Theme } from '../types/theme';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme, type Theme } from '../hooks/useTheme';
 import { makePuzzleId } from '../utils/puzzleId';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

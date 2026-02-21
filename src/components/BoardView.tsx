@@ -5,7 +5,7 @@ import { CellGridSvg } from './CellGridSvg';
 import { RegionBordersSvg } from './RegionBordersSvg';
 import { usePuzzleStore } from '../store';
 import type { Puzzle } from '../types/puzzle';
-import type { Theme } from '../types/theme';
+import type { Theme } from '../hooks/useTheme';
 type Props = {
   puzzle: Puzzle;
   theme: Theme;

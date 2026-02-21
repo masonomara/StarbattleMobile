@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { StarIcon } from './icons/StarIcon';
 import { MarkIcon } from './icons/MarkIcon';
 import { usePuzzleStore } from '../store';
-import type { Theme } from '../types/theme';
+import type { Theme } from '../hooks/useTheme';
 
 type Props = {
   row: number;

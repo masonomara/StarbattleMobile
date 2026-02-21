@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import Svg, { Line } from 'react-native-svg';
 const REGION_BORDER_WIDTH = 3;
-import type { Theme } from '../types/theme';
+import type { Theme } from '../hooks/useTheme';
 
 type Props = {
   size: number;
