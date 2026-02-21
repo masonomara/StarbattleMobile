@@ -24,9 +24,7 @@ function PackCard({
 }: {
   pack: Pack;
   onPress: (packId: string) => void;
-  styles: ReturnType<typeof createStyles>;
-
-  // thsi return type is very ugly, do we truly need a return type? cant we just rawdawg the types?
+  styles: any;
 }) {
   const total = pack.puzzles.length;
   const completed = useUserStore(s => {
@@ -57,8 +55,6 @@ export function HomeScreen({ navigation }: any) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-
-  // we're not using useMemo for stylinhg - if we nee someone tfor dark mode we can run it in a context fol eor soething - i dont think we need it jsut for one function
   const handlePress = useCallback(
     (packId: string) => {
       navigation.navigate('Pack', { packId });

@@ -24,7 +24,7 @@ const PuzzleCell = memo(function PuzzleCell({
   packId: string;
   index: number;
   onPress: (index: number) => void;
-  styles: ReturnType<typeof createStyles>;
+  styles: any;
   theme: Theme;
 }) {
   const puzzleId = makePuzzleId(packId, index);

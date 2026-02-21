@@ -36,7 +36,7 @@ function ToggleRow({
   label: string;
   value: boolean;
   onToggle: (v: boolean) => void;
-  styles: ReturnType<typeof createStyles>;
+  styles: any;
   theme: Theme;
 }) {
   return (
