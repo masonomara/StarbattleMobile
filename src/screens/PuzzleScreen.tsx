@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -17,12 +17,14 @@ import { useTheme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { makePuzzleId } from '../utils/puzzleId';
+import type { Theme } from '../types/theme';
 
 export function PuzzleScreen({ route, navigation }: any) {
   const { packId, puzzleIndex } = route.params;
   const pack = getPack(packId);
   const rawPuzzle = pack?.puzzles[puzzleIndex];
   const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
@@ -100,15 +102,12 @@ export function PuzzleScreen({ route, navigation }: any) {
   if (!puzzle) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bg }]}>
+    <View style={styles.container}>
       <Header
         absolute
         left={
           <Pressable
-            style={[
-              styles.headerButton,
-              { backgroundColor: theme.card, shadowColor: theme.shadow },
-            ]}
+            style={styles.headerButton}
             onPress={() => navigation.goBack()}
             hitSlop={8}
           >
@@ -125,6 +124,7 @@ export function PuzzleScreen({ route, navigation }: any) {
         >
           <BoardView
             puzzle={puzzle}
+            theme={theme}
             scale={scale}
             translateX={translateX}
             translateY={translateY}
@@ -139,23 +139,26 @@ export function PuzzleScreen({ route, navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  boardArea: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 8,
-    opacity: 0.97,
-  },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg },
+    boardArea: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      elevation: 8,
+      opacity: 0.97,
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
+    },
+  });

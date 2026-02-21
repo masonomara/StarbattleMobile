@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Alert, View, Pressable, StyleSheet } from 'react-native';
 import {
   Undo2,
@@ -15,6 +15,7 @@ import { useUserStore } from '../stores/userStore';
 import type { TapMode } from '../types/state';
 import { useTheme } from '../hooks/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Theme } from '../types/theme';
 
 const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   cycle: Pencil,
@@ -28,6 +29,7 @@ type Props = {
 
 export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
   const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const hapticsEnabled = useUserStore(s => s.settings.haptics);
   const undo = usePuzzleStore(s => s.undo);
   const redo = usePuzzleStore(s => s.redo);
@@ -57,11 +59,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           onZoomReset();
         }}
         disabled={zoomDisabled}
-        style={[
-          styles.button,
-          { backgroundColor: theme.card, shadowColor: theme.shadow },
-          zoomDisabled && styles.disabled,
-        ]}
+        style={[styles.button, zoomDisabled && styles.disabled]}
       >
         <Minimize2 size={24} color={theme.text} />
       </Pressable>
@@ -73,11 +71,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
         }}
         disabled={hintDisabled}
         style={[
-          styles.button,
-          {
-            backgroundColor: hasGhosts ? theme.accent : theme.card,
-            shadowColor: theme.shadow,
-          },
+          hasGhosts ? styles.buttonHintActive : styles.button,
           hintDisabled && styles.disabled,
         ]}
       >
@@ -90,11 +84,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           cycleTapMode();
         }}
         disabled={completed}
-        style={[
-          styles.button,
-          { backgroundColor: theme.card, shadowColor: theme.shadow },
-          completed && styles.disabled,
-        ]}
+        style={[styles.button, completed && styles.disabled]}
       >
         {React.createElement(TAP_MODE_ICONS[tapMode], {
           size: 24,
@@ -108,11 +98,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           undo();
         }}
         disabled={undoDisabled}
-        style={[
-          styles.button,
-          { backgroundColor: theme.card, shadowColor: theme.shadow },
-          undoDisabled && styles.disabled,
-        ]}
+        style={[styles.button, undoDisabled && styles.disabled]}
       >
         <Undo2 size={24} color={theme.text} />
       </Pressable>
@@ -123,11 +109,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           redo();
         }}
         disabled={redoDisabled}
-        style={[
-          styles.button,
-          { backgroundColor: theme.card, shadowColor: theme.shadow },
-          redoDisabled && styles.disabled,
-        ]}
+        style={[styles.button, redoDisabled && styles.disabled]}
       >
         <Redo2 size={24} color={theme.text} />
       </Pressable>
@@ -145,11 +127,7 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
           );
         }}
         disabled={clearDisabled}
-        style={[
-          styles.button,
-          { backgroundColor: theme.card, shadowColor: theme.shadow },
-          clearDisabled && styles.disabled,
-        ]}
+        style={[styles.button, clearDisabled && styles.disabled]}
       >
         <Trash2 size={24} color={theme.text} />
       </Pressable>
@@ -157,26 +135,43 @@ export const Toolbar = memo(function Toolbar({ isZoomed, onZoomReset }: Props) {
   );
 });
 
-const styles = StyleSheet.create({
-  toolbar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  button: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 8,
-    opacity: 0.97,
-  },
-  disabled: { opacity: 0.3 },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    toolbar: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    button: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      elevation: 8,
+      opacity: 0.97,
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
+    },
+    buttonHintActive: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      elevation: 8,
+      opacity: 0.97,
+      backgroundColor: theme.accent,
+      shadowColor: theme.shadow,
+    },
+    disabled: { opacity: 0.3 },
+  });

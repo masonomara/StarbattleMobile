@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import { getAllPacks } from '../packs';
 import { useUserStore } from '../stores/userStore';
@@ -20,11 +20,13 @@ import { makePuzzleId } from '../utils/puzzleId';
 function PackCard({
   pack,
   onPress,
-  theme,
+  styles,
 }: {
   pack: Pack;
   onPress: (packId: string) => void;
-  theme: Theme;
+  styles: ReturnType<typeof createStyles>;
+
+  // thsi return type is very ugly, do we truly need a return type? cant we just rawdawg the types?
 }) {
   const total = pack.puzzles.length;
   const completed = useUserStore(s => {
@@ -36,22 +38,14 @@ function PackCard({
   });
 
   return (
-    <Pressable
-      style={[
-        styles.packCard,
-        { backgroundColor: theme.card, shadowColor: theme.shadow },
-      ]}
-      onPress={() => onPress(pack.id)}
-    >
+    <Pressable style={styles.packCard} onPress={() => onPress(pack.id)}>
       <View style={styles.packInfo}>
-        <Text style={[styles.packName, { color: theme.text }]}>
-          {pack.name}
-        </Text>
-        <Text style={[styles.packMeta, { color: theme.textSecondary }]}>
+        <Text style={styles.packName}>{pack.name}</Text>
+        <Text style={styles.packMeta}>
           {pack.gridSize}x{pack.gridSize}
         </Text>
       </View>
-      <Text style={[styles.packProgress, { color: theme.accent }]}>
+      <Text style={styles.packProgress}>
         {completed}/{total}
       </Text>
     </Pressable>
@@ -61,7 +55,10 @@ function PackCard({
 export function HomeScreen({ navigation }: any) {
   const packs = getAllPacks();
   const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
+
+  // we're not using useMemo for stylinhg - if we nee someone tfor dark mode we can run it in a context fol eor soething - i dont think we need it jsut for one function
   const handlePress = useCallback(
     (packId: string) => {
       navigation.navigate('Pack', { packId });
@@ -70,17 +67,13 @@ export function HomeScreen({ navigation }: any) {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bg }]}>
-      <Header
-        center={
-          <Text style={[styles.title, { color: theme.text }]}>Star Battle</Text>
-        }
-      />
+    <View style={styles.container}>
+      <Header center={<Text style={styles.title}>Star Battle</Text>} />
       <FlatList
         data={packs}
         keyExtractor={p => p.id}
         renderItem={({ item }) => (
-          <PackCard pack={item} onPress={handlePress} theme={theme} />
+          <PackCard pack={item} onPress={handlePress} styles={styles} />
         )}
         contentContainerStyle={styles.list}
       />
@@ -88,20 +81,39 @@ export function HomeScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  title: { fontSize: FONT_SIZE_LG, fontWeight: FONT_WEIGHT_SEMIBOLD },
-  list: { padding: 0 },
-  packCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: SPACING_XL,
-    borderRadius: RADIUS_MD,
-    marginBottom: SPACING_MD,
-  },
-  packInfo: { flex: 1 },
-  packName: { fontSize: FONT_SIZE_LG, fontWeight: FONT_WEIGHT_SEMIBOLD },
-  packMeta: { fontSize: FONT_SIZE_SM, marginTop: 4 },
-  packProgress: { fontSize: FONT_SIZE_MD, fontWeight: FONT_WEIGHT_SEMIBOLD },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg },
+    title: {
+      fontSize: FONT_SIZE_LG,
+      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      color: theme.text,
+    },
+    list: { padding: 0 },
+    packCard: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: SPACING_XL,
+      borderRadius: RADIUS_MD,
+      marginBottom: SPACING_MD,
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
+    },
+    packInfo: { flex: 1 },
+    packName: {
+      fontSize: FONT_SIZE_LG,
+      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      color: theme.text,
+    },
+    packMeta: {
+      fontSize: FONT_SIZE_SM,
+      marginTop: 4,
+      color: theme.textSecondary,
+    },
+    packProgress: {
+      fontSize: FONT_SIZE_MD,
+      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      color: theme.accent,
+    },
+  });

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ellipsis } from 'lucide-react-native';
 import { SettingsModal } from './SettingsModal';
 import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 
 type HeaderProps = {
   left?: React.ReactNode;
@@ -15,6 +16,7 @@ type HeaderProps = {
 export function Header({ left, center, right, absolute }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [settingsVisible, setSettingsVisible] = useState(false);
 
   return (
@@ -36,10 +38,7 @@ export function Header({ left, center, right, absolute }: HeaderProps) {
             <Pressable
               onPress={() => setSettingsVisible(true)}
               hitSlop={8}
-              style={[
-                styles.headerButton,
-                { backgroundColor: theme.card, shadowColor: theme.shadow },
-              ]}
+              style={styles.headerButton}
             >
               <Ellipsis size={20} color={theme.text} />
             </Pressable>
@@ -54,39 +53,42 @@ export function Header({ left, center, right, absolute }: HeaderProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    minHeight: 48,
-    zIndex: 100,
-  },
-  absolute: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  side: {
-    width: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 8,
-    opacity: 0.97,
-  },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      minHeight: 48,
+      zIndex: 100,
+    },
+    absolute: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+    },
+    side: {
+      width: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      elevation: 8,
+      opacity: 0.97,
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
+    },
+  });
