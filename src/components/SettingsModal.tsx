@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { X } from 'lucide-react-native';
+import { Header } from './Header';
 import { useUserStore } from '../stores/userStore';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import type { UserSettings } from '../types/state';
@@ -56,43 +57,48 @@ export function SettingsModal({ visible, onClose }: Props) {
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
-          <Pressable onPress={onClose} hitSlop={8}>
-            <X size={24} color={theme.text} />
-          </Pressable>
-        </View>
+        <Header
+          absolute={false}
+          center={<Text style={styles.title}>Star Battle</Text>}
+          right={
+            <Pressable onPress={onClose} hitSlop={8}>
+              <X size={24} color={theme.text} />
+            </Pressable>
+          }
+        />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Gameplay</Text>
-          <ToggleRow
-            label="Auto-X Neighbors"
-            value={settings.autoXNeighbors}
-            onToggle={v => updateSettings({ autoXNeighbors: v })}
-            styles={styles}
-            theme={theme}
-          />
-          <ToggleRow
-            label="Auto-X Rows & Columns"
-            value={settings.autoXRowsCols}
-            onToggle={v => updateSettings({ autoXRowsCols: v })}
-            styles={styles}
-            theme={theme}
-          />
-          <ToggleRow
-            label="Auto-X Regions"
-            value={settings.autoXRegions}
-            onToggle={v => updateSettings({ autoXRegions: v })}
-            styles={styles}
-            theme={theme}
-          />
-          <ToggleRow
-            label="Highlight Errors"
-            value={settings.highlightErrors}
-            onToggle={v => updateSettings({ highlightErrors: v })}
-            styles={styles}
-            theme={theme}
-          />
+          <View style={styles.menuWrapper}>
+            <ToggleRow
+              label="Auto-X Neighbors"
+              value={settings.autoXNeighbors}
+              onToggle={v => updateSettings({ autoXNeighbors: v })}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Auto-X Rows & Columns"
+              value={settings.autoXRowsCols}
+              onToggle={v => updateSettings({ autoXRowsCols: v })}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Auto-X Regions"
+              value={settings.autoXRegions}
+              onToggle={v => updateSettings({ autoXRegions: v })}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Highlight Errors"
+              value={settings.highlightErrors}
+              onToggle={v => updateSettings({ highlightErrors: v })}
+              styles={styles}
+              theme={theme}
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -127,7 +133,11 @@ export function SettingsModal({ visible, onClose }: Props) {
                   <Pressable
                     key={opt.value}
                     onPress={() => updateSettings({ theme: opt.value })}
-                    style={active ? styles.themeButtonActive : styles.themeButtonInactive}
+                    style={
+                      active
+                        ? styles.themeButtonActive
+                        : styles.themeButtonInactive
+                    }
                   >
                     <Text
                       style={
@@ -153,15 +163,9 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: theme.spacingXl,
+      paddingHorizontal: 0,
       paddingTop: theme.spacingXl,
-      backgroundColor: theme.bg,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: theme.spacingXl,
+      backgroundColor: theme.highlight,
     },
     title: {
       fontSize: theme.fontSizeLg,
@@ -172,22 +176,26 @@ const createStyles = (theme: Theme) =>
       marginBottom: theme.spacingXl,
     },
     sectionTitle: {
-      fontSize: theme.fontSizeSm,
+      fontSize: 13,
+      lineHeight: 17,
       fontWeight: theme.fontWeightSemibold,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-      marginBottom: theme.spacingMd,
+      marginBottom: 10,
       color: theme.textSecondary,
     },
     row: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: theme.spacingMd,
+ 
+      minHeight: 60,
+      paddingVertical: 12,
+      paddingHorizontal: 12,
     },
     rowLabel: {
-      fontSize: theme.fontSizeLg,
+      fontSize: 15,
+      lineHeight: 20,
       color: theme.text,
+      fontWeight: 600,
     },
     themeButtons: {
       flexDirection: 'row',
@@ -214,5 +222,10 @@ const createStyles = (theme: Theme) =>
       fontSize: theme.fontSizeSm,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
+    },
+    menuWrapper: {
+      backgroundColor: theme.card,
+
+      borderRadius: 16,
     },
   });

@@ -3,9 +3,11 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { packs, streakPacks } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
+import { SettingsButton } from '../components/SettingsButton';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { getCurrentKey, getActiveStreak } from '../utils/streakDate';
 import type { StreakType } from '../types/state';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 
@@ -17,14 +19,15 @@ const STREAK_LABELS: Record<StreakType, string> = {
 
 export function HomeScreen({ navigation }: any) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
+  const styles = createStyles(theme, insets);
   const completedPerPack = useUserStore(s => s.progress.completedPerPack);
   const streaks = useUserStore(s => s.streaks);
   const completedPuzzles = useUserStore(s => s.progress.completedPuzzles);
 
   return (
     <View style={styles.container}>
-      <Header center={<Text style={styles.title}>Star Battle</Text>} />
+      <Header right={<SettingsButton />} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.streakRow}>
           {STREAK_TYPES.map(type => {
@@ -38,10 +41,17 @@ export function HomeScreen({ navigation }: any) {
             return (
               <Pressable
                 key={type}
-                style={[styles.streakCard, isCompleted && styles.streakCardCompleted]}
-                onPress={() => navigation.navigate('Puzzle', { streakType: type })}
+                style={[
+                  styles.streakCard,
+                  isCompleted && styles.streakCardCompleted,
+                ]}
+                onPress={() =>
+                  navigation.navigate('Puzzle', { streakType: type })
+                }
               >
-                <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                <Text style={styles.streakLabel}>
+                  {STREAK_LABELS[type]} Challenge
+                </Text>
                 <Text style={styles.streakMeta}>
                   {pack.gridSize}x{pack.gridSize}
                 </Text>
@@ -57,7 +67,8 @@ export function HomeScreen({ navigation }: any) {
           <Pressable
             key={pack.id}
             style={styles.packCard}
-            onPress={() => navigation.navigate('Pack', { packId: pack.id })}>
+            onPress={() => navigation.navigate('Pack', { packId: pack.id })}
+          >
             <View style={styles.packInfo}>
               <Text style={styles.packName}>{pack.name}</Text>
               <Text style={styles.packMeta}>
@@ -74,11 +85,13 @@ export function HomeScreen({ navigation }: any) {
   );
 }
 
-const createStyles = (theme: Theme) =>
+const createStyles = (theme: Theme, insets: any) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
     scrollContent: {
       paddingHorizontal: theme.spacingXl,
+      marginTop: insets.top + 60,
+      marginBottom: insets.bottom,
     },
     title: {
       fontSize: theme.fontSizeLg,
@@ -93,15 +106,16 @@ const createStyles = (theme: Theme) =>
     streakCard: {
       flex: 1,
       padding: theme.spacingLg,
-      borderRadius: theme.radiusMd,
+      borderRadius: 4,
       backgroundColor: theme.card,
       alignItems: 'center',
+      aspectRatio: 3 / 4,
     },
     streakCardCompleted: {
       opacity: 0.6,
     },
     streakLabel: {
-      fontSize: theme.fontSizeMd,
+      fontSize: 14,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },

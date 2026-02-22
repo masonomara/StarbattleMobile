@@ -5,6 +5,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { Header } from '../components/Header';
+import { SettingsButton } from '../components/SettingsButton';
 import { BoardView } from '../components/BoardView';
 import { HeaderTimer } from '../components/HeaderTimer';
 import { Toolbar } from '../components/Toolbar';
@@ -135,6 +136,7 @@ export function PuzzleScreen({ route, navigation }: any) {
           </Pressable>
         }
         center={<HeaderTimer />}
+        right={<SettingsButton />}
       />
       <GestureDetector gesture={gesture}>
         <View

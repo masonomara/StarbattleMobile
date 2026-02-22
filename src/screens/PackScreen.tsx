@@ -4,6 +4,7 @@ import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { packs } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
+import { SettingsButton } from '../components/SettingsButton';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -85,6 +86,7 @@ export function PackScreen({ route, navigation }: any) {
           </Pressable>
         }
         center={<Text style={styles.headerTitle}>{pack.name}</Text>}
+        right={<SettingsButton />}
       />
       <FlatList
         data={pack.puzzles}
