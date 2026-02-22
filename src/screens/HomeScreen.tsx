@@ -1,109 +1,159 @@
-import React, { memo, useCallback } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { getAllPacks } from '../packs';
+import React from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { packs, streakPacks } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
-import {
-  SPACING_MD,
-  SPACING_XL,
-  RADIUS_MD,
-  FONT_SIZE_SM,
-  FONT_SIZE_MD,
-  FONT_SIZE_LG,
-  FONT_WEIGHT_SEMIBOLD,
-} from '../utils/constants';
-import type { Pack } from '../types/puzzle';
-import type { RootStackParams } from '../types/navigation';
-import { useTheme } from '../hooks/useTheme';
-import { makePuzzleId } from '../utils/puzzleId';
+import { SettingsButton } from '../components/SettingsButton';
+import { useTheme, type Theme } from '../hooks/useTheme';
+import { getCurrentKey, getActiveStreak } from '../utils/streakDate';
+import type { StreakType } from '../types/state';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type Props = NativeStackScreenProps<RootStackParams, 'Home'>;
+const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 
-const PackCard = memo(function PackCard({
-  pack,
-  onPress,
-}: {
-  pack: Pack;
-  onPress: (packId: string) => void;
-}) {
+const STREAK_LABELS: Record<StreakType, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+};
+
+export function HomeScreen({ navigation }: any) {
   const theme = useTheme();
-  const total = pack.puzzles.length;
-  const completed = useUserStore(s => {
-    let count = 0;
-    for (let i = 0; i < total; i++) {
-      if (s.completedPuzzles.has(makePuzzleId(pack.id, i))) count++;
-    }
-    return count;
-  });
+  const insets = useSafeAreaInsets();
+  const styles = createStyles(theme, insets);
+  const completedPerPack = useUserStore(s => s.progress.completedPerPack);
+  const streaks = useUserStore(s => s.streaks);
+  const completedPuzzles = useUserStore(s => s.progress.completedPuzzles);
 
   return (
-    <Pressable
-      style={[
-        styles.packCard,
-        { backgroundColor: theme.card, shadowColor: theme.shadow },
-      ]}
-      onPress={() => onPress(pack.id)}
-    >
-      <View style={styles.packInfo}>
-        <Text style={[styles.packName, { color: theme.text }]}>
-          {pack.name}
-        </Text>
-        <Text style={[styles.packMeta, { color: theme.textSecondary }]}>
-          {pack.gridSize}x{pack.gridSize}
-        </Text>
-      </View>
-      <Text style={[styles.packProgress, { color: theme.accent }]}>
-        {completed}/{total}
-      </Text>
-    </Pressable>
-  );
-});
+    <View style={styles.container}>
+      <Header right={<SettingsButton />} />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.streakRow}>
+          {STREAK_TYPES.map(type => {
+            const pack = streakPacks[type];
+            const key = getCurrentKey(type);
+            const puzzleId = `${type}:${key}`;
+            const isCompleted = completedPuzzles.has(puzzleId);
+            const found = streaks.find(s => s.type === type);
+            const streakCount = found ? getActiveStreak(found, type) : 0;
 
-export function HomeScreen({ navigation }: Props) {
-  const packs = getAllPacks();
-  const theme = useTheme();
+            return (
+              <Pressable
+                key={type}
+                style={[
+                  styles.streakCard,
+                  isCompleted && styles.streakCardCompleted,
+                ]}
+                onPress={() =>
+                  navigation.navigate('Puzzle', { streakType: type })
+                }
+              >
+                <Text style={styles.streakLabel}>
+                  {STREAK_LABELS[type]} Challenge
+                </Text>
+                <Text style={styles.streakMeta}>
+                  {pack.gridSize}x{pack.gridSize}
+                </Text>
+                {isCompleted && (
+                  <Text style={styles.streakCount}>Streak: {streakCount}</Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
 
-  const handlePress = useCallback(
-    (packId: string) => {
-      navigation.navigate('Pack', { packId });
-    },
-    [navigation],
-  );
-
-  return (
-    <View style={[styles.container, { backgroundColor: theme.bg }]}>
-      <Header
-        center={
-          <Text style={[styles.title, { color: theme.text }]}>Star Battle</Text>
-        }
-      />
-      <FlatList
-        data={packs}
-        keyExtractor={p => p.id}
-        renderItem={({ item }) => (
-          <PackCard pack={item} onPress={handlePress} />
-        )}
-        contentContainerStyle={styles.list}
-      />
+        {packs.map(pack => (
+          <Pressable
+            key={pack.id}
+            style={styles.packCard}
+            onPress={() => navigation.navigate('Pack', { packId: pack.id })}
+          >
+            <View style={styles.packInfo}>
+              <Text style={styles.packName}>{pack.name}</Text>
+              <Text style={styles.packMeta}>
+                {pack.gridSize}x{pack.gridSize}
+              </Text>
+            </View>
+            <Text style={styles.packProgress}>
+              {completedPerPack[pack.id] ?? 0}/{pack.puzzles.length}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  title: { fontSize: FONT_SIZE_LG, fontWeight: FONT_WEIGHT_SEMIBOLD },
-  list: { padding: 0 },
-  packCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: SPACING_XL,
-    borderRadius: RADIUS_MD,
-    marginBottom: SPACING_MD,
-  },
-  packInfo: { flex: 1 },
-  packName: { fontSize: FONT_SIZE_LG, fontWeight: FONT_WEIGHT_SEMIBOLD },
-  packMeta: { fontSize: FONT_SIZE_SM, marginTop: 4 },
-  packProgress: { fontSize: FONT_SIZE_MD, fontWeight: FONT_WEIGHT_SEMIBOLD },
-});
+const createStyles = (theme: Theme, insets: any) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg },
+    scrollContent: {
+      paddingHorizontal: theme.spacingXl,
+      marginTop: insets.top + 60,
+      marginBottom: insets.bottom,
+    },
+    title: {
+      fontSize: theme.fontSizeLg,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.text,
+    },
+    streakRow: {
+      flexDirection: 'row',
+      gap: theme.spacingMd,
+      marginBottom: theme.spacingXl,
+    },
+    streakCard: {
+      flex: 1,
+      padding: theme.spacingLg,
+      borderRadius: 4,
+      backgroundColor: theme.card,
+      alignItems: 'center',
+      aspectRatio: 3 / 4,
+    },
+    streakCardCompleted: {
+      opacity: 0.6,
+    },
+    streakLabel: {
+      fontSize: 14,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.text,
+    },
+    streakMeta: {
+      fontSize: theme.fontSizeSm,
+      color: theme.textSecondary,
+      marginTop: 4,
+    },
+    streakCount: {
+      fontSize: theme.fontSizeSm,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.accent,
+      marginTop: 4,
+    },
+    packCard: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: theme.spacingXl,
+      borderRadius: theme.radiusMd,
+      marginBottom: theme.spacingMd,
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
+    },
+    packInfo: { flex: 1 },
+    packName: {
+      fontSize: theme.fontSizeLg,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.text,
+    },
+    packMeta: {
+      fontSize: theme.fontSizeSm,
+      marginTop: 4,
+      color: theme.textSecondary,
+    },
+    packProgress: {
+      fontSize: theme.fontSizeMd,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.accent,
+    },
+  });

@@ -4,25 +4,34 @@ import {
   saveSettings,
   saveProgress as storageSaveProgress,
   getProgress,
+  getStreaks,
+  saveStreak,
 } from '../storage';
-import { getAllPacks } from '../packs';
-import { makePuzzleId } from '../utils/puzzleId';
-import type { UserSettings, Progress, UserState } from '../types/state';
+import { packs } from '../packs';
+import type { UserSettings, Progress, ProgressState, UserState, Streak, StreakType } from '../types/state';
+import { getCurrentKey, getPreviousKey } from '../utils/streakDate';
 
-function buildCompletedSet(): Set<string> {
-  const completed = new Set<string>();
-  for (const pack of getAllPacks()) {
+function buildProgress(): ProgressState {
+  const completedPuzzles = new Set<string>();
+  const completedPerPack: Record<string, number> = {};
+  for (const pack of packs) {
+    let count = 0;
     for (let i = 0; i < pack.puzzles.length; i++) {
-      const id = makePuzzleId(pack.id, i);
-      if (getProgress(id)?.completed) completed.add(id);
+      const id = `${pack.id}:${i}`;
+      if (getProgress(id)?.completed) {
+        completedPuzzles.add(id);
+        count++;
+      }
     }
+    completedPerPack[pack.id] = count;
   }
-  return completed;
+  return { completedPuzzles, completedPerPack };
 }
 
 export const useUserStore = create<UserState>((set) => ({
   settings: getSettings(),
-  completedPuzzles: buildCompletedSet(),
+  progress: buildProgress(),
+  streaks: getStreaks(),
 
   initialize: () => {
     const settings = getSettings();
@@ -36,14 +45,46 @@ export const useUserStore = create<UserState>((set) => ({
     }));
   },
 
+  recordStreak: (type: StreakType) => {
+    set(state => {
+      const currentKey = getCurrentKey(type);
+      const prevKey = getPreviousKey(type);
+      const existing = state.streaks.find(s => s.type === type);
+
+      if (!existing || existing.lastCompletedKey === currentKey) {
+        return state;
+      }
+
+      const newCurrent = existing.lastCompletedKey === prevKey
+        ? existing.current + 1
+        : 1;
+
+      const newStreak: Streak = { type, current: newCurrent, lastCompletedKey: currentKey };
+      saveStreak(newStreak);
+
+      return {
+        streaks: state.streaks.map(s => s.type === type ? newStreak : s),
+      };
+    });
+  },
+
   saveProgress: (progress: Progress) => {
     storageSaveProgress(progress);
     if (progress.completed) {
       set(state => {
-        if (state.completedPuzzles.has(progress.puzzleId)) return state;
-        const next = new Set(state.completedPuzzles);
+        if (state.progress.completedPuzzles.has(progress.puzzleId)) return state;
+        const next = new Set(state.progress.completedPuzzles);
         next.add(progress.puzzleId);
-        return { completedPuzzles: next };
+        const packId = progress.puzzleId.split(':')[0];
+        return {
+          progress: {
+            completedPuzzles: next,
+            completedPerPack: {
+              ...state.progress.completedPerPack,
+              [packId]: (state.progress.completedPerPack[packId] ?? 0) + 1,
+            },
+          },
+        };
       });
     }
   },

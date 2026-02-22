@@ -10,5 +10,4 @@ src/screens/PuzzleScreen.tsx
 src/utils/parsePuzzle.ts
 src/storage.ts
 src/store.ts
-src/components/UserProvider.tsx
 src/stores/userStore.ts

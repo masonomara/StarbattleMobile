@@ -1,6 +1,30 @@
 import { useColorScheme } from 'react-native';
 import { useUserStore } from '../stores/userStore';
-import type { Theme } from '../types/theme';
+
+export type Theme = {
+  isDark: boolean;
+  bg: string;
+  card: string;
+  text: string;
+  textSecondary: string;
+  regionBorder: string;
+  innerBorder: string;
+  markColor: string;
+  accent: string;
+  onAccent: string;
+  highlight: string;
+  onHighlight: string;
+  shadow: string;
+  spacingMd: number;
+  spacingLg: number;
+  spacingXl: number;
+  radiusMd: number;
+  fontSizeSm: number;
+  fontSizeMd: number;
+  fontSizeLg: number;
+  fontWeightSemibold: '700';
+  cellSize: number;
+};
 
 export function useTheme(): Theme {
   const systemScheme = useColorScheme();
@@ -10,6 +34,18 @@ export function useTheme(): Theme {
   if (themePref === 'dark') return dark;
   return systemScheme === 'dark' ? dark : light;
 }
+
+const tokens = {
+  spacingMd: 12,
+  spacingLg: 16,
+  spacingXl: 24,
+  radiusMd: 12,
+  fontSizeSm: 14,
+  fontSizeMd: 16,
+  fontSizeLg: 18,
+  fontWeightSemibold: '600' as const,
+  cellSize: 32,
+};
 
 const light: Theme = {
   isDark: false,
@@ -25,6 +61,7 @@ const light: Theme = {
   highlight: '#EBEBEB',
   onHighlight: '#4E5058',
   shadow: '#EBEDEF',
+  ...tokens,
 };
 
 const dark: Theme = {
@@ -41,4 +78,5 @@ const dark: Theme = {
   highlight: '#2E3038',
   onHighlight: '#C7C8CE',
   shadow: '#131318',
+  ...tokens,
 };

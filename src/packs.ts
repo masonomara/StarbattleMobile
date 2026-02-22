@@ -3,10 +3,13 @@ import fiveStar from '../packs/1star-5x5.json';
 import sixStar from '../packs/1star-6x6.json';
 import eightStar from '../packs/1star-8x8.json';
 import tenStar from '../packs/2star-10x10.json';
+import dailyData from '../packs/daily.json';
+import weeklyData from '../packs/weekly.json';
+import monthlyData from '../packs/monthly.json';
 import type { Pack } from './types/puzzle';
+import type { StreakType } from './types/state';
 
-// Static for now — will be replaced with async cloud fetches
-const PACKS: Pack[] = [
+export const packs: Pack[] = [
   introData as unknown as Pack,
   fiveStar as unknown as Pack,
   sixStar as unknown as Pack,
@@ -14,10 +17,8 @@ const PACKS: Pack[] = [
   tenStar as unknown as Pack,
 ];
 
-export function getAllPacks(): Pack[] {
-  return PACKS;
-}
-
-export function getPack(id: string): Pack | undefined {
-  return PACKS.find(p => p.id === id);
-}
+export const streakPacks: Record<StreakType, Pack> = {
+  daily: dailyData as unknown as Pack,
+  weekly: weeklyData as unknown as Pack,
+  monthly: monthlyData as unknown as Pack,
+};

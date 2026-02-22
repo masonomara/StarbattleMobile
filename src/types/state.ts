@@ -1,6 +1,15 @@
+export type StreakType = 'daily' | 'weekly' | 'monthly';
+
+export type Streak = {
+  type: StreakType;
+  current: number;
+  lastCompletedKey: string;
+};
+
+
 export type CellValue = 0 | 1 | 2; // 0=empty, 1=star, 2=marked
 
-export type TapMode = 'cycle' | 'mark' | 'star' | 'erase';
+export type TapMode = 'cycle' | 'erase';
 
 export type Progress = {
   puzzleId: string;
@@ -34,10 +43,17 @@ export type Move = {
   autoMarks: number[];
 };
 
+export type ProgressState = {
+  completedPuzzles: Set<string>;
+  completedPerPack: Record<string, number>;
+};
+
 export type UserState = {
   settings: UserSettings;
-  completedPuzzles: Set<string>;
+  progress: ProgressState;
+  streaks: Streak[];
   initialize: () => void;
   updateSettings: (update: Partial<UserSettings>) => void;
   saveProgress: (progress: Progress) => void;
+  recordStreak: (type: StreakType) => void;
 };

@@ -1,36 +1,30 @@
-import React, { memo, useCallback } from 'react';
+import React from 'react';
 import { View, Text, Pressable, FlatList, StyleSheet } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
-import { getPack } from '../packs';
+import { packs } from '../packs';
 import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
-import {
-  SPACING_LG,
-  FONT_SIZE_LG,
-  FONT_WEIGHT_SEMIBOLD,
-} from '../utils/constants';
-import type { RootStackParams } from '../types/navigation';
-import { useTheme } from '../hooks/useTheme';
-import { makePuzzleId } from '../utils/puzzleId';
+import { SettingsButton } from '../components/SettingsButton';
+import { useTheme, type Theme } from '../hooks/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type Props = NativeStackScreenProps<RootStackParams, 'Pack'>;
-
-const PuzzleCell = memo(function PuzzleCell({
+function PuzzleCell({
   packId,
   index,
   onPress,
+  styles,
+  theme,
 }: {
   packId: string;
   index: number;
   onPress: (index: number) => void;
+  styles: any;
+  theme: Theme;
 }) {
-  const theme = useTheme();
-  const puzzleId = makePuzzleId(packId, index);
-  const isCompleted = useUserStore(s => s.completedPuzzles.has(puzzleId));
+  const puzzleId = `${packId}:${index}`;
+  const isCompleted = useUserStore(s => s.progress.completedPuzzles.has(puzzleId));
   const prevCompleted = useUserStore(
-    s => index === 0 || s.completedPuzzles.has(makePuzzleId(packId, index - 1)),
+    s => index === 0 || s.progress.completedPuzzles.has(`${packId}:${index - 1}`),
   );
 
   const status: 'completed' | 'active' | 'locked' = isCompleted
@@ -41,15 +35,7 @@ const PuzzleCell = memo(function PuzzleCell({
 
   return (
     <Pressable
-      style={[
-        styles.puzzleCell,
-        {
-          backgroundColor: theme.card,
-          shadowColor: theme.shadow,
-          borderColor: theme.regionBorder,
-        },
-        status === 'locked' && styles.locked,
-      ]}
+      style={[styles.puzzleCell, status === 'locked' && styles.locked]}
       onPress={() => onPress(index)}
       disabled={status === 'locked'}
     >
@@ -65,67 +51,54 @@ const PuzzleCell = memo(function PuzzleCell({
       <Text
         style={[
           styles.puzzleNumber,
-          {
-            color:
-              status === 'completed'
-                ? theme.accent
-                : status === 'locked'
-                ? theme.textSecondary
-                : theme.text,
-          },
+          status === 'completed'
+            ? styles.puzzleNumberCompleted
+            : status === 'locked'
+            ? styles.puzzleNumberLocked
+            : styles.puzzleNumberActive,
         ]}
       >
         {index + 1}
       </Text>
     </Pressable>
   );
-});
+}
 
-export function PackScreen({ route, navigation }: Props) {
+export function PackScreen({ route, navigation }: any) {
   const { packId } = route.params;
-  const pack = getPack(packId);
+  const pack = packs.find(p => p.id === packId);
   const theme = useTheme();
+  const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
-
-  const handlePuzzlePress = useCallback(
-    (index: number) => {
-      navigation.navigate('Puzzle', { packId, puzzleIndex: index });
-    },
-    [navigation, packId],
-  );
 
   if (!pack) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bg }]}>
+    <View style={styles.container}>
       <Header
-        absolute
         left={
           <Pressable
-            style={[
-              styles.headerButton,
-              { backgroundColor: theme.card, shadowColor: theme.shadow },
-            ]}
+            style={styles.headerButton}
             onPress={() => navigation.goBack()}
             hitSlop={8}
           >
             <ChevronLeft size={26} color={theme.text} />
           </Pressable>
         }
-        center={
-          <Text style={[styles.headerTitle, { color: theme.text }]}>
-            {pack.name}
-          </Text>
-        }
+        center={<Text style={styles.headerTitle}>{pack.name}</Text>}
+        right={<SettingsButton />}
       />
       <FlatList
         data={pack.puzzles}
-        keyExtractor={(_, i) => String(i)}
         renderItem={({ index }) => (
           <PuzzleCell
             packId={packId}
             index={index}
-            onPress={handlePuzzlePress}
+            onPress={i =>
+              navigation.navigate('Puzzle', { packId, puzzleIndex: i })
+            }
+            styles={styles}
+            theme={theme}
           />
         )}
         numColumns={5}
@@ -138,47 +111,56 @@ export function PackScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  title: { fontSize: FONT_SIZE_LG, fontWeight: FONT_WEIGHT_SEMIBOLD },
-  grid: {
-    padding: SPACING_LG,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  puzzleCell: {
-    aspectRatio: 1,
-    height: 54,
-    width: 54,
-    margin: 8,
-    borderWidth: 2.5,
-    borderRadius: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 1,
-  },
-  puzzleIcon: {
-    position: 'absolute',
-    opacity: 0.3,
-  },
-  puzzleNumber: { fontSize: 18, fontWeight: 700 },
-  locked: { opacity: 0.5 },
-  headerButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 8,
-    opacity: 0.97,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontVariant: ['tabular-nums'],
-    fontWeight: 600,
-  },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg },
+    grid: {
+      padding: theme.spacingLg,
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    puzzleCell: {
+      aspectRatio: 1,
+      height: 54,
+      width: 54,
+      margin: 8,
+      borderWidth: 2.5,
+      borderRadius: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 1,
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
+      borderColor: theme.regionBorder,
+    },
+    puzzleIcon: {
+      position: 'absolute',
+      opacity: 0.3,
+    },
+    puzzleNumber: { fontSize: 18, fontWeight: 700 },
+    puzzleNumberCompleted: { color: theme.accent },
+    puzzleNumberActive: { color: theme.text },
+    puzzleNumberLocked: { color: theme.textSecondary },
+    locked: { opacity: 0.5 },
+    headerButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      elevation: 8,
+      opacity: 0.97,
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
+    },
+    headerTitle: {
+      fontSize: 16,
+      fontVariant: ['tabular-nums'],
+      fontWeight: 600,
+      color: theme.text,
+    },
+  });

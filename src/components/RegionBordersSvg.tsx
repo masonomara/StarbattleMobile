@@ -1,9 +1,7 @@
 import React, { memo } from 'react';
 import Svg, { Line } from 'react-native-svg';
-import { CELL_SIZE } from '../utils/constants';
-
 const REGION_BORDER_WIDTH = 3;
-import type { Theme } from '../types/theme';
+import type { Theme } from '../hooks/useTheme';
 
 type Props = {
   size: number;
@@ -13,7 +11,7 @@ type Props = {
 
 type Segment = { x1: number; y1: number; x2: number; y2: number };
 
-function buildSegments(size: number, regions: number[][]): Segment[] {
+function buildSegments(size: number, regions: number[][], cellSize: number): Segment[] {
   const segs: Segment[] = [];
 
   for (let row = 0; row <= size; row++) {
@@ -23,10 +21,10 @@ function buildSegments(size: number, regions: number[][]): Segment[] {
 
       if (isEdge || isBoundary) {
         segs.push({
-          x1: col * CELL_SIZE,
-          y1: row * CELL_SIZE,
-          x2: (col + 1) * CELL_SIZE,
-          y2: row * CELL_SIZE,
+          x1: col * cellSize,
+          y1: row * cellSize,
+          x2: (col + 1) * cellSize,
+          y2: row * cellSize,
         });
       }
     }
@@ -39,10 +37,10 @@ function buildSegments(size: number, regions: number[][]): Segment[] {
 
       if (isEdge || isBoundary) {
         segs.push({
-          x1: col * CELL_SIZE,
-          y1: row * CELL_SIZE,
-          x2: col * CELL_SIZE,
-          y2: (row + 1) * CELL_SIZE,
+          x1: col * cellSize,
+          y1: row * cellSize,
+          x2: col * cellSize,
+          y2: (row + 1) * cellSize,
         });
       }
     }
@@ -56,9 +54,9 @@ export const RegionBordersSvg = memo(function RegionBordersSvg({
   regions,
   theme,
 }: Props) {
-  const boardPx = CELL_SIZE * size;
+  const boardPx = theme.cellSize * size;
   const half = REGION_BORDER_WIDTH / 2;
-  const segments = buildSegments(size, regions);
+  const segments = buildSegments(size, regions, theme.cellSize);
 
   return (
     <Svg

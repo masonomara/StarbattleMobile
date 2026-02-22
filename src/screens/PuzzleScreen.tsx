@@ -1,39 +1,60 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { Header } from '../components/Header';
+import { SettingsButton } from '../components/SettingsButton';
 import { BoardView } from '../components/BoardView';
 import { HeaderTimer } from '../components/HeaderTimer';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
 import { parsePuzzle } from '../utils/parsePuzzle';
-import { getPack } from '../packs';
+import { packs, streakPacks } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
-import { persistProgress as persistProgressUtil } from '../utils/persistProgress';
-import type { RootStackParams } from '../types/navigation';
-import { useTheme } from '../hooks/useTheme';
+import { persistProgress } from '../utils/persistProgress';
+import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
-import { makePuzzleId } from '../utils/puzzleId';
+import { getCurrentKey, getPuzzleIndex } from '../utils/streakDate';
+import type { StreakType } from '../types/state';
 
-type Props = NativeStackScreenProps<RootStackParams, 'Puzzle'>;
+export function PuzzleScreen({ route, navigation }: any) {
+  const { packId, puzzleIndex, streakType } = route.params;
 
-export function PuzzleScreen({ route, navigation }: Props) {
-  const { packId, puzzleIndex } = route.params;
-  const pack = getPack(packId);
-  const rawPuzzle = pack?.puzzles[puzzleIndex];
+  const { rawPuzzle, puzzleId, gridSize, packName, isLastPuzzle } = (() => {
+    if (streakType) {
+      const pack = streakPacks[streakType as StreakType];
+      const key = getCurrentKey(streakType as StreakType);
+      const idx = getPuzzleIndex(streakType as StreakType, pack.puzzles.length);
+      return {
+        rawPuzzle: pack.puzzles[idx],
+        puzzleId: `${streakType}:${key}`,
+        gridSize: pack.gridSize,
+        packName: pack.name,
+        isLastPuzzle: true,
+      };
+    }
+    const pack = packs.find(p => p.id === packId)!;
+    return {
+      rawPuzzle: pack.puzzles[puzzleIndex],
+      puzzleId: `${packId}:${puzzleIndex}`,
+      gridSize: pack.gridSize,
+      packName: pack.name,
+      isLastPuzzle: puzzleIndex >= pack.puzzles.length - 1,
+    };
+  })();
+
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const styles = createStyles(theme);
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
   const completed = usePuzzleStore(s => s.completed);
   const hideToolbar = useUserStore(s => s.settings.hideToolbar);
-
-  const gridSize = pack?.gridSize ?? 5;
 
   const {
     pinchGesture,
@@ -46,17 +67,17 @@ export function PuzzleScreen({ route, navigation }: Props) {
     savedTranslateY,
     isZoomed,
     handleZoomReset,
-  } = useZoom(gridSize);
+  } = useZoom(gridSize, theme.cellSize);
 
-  const boardAreaRef = useRef<View>(null);
   const boardLayout = useRef({ width: 0, height: 0 });
-  const handleBoardAreaLayout = useCallback((e: LayoutChangeEvent) => {
+  const handleBoardAreaLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     boardLayout.current = { width, height };
-  }, []);
+  };
 
   const { drawGesture } = useDrawGesture(
     gridSize,
+    theme.cellSize,
     savedScale,
     savedTranslateX,
     savedTranslateY,
@@ -71,20 +92,19 @@ export function PuzzleScreen({ route, navigation }: Props) {
   useEffect(() => {
     if (!rawPuzzle) return;
     try {
-      const puzzleId = makePuzzleId(packId, puzzleIndex);
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
       loadPuzzle(parsed);
     } catch {
       navigation.goBack();
     }
-  }, [rawPuzzle, packId, puzzleIndex, loadPuzzle, navigation, pack?.name]);
+  }, [rawPuzzle, puzzleId, loadPuzzle, navigation]);
 
   useEffect(() => {
     if (completed || !puzzle) return;
     const persistTime = () => {
       const state = usePuzzleStore.getState();
       if (!state.completed && state.puzzle) {
-        persistProgressUtil(
+        persistProgress(
           state.puzzle,
           state.cells,
           state.autoMarks,
@@ -104,15 +124,11 @@ export function PuzzleScreen({ route, navigation }: Props) {
   if (!puzzle) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bg }]}>
+    <View style={styles.container}>
       <Header
-        absolute
         left={
           <Pressable
-            style={[
-              styles.headerButton,
-              { backgroundColor: theme.card, shadowColor: theme.shadow },
-            ]}
+            style={styles.headerButton}
             onPress={() => navigation.goBack()}
             hitSlop={8}
           >
@@ -120,15 +136,19 @@ export function PuzzleScreen({ route, navigation }: Props) {
           </Pressable>
         }
         center={<HeaderTimer />}
+        right={<SettingsButton />}
       />
       <GestureDetector gesture={gesture}>
         <View
-          ref={boardAreaRef}
-          style={styles.boardArea}
+          style={[
+            styles.boardArea,
+            { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 80 },
+          ]}
           onLayout={handleBoardAreaLayout}
         >
           <BoardView
             puzzle={puzzle}
+            theme={theme}
             scale={scale}
             translateX={translateX}
             translateY={translateY}
@@ -138,28 +158,37 @@ export function PuzzleScreen({ route, navigation }: Props) {
       {!hideToolbar && (
         <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
       )}
-      <WinBanner />
+      <WinBanner
+        packId={packId}
+        puzzleIndex={puzzleIndex}
+        packName={packName}
+        isLastPuzzle={isLastPuzzle}
+        streakType={streakType}
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  boardArea: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 8,
-    opacity: 0.97,
-  },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.bg },
+    boardArea: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      elevation: 8,
+      opacity: 0.97,
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
+    },
+  });

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { hapticLight, hapticSuccess } from './haptics';
+import { hapticLight, hapticSuccess } from './utils/haptics';
 import { useUserStore } from './stores/userStore';
 import {
   computeAutoXForStar,

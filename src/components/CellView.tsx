@@ -1,11 +1,29 @@
 import React, { memo, useCallback } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Svg, { Line, Path } from 'react-native-svg';
 import { useShallow } from 'zustand/react/shallow';
-import { StarIcon } from './icons/StarIcon';
-import { MarkIcon } from './icons/MarkIcon';
 import { usePuzzleStore } from '../store';
-import { CELL_SIZE } from '../utils/constants';
-import type { Theme } from '../types/theme';
+import type { Theme } from '../hooks/useTheme';
+
+const STAR_PATH =
+  'M36 2.18L44.47 25.1H68.76L49.14 39.9L57.62 62.82L36 48.02L14.38 62.82L22.86 39.9L3.24 25.1H27.53Z';
+
+function Star({ color }: { color: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 72 72">
+      <Path d={STAR_PATH} fill={color} />
+    </Svg>
+  );
+}
+
+function Mark({ color }: { color: string }) {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24">
+      <Line x1={6} y1={6} x2={18} y2={18} stroke={color} strokeWidth={3} />
+      <Line x1={18} y1={6} x2={6} y2={18} stroke={color} strokeWidth={3} />
+    </Svg>
+  );
+}
 
 type Props = {
   row: number;
@@ -41,22 +59,22 @@ export const CellView = memo(function CellView({
       style={[
         styles.cell,
         {
-          width: CELL_SIZE,
-          height: CELL_SIZE,
+          width: theme.cellSize,
+          height: theme.cellSize,
           backgroundColor: theme.bg,
         },
       ]}
     >
-      {value === 1 && <StarIcon size={22} color={regionBorder} />}
-      {value === 2 && <MarkIcon size={14} color={theme.markColor} />}
+      {value === 1 && <Star color={regionBorder} />}
+      {value === 2 && <Mark color={theme.markColor} />}
       {ghost === 'star' && value !== 1 && (
         <View style={styles.ghost}>
-          <StarIcon size={22} color={theme.regionBorder} />
+          <Star color={theme.regionBorder} />
         </View>
       )}
       {ghost === 'mark' && value !== 2 && (
         <View style={styles.ghost}>
-          <MarkIcon size={14} color={theme.markColor} />
+          <Mark color={theme.markColor} />
         </View>
       )}
     </Pressable>
