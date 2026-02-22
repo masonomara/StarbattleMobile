@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { Header } from '../components/Header';
 import { BoardView } from '../components/BoardView';
@@ -46,6 +47,7 @@ export function PuzzleScreen({ route, navigation }: any) {
   })();
 
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
@@ -135,7 +137,13 @@ export function PuzzleScreen({ route, navigation }: any) {
         center={<HeaderTimer />}
       />
       <GestureDetector gesture={gesture}>
-        <View style={styles.boardArea} onLayout={handleBoardAreaLayout}>
+        <View
+          style={[
+            styles.boardArea,
+            { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 80 },
+          ]}
+          onLayout={handleBoardAreaLayout}
+        >
           <BoardView
             puzzle={puzzle}
             theme={theme}
