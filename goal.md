@@ -1,270 +1,126 @@
 # Star Battle Goal
 
-> Budget 5–10 minutes. Aim for ~1000 words. The more specific, the better.
->
-> Use the six core sections below as a template for a good `goal.md`. Feel free to include more or fewer sections — some projects demand additional ones such as business rules, sample data, algorithms, or third-party integrations.
->
-> Goals are open-ended. This is the most important step, but it can be written however you like. This is how it's structured to work well with the commands — not the only valid approach.
-
 ## Project Context (core)
 
-What is this app, why does it need to exist, and what problem does it solve? What already exists? What's broken or missing from the current solution? What does the app need to do?
+Star Battle is a mobile puzzle app and a curated library of Star Battle puzzles that users unlock either by completing earlier puzzles or by paying. The experience is intentionally low stimulation as a fun pick up and put down puzzle you can play offline or online with progress saved across devices when signed in.
 
-> _Example: A lightweight tool for restaurant managers to track daily inventory levels. Currently managed in a shared spreadsheet that breaks when multiple people edit at once. The app needs to let staff log counts per item, flag items below a threshold, and let managers see a daily summary — nothing more._
+The core value proposition is the largest unique library of Star Battle puzzles available offline with clean low friction UX.
 
-**Mason Answer:**
+Today there exists a working beta with solid gameplay and navigation. The beta needs to be redesigned and rebuilt to properly support pulling and downloading puzzle packs from cloud storage to the device and offline play with online sync when reconnected and anonymous play with optional account upgrade and account management for cross-device progress and one-time payments for individual packs and a premium tier for account and entitlement tracking for what each user owns and has unlocked.
 
-> Star Battle is a puzzle app, its. alibrary of Star battle Puzzles that you unlock by paying for them or by completing puzzless. Its a simple time-wasting puzzle thats funs, not meant to stimulate, just a puzzle you can pick up and put down, play offline, play online, create and account, save progress. jsut a fun simple puzzle that I love. The main value points is a large unique library of puzzles. Currentlyw e have a beta that has great gameplay and navigation but needs to be redisigned to better implement some of the core features like pulling and downlaoding puzzles from storage, downloading it to your device, offline/online syncing, payments for users, waht payments unlock, and aaccount management.
+We will not be including social features or multiplayer or leaderboards or ads or subscriptions as premium is one-time only.
 
 ## User Roles (core)
 
-Who uses the app? Describe each type of user, how they log in, what they can do in the app, what they cannot do, and what they are supposed to do. Include relevant account fields such as email, display name, avatar, etc.
+There are three user roles. All three can play. The differences are about persistence and library access and what they need to pay for.
 
-> _Example:_
-> _- **Admin** — created manually in Supabase; can create, edit, and delete all items and view all inventory logs; cannot delete other admins._
-> _- **Staff** — signs up with email and password; can log inventory counts for their assigned location; cannot edit item definitions or view other locations._
+An anonymous free user has no account. They play as an anonymous user so progress is saved to the cloud against an anonymous user ID. Anonymous users have access to the 9 free libraries detailed below so they have about 540 puzzles. They must complete each free pack sequentially so each puzzle is unlocked N+1 by finishing puzzle N. They have access to Daily Weekly and Monthly special puzzles. They cannot purchase packs or premium as they must create an account first.
 
-**Mason Answer:**
+A free user with an account has the same library access as anonymous users but progress syncs across devices. They can purchase individual paid packs for $1.99 each and purchased packs do not require sequential completion. A free user can purchase premium for $5.99 one-time to upgrade.
 
-> Free Users / No Account - can play certian puzzles, free puzzles, puzzles in each packs are unlocked sequentially for them. progress is saved to the cloud as an anonymous user. shoudl be about 8 hours of gameplay, about 300 free puzzles that range from 1-star to three star. they also have access to libraries of the following puzzles:
+Premium users are created by a one-time $5.99 purchase tied to their account. Premium users unlock every puzzle in the 9 free libraries so no sequential requirement is needed. Premium users automatically get access to all current and future paid packs. Premium users have full access to the past Daily Weekly and Monthly puzzles.
 
-5x5/1★ Normal Star Battle
-6x6/1★ Normal Star Battle
-6x6/1★ Hard Star Battle
-8x8/1★ Normal Star Battle
-8x8/1★ Hard Star Battle
-10x10/2★ Normal Star Battle
-10x10/2★ Hard Star Battle
-14x14/3★ Normal Star Battle
-14x14/3★ Hard Star Battle
+## Libraries
 
-about 60 puzzles each of each of these types of puzzles.
+The app comes with free libraries available to all users and have sequential unlock unless a user is premium. Each library contains 60 puzzles.
 
-then the free user also have access to a
-4★ Special Daily Star Battle
-5★ Special Weekly Star Battle
-6★ Special Monthly Star Battle
+The libraries are as follows:
 
-> Free Users / Account - same as free useers, but can save progress across devices. free users can buy more packs without having a preimium account, and those packs they buy they do not need to compelte sequentially
-> Premium users - unlimited packs, all new packs they automatically get, one time payment for free account, unlock all puzzles in free setup so they no longer need to solve sequentially
+5×5 / 1★ Normal
+6×6 / 1★ Normal
+6×6 / 1★ Hard
+8×8 / 1★ Normal
+8×8 / 1★ Hard
+10×10 / 2★ Normal
+10×10 / 2★ Hard
+14×14 / 3★ Normal
+14×14 / 3★ Hard
 
-So to recap: users get abotu 9 free packs of 60 puzzles they can solve. thats 540 free puzzles. each pack they need to compelte sequentially. there will be more packs beyodn that that users need to pay for ($1.99 per pack). users can also buy a premium account for $5.99 that allows them to unlock all remaining puzzles in the free packs and then have unimited access to all future packs.
+Streak Puzzles are available to all users on a daily/weekly/monthly basis. Premium users can replay any past Streak puzzle non-premium users can only play the current one. The streak puzzles are as follows:
 
-## User Flows (core)
+4★ Daily Star Battle
+5★ Weekly Star Battle
+6★ Monthly Star Battle
 
-Flows describe what users are supposed to do. Each flow should be a step-by-step sequence of actions leading to a concrete outcome. User flows should cover all key use cases.
+## User Flows
 
-Start from what brings the user to the app or screen and end at the outcome — what changed in the database or UI.
+When an anonymous user plays a daily special they start by opening the app and will land on the home screen. The user will see the Daily and Weekly and Monthly specials at the top of the screen. When they tap the daily puzzle they are able to play it. When they complete the daily puzzle the streak updates and the win-state appears. If a user was to exit the puzzle mid-game their progress is saved locally and synced to the cloud when online.
 
-> _Example — Staff logs an inventory count:_
-> _1. Staff opens the app and lands on the inventory list for their location._
-> _2. Staff taps an item row to open the count entry form._
-> _3. Staff enters the current quantity and optionally adds a note._
-> _4. Staff taps Submit — count is saved, item row updates to show new quantity and timestamp._
-> _5. If the quantity is below threshold, the item is flagged red on the list._
+When a user plays from a free library they begin by opening the app and scroll past the specials to the library section. The user will select a library such as 8x8 1-star normal. They will select the next unlocked puzzle in the selected pack. When the user completes the puzzle and the win state prompts them to continue to the next puzzle in the pack. If the user exits mid-game the progress is saved locally and synced when online.
 
-**Mason Answer:**
+A non-premium user will hit paywalls when they tap a locked pack or locked puzzle inside a free pack. When they hit a paywall a context-aware popup will appear such as a locked free puzzle that is not yet unlocked sequentially will have a message to buy a premium account to unlock this puzzle and all future puzzles for free and a locked paid pack will have a message that says to buy the pack for $1.99 or buy Premium for unlimited access. If a user has no account when they continue to pay they will have to create an account first. Immediately after account creation and purchase their entitlement updates and packs and puzzles unlock immediately.
 
-> 1. user opens up the app, the see a homescreen with the three daily/weekly/monthly special puzzles, and then below it a library of all he puzzles packs for them
-> 2. they select a special puzzle (dailyweekly/monthly) and compelte it, it gets added to their streal
-> 3. sometimes they dont finsih it, progress is saved locally (for offline) and synced to the cloud when online
+Nine free packs are bundled with the app and already on the device after install. Paid packs are downloaded from Supabase storage after purchase. Once downloaded all packs are playable offline.
 
-> 1. user opens the app, they go to one of their puzzle libraries
-> 2. they select a puzzle from teh puzzle library, if they compelte it they are prompted to go right to the next puzzle
-> 3. if they dont complete it, progress is saved locally (for offline) and synced to the cloud when online
+## Screens
 
-> 1. user tries to click a "locked pack" or a "locked puzzle" - they are prompted to create an account and buy a premiuma ccount to see all the unlocked puzzle, or they get a prompt to "buy a pack or buy a premium memebrship to access all packs and puzzles" - popup langage is specific to what theya re trying to do.
-> 2. user creates ana ccount and purchases a pack or a memebrship
-> 3. everythign is unlocked
+The homescreen has a header with the star battle title and a streaks button that opens the streaks popup and an account button. Below the header is a section for continuing to play if a user has in-progress puzzles. Below the conditional section for continuing to play is the Daily/Weekly/Monthly streaks section with three cards. Below the streaks section is the library section which is a scrollable list of 9 free libraries plus any additional packs that can be purchased or just viewed. The locked paid packs are visible but show a lock icon and price.
 
-> note that the free puzzle packs ae alrady downlaoded to the device, the premium puzzle packs ned to be downlaoded to the device later from teh cloud.
+The library screen is a grid of puzzles in the pack with completion status per puzzle. Locked puzzles which are sequential for non-premium users are shown but not yet playable. The app's current beta design is close to what is needed.
 
-## Screens (core)
+The puzzle screen shows the active puzzle with all gameplay tools including tap and drag and undo and etcetera. This screen can match or be similar to the beta's existing design.
 
-Screens describe what users see — a description of what each screen looks like and what it's for. List every screen with all key UI elements: what data is shown, what actions are available. Describe non-obvious form fields, toggles, or input shapes when the UI has complexity that wouldn't be obvious from the screen name.
+The streaks screen shows all current streak counts and has a list of all past daily weekly streak puzzles in their own packs. Premium users can go to the past daily weekly and monthly packs and play any past puzzle and non-premium users cannot access the old pack libraries.
 
-> _Example:_
-> _- **`/` — Inventory List**: Shows all items for the user's location sorted by category. Each row: item name, current quantity, threshold, last-updated timestamp, flag indicator. Tapping a row opens the count entry form. Managers see a location switcher at the top._
-> _- **`/items/[id]` — Count Entry Form**: Item name and current count shown at top. Number input for new quantity. Optional text field for notes. Submit button. Cancel returns to list without saving._
->
-> _Field constraints:_
-> _- Quantity: integer only, 0–9999, no decimals_
-> _- Notes: free text, max 280 characters, optional_
-> _- Location: single-select dropdown populated from the locations table_
+The account and settings screen has sign in and sign out and sign up capabilities and current entitlements such as premium status and owned packs and if needed the option to purchase premium or restore purchases.
 
-**Mason Answer:**
+## Success States
 
-> Home screen: daily/weekly/monthly streak puzzles, library of other puzzles, maybe a button at the top for account/settings. top bar looks like Star Battle title, button to see your current streaks, and account buttonare the header, then a section to continue puzzles you are working on (if any), then the daily/weekly/monthly streaks, and then all the libraries of puzzles you can tackle. This is pretty similar to the beta just need to add the streaks buttn for a streaks popup and continue screen
-> Library screen: pretty much match the beta
-> Puzzle Screen: pretty much match the beta
-> Win State: pretty much match the beta
-> Streaks Screen: stat showing streaks and all the puzzles that you cna play. for memebers with premium profiles, they can play all past daily/weekly/monthly puzzles, for non premium mebers they can see teh libraries but they are locked
+The app is successful if a user can complete a puzzle and see the win-state screen and all puzzle gameplay tools work such as tap and drag and undo and mark and etcetera and a user can sign out and sign back in from a different device with all their progress saved. A successful app is when all premium users have every puzzle in the nine free libraries unlocked and a non-premium user sees puzzles unlocked sequentially. Completing a daily/weekly/monthly streak puzzle will increment the corresponding streak and missing one breaks it. In a successful app a user can purchase a pack or premium and the entitlement is reflected immediately in the UI and persists across sessions.
 
-## Success State (core)
+## Key Mutations
 
-2–3 concrete, observable things you can check to confirm the app is working — not "it feels right," but "staff submitted a count and the row updated in the list and in the Supabase table editor."
+Puzzle progress needs to be saved. Partial state needs to be written locally and synced to the cloud.
 
-> _Example:_
-> _- Staff submits a count → the item row immediately shows the new quantity and timestamp, and a new row appears in the `inventory_counts` table in Supabase._
-> _- An item with quantity below threshold → the row is flagged red in the list and stays flagged after a page refresh._
-> _- Admin deletes an item → it disappears from the inventory list, but its historical counts are still visible in the `inventory_counts` table with the item marked archived._
+Puzzle completion state and timestamp and time-to-solve recorded needs to be tracked in puzzle completed.
 
-**Mason Answer:**
+The pack progress needs to be updated when a puzzle is completed and the pack's progress counter and next unlocked puzzle pointer update.
 
-> User can complete a puzzle, win state appears
-> All puzzle tools work
-> progress is saved for each user, they can sign out and sign in and see their progress
-> premium users unlock all puzzles, non premium users need to win to unlock them sequentially
-> when a user compeltes a daily/weelly/monthly streak, their streaks are updated
+The daily weekly and monthly streak increments must update on completion and reset on missed windows.
 
-## Key Mutations (core)
+Accounts being created and upgraded such as an anonymous user upgrading to a permanent account and carrying all progress with them.
 
-Every important write to the database — create, update, or delete. For non-trivial operations that touch multiple tables or require atomicity, describe the full operation and it will become a Postgres function called via RPC. When in doubt, write it out — `/schema` will decide the right implementation.
+Recorded purchases must be tracked such as pack purchases or Premium purchases writing to entitlements.
 
-> _Example:_
-> _- Create inventory count (staff submits a quantity for an item)_
-> _- Update item threshold (admin changes the low-stock alert level)_
-> _- Create item (admin adds a new item to the inventory list)_
-> _- Delete item (admin removes an item; cascades to all counts)_
+Packs being unlocked and downloaded after purchase must have pack metadata and puzzles downloaded from Supabase Storage.
 
-**Mason Answer:**
+Account settings and preferences must be updated.
 
-> Keep track of all the streaks
-> User loses a streak if they dont play the daily/weekly/monthly puzzle
-> Streak updates if user compeltes daily/weekly/monthly puzzle
-> When user compeltes a puzzle, compelte state is updated
-> When user completes a library the states are updated
-> Progress is saved on each puzzle
-> Progress is saved one each pack
-> Account settings are saved
-> account progress is saved
-> purchases tied to an account are saved
-> pack unlock status is updated and tracked
-> new puzzle packs can be uploaded
+New puzzle packs uploaded by admins will be done by a new pack being added to Supabase. All users see it immediately and premium users can play it immediately and others see it available for purchase.
 
-## Business Rules (bonus)
+## Business Rules
 
-Invariants and edge cases the system must enforce — things that would be bugs if violated.
+Premium account purchase is a one-time purchase with no recurring subscription. Premium accounts unlock all free-library puzzles immediately and all current and future paid packs. Non-premium users must complete free pack puzzles sequentially. Non-premium users see locked paid packs but cannot play them without purchase. Individual paid packs are one-time purchases that once owned allow the user to play those puzzles in any order. A user must have an account before making any purchase. Progress saves offline and syncs to the cloud when connectivity is restored. Streaks are time-windowed so missing a Daily by the end of the day or a weekly by the end of the week or a monthly by the end of the month resets that streak to zero. Purchases are permanent and carry over with account login on a new device.
 
-> _Example:_
-> _- A staff member can only submit one count per item per shift_
-> _- Quantity cannot be negative_
-> _- Deleting an item archives it rather than hard-deletes, so historical counts are preserved_
+## Constraints
 
-**Mason Answer:**
+The app is mobile only and must work fully offline once packs are downloaded. Anonymous-first onboarding means users should be able to play immediately without signup. The app is to be built on React Native (New Arch) with the stack outlined under Third-Party integrations that are listed below. The app is single region which means no multi-tenant or per-organization scoping.
 
-> Premium users have full access to all libraries and puzzles
-> non-premium users in the free packs only have access to puzzles that they unlock
-> non-premium users can view but cannot access the packs
-> progress is saved offline and synced online when attatched to the cloud
-> premium profile has unlimted access to all new packs, it sa one time purchase
-> individual puzzle packs are also one time purchases so they are always saved
-> users need an account before they make a purchase
+## Sample Data
 
-## Constraints (bonus)
+The full puzzle library at launch includes:
 
-Hard limits the system must respect.
+5×5 / 1★ Normal
+6×6 / 1★ Normal
+6×6 / 1★ Hard
+8×8 / 1★ Normal
+8×8 / 1★ Hard
+10×10 / 2★ Normal
+10×10 / 2★ Hard
+14×14 / 3★ Normal
+14×14 / 3★ Hard
+4★ Daily Star Battle (rolling)
+5★ Weekly Star Battle (rolling)
+6★ Monthly Star Battle (rolling)
 
-> _Example:_
-> _- Must work on mobile (staff use phones on the floor)_
-> _- No email notifications — managers check the dashboard manually_
-> _- All data scoped to a single organization; no multi-tenant support needed_
+I will provide the puzzle files and they need to be ported into Supabase. Difficulty ratings will be tweaked later and assume the current ratings are correct for now.
 
-## Sample Data (bonus)
+## Algorithm
 
-Representative rows showing what real data looks like and how it should be normalized. Useful for seeding and for validating the schema.
+Puzzle generation and validation is handled in a separate codebase at https://github.com/masonomara/star-battle. This app consumes pregenerated puzzles with no generation logic needed to live there.
 
-> _Example:_
-> _- Item: `{ name: "Olive Oil (1L)", category: "Dry Goods", unit: "bottles", threshold: 5 }`_
-> _- Count: `{ item_id: ..., quantity: 3, note: "found two in back storage", submitted_by: ..., submitted_at: "2024-01-15T14:32:00Z" }`_
+## Third party Integrations
 
-**Mason Answer:**
+See research.md for full rationale. A summary of the stack is listed below.
 
-> I will provide sample data, sample puzzles that work. full puzzle pack will be as follows:
-
-5x5/1★ Normal Star Battle
-6x6/1★ Normal Star Battle
-6x6/1★ Hard Star Battle
-8x8/1★ Normal Star Battle
-8x8/1★ Hard Star Battle
-10x10/2★ Normal Star Battle
-10x10/2★ Hard Star Battle
-14x14/3★ Normal Star Battle
-14x14/3★ Hard Star Battle
-
-60 puzzles each of each of these types of puzzles.
-
-then the free user also have access to a
-4★ Special Daily Star Battle
-5★ Special Weekly Star Battle
-6★ Special Monthly Star Battle
-
-We will start with those, i need to tweak the difficulty meter so dont worry about the difficulty, just pretend they are rated proper. packs are in teh following files, i need to port them to supabase:
-
-## Algorithm (bonus)
-
-If the app has a non-trivial calculation — scoring, ranking, matching, pricing — describe it precisely. Claude will implement it as a Postgres function.
-
-> _Example:_
-> _- ELO rating update: K=32, expected score = 1 / (1 + 10^((opponent_rating - player_rating) / 400))_
-
-**Mason Answer:**
-
-All calcuation is one locally in another codebase: https://github.com/masonomara/star-battle
-
-## Third-Party Integrations (bonus)
-
-Any external services the app talks to — APIs, webhooks, storage, email, payments, etc.
-
-> _Example:_
-> _- Resend for transactional email (low-stock alerts to managers)_
-> _- Cloudinary for item photo uploads_
-
-**Mason Answer:**
-
-Refer to `research.md`, looks like we will be using:
-
-### Rendering
-
-**react-native-skia** — single canvas, GPU-accelerated, worklet-driven. One GestureDetector on the canvas handles all touch; coordinate math in worklets computes cell from screen position. Eliminates N² CellView renders, enables per-cell animations without JS thread involvement.
-
-### Gestures
-
-**react-native-gesture-handler v3** — hooks API, New Arch only, worklet-based. Compose: `Simultaneous(pinch + two-finger-pan, Exclusive(long-press-draw, tap))`. Use `activateAfterLongPress` on the draw Pan gesture.
-
-### Animation
-
-**react-native-reanimated v4** — CSS Transitions API for per-cell state animations, shared values for gesture-driven board transforms.
-
-### Haptics
-
-**react-native-nitro-haptics** — worklet-compatible via Nitro boxing, New Arch only.
-
-### Local State
-
-**Zustand 5** for puzzle session state. Evaluate **Legend State v3** when designing cloud sync — its built-in MMKV + Supabase sync story may collapse the persistence and sync layers into one declarative solution.
-
-### Local Storage
-
-**react-native-mmkv v4** for settings, auth tokens, small blobs.  
-**op-sqlite + Drizzle** for all structured data (puzzle progress, purchase records, entitlements).
-
-### Navigation
-
-**React Navigation v7** (native-stack). Adopt the static API for full TypeScript inference. Watch v8 for `React.Activity` screen pausing.
-
-### Backend
-
-**Supabase** — Postgres + Auth + Storage + Edge Functions. Self-hostable.
-
-### Offline Sync
-
-**PowerSync** on top of Supabase — genuine offline-first SQLite on client, Postgres WAL as source of truth, your own write API for conflict control.
-
-### Authentication
-
-**Supabase Auth** — pure JS, no Expo deps. Native Apple Sign In via `@invertase/react-native-apple-authentication` → `signInWithIdToken`. Anonymous-first, upgrade to permanent account when user opts in.
-
-### Payments
-
-**Adapty** — better free tier ($5K MTR), built-in paywall A/B testing, bare RN SDK. Entitlement webhooks → Supabase Edge Function → `user_entitlements` table → PowerSync streams to client.
+Rendering is done with `react-native-skia` which is a single GPU-accelerated canvas that is worklet-driven for gesture handling and per-cell animations off the JS thread. Gestures are done with `react-native-gesture-handler` with hooks API and new arch only. Animation is done with `react-native-reanimated` version 4 for the CSS transitions API and shared values. Haptics are done with `react-native-nitro-haptics` for worklet compatibility with new Arch only. Local state is managed by Zustand 5 for puzzle session state and to evaluate Legend State v3 for the sync layer. Navigation is handled by React Navigation v7 with a native stack static API. The backend is managed by Supabase including Postgres and auth and storage and edge functions. Offline sync is managed by PowerSync on top of Supabase for offline-first SQLite and Postgres WAL as the source of truth. Auth is done via Supabase auth for anonymous-first. Apple sign in can be done via `@invertase/react-native-apple-authentication` for `signInWithIdToken`. Payments are done with Adapty for entitlement webhooks with Supabase Edge Function and `user_entitlements` table with PowerSync to client.
