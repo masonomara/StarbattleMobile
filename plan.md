@@ -417,7 +417,8 @@ bucket_definitions:
     data:
       - SELECT * FROM puzzle_progress WHERE user_id = bucket.user_id
       - SELECT * FROM streaks         WHERE user_id = bucket.user_id
-      - SELECT * FROM user_entitlements WHERE user_id = bucket.user_id
+      - SELECT user_id AS id, is_premium, premium_purchased_at, owned_pack_ids, updated_at
+        FROM user_entitlements WHERE user_id = bucket.user_id
 ```
 
 ### 2.2 Client SQLite Schema
@@ -2245,13 +2246,13 @@ Tasks are labeled **[YOU]** (done in a dashboard, GUI, or third-party service �
 
 These must be done before any code is written.
 
-- [ ] **[YOU]** Create a Supabase project at supabase.com. Note the Project URL and anon key.
-- [ ] **[YOU]** In the Supabase dashboard: enable **Anonymous Sign-In** under Authentication → Providers.
-- [ ] **[YOU]** In Supabase Storage: create a bucket named `packs`. Set it to **private** (downloads go through signed URLs or the service role key).
-- [ ] **[YOU]** Create a PowerSync cloud instance at powersync.com. Connect it to your Supabase project using the Supabase connection string.
-- [ ] **[YOU]** Create an Adapty account at adapty.io. Start a free tier project.
-- [ ] **[YOU]** In your Apple Developer account: register an App ID for the alpha bundle identifier (if not already done).
-- [ ] **[YOU]** Add environment variables to the project. Create a `.env` file (or use whatever env-loading approach is already in the project) with: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `POWERSYNC_URL`, `ADAPTY_SDK_KEY`.
+- [x] **[YOU]** Create a Supabase project at supabase.com. Note the Project URL and anon key.
+- [x] **[YOU]** In the Supabase dashboard: enable **Anonymous Sign-In** under Authentication → Providers.
+- [x] **[YOU]** In Supabase Storage: create a bucket named `packs`. Set it to **private** (downloads go through signed URLs or the service role key).
+- [x] **[YOU]** Create a PowerSync cloud instance at powersync.com. Connect it to your Supabase project using the Supabase connection string.
+- [x] **[YOU]** Create an Adapty account at adapty.io. Start a free tier project.
+- [x] **[YOU]** In your Apple Developer account: register an App ID for the alpha bundle identifier (if not already done).
+- [x] **[YOU]** Add environment variables to the project. Create a `.env` file (or use whatever env-loading approach is already in the project) with: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `POWERSYNC_URL`, `ADAPTY_SDK_KEY`.
 
 ---
 
@@ -2275,39 +2276,39 @@ These must be done before any code is written.
 
 ### Phase 2: PowerSync Setup
 
-- [ ] **[YOU]** In the PowerSync dashboard: deploy `sync-rules.yaml` from Phase 2.1. Confirm it validates without errors.
-- [ ] **[YOU]** Copy the PowerSync instance URL. Add it to your env as `POWERSYNC_URL`.
-- [ ] **[CLAUDE]** Create `src/powersync/AppSchema.ts` with the full client SQLite schema (packs, puzzle_progress, streaks, user_entitlements, streak_archive).
-- [ ] **[CLAUDE]** Create `src/powersync/database.ts` — PowerSync singleton using op-sqlite.
-- [ ] **[CLAUDE]** Create `src/powersync/Connector.ts` — `SupabaseConnector` with `fetchCredentials` and `uploadData`.
-- [ ] **[CLAUDE]** Create `src/supabase/client.ts` — Supabase JS client with MMKV auth storage adapter.
-- [ ] **[CLAUDE]** Update `App.tsx` — initialize sequence: Adapty → settings → auth → PowerSync connect.
+- [x] **[YOU]** In the PowerSync dashboard: deploy `sync-rules.yaml` from Phase 2.1. Confirm it validates without errors.
+- [x] **[YOU]** Copy the PowerSync instance URL. Add it to your env as `POWERSYNC_URL`.
+- [x] **[CLAUDE]** Create `src/powersync/AppSchema.ts` with the full client SQLite schema (packs, puzzle_progress, streaks, user_entitlements, streak_archive).
+- [x] **[CLAUDE]** Create `src/powersync/database.ts` — PowerSync singleton using op-sqlite.
+- [x] **[CLAUDE]** Create `src/powersync/Connector.ts` — `SupabaseConnector` with `fetchCredentials` and `uploadData`.
+- [x] **[CLAUDE]** Create `src/supabase/client.ts` — Supabase JS client with MMKV auth storage adapter.
+- [x] **[CLAUDE]** Update `App.tsx` — initialize sequence: Adapty → settings → auth → PowerSync connect.
 - [ ] **[YOU]** Launch app, confirm PowerSync connects without error (check console logs).
 
 ---
 
 ### Phase 3: Auth Store
 
-- [ ] **[YOU]** In Supabase dashboard under Authentication → Providers: confirm Anonymous is enabled (already done in pre-setup). No additional configuration needed for anonymous auth.
-- [ ] **[CLAUDE]** Create `src/stores/authStore.ts` — anonymous-first, Apple Sign In, email sign-up/sign-in, sign-out, anon→account upgrade, Adapty identify.
-- [ ] **[CLAUDE]** Wire `authStore.initialize()` into `App.tsx` startup sequence.
+- [x] **[YOU]** In Supabase dashboard under Authentication → Providers: confirm Anonymous is enabled (already done in pre-setup). No additional configuration needed for anonymous auth.
+- [x] **[CLAUDE]** Create `src/stores/authStore.ts` — anonymous-first, Apple Sign In, email sign-up/sign-in, sign-out, anon→account upgrade, Adapty identify.
+- [x] **[CLAUDE]** Wire `authStore.initialize()` into `App.tsx` startup sequence.
 - [ ] **[YOU]** Run app. Verify an anonymous session is created on first launch and persists across restarts (check Supabase Auth → Users for the anonymous user row).
 
 ---
 
 ### Phase 4: Entitlements Store
 
-- [ ] **[CLAUDE]** Create `src/stores/entitlementsStore.ts` — reads `user_entitlements` and `packs` from local SQLite, exposes `hasPackAccess`, `canPlayPuzzle`, `canPlayPack`.
-- [ ] **[CLAUDE]** Wire `db.watch` on `user_entitlements` in `App.tsx` to reload entitlements on any sync update.
-- [ ] **[CLAUDE]** Create `src/hooks/useEntitlements.ts` — convenience hook over entitlementsStore for component use.
+- [x] **[CLAUDE]** Create `src/stores/entitlementsStore.ts` — reads `user_entitlements` and `packs` from local SQLite, exposes `hasPackAccess`, `canPlayPuzzle`, `canPlayPack`.
+- [x] **[CLAUDE]** Wire `db.watch` on `user_entitlements` in `App.tsx` to reload entitlements on any sync update.
+- [x] **[CLAUDE]** Create `src/hooks/useEntitlements.ts` — convenience hook over entitlementsStore for component use.
 
 ---
 
 ### Phase 5: Settings Store
 
-- [ ] **[CLAUDE]** Create `src/stores/settingsStore.ts` — MMKV-backed settings, extracted from the old `userStore.ts`.
+- [x] **[CLAUDE]** Create `src/stores/settingsStore.ts` — MMKV-backed settings, extracted from the old `userStore.ts`.
 - [ ] **[CLAUDE]** Update `src/storage.ts` — strip out progress and streak functions (those move to PowerSync), keep only settings get/set.
-- [ ] **[CLAUDE]** Wire `settingsStore.initialize()` into `App.tsx` startup (before auth).
+- [x] **[CLAUDE]** Wire `settingsStore.initialize()` into `App.tsx` startup (before auth).
 
 ---
 
