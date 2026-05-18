@@ -606,10 +606,13 @@ export default function App() {
     useSettingsStore.getState().initialize();
 
     // 3. Initialize auth (creates anonymous session if no session exists)
-    useAuthStore.getState().initialize().then(() => {
-      // 4. Connect PowerSync (needs auth session for the JWT)
-      db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
-    });
+    useAuthStore
+      .getState()
+      .initialize()
+      .then(() => {
+        // 4. Connect PowerSync (needs auth session for the JWT)
+        db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
+      });
   }, []);
 
   return (
@@ -698,8 +701,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInWithApple: async () => {
-    const { appleAuth } =
-      await import('@invertase/react-native-apple-authentication');
+    const { appleAuth } = await import(
+      '@invertase/react-native-apple-authentication'
+    );
     const credential = await appleAuth.performRequest({
       requestedOperation: appleAuth.Operation.LOGIN,
       requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
@@ -1336,9 +1340,9 @@ import { useTheme } from './hooks/useTheme';
 
 const Stack = createNativeStackNavigator({
   screens: {
-    Home:    { screen: HomeScreen },
+    Home: { screen: HomeScreen },
     Library: { screen: LibraryScreen },
-    Puzzle:  { screen: PuzzleScreen },
+    Puzzle: { screen: PuzzleScreen },
     Streaks: { screen: StreaksScreen },
     Account: { screen: AccountScreen },
   },
@@ -1355,9 +1359,15 @@ declare global {
 // Screen param types (co-locate with navigation.tsx for easy reference)
 declare module '@react-navigation/native' {
   interface RootParamList {
-    Home:    undefined;
+    Home: undefined;
     Library: { packId: string };
-    Puzzle:  { packId: string; puzzleIndex: number } | { streakType: 'daily' | 'weekly' | 'monthly'; isArchive?: boolean; archiveKey?: string };
+    Puzzle:
+      | { packId: string; puzzleIndex: number }
+      | {
+          streakType: 'daily' | 'weekly' | 'monthly';
+          isArchive?: boolean;
+          archiveKey?: string;
+        };
     Streaks: undefined;
     Account: undefined;
   }
@@ -1390,12 +1400,18 @@ Replace `BoardView.tsx`, `CellView.tsx`, `CellGridSvg.tsx`, and `RegionBordersSv
 // src/components/PuzzleCanvas.tsx
 import React, { useMemo } from 'react';
 import {
-  Canvas, Rect, Path, Skia, Group, Circle,
+  Canvas,
+  Rect,
+  Path,
+  Skia,
+  Group,
+  Circle,
   Line as SkiaLine,
   useDerivedValue,
 } from '@shopify/react-native-skia';
 import {
-  GestureDetector, Gesture,
+  GestureDetector,
+  Gesture,
   type GestureType,
 } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
@@ -1405,14 +1421,32 @@ import type { Theme } from '../hooks/useTheme';
 
 // Region color palette (one per region ID)
 const REGION_COLORS_LIGHT = [
-  '#E8EAF6', '#E3F2FD', '#E8F5E9', '#FFF8E1',
-  '#FCE4EC', '#F3E5F5', '#E0F7FA', '#FBE9E7',
-  '#F9FBE7', '#EDE7F6', '#E0F2F1', '#FFF3E0',
+  '#E8EAF6',
+  '#E3F2FD',
+  '#E8F5E9',
+  '#FFF8E1',
+  '#FCE4EC',
+  '#F3E5F5',
+  '#E0F7FA',
+  '#FBE9E7',
+  '#F9FBE7',
+  '#EDE7F6',
+  '#E0F2F1',
+  '#FFF3E0',
 ];
 const REGION_COLORS_DARK = [
-  '#283593', '#1565C0', '#2E7D32', '#F9A825',
-  '#AD1457', '#6A1B9A', '#00838F', '#BF360C',
-  '#827717', '#4527A0', '#00695C', '#E65100',
+  '#283593',
+  '#1565C0',
+  '#2E7D32',
+  '#F9A825',
+  '#AD1457',
+  '#6A1B9A',
+  '#00838F',
+  '#BF360C',
+  '#827717',
+  '#4527A0',
+  '#00695C',
+  '#E65100',
 ];
 
 interface PuzzleCanvasProps {
@@ -1422,13 +1456,19 @@ interface PuzzleCanvasProps {
   errorCells: Set<number>;
   hintGhosts: Map<number, 'star' | 'mark'>;
   theme: Theme;
-  canvasSize: number;       // square size in px
+  canvasSize: number; // square size in px
   composedGesture: GestureType;
 }
 
 export function PuzzleCanvas({
-  puzzle, cells, autoMarks, errorCells, hintGhosts,
-  theme, canvasSize, composedGesture,
+  puzzle,
+  cells,
+  autoMarks,
+  errorCells,
+  hintGhosts,
+  theme,
+  canvasSize,
+  composedGesture,
 }: PuzzleCanvasProps) {
   const { size, regions } = puzzle;
   const cellSize = canvasSize / size;
@@ -1457,7 +1497,14 @@ export function PuzzleCanvas({
       }
     }
     // Outer border
-    path.addRect(Skia.XYWHRect(inset, inset, canvasSize - inset * 2, canvasSize - inset * 2));
+    path.addRect(
+      Skia.XYWHRect(
+        inset,
+        inset,
+        canvasSize - inset * 2,
+        canvasSize - inset * 2,
+      ),
+    );
     return path;
   }, [puzzle.id, canvasSize]);
 
@@ -1489,10 +1536,14 @@ export function PuzzleCanvas({
                 y={row * cellSize}
                 width={cellSize}
                 height={cellSize}
-                color={isError ? '#FFE0E0' : regionColors[region % regionColors.length]}
+                color={
+                  isError
+                    ? '#FFE0E0'
+                    : regionColors[region % regionColors.length]
+                }
               />
             );
-          })
+          }),
         )}
 
         {/* 2. Inner grid lines */}
@@ -1528,7 +1579,8 @@ export function PuzzleCanvas({
             return (
               <StarMark
                 key={idx}
-                cx={cx} cy={cy}
+                cx={cx}
+                cy={cy}
                 cellSize={cellSize}
                 isGhost={ghost === 'star'}
                 color={theme.text}
@@ -1539,7 +1591,8 @@ export function PuzzleCanvas({
             return (
               <XMark
                 key={idx}
-                cx={cx} cy={cy}
+                cx={cx}
+                cy={cy}
                 cellSize={cellSize}
                 isGhost={ghost === 'mark'}
                 isAuto={isAutoMark}
@@ -1554,21 +1607,39 @@ export function PuzzleCanvas({
   );
 }
 
-function StarMark({ cx, cy, cellSize, isGhost, color }: {
-  cx: number; cy: number; cellSize: number; isGhost: boolean; color: string;
+function StarMark({
+  cx,
+  cy,
+  cellSize,
+  isGhost,
+  color,
+}: {
+  cx: number;
+  cy: number;
+  cellSize: number;
+  isGhost: boolean;
+  color: string;
 }) {
   const r = cellSize * 0.28;
   return (
-    <Circle
-      cx={cx} cy={cy} r={r}
-      color={isGhost ? color + '55' : color}
-    />
+    <Circle cx={cx} cy={cy} r={r} color={isGhost ? color + '55' : color} />
   );
 }
 
-function XMark({ cx, cy, cellSize, isGhost, isAuto, color }: {
-  cx: number; cy: number; cellSize: number;
-  isGhost: boolean; isAuto: boolean; color: string;
+function XMark({
+  cx,
+  cy,
+  cellSize,
+  isGhost,
+  isAuto,
+  color,
+}: {
+  cx: number;
+  cy: number;
+  cellSize: number;
+  isGhost: boolean;
+  isAuto: boolean;
+  color: string;
 }) {
   const half = cellSize * 0.22;
   const opacity = isGhost ? '55' : isAuto ? 'AA' : 'FF';
@@ -1578,12 +1649,16 @@ function XMark({ cx, cy, cellSize, isGhost, isAuto, color }: {
       <SkiaLine
         p1={{ x: cx - half, y: cy - half }}
         p2={{ x: cx + half, y: cy + half }}
-        color={c} strokeWidth={2} strokeCap="round"
+        color={c}
+        strokeWidth={2}
+        strokeCap="round"
       />
       <SkiaLine
         p1={{ x: cx + half, y: cy - half }}
         p2={{ x: cx - half, y: cy + half }}
-        color={c} strokeWidth={2} strokeCap="round"
+        color={c}
+        strokeWidth={2}
+        strokeCap="round"
       />
     </Group>
   );
@@ -2038,23 +2113,36 @@ Wrap screens to prevent crashes propagating to root:
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 
-interface Props { children: React.ReactNode; onReset?: () => void; }
-interface State { hasError: boolean; }
+interface Props {
+  children: React.ReactNode;
+  onReset?: () => void;
+}
+interface State {
+  hasError: boolean;
+}
 
 export class ErrorBoundary extends React.Component<Props, State> {
   state = { hasError: false };
-  static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error: Error) { console.error('Boundary caught:', error); }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.error('Boundary caught:', error);
+  }
 
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
           <Text>Something went wrong.</Text>
-          <Pressable onPress={() => {
-            this.setState({ hasError: false });
-            this.props.onReset?.();
-          }}>
+          <Pressable
+            onPress={() => {
+              this.setState({ hasError: false });
+              this.props.onReset?.();
+            }}
+          >
             <Text>Try Again</Text>
           </Pressable>
         </View>
@@ -2140,6 +2228,221 @@ Free packs follow the same pipeline — after upload they become the cloud-autho
 **Streak archive assignment script:** After generating daily/weekly/monthly puzzles, a second script assigns each puzzle a `date_key` and inserts rows into the `streak_archive` table. Dates are assigned sequentially from a given start date. Once inserted, a puzzle appears in the archive UI as soon as its `date_key` has passed.
 
 **File system:**
+
 - `react-native-fs` is confirmed for all file I/O (free pack refresh, paid pack downloads). No Expo dependency.
 - Pack IDs are opaque — display names always come from the `name` metadata field in the `packs` table, never derived from the ID string.
 - Anonymous users' progress is device-local by design. A new anonymous session on a second device gets no cross-device sync. Signing in with an account is the upgrade path.
+
+---
+
+## TODO
+
+Tasks are labeled **[YOU]** (done in a dashboard, GUI, or third-party service — no code) or **[CLAUDE]** (code implementation). Do all **[YOU]** tasks in a phase before handing off to Claude for that phase's **[CLAUDE]** tasks, unless noted otherwise.
+
+---
+
+### Pre-Implementation: Account & Service Setup
+
+These must be done before any code is written.
+
+- [ ] **[YOU]** Create a Supabase project at supabase.com. Note the Project URL and anon key.
+- [ ] **[YOU]** In the Supabase dashboard: enable **Anonymous Sign-In** under Authentication → Providers.
+- [ ] **[YOU]** In Supabase Storage: create a bucket named `packs`. Set it to **private** (downloads go through signed URLs or the service role key).
+- [ ] **[YOU]** Create a PowerSync cloud instance at powersync.com. Connect it to your Supabase project using the Supabase connection string.
+- [ ] **[YOU]** Create an Adapty account at adapty.io. Start a free tier project.
+- [ ] **[YOU]** In your Apple Developer account: register an App ID for the alpha bundle identifier (if not already done).
+- [ ] **[YOU]** Add environment variables to the project. Create a `.env` file (or use whatever env-loading approach is already in the project) with: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `POWERSYNC_URL`, `ADAPTY_SDK_KEY`.
+
+---
+
+### Phase 0: Foundation
+
+- [ ] **[CLAUDE]** Remove `react-native-svg` and `react-native-haptic-feedback`. Install all new packages per the Phase 0 package list. Run `pod install`.
+- [ ] **[CLAUDE]** Restructure `src/` to match the Phase 0.2 directory layout. Create empty placeholder files for every new module so imports resolve.
+- [ ] **[CLAUDE]** Update `src/types/state.ts` — remove `ProgressState` and `UserState`, add new types per Phase 0.3.
+- [ ] **[CLAUDE]** Create `src/types/user.ts` with `UserRole`, `Entitlements`, and `PackCatalogItem`.
+- [ ] **[YOU]** Verify the app still builds and launches (even with placeholder screens) after package changes.
+
+---
+
+### Phase 1: Supabase Schema
+
+- [ ] **[YOU]** In the Supabase SQL editor: run the full migration from Phase 1 — all `CREATE TABLE` statements, RLS policies, the `handle_new_user` trigger, the `add_owned_pack` RPC, and the free pack seed `INSERT`.
+- [ ] **[YOU]** Verify in the Supabase Table Editor that all tables exist: `packs`, `puzzle_progress`, `streaks`, `user_entitlements`, `adapty_events`, `streak_archive`.
+- [ ] **[YOU]** Confirm the 9 free pack rows are present in the `packs` table.
+
+---
+
+### Phase 2: PowerSync Setup
+
+- [ ] **[YOU]** In the PowerSync dashboard: deploy `sync-rules.yaml` from Phase 2.1. Confirm it validates without errors.
+- [ ] **[YOU]** Copy the PowerSync instance URL. Add it to your env as `POWERSYNC_URL`.
+- [ ] **[CLAUDE]** Create `src/powersync/AppSchema.ts` with the full client SQLite schema (packs, puzzle_progress, streaks, user_entitlements, streak_archive).
+- [ ] **[CLAUDE]** Create `src/powersync/database.ts` — PowerSync singleton using op-sqlite.
+- [ ] **[CLAUDE]** Create `src/powersync/Connector.ts` — `SupabaseConnector` with `fetchCredentials` and `uploadData`.
+- [ ] **[CLAUDE]** Create `src/supabase/client.ts` — Supabase JS client with MMKV auth storage adapter.
+- [ ] **[CLAUDE]** Update `App.tsx` — initialize sequence: Adapty → settings → auth → PowerSync connect.
+- [ ] **[YOU]** Launch app, confirm PowerSync connects without error (check console logs).
+
+---
+
+### Phase 3: Auth Store
+
+- [ ] **[YOU]** In Supabase dashboard under Authentication → Providers: confirm Anonymous is enabled (already done in pre-setup). No additional configuration needed for anonymous auth.
+- [ ] **[CLAUDE]** Create `src/stores/authStore.ts` — anonymous-first, Apple Sign In, email sign-up/sign-in, sign-out, anon→account upgrade, Adapty identify.
+- [ ] **[CLAUDE]** Wire `authStore.initialize()` into `App.tsx` startup sequence.
+- [ ] **[YOU]** Run app. Verify an anonymous session is created on first launch and persists across restarts (check Supabase Auth → Users for the anonymous user row).
+
+---
+
+### Phase 4: Entitlements Store
+
+- [ ] **[CLAUDE]** Create `src/stores/entitlementsStore.ts` — reads `user_entitlements` and `packs` from local SQLite, exposes `hasPackAccess`, `canPlayPuzzle`, `canPlayPack`.
+- [ ] **[CLAUDE]** Wire `db.watch` on `user_entitlements` in `App.tsx` to reload entitlements on any sync update.
+- [ ] **[CLAUDE]** Create `src/hooks/useEntitlements.ts` — convenience hook over entitlementsStore for component use.
+
+---
+
+### Phase 5: Settings Store
+
+- [ ] **[CLAUDE]** Create `src/stores/settingsStore.ts` — MMKV-backed settings, extracted from the old `userStore.ts`.
+- [ ] **[CLAUDE]** Update `src/storage.ts` — strip out progress and streak functions (those move to PowerSync), keep only settings get/set.
+- [ ] **[CLAUDE]** Wire `settingsStore.initialize()` into `App.tsx` startup (before auth).
+
+---
+
+### Phase 6: Progress via PowerSync
+
+- [ ] **[CLAUDE]** Create `src/utils/progress.ts` — `saveProgress`, `loadProgress`, `getCompletedCountForPack`, `saveStreak`, `loadStreaks` — all reading/writing local SQLite via PowerSync.
+- [ ] **[CLAUDE]** Update `src/store.ts` — make `loadPuzzle` async (awaits `loadProgress`), replace all `persistProgress` calls with `saveProgress` (fire-and-forget), remove the 5-second autosave interval.
+- [ ] **[CLAUDE]** Delete `src/utils/persistProgress.ts` and remove all references.
+- [ ] **[YOU]** Play a puzzle partway through. Kill the app. Reopen. Verify progress is restored from SQLite.
+
+---
+
+### Phase 7: Payments (Adapty)
+
+**Adapty dashboard setup — do this before Claude writes any payment code:**
+
+- [ ] **[YOU]** In the Adapty dashboard: create a **Product** named `starbattle_premium` — one-time, $5.99, link to App Store product (create the App Store product first if it doesn't exist).
+- [ ] **[YOU]** In App Store Connect: create the `starbattle_premium` in-app purchase (non-consumable, $5.99). Note the vendor product ID matches exactly.
+- [ ] **[YOU]** In Adapty: create an **Access Level** named `premium`.
+- [ ] **[YOU]** In Adapty: create a **Paywall** named `main_paywall` containing the premium product (add paid pack products later as they are created).
+- [ ] **[YOU]** In Adapty: configure the **Webhook** URL. This will point to the Supabase Edge Function URL (`https://{project}.supabase.co/functions/v1/adapty-webhook?secret={ADAPTY_WEBHOOK_SECRET}`). Set the secret value — note it for the next step.
+- [ ] **[YOU]** In Supabase → Edge Functions → Secrets: add `ADAPTY_WEBHOOK_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`.
+- [ ] **[YOU]** Add `ADAPTY_SDK_KEY` to your app env (get it from Adapty dashboard → App Settings).
+
+**Code — after dashboard is configured:**
+
+- [ ] **[CLAUDE]** Create `src/utils/payments.ts` — `fetchPaywall`, `purchasePremium`, `purchasePack`, `restorePurchases`.
+- [ ] **[CLAUDE]** Create `src/packs/downloaded.ts` — `downloadPack`, `isPackDownloaded`, `loadDownloadedPack` using `react-native-fs`.
+- [ ] **[CLAUDE]** Write and deploy Supabase Edge Function `supabase/functions/adapty-webhook/index.ts` — handles grant/revoke premium events and pack purchase events, writes to `user_entitlements` and calls `add_owned_pack`.
+- [ ] **[YOU]** Use Adapty's sandbox/test mode to trigger a test purchase event. Verify the webhook fires and `user_entitlements` updates in Supabase. Verify PowerSync syncs the change to the device and entitlements update in-app without a restart.
+
+---
+
+### Phase 8: Navigation
+
+- [ ] **[CLAUDE]** Rewrite `src/navigation.tsx` with the React Navigation v7 typed static API — all 5 screens (Home, Library, Puzzle, Streaks, Account), fully typed params, global type augmentation.
+- [ ] **[YOU]** Confirm all existing screens still render and navigation between them works.
+
+---
+
+### Phase 9: Rendering (Skia Canvas)
+
+- [ ] **[CLAUDE]** Create `src/components/PuzzleCanvas.tsx` — single Skia canvas replacing `BoardView`, `CellView`, `CellGridSvg`, and `RegionBordersSvg`. Renders region fills, inner grid, region borders, star marks, X marks, hint ghosts.
+- [ ] **[CLAUDE]** Update `src/hooks/useDrawGesture.ts` for GH v3 — `activateAfterLongPress(300)`, new hooks API, worklet-safe coordinate math.
+- [ ] **[CLAUDE]** Update `src/hooks/useZoom.ts` for GH v3 — update pinch + pan syntax, keep spring physics and boundary clamping.
+- [ ] **[CLAUDE]** Update `src/utils/haptics.ts` — switch to `react-native-nitro-haptics` with `NitroModules.box(Haptics)` for worklet use.
+- [ ] **[CLAUDE]** Delete `src/components/BoardView.tsx`, `CellView.tsx`, `CellGridSvg.tsx`, `RegionBordersSvg.tsx`.
+- [ ] **[YOU]** Play a full puzzle. Verify: region colors, borders, grid lines, star placement, X marks, auto-marks, error highlighting, hint ghosts, pinch-zoom, drag-to-mark, haptics.
+
+---
+
+### Phase 10: Screens
+
+- [ ] **[CLAUDE]** Rewrite `src/screens/HomeScreen.tsx` — header with streak + account buttons, continue card (if in-progress puzzle), Daily/Weekly/Monthly streak cards, scrollable pack list (free + paid from catalog), lock state driven by entitlementsStore.
+- [ ] **[CLAUDE]** Rename `PackScreen.tsx` → `LibraryScreen.tsx`. Update to read completion per puzzle from PowerSync, use `canPlayPuzzle` for lock state, show paywall on locked tap.
+- [ ] **[CLAUDE]** Update `src/screens/PuzzleScreen.tsx` — replace BoardView with PuzzleCanvas, make `loadPuzzle` async, save progress on `beforeRemove` event, remove 5-second interval autosave.
+- [ ] **[CLAUDE]** Create `src/screens/StreaksScreen.tsx` — streak counts for daily/weekly/monthly, past archive list (premium only), premium upsell teaser for non-premium.
+- [ ] **[CLAUDE]** Create `src/screens/AccountScreen.tsx` — sign-up/sign-in (anonymous state), signed-in state with entitlements, buy premium, restore purchases, sign out, settings toggles (replaces SettingsModal).
+- [ ] **[CLAUDE]** Create `src/components/PaywallModal.tsx` — context-aware with the 4 scenarios: sequential lock, paid pack (no account), paid pack (has account), premium CTA.
+- [ ] **[YOU]** Walk through all screen flows: home → library → puzzle → win → next, home → streaks, home → account → sign up, paywall scenarios for each lock type.
+
+---
+
+### Phase 11: Streak System Update
+
+- [ ] **[CLAUDE]** Update `recordStreak` in `src/store.ts` (or extract to `src/utils/streakActions.ts`) — write via `saveStreak` (PowerSync) instead of MMKV.
+- [ ] **[CLAUDE]** Add `getArchivePuzzleId` and `getPastArchive` to `src/utils/streakDate.ts` — query `streak_archive` from local SQLite.
+- [ ] **[CLAUDE]** Wire `getPastArchive` into `StreaksScreen` to render the past puzzle list for premium users.
+- [ ] **[YOU]** Complete a daily puzzle. Verify streak counter increments and persists after app restart.
+
+---
+
+### Phase 12: Pack Loading
+
+- [ ] **[CLAUDE]** Rewrite `src/packs/index.ts` — `refreshFreePacks` (background download from Supabase Storage), `downloadPaidPack`, `getPuzzlesForPack` (downloaded → bundled fallback priority).
+- [ ] **[CLAUDE]** Call `refreshFreePacks` in `App.tsx` after PowerSync connects (fire-and-forget).
+- [ ] **[YOU]** Upload the 9 free pack JSON files to Supabase Storage bucket `packs/` at paths matching pack IDs (e.g. `5x5-normal.json`). These files should already exist in the beta `packs/` folder — rename them to match the new IDs as needed.
+- [ ] **[YOU]** Verify `refreshFreePacks` downloads and overwrites local copies on app startup. Verify `getPuzzlesForPack` returns puzzles correctly for a free pack.
+
+---
+
+### Phase 13: Error Boundaries
+
+- [ ] **[CLAUDE]** Create `src/components/ErrorBoundary.tsx` — class component with `getDerivedStateFromError`, "Try Again" fallback UI.
+- [ ] **[CLAUDE]** Wrap `PuzzleScreen`, `HomeScreen`, and `LibraryScreen` with `<ErrorBoundary>`.
+- [ ] **[CLAUDE]** Add input validation to `src/utils/parsePuzzle.ts` — validate SBN header format, region letter range, and array lengths before parsing.
+
+---
+
+### Admin Data Pipeline
+
+Do this before launch to seed all puzzle content.
+
+**Free packs (9 libraries):**
+
+- [ ] **[YOU]** Confirm you have `.sbn` files for all 9 free pack libraries and the daily/weekly/monthly streak packs.
+- [ ] **[CLAUDE]** Write an admin ingestion script (`scripts/ingest-pack.ts`) that: reads a `.sbn` file → calls the Rust generator at `github.com/masonomara/star-battle` for each puzzle to get solution + hints → formats as `RawPuzzle[]` → writes `{packId}.json` → uploads to Supabase Storage → upserts the `packs` row.
+- [ ] **[YOU]** Run `ingest-pack.ts` for each of the 9 free libraries. Verify each JSON appears in Supabase Storage and the `packs` table row is correct.
+- [ ] **[YOU]** Commit the generated JSON files to the repo as the bundled offline fallback.
+
+**Streak archive:**
+
+- [ ] **[CLAUDE]** Write a streak archive assignment script (`scripts/assign-streak-dates.ts`) that: reads a streak `.sbn` file (daily/weekly/monthly) → generates puzzle JSON via the Rust generator → inserts `streak_archive` rows assigning each puzzle a sequential `date_key` starting from a given start date.
+- [ ] **[YOU]** Choose start dates for daily, weekly, and monthly archives.
+- [ ] **[YOU]** Run `assign-streak-dates.ts` for each type. Verify rows appear in `streak_archive` with correct `date_key` values.
+- [ ] **[YOU]** Confirm that only past-dated puzzles appear in the StreaksScreen archive for a premium test account.
+
+**Paid packs (if any at launch):**
+
+- [ ] **[YOU]** For each paid pack: create the App Store in-app purchase in App Store Connect. Create the corresponding Adapty product. Add it to the `main_paywall`.
+- [ ] **[CLAUDE]** Add the paid pack products to the ingestion script and run for each paid pack.
+- [ ] **[YOU]** Verify the paid pack appears as locked (with price) in HomeScreen, paywall triggers correctly on tap, purchase flow works in sandbox.
+
+---
+
+### Apple Sign In Setup
+
+Do this when AccountScreen is ready (after Phase 10).
+
+- [ ] **[YOU]** In Apple Developer portal: enable Sign In with Apple capability for the app's App ID.
+- [ ] **[YOU]** In Supabase dashboard under Authentication → Providers → Apple: enter your Services ID, Team ID, Key ID, and private key. Save.
+- [ ] **[YOU]** In Xcode: add the Sign In with Apple entitlement to the target.
+- [ ] **[YOU]** Test Apple Sign In on a physical device (Sign In with Apple does not work in the simulator). Verify the anonymous session is upgraded to a full account and progress carries over.
+
+---
+
+### Polish & Pre-Launch
+
+These are judgment calls that belong to you, with Claude available to implement specific changes you decide on.
+
+- [ ] **[YOU]** Review all screen designs. Decide on spacing, typography, color adjustments for light and dark mode.
+- [ ] **[YOU]** Decide on transition animations between screens (native-stack defaults vs. custom).
+- [ ] **[YOU]** Write final copy for PaywallModal, AccountScreen, and onboarding-adjacent text.
+- [ ] **[YOU]** Design and export the app icon and launch screen.
+- [ ] **[CLAUDE]** Implement any specific visual polish changes you specify after review.
+- [ ] **[CLAUDE]** Wire up any remaining `useTheme` tokens that don't yet adapt to dark mode.
+- [ ] **[YOU]** Offline testing: enable airplane mode, complete a puzzle, re-enable network, verify sync. Test on a second device with the same account.
+- [ ] **[YOU]** Final App Store Connect submission: screenshots, description, review notes, build upload.
