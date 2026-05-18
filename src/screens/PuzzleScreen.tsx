@@ -21,7 +21,19 @@ import { useDrawGesture } from '../hooks/useDrawGesture';
 import { getCurrentKey, getPuzzleIndex } from '../utils/streakDate';
 import type { StreakType } from '../types/state';
 
-export function PuzzleScreen({ route, navigation }: any) {
+export function PuzzleScreen({
+  route,
+  navigation,
+}: {
+  route: {
+    params: {
+      packId?: string;
+      puzzleIndex?: number;
+      streakType?: string;
+    };
+  };
+  navigation: { goBack: () => void };
+}) {
   const { packId, puzzleIndex, streakType } = route.params;
 
   const { rawPuzzle, puzzleId, gridSize, packName, isLastPuzzle } = (() => {
@@ -38,12 +50,13 @@ export function PuzzleScreen({ route, navigation }: any) {
       };
     }
     const pack = packs.find(p => p.id === packId)!;
+    const idx = puzzleIndex ?? 0;
     return {
-      rawPuzzle: pack.puzzles[puzzleIndex],
-      puzzleId: `${packId}:${puzzleIndex}`,
+      rawPuzzle: pack.puzzles[idx],
+      puzzleId: `${packId}:${idx}`,
       gridSize: pack.gridSize,
       packName: pack.name,
-      isLastPuzzle: puzzleIndex >= pack.puzzles.length - 1,
+      isLastPuzzle: idx >= pack.puzzles.length - 1,
     };
   })();
 
@@ -159,11 +172,11 @@ export function PuzzleScreen({ route, navigation }: any) {
         <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
       )}
       <WinBanner
-        packId={packId}
-        puzzleIndex={puzzleIndex}
+        packId={packId ?? ''}
+        puzzleIndex={puzzleIndex ?? 0}
         packName={packName}
         isLastPuzzle={isLastPuzzle}
-        streakType={streakType}
+        streakType={streakType as StreakType | undefined}
       />
     </View>
   );

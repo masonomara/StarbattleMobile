@@ -22,7 +22,7 @@ export type Theme = {
   fontSizeSm: number;
   fontSizeMd: number;
   fontSizeLg: number;
-  fontWeightSemibold: '700';
+  fontWeightSemibold: '600';
   cellSize: number;
 };
 

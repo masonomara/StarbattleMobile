@@ -18,13 +18,16 @@ function PuzzleCell({
   packId: string;
   index: number;
   onPress: (index: number) => void;
-  styles: any;
+  styles: ReturnType<typeof createStyles>;
   theme: Theme;
 }) {
   const puzzleId = `${packId}:${index}`;
-  const isCompleted = useUserStore(s => s.progress.completedPuzzles.has(puzzleId));
+  const isCompleted = useUserStore(s =>
+    s.progress.completedPuzzles.has(puzzleId),
+  );
   const prevCompleted = useUserStore(
-    s => index === 0 || s.progress.completedPuzzles.has(`${packId}:${index - 1}`),
+    s =>
+      index === 0 || s.progress.completedPuzzles.has(`${packId}:${index - 1}`),
   );
 
   const status: 'completed' | 'active' | 'locked' = isCompleted
@@ -64,7 +67,16 @@ function PuzzleCell({
   );
 }
 
-export function PackScreen({ route, navigation }: any) {
+export function LibraryScreen({
+  route,
+  navigation,
+}: {
+  route: { params: { packId: string } };
+  navigation: {
+    goBack: () => void;
+    navigate: (screen: string, params: object) => void;
+  };
+}) {
   const { packId } = route.params;
   const pack = packs.find(p => p.id === packId);
   const theme = useTheme();
@@ -138,7 +150,7 @@ const createStyles = (theme: Theme) =>
       position: 'absolute',
       opacity: 0.3,
     },
-    puzzleNumber: { fontSize: 18, fontWeight: 700 },
+    puzzleNumber: { fontSize: 18, fontWeight: '700' },
     puzzleNumberCompleted: { color: theme.accent },
     puzzleNumberActive: { color: theme.text },
     puzzleNumberLocked: { color: theme.textSecondary },
@@ -160,7 +172,7 @@ const createStyles = (theme: Theme) =>
     headerTitle: {
       fontSize: 16,
       fontVariant: ['tabular-nums'],
-      fontWeight: 600,
+      fontWeight: '600',
       color: theme.text,
     },
   });

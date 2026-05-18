@@ -31,7 +31,10 @@ export function WinBanner({
   });
   const theme = useTheme();
   const styles = createStyles(theme);
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<{
+    goBack: () => void;
+    replace: (screen: string, params: object) => void;
+  }>();
 
   const [bannerHeight, setBannerHeight] = useState(0);
   const bannerTranslateY = useRef(new Animated.Value(0)).current;
@@ -82,8 +85,8 @@ export function WinBanner({
   const buttonLabel = streakType
     ? 'Back to Home'
     : isLastPuzzle
-      ? `Back to ${packName || 'Pack'}`
-      : 'Next Puzzle';
+    ? `Back to ${packName || 'Pack'}`
+    : 'Next Puzzle';
 
   return (
     <Animated.View

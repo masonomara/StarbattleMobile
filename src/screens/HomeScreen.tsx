@@ -17,7 +17,11 @@ const STREAK_LABELS: Record<StreakType, string> = {
   monthly: 'Monthly',
 };
 
-export function HomeScreen({ navigation }: any) {
+export function HomeScreen({
+  navigation,
+}: {
+  navigation: { navigate: (screen: string, params?: object) => void };
+}) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets);
@@ -67,7 +71,7 @@ export function HomeScreen({ navigation }: any) {
           <Pressable
             key={pack.id}
             style={styles.packCard}
-            onPress={() => navigation.navigate('Pack', { packId: pack.id })}
+            onPress={() => navigation.navigate('Library', { packId: pack.id })}
           >
             <View style={styles.packInfo}>
               <Text style={styles.packName}>{pack.name}</Text>
@@ -85,7 +89,7 @@ export function HomeScreen({ navigation }: any) {
   );
 }
 
-const createStyles = (theme: Theme, insets: any) =>
+const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
     scrollContent: {

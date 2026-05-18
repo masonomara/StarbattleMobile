@@ -1,8 +1,16 @@
-import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import { Haptics } from 'react-native-nitro-haptics';
+import { NitroModules } from 'react-native-nitro-modules';
 
-export const hapticLight = () =>
-  ReactNativeHapticFeedback.trigger('impactLight');
-export const hapticMedium = () =>
-  ReactNativeHapticFeedback.trigger('impactMedium');
-export const hapticSuccess = () =>
-  ReactNativeHapticFeedback.trigger('notificationSuccess');
+export const boxedHaptics = NitroModules.box(Haptics);
+
+export function hapticLight(): void {
+  Haptics.impact('light');
+}
+
+export function hapticSuccess(): void {
+  Haptics.notification('success');
+}
+
+export function hapticMedium(): void {
+  Haptics.impact('medium');
+}
