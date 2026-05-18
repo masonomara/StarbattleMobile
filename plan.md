@@ -2261,15 +2261,15 @@ These must be done before any code is written.
 - [x] **[CLAUDE]** Restructure `src/` to match the Phase 0.2 directory layout. Create empty placeholder files for every new module so imports resolve.
 - [x] **[CLAUDE]** Update `src/types/state.ts` — remove `ProgressState` and `UserState`, add new types per Phase 0.3.
 - [x] **[CLAUDE]** Create `src/types/user.ts` with `UserRole`, `Entitlements`, and `PackCatalogItem`.
-- [ ] **[YOU]** Run `pod install` in `ios/` then verify the app builds and launches (even with placeholder screens) after package changes.
+- [x] **[YOU]** Run `pod install` in `ios/` then verify the app builds and launches (even with placeholder screens) after package changes.
 
 ---
 
 ### Phase 1: Supabase Schema
 
-- [ ] **[YOU]** In the Supabase SQL editor: run the full migration from Phase 1 — all `CREATE TABLE` statements, RLS policies, the `handle_new_user` trigger, the `add_owned_pack` RPC, and the free pack seed `INSERT`.
-- [ ] **[YOU]** Verify in the Supabase Table Editor that all tables exist: `packs`, `puzzle_progress`, `streaks`, `user_entitlements`, `adapty_events`, `streak_archive`.
-- [ ] **[YOU]** Confirm the 9 free pack rows are present in the `packs` table.
+- [x] **[YOU]** In the Supabase SQL editor: run the full migration from Phase 1 — all `CREATE TABLE` statements, RLS policies, the `handle_new_user` trigger, the `add_owned_pack` RPC, and the free pack seed `INSERT`.
+- [x] **[YOU]** Verify in the Supabase Table Editor that all tables exist: `packs`, `puzzle_progress`, `streaks`, `user_entitlements`, `adapty_events`, `streak_archive`.
+- [x] **[YOU]** Confirm the 9 free pack rows are present in the `packs` table.
 
 ---
 
