@@ -1,11 +1,33 @@
 import { create } from 'zustand';
+import { getSettings, saveSettings } from '../storage';
 import type { UserSettings } from '../types/state';
-import { getSettings } from '../storage';
+import { usePuzzleStore } from '../store';
 
 type SettingsState = {
   settings: UserSettings;
+  initialize: () => void;
+  updateSettings: (update: Partial<UserSettings>) => void;
 };
 
-export const useSettingsStore = create<SettingsState>(() => ({
+export const useSettingsStore = create<SettingsState>(set => ({
   settings: getSettings(),
+
+  initialize: () => {
+    set({ settings: getSettings() });
+  },
+
+  updateSettings: update => {
+    saveSettings(update);
+    set(state => {
+      const next = { ...state.settings, ...update };
+      const autoXChanged =
+        'autoXNeighbors' in update ||
+        'autoXRowsCols' in update ||
+        'autoXRegions' in update;
+      if (autoXChanged) {
+        usePuzzleStore.getState().recomputeAutoMarks();
+      }
+      return { settings: next };
+    });
+  },
 }));
