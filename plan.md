@@ -557,6 +557,12 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
 
 ### 2.5 Supabase Client
 
+> **Config approach:** This project uses `src/config.ts` (exported constants) for
+> all credentials and URLs. `process.env` is NOT used — React Native has no
+> runtime env mechanism without a babel plugin. All `process.env.X!` references
+> in this plan should be read as named imports from `'../config'` (or `'./src/config'`
+> from the root). The actual source files already reflect this.
+
 ```typescript
 // src/supabase/client.ts
 import { createClient } from '@supabase/supabase-js';
@@ -1173,6 +1179,15 @@ export async function restorePurchases(): Promise<void> {
 ```
 
 ### 7.3 Pack Download from Supabase Storage
+
+> **[STUB — IMPLEMENT BEFORE SHIP]** `src/packs/downloaded.ts` is currently a
+> stub returning `null`/`false`. To make it functional, install `react-native-fs`:
+> ```bash
+> npm install react-native-fs && cd ios && pod install
+> ```
+> Then replace the stub body with the full implementation shown below.
+> The `downloadPack()` call in `purchasePack()` (Phase 7.2) will silently
+> no-op until this is done.
 
 ```typescript
 // src/packs/downloaded.ts
@@ -2258,57 +2273,57 @@ These must be done before any code is written.
 
 ### Phase 0: Foundation
 
-- [x] **[CLAUDE]** Remove `react-native-svg` and `react-native-haptic-feedback`. Install all new packages per the Phase 0 package list. Run `pod install`.
-- [x] **[CLAUDE]** Restructure `src/` to match the Phase 0.2 directory layout. Create empty placeholder files for every new module so imports resolve.
-- [x] **[CLAUDE]** Update `src/types/state.ts` — remove `ProgressState` and `UserState`, add new types per Phase 0.3.
-- [x] **[CLAUDE]** Create `src/types/user.ts` with `UserRole`, `Entitlements`, and `PackCatalogItem`.
-- [x] **[YOU]** Run `pod install` in `ios/` then verify the app builds and launches (even with placeholder screens) after package changes.
+- [ ] **[CLAUDE]** Remove `react-native-svg` and `react-native-haptic-feedback`. Install all new packages per the Phase 0 package list. Run `pod install`.
+- [ ] **[CLAUDE]** Restructure `src/` to match the Phase 0.2 directory layout. Create empty placeholder files for every new module so imports resolve.
+- [ ] **[CLAUDE]** Update `src/types/state.ts` — remove `ProgressState` and `UserState`, add new types per Phase 0.3.
+- [ ] **[CLAUDE]** Create `src/types/user.ts` with `UserRole`, `Entitlements`, and `PackCatalogItem`.
+- [ ] **[YOU]** Run `pod install` in `ios/` then verify the app builds and launches (even with placeholder screens) after package changes.
 
 ---
 
 ### Phase 1: Supabase Schema
 
-- [x] **[YOU]** In the Supabase SQL editor: run the full migration from Phase 1 — all `CREATE TABLE` statements, RLS policies, the `handle_new_user` trigger, the `add_owned_pack` RPC, and the free pack seed `INSERT`.
-- [x] **[YOU]** Verify in the Supabase Table Editor that all tables exist: `packs`, `puzzle_progress`, `streaks`, `user_entitlements`, `adapty_events`, `streak_archive`.
-- [x] **[YOU]** Confirm the 9 free pack rows are present in the `packs` table.
+- [ ] **[YOU]** In the Supabase SQL editor: run the full migration from Phase 1 — all `CREATE TABLE` statements, RLS policies, the `handle_new_user` trigger, the `add_owned_pack` RPC, and the free pack seed `INSERT`.
+- [ ] **[YOU]** Verify in the Supabase Table Editor that all tables exist: `packs`, `puzzle_progress`, `streaks`, `user_entitlements`, `adapty_events`, `streak_archive`.
+- [ ] **[YOU]** Confirm the 9 free pack rows are present in the `packs` table.
 
 ---
 
 ### Phase 2: PowerSync Setup
 
-- [x] **[YOU]** In the PowerSync dashboard: deploy `sync-rules.yaml` from Phase 2.1. Confirm it validates without errors.
-- [x] **[YOU]** Copy the PowerSync instance URL. Add it to your env as `POWERSYNC_URL`.
-- [x] **[CLAUDE]** Create `src/powersync/AppSchema.ts` with the full client SQLite schema (packs, puzzle_progress, streaks, user_entitlements, streak_archive).
-- [x] **[CLAUDE]** Create `src/powersync/database.ts` — PowerSync singleton using op-sqlite.
-- [x] **[CLAUDE]** Create `src/powersync/Connector.ts` — `SupabaseConnector` with `fetchCredentials` and `uploadData`.
-- [x] **[CLAUDE]** Create `src/supabase/client.ts` — Supabase JS client with MMKV auth storage adapter.
-- [x] **[CLAUDE]** Update `App.tsx` — initialize sequence: Adapty → settings → auth → PowerSync connect.
+- [ ] **[YOU]** In the PowerSync dashboard: deploy `sync-rules.yaml` from Phase 2.1. Confirm it validates without errors.
+- [ ] **[YOU]** Copy the PowerSync instance URL. Add it to your env as `POWERSYNC_URL`.
+- [ ] **[CLAUDE]** Create `src/powersync/AppSchema.ts` with the full client SQLite schema (packs, puzzle_progress, streaks, user_entitlements, streak_archive).
+- [ ] **[CLAUDE]** Create `src/powersync/database.ts` — PowerSync singleton using op-sqlite.
+- [ ] **[CLAUDE]** Create `src/powersync/Connector.ts` — `SupabaseConnector` with `fetchCredentials` and `uploadData`.
+- [ ] **[CLAUDE]** Create `src/supabase/client.ts` — Supabase JS client with MMKV auth storage adapter.
+- [ ] **[CLAUDE]** Update `App.tsx` — initialize sequence: Adapty → settings → auth → PowerSync connect.
 - [ ] **[YOU]** Launch app, confirm PowerSync connects without error (check console logs).
 
 ---
 
 ### Phase 3: Auth Store
 
-- [x] **[YOU]** In Supabase dashboard under Authentication → Providers: confirm Anonymous is enabled (already done in pre-setup). No additional configuration needed for anonymous auth.
-- [x] **[CLAUDE]** Create `src/stores/authStore.ts` — anonymous-first, Apple Sign In, email sign-up/sign-in, sign-out, anon→account upgrade, Adapty identify.
-- [x] **[CLAUDE]** Wire `authStore.initialize()` into `App.tsx` startup sequence.
+- [ ] **[YOU]** In Supabase dashboard under Authentication → Providers: confirm Anonymous is enabled (already done in pre-setup). No additional configuration needed for anonymous auth.
+- [ ] **[CLAUDE]** Create `src/stores/authStore.ts` — anonymous-first, Apple Sign In, email sign-up/sign-in, sign-out, anon→account upgrade, Adapty identify.
+- [ ] **[CLAUDE]** Wire `authStore.initialize()` into `App.tsx` startup sequence.
 - [ ] **[YOU]** Run app. Verify an anonymous session is created on first launch and persists across restarts (check Supabase Auth → Users for the anonymous user row).
 
 ---
 
 ### Phase 4: Entitlements Store
 
-- [x] **[CLAUDE]** Create `src/stores/entitlementsStore.ts` — reads `user_entitlements` and `packs` from local SQLite, exposes `hasPackAccess`, `canPlayPuzzle`, `canPlayPack`.
-- [x] **[CLAUDE]** Wire `db.watch` on `user_entitlements` in `App.tsx` to reload entitlements on any sync update.
-- [x] **[CLAUDE]** Create `src/hooks/useEntitlements.ts` — convenience hook over entitlementsStore for component use.
+- [ ] **[CLAUDE]** Create `src/stores/entitlementsStore.ts` — reads `user_entitlements` and `packs` from local SQLite, exposes `hasPackAccess`, `canPlayPuzzle`, `canPlayPack`.
+- [ ] **[CLAUDE]** Wire `db.watch` on `user_entitlements` in `App.tsx` to reload entitlements on any sync update.
+- [ ] **[CLAUDE]** Create `src/hooks/useEntitlements.ts` — convenience hook over entitlementsStore for component use.
 
 ---
 
 ### Phase 5: Settings Store
 
-- [x] **[CLAUDE]** Create `src/stores/settingsStore.ts` — MMKV-backed settings, extracted from the old `userStore.ts`.
+- [ ] **[CLAUDE]** Create `src/stores/settingsStore.ts` — MMKV-backed settings, extracted from the old `userStore.ts`.
 - [ ] **[CLAUDE]** Update `src/storage.ts` — strip out progress and streak functions (those move to PowerSync), keep only settings get/set.
-- [x] **[CLAUDE]** Wire `settingsStore.initialize()` into `App.tsx` startup (before auth).
+- [ ] **[CLAUDE]** Wire `settingsStore.initialize()` into `App.tsx` startup (before auth).
 
 ---
 
