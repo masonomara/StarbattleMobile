@@ -3,11 +3,11 @@ import { Animated, Text, Pressable, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { usePuzzleStore } from '../store';
-import { useUserStore } from '../stores/userStore';
-import { formatTime } from '../utils/formatTime';
+import { loadStreaks, recordStreak } from '../utils/progress';
 import { getActiveStreak } from '../utils/streakDate';
+import { formatTime } from '../utils/formatTime';
 import { useTheme, type Theme } from '../hooks/useTheme';
-import type { StreakType } from '../types/state';
+import type { StreakType, Streak } from '../types/state';
 
 export function WinBanner({
   packId,
@@ -24,11 +24,6 @@ export function WinBanner({
 }) {
   const completed = usePuzzleStore(s => s.completed);
   const timeMs = usePuzzleStore(s => s.timeMs);
-  const streak = useUserStore(s => {
-    if (!streakType) return 0;
-    const found = s.streaks.find(st => st.type === streakType);
-    return found ? getActiveStreak(found, streakType) : 0;
-  });
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation = useNavigation<{
@@ -36,6 +31,7 @@ export function WinBanner({
     replace: (screen: string, params: object) => void;
   }>();
 
+  const [streakCount, setStreakCount] = useState(0);
   const [bannerHeight, setBannerHeight] = useState(0);
   const bannerTranslateY = useRef(new Animated.Value(0)).current;
 
@@ -44,9 +40,21 @@ export function WinBanner({
   };
 
   useEffect(() => {
-    if (completed && streakType) {
-      useUserStore.getState().recordStreak(streakType);
+    if (!completed || !streakType) return;
+    async function handleStreakCompletion() {
+      await recordStreak(streakType!);
+      const rawStreaks = await loadStreaks();
+      const found = rawStreaks.find(s => s.type === streakType);
+      if (found) {
+        const mapped: Streak = {
+          type: streakType!,
+          current: found.currentCount,
+          lastCompletedKey: found.lastCompletedKey,
+        };
+        setStreakCount(getActiveStreak(mapped, streakType!));
+      }
     }
+    handleStreakCompletion();
   }, [completed, streakType]);
 
   useEffect(() => {
@@ -71,7 +79,7 @@ export function WinBanner({
     : `${packName} #${puzzleIndex + 1}`;
 
   const headline = streakType
-    ? `Streak: ${streak}`
+    ? `Streak: ${streakCount}`
     : `Solved in ${formatTime(timeMs)}`;
 
   const handlePress = () => {

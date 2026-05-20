@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { packs, streakPacks } from '../packs';
-import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
 import { SettingsButton } from '../components/SettingsButton';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { getCurrentKey, getActiveStreak } from '../utils/streakDate';
-import type { StreakType } from '../types/state';
+import { loadStreaks, getCompletedCountForPack, loadProgress } from '../utils/progress';
+import type { StreakType, Streak } from '../types/state';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
@@ -25,9 +25,39 @@ export function HomeScreen({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets);
-  const completedPerPack = useUserStore(s => s.progress.completedPerPack);
-  const streaks = useUserStore(s => s.streaks);
-  const completedPuzzles = useUserStore(s => s.progress.completedPuzzles);
+
+  const [completedPerPack, setCompletedPerPack] = useState<Record<string, number>>({});
+  const [streaks, setStreaks] = useState<Streak[]>([]);
+  const [completedPuzzleIds, setCompletedPuzzleIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    async function load() {
+      const rawStreaks = await loadStreaks();
+      setStreaks(
+        rawStreaks.map(r => ({
+          type: r.type as StreakType,
+          current: r.currentCount,
+          lastCompletedKey: r.lastCompletedKey,
+        })),
+      );
+
+      const counts: Record<string, number> = {};
+      for (const pack of packs) {
+        counts[pack.id] = await getCompletedCountForPack(pack.id, pack.puzzles.length);
+      }
+      setCompletedPerPack(counts);
+
+      const completed = new Set<string>();
+      for (const type of STREAK_TYPES) {
+        const key = getCurrentKey(type);
+        const puzzleId = `${type}:${key}`;
+        const prog = await loadProgress(puzzleId);
+        if (prog?.completed) completed.add(puzzleId);
+      }
+      setCompletedPuzzleIds(completed);
+    }
+    load();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -38,7 +68,7 @@ export function HomeScreen({
             const pack = streakPacks[type];
             const key = getCurrentKey(type);
             const puzzleId = `${type}:${key}`;
-            const isCompleted = completedPuzzles.has(puzzleId);
+            const isCompleted = completedPuzzleIds.has(puzzleId);
             const found = streaks.find(s => s.type === type);
             const streakCount = found ? getActiveStreak(found, type) : 0;
 

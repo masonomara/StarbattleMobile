@@ -1,6 +1,7 @@
 import { db } from '../powersync/database';
 import { useAuthStore } from '../stores/authStore';
-import type { CellValue } from '../types/state';
+import { getCurrentKey, getPreviousKey } from './streakDate';
+import type { CellValue, StreakType } from '../types/state';
 
 function rowId(userId: string, puzzleId: string): string {
   return `${userId}:${puzzleId}`;
@@ -125,4 +126,33 @@ export async function loadStreaks(): Promise<
     'SELECT type, current_count as currentCount, last_completed_key as lastCompletedKey FROM streaks WHERE user_id = ?',
     [userId],
   );
+}
+
+export async function getCompletedPuzzleIdsForPack(
+  packId: string,
+  puzzleCount: number,
+): Promise<Set<string>> {
+  const userId = useAuthStore.getState().user?.id;
+  if (!userId) return new Set();
+
+  const ids = Array.from({ length: puzzleCount }, (_, i) => `${packId}:${i}`);
+  const placeholders = ids.map(() => '?').join(',');
+
+  const rows = await db.getAll<{ puzzle_id: string }>(
+    `SELECT puzzle_id FROM puzzle_progress WHERE user_id = ? AND puzzle_id IN (${placeholders}) AND completed = 1`,
+    [userId, ...ids],
+  );
+  return new Set(rows.map(r => r.puzzle_id));
+}
+
+export async function recordStreak(type: StreakType): Promise<void> {
+  const currentKey = getCurrentKey(type);
+  const streaks = await loadStreaks();
+  const existing = streaks.find(s => s.type === type);
+  if (existing?.lastCompletedKey === currentKey) return;
+  const newCount =
+    existing?.lastCompletedKey === getPreviousKey(type)
+      ? existing.currentCount + 1
+      : 1;
+  await saveStreak(type, newCount, currentKey);
 }

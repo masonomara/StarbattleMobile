@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, FlatList, StyleSheet } from 'react-native';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { packs } from '../packs';
-import { useUserStore } from '../stores/userStore';
 import { Header } from '../components/Header';
 import { SettingsButton } from '../components/SettingsButton';
 import { useTheme, type Theme } from '../hooks/useTheme';
+import { getCompletedPuzzleIdsForPack } from '../utils/progress';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function PuzzleCell({
@@ -14,21 +14,19 @@ function PuzzleCell({
   onPress,
   styles,
   theme,
+  completedSet,
 }: {
   packId: string;
   index: number;
   onPress: (index: number) => void;
   styles: ReturnType<typeof createStyles>;
   theme: Theme;
+  completedSet: Set<string>;
 }) {
   const puzzleId = `${packId}:${index}`;
-  const isCompleted = useUserStore(s =>
-    s.progress.completedPuzzles.has(puzzleId),
-  );
-  const prevCompleted = useUserStore(
-    s =>
-      index === 0 || s.progress.completedPuzzles.has(`${packId}:${index - 1}`),
-  );
+  const isCompleted = completedSet.has(puzzleId);
+  const prevCompleted =
+    index === 0 || completedSet.has(`${packId}:${index - 1}`);
 
   const status: 'completed' | 'active' | 'locked' = isCompleted
     ? 'completed'
@@ -83,6 +81,13 @@ export function LibraryScreen({
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
 
+  const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!pack) return;
+    getCompletedPuzzleIdsForPack(packId, pack.puzzles.length).then(setCompletedSet);
+  }, [packId, pack]);
+
   if (!pack) return null;
 
   return (
@@ -111,6 +116,7 @@ export function LibraryScreen({
             }
             styles={styles}
             theme={theme}
+            completedSet={completedSet}
           />
         )}
         numColumns={5}
