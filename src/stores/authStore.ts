@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from '../supabase/client';
 import { adapty } from 'react-native-adapty';
+import { GOOGLE_WEB_CLIENT_ID } from '../config';
 
 type AuthState = {
   session: Session | null;
@@ -11,6 +13,7 @@ type AuthState = {
   signInAnonymously: () => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signInWithApple: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -20,6 +23,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAnonymous: true,
 
   initialize: async () => {
+    GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -57,6 +62,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
     set({ user: data.user, isAnonymous: false });
     await adapty.identify(data.user.id);
+  },
+
+  signInWithGoogle: async () => {
+    await GoogleSignin.hasPlayServices();
+    const response = await GoogleSignin.signIn();
+    if (!response.data?.idToken) throw new Error('No Google ID token');
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: response.data.idToken,
+    });
+    if (error) throw error;
+    set({ session: data.session, user: data.user, isAnonymous: false });
+    if (data.user) await adapty.identify(data.user.id);
   },
 
   signInWithApple: async () => {
