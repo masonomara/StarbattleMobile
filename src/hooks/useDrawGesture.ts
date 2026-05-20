@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { Gesture } from 'react-native-gesture-handler';
 import { usePuzzleStore } from '../store';
-import { useUserStore } from '../stores/userStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { hapticLight } from '../utils/haptics';
 import type { CellChange } from '../types/state';
 
@@ -73,7 +73,7 @@ export function useDrawGesture(
       });
     }
 
-    const settings = useUserStore.getState().settings;
+    const settings = useSettingsStore.getState().settings;
     if (settings.haptics) hapticLight();
   }, []);
 

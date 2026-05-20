@@ -1,5 +1,5 @@
 import { useColorScheme } from 'react-native';
-import { useUserStore } from '../stores/userStore';
+import { useSettingsStore } from '../stores/settingsStore';
 
 export type Theme = {
   isDark: boolean;
@@ -28,7 +28,7 @@ export type Theme = {
 
 export function useTheme(): Theme {
   const systemScheme = useColorScheme();
-  const themePref = useUserStore(s => s.settings.theme);
+  const themePref = useSettingsStore(s => s.settings.theme);
 
   if (themePref === 'light') return light;
   if (themePref === 'dark') return dark;

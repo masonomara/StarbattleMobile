@@ -6,14 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { Header } from '../components/Header';
 import { SettingsButton } from '../components/SettingsButton';
-import { BoardView } from '../components/BoardView';
+import { PuzzleCanvas } from '../components/PuzzleCanvas';
 import { HeaderTimer } from '../components/HeaderTimer';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { packs, streakPacks } from '../packs';
 import { usePuzzleStore } from '../store';
-import { useUserStore } from '../stores/userStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { saveProgress } from '../utils/progress';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
@@ -67,14 +67,11 @@ export function PuzzleScreen({
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
   const completed = usePuzzleStore(s => s.completed);
-  const hideToolbar = useUserStore(s => s.settings.hideToolbar);
+  const hideToolbar = useSettingsStore(s => s.settings.hideToolbar);
 
   const {
     pinchGesture,
     panGesture,
-    scale,
-    translateX,
-    translateY,
     savedScale,
     savedTranslateX,
     savedTranslateY,
@@ -152,13 +149,7 @@ export function PuzzleScreen({
           ]}
           onLayout={handleBoardAreaLayout}
         >
-          <BoardView
-            puzzle={puzzle}
-            theme={theme}
-            scale={scale}
-            translateX={translateX}
-            translateY={translateY}
-          />
+          <PuzzleCanvas />
         </View>
       </GestureDetector>
       {!hideToolbar && (

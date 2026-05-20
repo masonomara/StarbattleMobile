@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { X } from 'lucide-react-native';
 import { Header } from './Header';
-import { useUserStore } from '../stores/userStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import type { UserSettings } from '../types/state';
 
@@ -46,8 +46,8 @@ function ToggleRow({
 export function SettingsModal({ visible, onClose }: Props) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const settings = useUserStore(s => s.settings);
-  const updateSettings = useUserStore(s => s.updateSettings);
+  const settings = useSettingsStore(s => s.settings);
+  const updateSettings = useSettingsStore(s => s.updateSettings);
 
   return (
     <Modal

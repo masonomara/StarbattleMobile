@@ -11,7 +11,7 @@ import {
 } from 'lucide-react-native';
 import { usePuzzleStore } from '../store';
 import { hapticMedium } from '../utils/haptics';
-import { useUserStore } from '../stores/userStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import type { TapMode } from '../types/state';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,7 +29,7 @@ type Props = {
 export function Toolbar({ isZoomed, onZoomReset }: Props) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const hapticsEnabled = useUserStore(s => s.settings.haptics);
+  const hapticsEnabled = useSettingsStore(s => s.settings.haptics);
   const undo = usePuzzleStore(s => s.undo);
   const redo = usePuzzleStore(s => s.redo);
   const clearBoard = usePuzzleStore(s => s.clearBoard);
