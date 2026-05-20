@@ -24,9 +24,7 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
       data: { session },
       error,
     } = await supabase.auth.getSession();
-    console.log('[connector] session:', session?.user?.id ?? 'null', error?.message ?? '');
     if (error || !session) throw new Error('No active session');
-    console.log('[connector] endpoint:', POWERSYNC_URL);
     return {
       endpoint: POWERSYNC_URL,
       token: session.access_token,

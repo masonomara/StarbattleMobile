@@ -2273,11 +2273,11 @@ These must be done before any code is written.
 
 ### Phase 0: Foundation
 
-- [ ] **[CLAUDE]** Remove `react-native-svg` and `react-native-haptic-feedback`. Install all new packages per the Phase 0 package list. Run `pod install`.
-- [ ] **[CLAUDE]** Restructure `src/` to match the Phase 0.2 directory layout. Create empty placeholder files for every new module so imports resolve.
-- [ ] **[CLAUDE]** Update `src/types/state.ts` — remove `ProgressState` and `UserState`, add new types per Phase 0.3.
-- [ ] **[CLAUDE]** Create `src/types/user.ts` with `UserRole`, `Entitlements`, and `PackCatalogItem`.
-- [ ] **[YOU]** Run `pod install` in `ios/` then verify the app builds and launches (even with placeholder screens) after package changes.
+- [x] **[CLAUDE]** Remove `react-native-svg` and `react-native-haptic-feedback`. Install all new packages per the Phase 0 package list. Run `pod install`.
+- [x] **[CLAUDE]** Restructure `src/` to match the Phase 0.2 directory layout. Create empty placeholder files for every new module so imports resolve.
+- [x] **[CLAUDE]** Update `src/types/state.ts` — remove `ProgressState` and `UserState`, add new types per Phase 0.3.
+- [x] **[CLAUDE]** Create `src/types/user.ts` with `UserRole`, `Entitlements`, and `PackCatalogItem`.
+- [x] **[YOU]** Run `pod install` in `ios/` then verify the app builds and launches (even with placeholder screens) after package changes.
 
 ---
 

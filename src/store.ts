@@ -382,20 +382,3 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     set(state => ({ timeMs: state.timeMs + 1000 }));
   },
 }));
-
-let prevAutoX = {
-  n: useSettingsStore.getState().settings.autoXNeighbors,
-  rc: useSettingsStore.getState().settings.autoXRowsCols,
-  rg: useSettingsStore.getState().settings.autoXRegions,
-};
-useSettingsStore.subscribe(state => {
-  const {
-    autoXNeighbors: n,
-    autoXRowsCols: rc,
-    autoXRegions: rg,
-  } = state.settings;
-  if (n !== prevAutoX.n || rc !== prevAutoX.rc || rg !== prevAutoX.rg) {
-    prevAutoX = { n, rc, rg };
-    usePuzzleStore.getState().recomputeAutoMarks();
-  }
-});
