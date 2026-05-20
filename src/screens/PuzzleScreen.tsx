@@ -14,7 +14,7 @@ import { parsePuzzle } from '../utils/parsePuzzle';
 import { packs, streakPacks } from '../packs';
 import { usePuzzleStore } from '../store';
 import { useUserStore } from '../stores/userStore';
-import { persistProgress } from '../utils/persistProgress';
+import { saveProgress } from '../utils/progress';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
@@ -117,14 +117,7 @@ export function PuzzleScreen({
     const persistTime = () => {
       const state = usePuzzleStore.getState();
       if (!state.completed && state.puzzle) {
-        persistProgress(
-          state.puzzle,
-          state.cells,
-          state.autoMarks,
-          state.timeMs,
-          state.completed,
-          false,
-        );
+        saveProgress(state.puzzle.id, state.cells, state.autoMarks, state.timeMs, false);
       }
     };
     const id = setInterval(persistTime, 5000);

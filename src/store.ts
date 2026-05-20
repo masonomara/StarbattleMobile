@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { hapticLight, hapticSuccess } from './utils/haptics';
-import { useUserStore } from './stores/userStore';
+import { useSettingsStore } from './stores/settingsStore';
 import {
   computeAutoXForStar,
   applyMarks,
@@ -8,8 +8,7 @@ import {
   computeErrors,
   checkWin,
 } from './utils/puzzleLogic';
-import { persistProgress } from './utils/persistProgress';
-import { getProgress } from './storage';
+import { loadProgress, saveProgress } from './utils/progress';
 import type { CellValue, Move, CellChange, TapMode } from './types/state';
 import type { Puzzle } from './types/puzzle';
 
@@ -25,7 +24,7 @@ type PuzzleState = {
   tapMode: TapMode;
   hintGhosts: Map<number, 'star' | 'mark'>;
   hintStepIndex: number;
-  loadPuzzle: (puzzle: Puzzle) => void;
+  loadPuzzle: (puzzle: Puzzle) => Promise<void>;
   tapCell: (row: number, col: number) => void;
   cycleTapMode: () => void;
   recomputeAutoMarks: () => void;
@@ -51,9 +50,9 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   hintGhosts: new Map<number, 'star' | 'mark'>(),
   hintStepIndex: -1,
 
-  loadPuzzle: (puzzle: Puzzle) => {
+  loadPuzzle: async (puzzle: Puzzle) => {
     const total = puzzle.size * puzzle.size;
-    const saved = getProgress(puzzle.id);
+    const saved = await loadProgress(puzzle.id);
     set({
       puzzle,
       cells: saved ? saved.cells : new Array<CellValue>(total).fill(0),
@@ -77,7 +76,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     }
 
     const size = puzzle.size;
-    const settings = useUserStore.getState().settings;
+    const settings = useSettingsStore.getState().settings;
     const idx = row * size + col;
     const current = cells[idx];
 
@@ -143,7 +142,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     }
 
     const s = get();
-    persistProgress(s.puzzle, s.cells, s.autoMarks, s.timeMs, s.completed, won);
+    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   cycleTapMode: () => {
@@ -158,7 +157,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     if (!puzzle || completed) return;
 
     const size = puzzle.size;
-    const settings = useUserStore.getState().settings;
+    const settings = useSettingsStore.getState().settings;
     const changes: CellChange[] = [];
     const newCells = [...cells];
     const savedAutoMarks = [...autoMarks];
@@ -181,14 +180,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       redoStack: [],
     }));
     const s = get();
-    persistProgress(
-      s.puzzle,
-      s.cells,
-      s.autoMarks,
-      s.timeMs,
-      s.completed,
-      false,
-    );
+    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   undo: () => {
@@ -215,7 +207,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       newCells[lastMove.changes[i].index] = lastMove.changes[i].prev;
     }
 
-    const settings = useUserStore.getState().settings;
+    const settings = useSettingsStore.getState().settings;
     if (settings.haptics) hapticLight();
 
     const { puzzle } = get();
@@ -232,14 +224,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       redoStack: [...state.redoStack, redoMove],
     }));
     const s = get();
-    persistProgress(
-      s.puzzle,
-      s.cells,
-      s.autoMarks,
-      s.timeMs,
-      s.completed,
-      false,
-    );
+    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   redo: () => {
@@ -266,7 +251,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       newCells[c.index] = c.prev;
     }
 
-    const settings = useUserStore.getState().settings;
+    const settings = useSettingsStore.getState().settings;
     if (settings.haptics) hapticLight();
 
     const { puzzle } = get();
@@ -289,7 +274,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       set({ completed: true });
     }
     const s = get();
-    persistProgress(s.puzzle, s.cells, s.autoMarks, s.timeMs, s.completed, won);
+    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   applyDrawStroke: (changes: CellChange[]) => {
@@ -301,7 +286,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     }
 
     const size = puzzle.size;
-    const settings = useUserStore.getState().settings;
+    const settings = useSettingsStore.getState().settings;
 
     set(state => {
       const newAutoMarks = new Set(state.autoMarks);
@@ -324,14 +309,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     });
 
     const s = get();
-    persistProgress(
-      s.puzzle,
-      s.cells,
-      s.autoMarks,
-      s.timeMs,
-      s.completed,
-      false,
-    );
+    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   clearBoard: () => {
@@ -361,14 +339,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       redoStack: [],
     }));
     const s = get();
-    persistProgress(
-      s.puzzle,
-      s.cells,
-      s.autoMarks,
-      s.timeMs,
-      s.completed,
-      false,
-    );
+    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   showHint: () => {
@@ -413,11 +384,11 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 }));
 
 let prevAutoX = {
-  n: useUserStore.getState().settings.autoXNeighbors,
-  rc: useUserStore.getState().settings.autoXRowsCols,
-  rg: useUserStore.getState().settings.autoXRegions,
+  n: useSettingsStore.getState().settings.autoXNeighbors,
+  rc: useSettingsStore.getState().settings.autoXRowsCols,
+  rg: useSettingsStore.getState().settings.autoXRegions,
 };
-useUserStore.subscribe(state => {
+useSettingsStore.subscribe(state => {
   const {
     autoXNeighbors: n,
     autoXRowsCols: rc,
