@@ -13,6 +13,7 @@ const config = {
         inlineRequires: {
           blockList: {
             [require.resolve('@powersync/react-native')]: true,
+            [require.resolve('@powersync/adapter-sql-js')]: true,
           },
         },
       },
