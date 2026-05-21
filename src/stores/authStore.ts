@@ -60,8 +60,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUpWithEmail: async (email: string, password: string) => {
     const { data, error } = await supabase.auth.updateUser({ email, password });
     if (error) throw error;
-    set({ user: data.user, isAnonymous: false });
-    await adapty.identify(data.user.id);
+    set({ session: data?.session ?? get().session, user: data.user, isAnonymous: false });
+    if (data?.user) await adapty.identify(data.user.id);
   },
 
   signInWithGoogle: async () => {
