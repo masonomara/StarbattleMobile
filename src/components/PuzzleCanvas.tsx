@@ -1,51 +1,118 @@
 import React, { useMemo } from 'react';
+import { View } from 'react-native';
+import { useSettingsStore } from '../stores/settingsStore';
 import {
   Canvas,
-  Rect,
   Path,
   Skia,
-  Group,
-  Circle,
-  Line,
 } from '@shopify/react-native-skia';
 import type { Puzzle } from '../types/puzzle';
 import type { CellValue } from '../types/state';
 import type { Theme } from '../hooks/useTheme';
 
 const REGION_COLORS_LIGHT = [
-  '#E8EAF6',
-  '#E3F2FD',
-  '#E8F5E9',
-  '#FFF8E1',
-  '#FCE4EC',
-  '#F3E5F5',
-  '#E0F7FA',
-  '#FBE9E7',
-  '#F9FBE7',
-  '#EDE7F6',
-  '#E0F2F1',
-  '#FFF3E0',
+  '#E8EAF6', '#E3F2FD', '#E8F5E9', '#FFF8E1', '#FCE4EC', '#F3E5F5',
+  '#E0F7FA', '#FBE9E7', '#F9FBE7', '#EDE7F6', '#E0F2F1', '#FFF3E0',
+];
+const REGION_COLORS_DARK = [
+  '#283593', '#1565C0', '#2E7D32', '#F9A825', '#AD1457', '#6A1B9A',
+  '#00838F', '#BF360C', '#827717', '#4527A0', '#00695C', '#E65100',
 ];
 
-const REGION_COLORS_DARK = [
-  '#283593',
-  '#1565C0',
-  '#2E7D32',
-  '#F9A825',
-  '#AD1457',
-  '#6A1B9A',
-  '#00838F',
-  '#BF360C',
-  '#827717',
-  '#4527A0',
-  '#00695C',
-  '#E65100',
-];
+const NUM_COLORS = REGION_COLORS_LIGHT.length;
+
+// Static background — region fills, grid lines, region borders.
+// Wrapped in React.memo so it never re-renders during gameplay;
+// only rebuilds when the puzzle or theme changes.
+const BackgroundCanvas = React.memo(function BackgroundCanvas({
+  puzzle,
+  theme,
+  canvasSize,
+  coloredRegions,
+}: {
+  puzzle: Puzzle;
+  theme: Theme;
+  canvasSize: number;
+  coloredRegions: boolean;
+}) {
+  const { size, regions } = puzzle;
+  const cs = canvasSize / size;
+  const regionColors = theme.isDark ? REGION_COLORS_DARK : REGION_COLORS_LIGHT;
+
+  const regionFillPaths = useMemo(() => {
+    const builders = new Map<number, ReturnType<typeof Skia.PathBuilder.Make>>();
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
+        const colorIdx = regions[row][col] % NUM_COLORS;
+        if (!builders.has(colorIdx)) {
+          builders.set(colorIdx, Skia.PathBuilder.Make());
+        }
+        builders.get(colorIdx)!.addRect(Skia.XYWHRect(col * cs, row * cs, cs, cs));
+      }
+    }
+    return [...builders.entries()].map(([colorIdx, b]) => ({
+      colorIdx,
+      path: b.detach(),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puzzle.id, canvasSize]);
+
+  const regionBorderPath = useMemo(() => {
+    const b = Skia.PathBuilder.Make();
+    for (let row = 0; row <= size; row++) {
+      for (let col = 0; col < size; col++) {
+        const isEdge = row === 0 || row === size;
+        const isBoundary = !isEdge && regions[row - 1][col] !== regions[row][col];
+        if (isEdge || isBoundary) {
+          b.moveTo(col * cs, row * cs);
+          b.lineTo((col + 1) * cs, row * cs);
+        }
+      }
+    }
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col <= size; col++) {
+        const isEdge = col === 0 || col === size;
+        const isBoundary = !isEdge && regions[row][col - 1] !== regions[row][col];
+        if (isEdge || isBoundary) {
+          b.moveTo(col * cs, row * cs);
+          b.lineTo(col * cs, (row + 1) * cs);
+        }
+      }
+    }
+    return b.detach();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puzzle.id, canvasSize]);
+
+  const innerGridPath = useMemo(() => {
+    const b = Skia.PathBuilder.Make();
+    for (let i = 1; i < size; i++) {
+      b.moveTo(i * cs, 0);
+      b.lineTo(i * cs, canvasSize);
+      b.moveTo(0, i * cs);
+      b.lineTo(canvasSize, i * cs);
+    }
+    return b.detach();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puzzle.id, canvasSize]);
+
+  return (
+    <Canvas style={{ width: canvasSize, height: canvasSize }}>
+      {regionFillPaths.map(({ colorIdx, path }) => (
+        <Path
+          key={`region-${colorIdx}`}
+          path={path}
+          color={coloredRegions ? regionColors[colorIdx] : theme.bg}
+        />
+      ))}
+      <Path path={innerGridPath} color={theme.innerBorder} style="stroke" strokeWidth={1} />
+      <Path path={regionBorderPath} color={theme.regionBorder} style="stroke" strokeWidth={3} strokeCap="square" strokeJoin="miter" />
+    </Canvas>
+  );
+});
 
 type PuzzleCanvasProps = {
   puzzle: Puzzle;
   cells: CellValue[];
-  autoMarks: Set<number>;
   errorCells: Set<number>;
   hintGhosts: Map<number, 'star' | 'mark'>;
   theme: Theme;
@@ -55,143 +122,65 @@ type PuzzleCanvasProps = {
 export function PuzzleCanvas({
   puzzle,
   cells,
-  autoMarks,
   errorCells,
   hintGhosts,
   theme,
   canvasSize,
 }: PuzzleCanvasProps) {
-  const { size, regions } = puzzle;
-  const cellSize = canvasSize / size;
-  const regionColors = theme.isDark ? REGION_COLORS_DARK : REGION_COLORS_LIGHT;
+  const { size } = puzzle;
+  const cs = canvasSize / size;
+  const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
 
-  const regionBorderPath = useMemo(() => {
-    const path = Skia.Path.Make();
-    const inset = 1.5;
+  // Rebuilt on every tap — only 4 paths, O(n) loop
+  const dynamicPaths = useMemo(() => {
+    const r = cs * 0.3;
+    const half = cs * 0.22;
 
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
-        const x = col * cellSize;
-        const y = row * cellSize;
+    const starNormal = Skia.PathBuilder.Make();
+    const starError = Skia.PathBuilder.Make();
+    const starGhost = Skia.PathBuilder.Make();
+    const marks = Skia.PathBuilder.Make();
 
-        if (col + 1 < size && regions[row][col] !== regions[row][col + 1]) {
-          path.moveTo(x + cellSize, y);
-          path.lineTo(x + cellSize, y + cellSize);
-        }
-        if (row + 1 < size && regions[row][col] !== regions[row + 1][col]) {
-          path.moveTo(x, y + cellSize);
-          path.lineTo(x + cellSize, y + cellSize);
-        }
+    for (let idx = 0; idx < cells.length; idx++) {
+      const value = cells[idx];
+      const ghost = hintGhosts.get(idx);
+      if (value === 0 && !ghost) continue;
+
+      const row = Math.floor(idx / size);
+      const col = idx % size;
+      const cx = col * cs + cs / 2;
+      const cy = row * cs + cs / 2;
+
+      if (value === 1 || ghost === 'star') {
+        const isGhost = ghost === 'star' && value !== 1;
+        const b = isGhost ? starGhost : errorCells.has(idx) ? starError : starNormal;
+        b.addOval(Skia.XYWHRect(cx - r, cy - r, r * 2, r * 2));
+      } else if (value === 2 || ghost === 'mark') {
+        marks.moveTo(cx - half, cy - half);
+        marks.lineTo(cx + half, cy + half);
+        marks.moveTo(cx + half, cy - half);
+        marks.lineTo(cx - half, cy + half);
       }
     }
-    path.addRect(
-      Skia.XYWHRect(inset, inset, canvasSize - inset * 2, canvasSize - inset * 2),
-    );
-    return path;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle.id, canvasSize]);
 
-  const innerGridPath = useMemo(() => {
-    const path = Skia.Path.Make();
-    for (let i = 1; i < size; i++) {
-      path.moveTo(i * cellSize, 0);
-      path.lineTo(i * cellSize, canvasSize);
-      path.moveTo(0, i * cellSize);
-      path.lineTo(canvasSize, i * cellSize);
-    }
-    return path;
+    return {
+      starNormal: starNormal.detach(),
+      starError: starError.detach(),
+      starGhost: starGhost.detach(),
+      marks: marks.detach(),
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle.id, canvasSize]);
+  }, [cells, errorCells, hintGhosts, canvasSize]);
 
   return (
-    <Canvas style={{ width: canvasSize, height: canvasSize }}>
-      {Array.from({ length: size }, (_row, row) =>
-        Array.from({ length: size }, (_col, col) => {
-          const idx = row * size + col;
-          const region = regions[row][col];
-          const isError = errorCells.has(idx);
-          return (
-            <Rect
-              key={`bg-${idx}`}
-              x={col * cellSize}
-              y={row * cellSize}
-              width={cellSize}
-              height={cellSize}
-              color={
-                isError
-                  ? '#FFE0E0'
-                  : regionColors[region % regionColors.length]
-              }
-            />
-          );
-        }),
-      )}
-
-      <Path
-        path={innerGridPath}
-        color={theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'}
-        style="stroke"
-        strokeWidth={0.5}
-      />
-
-      <Path
-        path={regionBorderPath}
-        color={theme.isDark ? '#EBEDEF' : '#060607'}
-        style="stroke"
-        strokeWidth={3}
-        strokeJoin="miter"
-        strokeCap="square"
-      />
-
-      {cells.map((value, idx) => {
-        const row = Math.floor(idx / size);
-        const col = idx % size;
-        const cx = col * cellSize + cellSize / 2;
-        const cy = row * cellSize + cellSize / 2;
-        const ghost = hintGhosts.get(idx);
-        const isAutoMark = autoMarks.has(idx);
-
-        if (value === 1 || ghost === 'star') {
-          const r = cellSize * 0.28;
-          const isGhost = ghost === 'star';
-          return (
-            <Circle
-              key={idx}
-              cx={cx}
-              cy={cy}
-              r={r}
-              color={isGhost ? theme.text + '55' : theme.text}
-            />
-          );
-        }
-
-        if (value === 2 || ghost === 'mark') {
-          const half = cellSize * 0.22;
-          const isGhost = ghost === 'mark';
-          const opacitySuffix = isGhost ? '55' : isAutoMark ? 'AA' : 'FF';
-          const c = theme.markColor + opacitySuffix;
-          return (
-            <Group key={idx}>
-              <Line
-                p1={{ x: cx - half, y: cy - half }}
-                p2={{ x: cx + half, y: cy + half }}
-                color={c}
-                strokeWidth={2}
-                strokeCap="round"
-              />
-              <Line
-                p1={{ x: cx + half, y: cy - half }}
-                p2={{ x: cx - half, y: cy + half }}
-                color={c}
-                strokeWidth={2}
-                strokeCap="round"
-              />
-            </Group>
-          );
-        }
-
-        return null;
-      })}
-    </Canvas>
+    <View style={{ width: canvasSize, height: canvasSize }}>
+      <BackgroundCanvas puzzle={puzzle} theme={theme} canvasSize={canvasSize} coloredRegions={coloredRegions} />
+      <Canvas style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <Path path={dynamicPaths.starNormal} color={theme.regionBorder} />
+        <Path path={dynamicPaths.starError} color="#E53935" />
+        <Path path={dynamicPaths.starGhost} color={theme.regionBorder + '55'} />
+        <Path path={dynamicPaths.marks} color={theme.markColor} style="stroke" strokeWidth={2} strokeCap="round" />
+      </Canvas>
+    </View>
   );
 }

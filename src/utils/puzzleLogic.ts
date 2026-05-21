@@ -56,14 +56,7 @@ export function computeAutoXForStar(
 
   if (settings.autoXRegions) {
     const region = puzzle.regions[starRow][starCol];
-    const regionIndices: number[] = [];
-    for (let r = 0; r < boardSize; r++) {
-      for (let c = 0; c < boardSize; c++) {
-        if (puzzle.regions[r][c] === region)
-          regionIndices.push(r * boardSize + c);
-      }
-    }
-    marks.push(...collectZoneMarks(cells, regionIndices, puzzle.stars));
+    marks.push(...collectZoneMarks(cells, puzzle.regionCells[region], puzzle.stars));
   }
 
   return marks;

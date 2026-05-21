@@ -343,10 +343,18 @@ export const CellView = memo(function CellView({
           width: size,
           height: size,
           backgroundColor: theme.cellBg,
-          borderTopWidth: borders.top ? REGION_BORDER_WIDTH : INNER_BORDER_WIDTH,
-          borderBottomWidth: borders.bottom ? REGION_BORDER_WIDTH : INNER_BORDER_WIDTH,
-          borderLeftWidth: borders.left ? REGION_BORDER_WIDTH : INNER_BORDER_WIDTH,
-          borderRightWidth: borders.right ? REGION_BORDER_WIDTH : INNER_BORDER_WIDTH,
+          borderTopWidth: borders.top
+            ? REGION_BORDER_WIDTH
+            : INNER_BORDER_WIDTH,
+          borderBottomWidth: borders.bottom
+            ? REGION_BORDER_WIDTH
+            : INNER_BORDER_WIDTH,
+          borderLeftWidth: borders.left
+            ? REGION_BORDER_WIDTH
+            : INNER_BORDER_WIDTH,
+          borderRightWidth: borders.right
+            ? REGION_BORDER_WIDTH
+            : INNER_BORDER_WIDTH,
           borderStyle: INNER_BORDER_STYLE,
           borderTopColor: borders.top ? theme.regionBorder : theme.innerBorder,
           borderBottomColor: borders.bottom
@@ -531,7 +539,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       let regionStars = 0;
       for (let r = 0; r < boardSize; r++) {
         for (let c = 0; c < boardSize; c++) {
-          if (puzzle.regions[r][c] === placedRegion && newCells[r * boardSize + c] === 1) {
+          if (
+            puzzle.regions[r][c] === placedRegion &&
+            newCells[r * boardSize + c] === 1
+          ) {
             regionStars++;
           }
         }
@@ -542,7 +553,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
             if (puzzle.regions[r][c] === placedRegion) {
               const regIdx = r * boardSize + c;
               if (newCells[regIdx] === 0) {
-                changes.push({ index: regIdx, previousValue: newCells[regIdx] });
+                changes.push({
+                  index: regIdx,
+                  previousValue: newCells[regIdx],
+                });
                 newCells[regIdx] = 2;
               }
             }
@@ -1019,7 +1033,7 @@ const light: Theme = {
   text: '#1A1A1A',
   textSecondary: '#888888',
   regionBorder: '#000000',
-  innerBorder: '#CCCCCC',
+  innerBorder: '#000000',
   cellBg: '#FFFFFF',
   starColor: '#F9A825',
   starErrorColor: '#EF4444',
@@ -1033,7 +1047,7 @@ const dark: Theme = {
   text: '#E0E0E0',
   textSecondary: '#888888',
   regionBorder: '#CCCCCC',
-  innerBorder: '#444444',
+  innerBorder: '#CCCCCC',
   cellBg: '#2A2A2A',
   starColor: '#FFD54F',
   starErrorColor: '#F87171',

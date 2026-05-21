@@ -98,12 +98,18 @@ export function useDrawGesture(
       visitedCells.current = new Set();
       committed.current = false;
 
-      if (usePuzzleStore.getState().completed) return;
+      if (usePuzzleStore.getState().completed || e.numberOfPointers > 1) return;
 
       const cell = viewToCell(e.x, e.y);
       if (cell) markCell(cell.row, cell.col);
     })
     .onUpdate(e => {
+      if (e.numberOfPointers > 1) {
+        revertPreview();
+        strokeChanges.current = [];
+        committed.current = true;
+        return;
+      }
       if (usePuzzleStore.getState().completed) return;
 
       const cell = viewToCell(e.x, e.y);

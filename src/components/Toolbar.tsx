@@ -51,7 +51,7 @@ export function Toolbar({ isZoomed, onZoomReset }: Props) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.toolbar, { bottom: 16 + insets.bottom }]}>
+    <View style={[styles.toolbar, { bottom: insets.bottom - 12 }]}>
       <Pressable
         onPress={() => {
           if (hapticsEnabled) hapticMedium();
@@ -139,25 +139,30 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     toolbar: {
       position: 'absolute',
-      left: 0,
-      right: 0,
+      left: theme.spacingLg,
+      right: theme.spacingLg,
       flexDirection: 'row',
       justifyContent: 'center',
       gap: 8,
+      display: 'flex',
+      padding: 4,
+      margin: 0,
     },
     button: {
-      width: 48,
       height: 48,
-      borderRadius: 24,
+      maxWidth: 64,
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
+
+      borderRadius: 100,
+      backgroundColor: theme.bg,
+      borderWidth: 1,
+      borderColor: theme.bg,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 48,
       elevation: 8,
-      opacity: 0.97,
-      backgroundColor: theme.card,
-      shadowColor: theme.shadow,
     },
-    disabled: { opacity: 0.3 },
+    disabled: { opacity: 0.4 },
   });

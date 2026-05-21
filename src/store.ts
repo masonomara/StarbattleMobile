@@ -12,6 +12,17 @@ import { loadProgress, saveProgress } from './utils/progress';
 import type { CellValue, Move, CellChange, TapMode } from './types/state';
 import type { Puzzle } from './types/puzzle';
 
+const MAX_HISTORY = 50;
+
+let _saveTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleSave(puzzleId: string, cells: CellValue[], autoMarks: Set<number>, timeMs: number, completed: boolean) {
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    _saveTimer = null;
+    saveProgress(puzzleId, cells, autoMarks, timeMs, completed);
+  }, 400);
+}
+
 type PuzzleState = {
   puzzle: Puzzle | null;
   cells: CellValue[];
@@ -52,19 +63,31 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
   loadPuzzle: async (puzzle: Puzzle) => {
     const total = puzzle.size * puzzle.size;
-    const saved = await loadProgress(puzzle.id);
     set({
       puzzle,
-      cells: saved ? saved.cells : new Array<CellValue>(total).fill(0),
-      autoMarks: new Set(saved?.autoMarks ?? []),
+      cells: new Array<CellValue>(total).fill(0),
+      autoMarks: new Set<number>(),
       errorCells: new Set<number>(),
-      completed: saved?.completed ?? false,
-      timeMs: saved?.timeMs ?? 0,
+      completed: false,
+      timeMs: 0,
       moveLog: [],
       redoStack: [],
       hintGhosts: new Map(),
       hintStepIndex: -1,
     });
+    try {
+      const saved = await loadProgress(puzzle.id);
+      if (saved) {
+        set({
+          cells: saved.cells,
+          autoMarks: new Set(saved.autoMarks),
+          completed: saved.completed,
+          timeMs: saved.timeMs,
+        });
+      }
+    } catch {
+      // ignore — puzzle already shown with empty state
+    }
   },
 
   tapCell: (row: number, col: number) => {
@@ -131,7 +154,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarks: newAutoMarks,
       errorCells: newErrors,
-      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }],
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(-MAX_HISTORY),
       redoStack: [],
     }));
 
@@ -142,7 +165,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     }
 
     const s = get();
-    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   cycleTapMode: () => {
@@ -176,11 +199,11 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     set(state => ({
       cells: newCells,
       autoMarks: newAutoMarks,
-      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }],
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(-MAX_HISTORY),
       redoStack: [],
     }));
     const s = get();
-    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   undo: () => {
@@ -221,10 +244,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       autoMarks: new Set(lastMove.autoMarks),
       errorCells: undoErrors,
       moveLog: moveLog.slice(0, -1),
-      redoStack: [...state.redoStack, redoMove],
+      redoStack: [...state.redoStack, redoMove].slice(-MAX_HISTORY),
     }));
     const s = get();
-    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   redo: () => {
@@ -274,7 +297,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       set({ completed: true });
     }
     const s = get();
-    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   applyDrawStroke: (changes: CellChange[]) => {
@@ -309,7 +332,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     });
 
     const s = get();
-    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   clearBoard: () => {
@@ -335,11 +358,11 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarks: new Set<number>(),
       errorCells: new Set<number>(),
-      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }],
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(-MAX_HISTORY),
       redoStack: [],
     }));
     const s = get();
-    saveProgress(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   showHint: () => {

@@ -373,6 +373,13 @@ export function AccountScreen({
               styles={styles}
               theme={theme}
             />
+            <ToggleRow
+              label="Colored Regions"
+              value={settings.coloredRegions}
+              onToggle={v => updateSettings({ coloredRegions: v })}
+              styles={styles}
+              theme={theme}
+            />
           </View>
         </View>
 

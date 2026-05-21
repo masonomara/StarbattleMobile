@@ -54,7 +54,7 @@ const light: Theme = {
   text: '#060607',
   textSecondary: '#4E5058',
   regionBorder: '#060607',
-  innerBorder: '#828282',
+  innerBorder: '#060607',
   markColor: '#B52C21',
   accent: '#5865F2',
   onAccent: '#FFFFFF',

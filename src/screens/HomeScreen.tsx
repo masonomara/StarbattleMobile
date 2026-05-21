@@ -78,16 +78,15 @@ export function HomeScreen({
     packCatalog.length > 0 &&
     packCatalog.some(cp => packs.some(bp => bp.id === cp.id));
 
-  const displayPacks: PackDisplayItem[] =
-    catalogMatchesBundled
-      ? packCatalog.map(packFromCatalog)
-      : packs.map(p => ({
-          id: p.id,
-          name: p.name,
-          gridSize: p.gridSize,
-          puzzleCount: p.puzzles.length,
-          isFree: true,
-        }));
+  const displayPacks: PackDisplayItem[] = catalogMatchesBundled
+    ? packCatalog.map(packFromCatalog)
+    : packs.map(p => ({
+        id: p.id,
+        name: p.name,
+        gridSize: p.gridSize,
+        puzzleCount: p.puzzles.length,
+        isFree: true,
+      }));
 
   const freePacks = displayPacks.filter(p => p.isFree);
   const paidPacks = displayPacks.filter(p => !p.isFree);
@@ -175,125 +174,141 @@ export function HomeScreen({
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: 48 + insets.top, paddingBottom: insets.bottom + 24 },
+          { paddingTop: 57 + insets.top, paddingBottom: insets.bottom },
         ]}
       >
         {continueCard && (
-          <Pressable
-            style={styles.continueCard}
-            onPress={() =>
-              navigation.navigate('Puzzle', {
-                packId: continueCard.packId,
-                puzzleIndex: continueCard.puzzleIndex,
-              })
-            }
-          >
-            <View>
-              <Text style={styles.continueLabel}>Continue</Text>
-              <Text style={styles.continueName}>
-                {continueCard.packName} #{continueCard.puzzleIndex + 1}
-              </Text>
-            </View>
-            <Text style={styles.continueTime}>
-              {formatTime(continueCard.timeMs)}
-            </Text>
-          </Pressable>
-        )}
+          <View style={styles.continueSection}>
+            <Text style={styles.sectionLabel}>Continue Playing</Text>
 
-        <View style={styles.streakRow}>
-          {STREAK_TYPES.map(type => {
-            const pack = streakPacks[type];
-            const key = getCurrentKey(type);
-            const puzzleId = `${type}:${key}`;
-            const isCompleted = completedPuzzleIds.has(puzzleId);
-            const found = streaks.find(s => s.type === type);
-            const streakCount = found ? getActiveStreak(found, type) : 0;
-
-            return (
-              <Pressable
-                key={type}
-                style={[
-                  styles.streakCard,
-                  isCompleted && styles.streakCardCompleted,
-                ]}
-                onPress={() =>
-                  navigation.navigate('Puzzle', { streakType: type })
-                }
-              >
-                <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
-                <Text style={styles.streakMeta}>
-                  {pack.gridSize}×{pack.gridSize}
+            <Pressable
+              style={styles.continueCard}
+              onPress={() =>
+                navigation.navigate('Puzzle', {
+                  packId: continueCard.packId,
+                  puzzleIndex: continueCard.puzzleIndex,
+                })
+              }
+            >
+              <View>
+                <Text style={styles.continueLabel}>Continue</Text>
+                <Text style={styles.continueName}>
+                  {continueCard.packName} #{continueCard.puzzleIndex + 1}
                 </Text>
-                {streakCount > 0 && (
-                  <Text style={styles.streakCount}>{streakCount}</Text>
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {freePacks.length > 0 && (
-          <>
-            <Text style={styles.sectionLabel}>Free Packs</Text>
-            {freePacks.map(pack => {
-              const completed = completedPerPack[pack.id] ?? 0;
-              return (
-                <Pressable
-                  key={pack.id}
-                  style={styles.packCard}
-                  onPress={() =>
-                    navigation.navigate('Library', { packId: pack.id })
-                  }
-                >
-                  <View style={styles.packInfo}>
-                    <Text style={styles.packName}>{pack.name}</Text>
-                    <Text style={styles.packMeta}>
-                      {pack.gridSize}×{pack.gridSize}
-                    </Text>
-                  </View>
-                  <Text style={styles.packProgress}>
-                    {completed}/{pack.puzzleCount}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </>
+              </View>
+              <Text style={styles.continueTime}>
+                {formatTime(continueCard.timeMs)}
+              </Text>
+            </Pressable>
+          </View>
         )}
+        <View style={styles.streakSection}>
+          <Text style={styles.sectionLabel}>Streaks</Text>
+          <ScrollView
+            style={styles.streakRow}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingRight: theme.spacingXl,
+              paddingLeft: theme.spacingXl,
+              gap: theme.spacingMd,
+            }}
+          >
+            {STREAK_TYPES.map(type => {
+              const pack = streakPacks[type];
+              const key = getCurrentKey(type);
+              const puzzleId = `${type}:${key}`;
+              const isCompleted = completedPuzzleIds.has(puzzleId);
+              const found = streaks.find(s => s.type === type);
+              const streakCount = found ? getActiveStreak(found, type) : 0;
 
-        {paidPacks.length > 0 && (
-          <>
-            <Text style={styles.sectionLabel}>More Packs</Text>
-            {paidPacks.map(pack => {
-              const hasAccess = hasPackAccess(pack.id);
-              const completed = completedPerPack[pack.id] ?? 0;
               return (
                 <Pressable
-                  key={pack.id}
-                  style={styles.packCard}
+                  key={type}
+                  style={[
+                    styles.streakCard,
+                    isCompleted && styles.streakCardCompleted,
+                  ]}
                   onPress={() =>
-                    navigation.navigate('Library', { packId: pack.id })
+                    navigation.navigate('Puzzle', { streakType: type })
                   }
                 >
-                  <View style={styles.packInfo}>
-                    <Text style={styles.packName}>{pack.name}</Text>
-                    <Text style={styles.packMeta}>
-                      {pack.gridSize}×{pack.gridSize}
-                    </Text>
-                  </View>
-                  {hasAccess ? (
-                    <Text style={styles.packProgress}>
-                      {completed}/{pack.puzzleCount}
-                    </Text>
-                  ) : (
-                    <Text style={styles.packPrice}>
-                      ${pack.priceUsd?.toFixed(2) ?? '—'}
-                    </Text>
+                  <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                  <Text style={styles.streakMeta}>
+                    {pack.gridSize}×{pack.gridSize}
+                  </Text>
+                  {streakCount > 0 && (
+                    <Text style={styles.streakCount}>{streakCount}</Text>
                   )}
                 </Pressable>
               );
             })}
-          </>
-        )}
+          </ScrollView>
+        </View>
+        <View style={styles.packSection}>
+          {freePacks.length > 0 && (
+            <>
+              <Text style={styles.sectionLabel}>Packs</Text>
+              {freePacks.map(pack => {
+                const completed = completedPerPack[pack.id] ?? 0;
+                return (
+                  <Pressable
+                    key={pack.id}
+                    style={styles.packCard}
+                    onPress={() =>
+                      navigation.navigate('Library', { packId: pack.id })
+                    }
+                  >
+                    <View style={styles.packInfo}>
+                      <Text style={styles.packName}>{pack.name}</Text>
+                      <Text style={styles.packMeta}>
+                        {pack.gridSize}×{pack.gridSize}
+                      </Text>
+                    </View>
+                    <Text style={styles.packProgress}>
+                      {completed}/{pack.puzzleCount}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </>
+          )}
+
+          {paidPacks.length > 0 && (
+            <>
+              <Text style={styles.sectionLabel}>More Packs</Text>
+              {paidPacks.map(pack => {
+                const hasAccess = hasPackAccess(pack.id);
+                const completed = completedPerPack[pack.id] ?? 0;
+                return (
+                  <Pressable
+                    key={pack.id}
+                    style={styles.packCard}
+                    onPress={() =>
+                      navigation.navigate('Library', { packId: pack.id })
+                    }
+                  >
+                    <View style={styles.packInfo}>
+                      <Text style={styles.packName}>{pack.name}</Text>
+                      <Text style={styles.packMeta}>
+                        {pack.gridSize}×{pack.gridSize}
+                      </Text>
+                    </View>
+                    {hasAccess ? (
+                      <Text style={styles.packProgress}>
+                        {completed}/{pack.puzzleCount}
+                      </Text>
+                    ) : (
+                      <Text style={styles.packPrice}>
+                        ${pack.priceUsd?.toFixed(2) ?? '—'}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -312,10 +327,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: theme.spacingXl,
-      height: 48 + insets.top,
+      height: 57 + insets.top,
+      backgroundColor: theme.bg,
     },
     appTitle: {
-      fontSize: theme.fontSizeLg,
+      fontSize: 28,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
@@ -324,9 +340,9 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       gap: theme.spacingMd,
     },
     headerIconButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: 48,
+      height: 48,
+      borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.card,
@@ -335,16 +351,17 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       shadowOpacity: 1,
       shadowRadius: 4,
       elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.bg,
     },
-    scrollContent: {
-      paddingHorizontal: theme.spacingXl,
-    },
+    scrollContent: {},
     continueCard: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: theme.spacingXl,
       borderRadius: theme.radiusMd,
+      marginHorizontal: theme.spacingXl,
       marginBottom: theme.spacingXl,
       backgroundColor: theme.accent,
     },
@@ -365,23 +382,55 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       color: theme.onAccent,
       opacity: 0.8,
     },
+      continueSection: {
+      paddingTop: 34,
+      flexDirection: 'column',
+      backgroundColor: theme.bg,
+
+     
+      paddingHorizontal: theme.spacingXl,
+    },
+    streakSection: {
+      paddingTop: 34,
+      flexDirection: 'column',
+      backgroundColor: theme.bg,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 56,
+      elevation: 8,
+    },
+    packSection: {
+      paddingTop: 34,
+      backgroundColor: theme.bg,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 56,
+      elevation: 8,
+      paddingHorizontal: theme.spacingXl,
+
+    },
     streakRow: {
       flexDirection: 'row',
       gap: theme.spacingMd,
-      marginBottom: theme.spacingXl,
+      zIndex: 100,
+      overflow: 'visible',
+      marginBottom: 34,
     },
+
     streakCard: {
-      flex: 1,
+   
       padding: theme.spacingLg,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.card,
+      backgroundColor: theme.bg,
       alignItems: 'center',
       aspectRatio: 3 / 4,
       shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 1,
-      shadowRadius: 4,
+      shadowRadius: 8,
       elevation: 2,
+      zIndex: 70,
+      width: 280,
     },
     streakCardCompleted: {
       opacity: 0.6,
@@ -403,12 +452,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       marginTop: 8,
     },
     sectionLabel: {
-      fontSize: 13,
+      fontSize: 22,
+      lineHeight: 28,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.textSecondary,
+      color: theme.text,
       marginBottom: theme.spacingMd,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
     },
     packCard: {
       flexDirection: 'row',

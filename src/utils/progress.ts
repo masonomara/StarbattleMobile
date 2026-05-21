@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/authStore';
 import { getCurrentKey, getPreviousKey } from './streakDate';
 import type { CellValue, StreakType } from '../types/state';
 
-function rowId(userId: string, puzzleId: string): string {
+function progressId(userId: string, puzzleId: string): string {
   return `${userId}:${puzzleId}`;
 }
 
@@ -18,12 +18,9 @@ export async function saveProgress(
   if (!userId) return;
 
   const now = new Date().toISOString();
-  const id = rowId(userId, puzzleId);
+  const id = progressId(userId, puzzleId);
 
-  const existing = await db.getOptional<{
-    id: string;
-    completed_at: string | null;
-  }>(
+  const existing = await db.getOptional<{ id: string; completed_at: string | null }>(
     'SELECT id, completed_at FROM puzzle_progress WHERE user_id = ? AND puzzle_id = ?',
     [userId, puzzleId],
   );
@@ -73,33 +70,23 @@ export async function loadProgress(puzzleId: string): Promise<{
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return null;
 
-  try {
-    // db.getAll() hangs forever if sql.js hasn't finished loading yet — race it
-    const fallback = new Promise<[]>(resolve => setTimeout(() => resolve([]), 1500));
-    const rows = await Promise.race([
-      db.getAll<{
-        cells: string;
-        auto_marks: string | null;
-        time_ms: number;
-        completed: number;
-      }>(
-        'SELECT cells, auto_marks, time_ms, completed FROM puzzle_progress WHERE user_id = ? AND puzzle_id = ?',
-        [userId, puzzleId],
-      ),
-      fallback,
-    ]);
+  const row = await db.getOptional<{
+    cells: string;
+    auto_marks: string | null;
+    time_ms: number;
+    completed: number;
+  }>(
+    'SELECT cells, auto_marks, time_ms, completed FROM puzzle_progress WHERE user_id = ? AND puzzle_id = ?',
+    [userId, puzzleId],
+  );
 
-    if (!rows.length) return null;
-    const row = rows[0];
-    return {
-      cells: JSON.parse(row.cells),
-      autoMarks: JSON.parse(row.auto_marks ?? '[]'),
-      timeMs: row.time_ms,
-      completed: row.completed === 1,
-    };
-  } catch {
-    return null;
-  }
+  if (!row) return null;
+  return {
+    cells: JSON.parse(row.cells),
+    autoMarks: JSON.parse(row.auto_marks ?? '[]'),
+    timeMs: row.time_ms,
+    completed: row.completed === 1,
+  };
 }
 
 export async function getCompletedCountForPack(
@@ -118,6 +105,55 @@ export async function getCompletedCountForPack(
     [userId, ...ids],
   );
   return rows[0]?.count ?? 0;
+}
+
+export async function getCompletedPuzzleIdsForPack(
+  packId: string,
+  puzzleCount: number,
+): Promise<Set<string>> {
+  const userId = useAuthStore.getState().user?.id;
+  if (!userId) return new Set();
+
+  const ids = Array.from({ length: puzzleCount }, (_, i) => `${packId}:${i}`);
+  const placeholders = ids.map(() => '?').join(',');
+
+  const rows = await db.getAll<{ puzzle_id: string }>(
+    `SELECT puzzle_id FROM puzzle_progress
+     WHERE user_id = ? AND puzzle_id IN (${placeholders}) AND completed = 1`,
+    [userId, ...ids],
+  );
+  return new Set(rows.map(r => r.puzzle_id));
+}
+
+export async function getMostRecentInProgress(): Promise<{
+  puzzleId: string;
+  packId: string;
+  puzzleIndex: number;
+  timeMs: number;
+} | null> {
+  const userId = useAuthStore.getState().user?.id;
+  if (!userId) return null;
+
+  const row = await db.getOptional<{ puzzle_id: string; time_ms: number }>(
+    `SELECT puzzle_id, time_ms FROM puzzle_progress
+     WHERE user_id = ? AND completed = 0
+       AND puzzle_id NOT LIKE 'daily:%'
+       AND puzzle_id NOT LIKE 'weekly:%'
+       AND puzzle_id NOT LIKE 'monthly:%'
+     ORDER BY updated_at DESC LIMIT 1`,
+    [userId],
+  );
+
+  if (!row) return null;
+
+  const lastColon = row.puzzle_id.lastIndexOf(':');
+  if (lastColon === -1) return null;
+
+  const packId = row.puzzle_id.slice(0, lastColon);
+  const puzzleIndex = parseInt(row.puzzle_id.slice(lastColon + 1), 10);
+  if (isNaN(puzzleIndex)) return null;
+
+  return { puzzleId: row.puzzle_id, packId, puzzleIndex, timeMs: row.time_ms };
 }
 
 export async function saveStreak(
@@ -161,60 +197,26 @@ export async function loadStreaks(): Promise<
   );
 }
 
-export async function getCompletedPuzzleIdsForPack(
-  packId: string,
-  puzzleCount: number,
-): Promise<Set<string>> {
-  const userId = useAuthStore.getState().user?.id;
-  if (!userId) return new Set();
-
-  const ids = Array.from({ length: puzzleCount }, (_, i) => `${packId}:${i}`);
-  const placeholders = ids.map(() => '?').join(',');
-
-  const rows = await db.getAll<{ puzzle_id: string }>(
-    `SELECT puzzle_id FROM puzzle_progress WHERE user_id = ? AND puzzle_id IN (${placeholders}) AND completed = 1`,
-    [userId, ...ids],
-  );
-  return new Set(rows.map(r => r.puzzle_id));
-}
-
-export async function getMostRecentInProgress(): Promise<{
-  puzzleId: string;
-  packId: string;
-  puzzleIndex: number;
-  timeMs: number;
-} | null> {
-  const userId = useAuthStore.getState().user?.id;
-  if (!userId) return null;
-
-  const row = await db.getOptional<{ puzzle_id: string; time_ms: number }>(
-    'SELECT puzzle_id, time_ms FROM puzzle_progress WHERE user_id = ? AND completed = 0 ORDER BY updated_at DESC LIMIT 1',
-    [userId],
-  );
-
-  if (!row) return null;
-
-  const streakPrefixes = ['daily:', 'weekly:', 'monthly:'];
-  if (streakPrefixes.some(p => row.puzzle_id.startsWith(p))) return null;
-
-  const lastColon = row.puzzle_id.lastIndexOf(':');
-  if (lastColon === -1) return null;
-
-  const packId = row.puzzle_id.slice(0, lastColon);
-  const puzzleIndex = parseInt(row.puzzle_id.slice(lastColon + 1), 10);
-  if (isNaN(puzzleIndex)) return null;
-
-  return { puzzleId: row.puzzle_id, packId, puzzleIndex, timeMs: row.time_ms };
-}
-
 export async function recordStreak(type: StreakType): Promise<void> {
+  const userId = useAuthStore.getState().user?.id;
+  if (!userId) return;
+
   const currentKey = getCurrentKey(type);
-  const streaks = await loadStreaks();
-  const existing = streaks.find(s => s.type === type);
-  if (existing?.lastCompletedKey === currentKey) return;
+
+  const existing = await db.getOptional<{
+    id: string;
+    current_count: number;
+    last_completed_key: string;
+  }>(
+    'SELECT id, current_count, last_completed_key FROM streaks WHERE user_id = ? AND type = ?',
+    [userId, type],
+  );
+
+  if (existing?.last_completed_key === currentKey) return;
+
+  const prevKey = getPreviousKey(type);
   const newCount =
-    existing?.lastCompletedKey === getPreviousKey(type)
-      ? existing.currentCount + 1
-      : 1;
+    existing?.last_completed_key === prevKey ? existing.current_count + 1 : 1;
+
   await saveStreak(type, newCount, currentKey);
 }

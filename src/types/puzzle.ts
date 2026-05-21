@@ -18,6 +18,7 @@ export type Puzzle = {
   size: number;
   stars: number;
   regions: number[][];
+  regionCells: number[][];
   solution: Coord[];
   hints: HintStep[];
 };

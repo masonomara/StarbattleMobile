@@ -25,6 +25,7 @@ export type UserSettings = {
   autoXRowsCols: boolean;
   autoXRegions: boolean;
   highlightErrors: boolean;
+  coloredRegions: boolean;
   showTimer: boolean;
   hideToolbar: boolean;
   theme: 'system' | 'light' | 'dark';

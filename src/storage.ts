@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   autoXRowsCols: false,
   autoXRegions: false,
   highlightErrors: true,
+  coloredRegions: false,
   showTimer: true,
   hideToolbar: false,
   theme: 'system',

@@ -12,11 +12,15 @@ export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
   const stars = parseInt(match[2], 10);
 
   const regions: number[][] = [];
+  const regionCells: number[][] = [];
   for (let row = 0; row < size; row++) {
     const rowData: number[] = [];
     for (let col = 0; col < size; col++) {
       const char = layout[row * size + col];
-      rowData.push(LETTERS.indexOf(char.toUpperCase()));
+      const regionIdx = LETTERS.indexOf(char.toUpperCase());
+      rowData.push(regionIdx);
+      if (!regionCells[regionIdx]) regionCells[regionIdx] = [];
+      regionCells[regionIdx].push(row * size + col);
     }
     regions.push(rowData);
   }
@@ -26,6 +30,7 @@ export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
     size,
     stars,
     regions,
+    regionCells,
     solution: raw.solution,
     hints: (raw.hints ?? []) as HintStep[],
   };

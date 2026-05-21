@@ -93,6 +93,27 @@ export async function getPastArchive(
   return rows.map(r => ({ dateKey: r.date_key, puzzleId: r.puzzle_id }));
 }
 
+export function archiveKeyToDate(type: StreakType, key: string): Date {
+  switch (type) {
+    case 'daily':
+      return new Date(key);
+    case 'weekly': {
+      const [yearStr, weekStr] = key.split('-W');
+      const year = Number(yearStr);
+      const week = Number(weekStr);
+      const jan4 = new Date(year, 0, 4);
+      const isoDay = jan4.getDay() || 7;
+      const firstMonday = new Date(jan4);
+      firstMonday.setDate(jan4.getDate() - (isoDay - 1) + (week - 1) * 7);
+      return firstMonday;
+    }
+    case 'monthly': {
+      const [yearStr, monthStr] = key.split('-');
+      return new Date(Number(yearStr), Number(monthStr) - 1, 1);
+    }
+  }
+}
+
 export function getActiveStreak(streak: Streak, type: StreakType): number {
   const currentKey = getCurrentKey(type);
   const prevKey = getPreviousKey(type);

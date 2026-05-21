@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, StyleSheet, Pressable, Animated, ActivityIndicator } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -19,7 +19,7 @@ import { saveProgress } from '../utils/progress';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
-import { getCurrentKey, getPuzzleIndex } from '../utils/streakDate';
+import { getCurrentKey, getPuzzleIndex, archiveKeyToDate } from '../utils/streakDate';
 import type { RootStackParamList } from '../types/navigation';
 
 export function PuzzleScreen({
@@ -27,18 +27,23 @@ export function PuzzleScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
   const { packId, puzzleIndex, streakType } = route.params;
+  const rawParams = route.params as { isArchive?: boolean; archiveKey?: string };
+  const isArchive = rawParams.isArchive;
+  const archiveKey = rawParams.archiveKey;
 
-  const packData = (() => {
+  const packData = useMemo(() => {
     if (streakType) {
       const pack = streakPacks[streakType];
-      const key = getCurrentKey(streakType);
-      const idx = getPuzzleIndex(streakType, pack.puzzles.length);
+      if (!pack) return null;
+      const key = isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
+      const date = isArchive && archiveKey ? archiveKeyToDate(streakType, archiveKey) : new Date();
+      const idx = getPuzzleIndex(streakType, pack.puzzles.length, date);
       return {
         rawPuzzle: pack.puzzles[idx],
-        puzzleId: `${streakType}:${key}`,
+        puzzleId: isArchive ? `${streakType}:archive:${key}` : `${streakType}:${key}`,
         gridSize: pack.gridSize,
         packName: pack.name,
-        isLastPuzzle: true,
+        isLastPuzzle: !isArchive,
       };
     }
     const pack = packs.find(p => p.id === packId);
@@ -51,7 +56,7 @@ export function PuzzleScreen({
       packName: pack.name,
       isLastPuzzle: idx >= pack.puzzles.length - 1,
     };
-  })();
+  }, [packId, puzzleIndex, streakType, isArchive, archiveKey]);
 
   const rawPuzzle = packData?.rawPuzzle;
   const puzzleId = packData?.puzzleId ?? '';
@@ -66,7 +71,6 @@ export function PuzzleScreen({
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
   const cells = usePuzzleStore(s => s.cells);
-  const autoMarks = usePuzzleStore(s => s.autoMarks);
   const errorCells = usePuzzleStore(s => s.errorCells);
   const hintGhosts = usePuzzleStore(s => s.hintGhosts);
   const hideToolbar = useSettingsStore(s => s.settings.hideToolbar);
@@ -176,7 +180,6 @@ export function PuzzleScreen({
             <PuzzleCanvas
               puzzle={puzzle}
               cells={cells}
-              autoMarks={autoMarks}
               errorCells={errorCells}
               hintGhosts={hintGhosts}
               theme={theme}
