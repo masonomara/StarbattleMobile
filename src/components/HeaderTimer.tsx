@@ -14,7 +14,12 @@ export function HeaderTimer() {
 
   useEffect(() => {
     if (completed || !showTimer) return;
-    const id = setInterval(() => usePuzzleStore.getState().tick(), 1000);
+    let last = Date.now();
+    const id = setInterval(() => {
+      const now = Date.now();
+      usePuzzleStore.getState().tick(now - last);
+      last = now;
+    }, 1000);
     return () => clearInterval(id);
   }, [completed, showTimer]);
 

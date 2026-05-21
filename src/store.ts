@@ -32,7 +32,7 @@ type PuzzleState = {
   redo: () => void;
   applyDrawStroke: (changes: CellChange[]) => void;
   clearBoard: () => void;
-  tick: () => void;
+  tick: (ms?: number) => void;
   showHint: () => void;
   dismissHint: () => void;
 };
@@ -376,9 +376,8 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     set({ hintGhosts: new Map(), hintStepIndex: -1 });
   },
 
-  tick: () => {
-    const { completed } = get();
-    if (completed) return;
-    set(state => ({ timeMs: state.timeMs + 1000 }));
+  tick: (ms = 1000) => {
+    if (get().completed) return;
+    set(state => ({ timeMs: state.timeMs + ms }));
   },
 }));
