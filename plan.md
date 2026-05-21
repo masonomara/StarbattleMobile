@@ -2409,20 +2409,20 @@ These must be done before any code is written.
 
 **Adapty dashboard setup — do this before Claude writes any payment code:**
 
-- [ ] **[YOU]** In the Adapty dashboard: create a **Product** named `starbattle_premium` — one-time, $5.99, link to App Store product (create the App Store product first if it doesn't exist).
-- [ ] **[YOU]** In App Store Connect: create the `starbattle_premium` in-app purchase (non-consumable, $5.99). Note the vendor product ID matches exactly.
-- [ ] **[YOU]** In Adapty: create an **Access Level** named `premium`.
-- [ ] **[YOU]** In Adapty: create a **Paywall** named `main_paywall` containing the premium product (add paid pack products later as they are created).
-- [ ] **[YOU]** In Adapty: configure the **Webhook** URL. This will point to the Supabase Edge Function URL (`https://{project}.supabase.co/functions/v1/adapty-webhook?secret={ADAPTY_WEBHOOK_SECRET}`). Set the secret value — note it for the next step.
-- [ ] **[YOU]** In Supabase → Edge Functions → Secrets: add `ADAPTY_WEBHOOK_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`.
-- [ ] **[YOU]** Add `ADAPTY_SDK_KEY` to your app env (get it from Adapty dashboard → App Settings).
+- [x] **[YOU]** In the Adapty dashboard: create a **Product** named `starbattle_premium` — one-time, $5.99, link to App Store product (create the App Store product first if it doesn't exist).
+- [x] **[YOU]** In App Store Connect: create the `starbattle_premium` in-app purchase (non-consumable, $5.99). Note the vendor product ID matches exactly.
+- [x] **[YOU]** In Adapty: create an **Access Level** named `premium`.
+- [x] **[YOU]** In Adapty: create a **Paywall** named `main_paywall` containing the premium product (add paid pack products later as they are created).
+- [x] **[YOU]** In Adapty: configure the **Webhook** URL. This will point to the Supabase Edge Function URL (`https://{project}.supabase.co/functions/v1/adapty-webhook?secret={ADAPTY_WEBHOOK_SECRET}`). Set the secret value — note it for the next step.
+- [x] **[YOU]** In Supabase → Edge Functions → Secrets: add `ADAPTY_WEBHOOK_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`.
+- [x] **[YOU]** Add `ADAPTY_SDK_KEY` to your app env (get it from Adapty dashboard → App Settings).
 
 **Code — after dashboard is configured:**
 
-- [ ] **[CLAUDE]** Create `src/utils/payments.ts` — `fetchPaywall`, `purchasePremium`, `purchasePack`, `restorePurchases`.
-- [ ] **[CLAUDE]** Create `src/packs/downloaded.ts` — `downloadPack`, `isPackDownloaded`, `loadDownloadedPack` using `react-native-fs`.
-- [ ] **[CLAUDE]** Write and deploy Supabase Edge Function `supabase/functions/adapty-webhook/index.ts` — handles grant/revoke premium events and pack purchase events, writes to `user_entitlements` and calls `add_owned_pack`.
-- [ ] **[YOU]** Use Adapty's sandbox/test mode to trigger a test purchase event. Verify the webhook fires and `user_entitlements` updates in Supabase. Verify PowerSync syncs the change to the device and entitlements update in-app without a restart.
+- [x] **[CLAUDE]** Create `src/utils/payments.ts` — `fetchPaywall`, `purchasePremium`, `purchasePack`, `restorePurchases`.
+- [x] **[CLAUDE]** Create `src/packs/downloaded.ts` — `downloadPack`, `isPackDownloaded`, `loadDownloadedPack` using `react-native-fs`.
+- [x] **[CLAUDE]** Write and deploy Supabase Edge Function `supabase/functions/adapty-webhook/index.ts` — handles grant/revoke premium events and pack purchase events, writes to `user_entitlements` and calls `add_owned_pack`.
+- [x] **[YOU]** Use Adapty's sandbox/test mode to trigger a test purchase event. Verify the webhook fires and `user_entitlements` updates in Supabase. Verify PowerSync syncs the change to the device and entitlements update in-app without a restart.
 
 ---
 
