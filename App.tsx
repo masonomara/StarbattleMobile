@@ -18,19 +18,17 @@ export default function App() {
 
     useSettingsStore.getState().initialize();
 
-    useAuthStore
-      .getState()
-      .initialize()
-      .then(() => {
-        db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
+    // Open local SQLite immediately — fetchCredentials() retries once auth resolves
+    db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
 
-        db.watch('SELECT * FROM user_entitlements LIMIT 1', [], {
-          onResult: () => {
-            const userId = useAuthStore.getState().user?.id;
-            if (userId) useEntitlementsStore.getState().loadEntitlements(userId);
-          },
-        });
-      });
+    db.watch('SELECT * FROM user_entitlements LIMIT 1', [], {
+      onResult: () => {
+        const userId = useAuthStore.getState().user?.id;
+        if (userId) useEntitlementsStore.getState().loadEntitlements(userId);
+      },
+    });
+
+    useAuthStore.getState().initialize();
   }, []);
 
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated } from 'react-native';
+import { View, StyleSheet, Pressable, Animated, ActivityIndicator } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -28,7 +28,7 @@ export function PuzzleScreen({
 }: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
   const { packId, puzzleIndex, streakType } = route.params;
 
-  const { rawPuzzle, puzzleId, gridSize, packName, isLastPuzzle } = (() => {
+  const packData = (() => {
     if (streakType) {
       const pack = streakPacks[streakType];
       const key = getCurrentKey(streakType);
@@ -41,7 +41,8 @@ export function PuzzleScreen({
         isLastPuzzle: true,
       };
     }
-    const pack = packs.find(p => p.id === packId)!;
+    const pack = packs.find(p => p.id === packId);
+    if (!pack) return null;
     const idx = puzzleIndex ?? 0;
     return {
       rawPuzzle: pack.puzzles[idx],
@@ -51,6 +52,12 @@ export function PuzzleScreen({
       isLastPuzzle: idx >= pack.puzzles.length - 1,
     };
   })();
+
+  const rawPuzzle = packData?.rawPuzzle;
+  const puzzleId = packData?.puzzleId ?? '';
+  const gridSize = packData?.gridSize ?? 0;
+  const packName = packData?.packName ?? '';
+  const isLastPuzzle = packData?.isLastPuzzle ?? true;
 
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -62,7 +69,6 @@ export function PuzzleScreen({
   const autoMarks = usePuzzleStore(s => s.autoMarks);
   const errorCells = usePuzzleStore(s => s.errorCells);
   const hintGhosts = usePuzzleStore(s => s.hintGhosts);
-  const completed = usePuzzleStore(s => s.completed);
   const hideToolbar = useSettingsStore(s => s.settings.hideToolbar);
 
   const {
@@ -94,11 +100,18 @@ export function PuzzleScreen({
   );
 
   const gesture = Gesture.Simultaneous(
-    Gesture.Simultaneous(pinchGesture, panGesture),
-    Gesture.Race(drawGesture, tapGesture),
+    pinchGesture,
+    Gesture.Race(
+      drawGesture,
+      Gesture.Exclusive(panGesture, tapGesture),
+    ),
   );
 
   useEffect(() => {
+    if (!packData) {
+      navigation.goBack();
+      return;
+    }
     if (!rawPuzzle) return;
     try {
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
@@ -106,24 +119,31 @@ export function PuzzleScreen({
     } catch {
       navigation.goBack();
     }
-  }, [rawPuzzle, puzzleId, loadPuzzle, navigation]);
+  }, [packData, rawPuzzle, puzzleId, loadPuzzle, navigation]);
 
   useEffect(() => {
-    if (completed || !puzzle) return;
-    const persistTime = () => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
       const state = usePuzzleStore.getState();
-      if (!state.completed && state.puzzle) {
-        saveProgress(state.puzzle.id, state.cells, state.autoMarks, state.timeMs, false);
+      if (state.puzzle) {
+        saveProgress(
+          state.puzzle.id,
+          state.cells,
+          state.autoMarks,
+          state.timeMs,
+          state.completed,
+        );
       }
-    };
-    const id = setInterval(persistTime, 5000);
-    return () => {
-      clearInterval(id);
-      persistTime();
-    };
-  }, [completed, puzzle]);
+    });
+    return unsubscribe;
+  }, [navigation]);
 
-  if (!puzzle) return null;
+  if (!puzzle) {
+    return (
+      <View style={[{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.bg }]}>
+        <ActivityIndicator color={theme.accent} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

@@ -1,46 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { packs } from '../packs';
-import { Header } from '../components/Header';
-import { SettingsButton } from '../components/SettingsButton';
+import { PaywallModal } from '../components/PaywallModal';
 import { useTheme, type Theme } from '../hooks/useTheme';
+import { useEntitlements } from '../hooks/useEntitlements';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
 import type { RootStackParamList } from '../types/navigation';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { PaywallContext } from '../types/user';
+
+type PuzzleCellProps = {
+  packId: string;
+  index: number;
+  onPress: (index: number) => void;
+  onLockedPress: (index: number) => void;
+  styles: ReturnType<typeof createStyles>;
+  theme: Theme;
+  completedSet: Set<string>;
+  canPlay: boolean;
+};
 
 function PuzzleCell({
   packId,
   index,
   onPress,
+  onLockedPress,
   styles,
   theme,
   completedSet,
-}: {
-  packId: string;
-  index: number;
-  onPress: (index: number) => void;
-  styles: ReturnType<typeof createStyles>;
-  theme: Theme;
-  completedSet: Set<string>;
-}) {
+  canPlay,
+}: PuzzleCellProps) {
   const puzzleId = `${packId}:${index}`;
   const isCompleted = completedSet.has(puzzleId);
-  const prevCompleted =
-    index === 0 || completedSet.has(`${packId}:${index - 1}`);
 
   const status: 'completed' | 'active' | 'locked' = isCompleted
     ? 'completed'
-    : prevCompleted
+    : canPlay
     ? 'active'
     : 'locked';
 
   return (
     <Pressable
       style={[styles.puzzleCell, status === 'locked' && styles.locked]}
-      onPress={() => onPress(index)}
-      disabled={status === 'locked'}
+      onPress={() =>
+        status === 'locked' ? onLockedPress(index) : onPress(index)
+      }
     >
       {status !== 'active' && (
         <View style={styles.puzzleIcon}>
@@ -72,54 +78,110 @@ export function LibraryScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Library'>) {
   const { packId } = route.params;
-  const pack = packs.find(p => p.id === packId);
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const { packCatalog, canPlayPuzzle, hasPackAccess } = useEntitlements();
+
+  const catalogPack = packCatalog.find(p => p.id === packId);
+  const bundledPack = packs.find(p => p.id === packId);
+  const puzzleCount =
+    catalogPack?.puzzleCount ?? bundledPack?.puzzles.length ?? 0;
+  const packName = catalogPack?.name ?? bundledPack?.name ?? packId;
+  const isFree = catalogPack?.isFree ?? true;
+  const priceUsd = catalogPack?.priceUsd;
+  const storagePath = catalogPack?.storagePath;
 
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
+  const [completedCount, setCompletedCount] = useState(0);
+  const [paywallContext, setPaywallContext] = useState<PaywallContext | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (!pack) return;
-    getCompletedPuzzleIdsForPack(packId, pack.puzzles.length).then(setCompletedSet);
-  }, [packId, pack]);
+    if (!puzzleCount) return;
+    getCompletedPuzzleIdsForPack(packId, puzzleCount).then(set => {
+      setCompletedSet(set);
+      setCompletedCount(set.size);
+    });
+  }, [packId, puzzleCount]);
 
-  if (!pack) return null;
+  function isPuzzlePlayable(index: number): boolean {
+    const packInCatalog = packCatalog.find(p => p.id === packId);
+    if (!packInCatalog) {
+      return index === 0 || completedSet.has(`${packId}:${index - 1}`);
+    }
+    return canPlayPuzzle(packId, index, completedCount);
+  }
+
+  function handleLockedPress(index: number) {
+    if (!isFree && !hasPackAccess(packId)) {
+      if (priceUsd !== undefined && storagePath !== undefined) {
+        setPaywallContext({
+          type: 'paid-pack',
+          packId,
+          packName,
+          priceUsd,
+          storagePath,
+        });
+      }
+    } else {
+      setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
+    }
+  }
+
+  const puzzleIndices = useMemo(
+    () => Array.from({ length: puzzleCount }, (_, i) => i),
+    [puzzleCount],
+  );
+
+  if (!puzzleCount) return null;
 
   return (
     <View style={styles.container}>
-      <Header
-        left={
-          <Pressable
-            style={styles.headerButton}
-            onPress={() => navigation.goBack()}
-            hitSlop={8}
-          >
-            <ChevronLeft size={26} color={theme.text} />
-          </Pressable>
-        }
-        center={<Text style={styles.headerTitle}>{pack.name}</Text>}
-        right={<SettingsButton />}
-      />
-      <FlatList
-        data={pack.puzzles}
-        renderItem={({ index }) => (
+      <View style={[styles.headerRow, { paddingTop: insets.top, height: 48 + insets.top }]}>
+        <Pressable
+          style={styles.headerButton}
+          onPress={() => navigation.goBack()}
+          hitSlop={8}
+        >
+          <ChevronLeft size={26} color={theme.text} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{packName}</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.grid, { paddingBottom: insets.bottom }]}
+      >
+        {puzzleIndices.map(index => (
           <PuzzleCell
+            key={index}
             packId={packId}
             index={index}
             onPress={i =>
               navigation.navigate('Puzzle', { packId, puzzleIndex: i })
             }
+            onLockedPress={handleLockedPress}
             styles={styles}
             theme={theme}
             completedSet={completedSet}
+            canPlay={isPuzzlePlayable(index)}
           />
-        )}
-        numColumns={5}
-        contentContainerStyle={[
-          styles.grid,
-          { paddingBottom: insets.bottom, paddingTop: insets.top },
-        ]}
+        ))}
+      </ScrollView>
+      <PaywallModal
+        visible={paywallContext !== null}
+        context={paywallContext}
+        onClose={() => setPaywallContext(null)}
+        onPurchaseSuccess={() => {
+          setPaywallContext(null);
+          getCompletedPuzzleIdsForPack(packId, puzzleCount).then(set => {
+            setCompletedSet(set);
+            setCompletedCount(set.size);
+          });
+        }}
+        onNavigateToAccount={() => navigation.navigate('Account')}
       />
     </View>
   );
@@ -128,11 +190,12 @@ export function LibraryScreen({
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
+    scroll: { flex: 1 },
     grid: {
       padding: theme.spacingLg,
-      flex: 1,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       justifyContent: 'center',
-      alignItems: 'center',
     },
     puzzleCell: {
       aspectRatio: 1,
@@ -176,5 +239,15 @@ const createStyles = (theme: Theme) =>
       fontVariant: ['tabular-nums'],
       fontWeight: '600',
       color: theme.text,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: theme.spacingXl,
+      backgroundColor: theme.bg,
+    },
+    headerSpacer: {
+      width: 36,
     },
   });

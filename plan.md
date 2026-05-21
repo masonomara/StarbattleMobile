@@ -2446,12 +2446,12 @@ These must be done before any code is written.
 
 ### Phase 10: Screens
 
-- [ ] **[CLAUDE]** Rewrite `src/screens/HomeScreen.tsx` — header with streak + account buttons, continue card (if in-progress puzzle), Daily/Weekly/Monthly streak cards, scrollable pack list (free + paid from catalog), lock state driven by entitlementsStore.
-- [ ] **[CLAUDE]** Rename `PackScreen.tsx` → `LibraryScreen.tsx`. Update to read completion per puzzle from PowerSync, use `canPlayPuzzle` for lock state, show paywall on locked tap.
-- [ ] **[CLAUDE]** Update `src/screens/PuzzleScreen.tsx` — replace BoardView with PuzzleCanvas, make `loadPuzzle` async, save progress on `beforeRemove` event, remove 5-second interval autosave.
-- [ ] **[CLAUDE]** Create `src/screens/StreaksScreen.tsx` — streak counts for daily/weekly/monthly, past archive list (premium only), premium upsell teaser for non-premium.
-- [ ] **[CLAUDE]** Create `src/screens/AccountScreen.tsx` — sign-up/sign-in (anonymous state), signed-in state with entitlements, buy premium, restore purchases, sign out, settings toggles (replaces SettingsModal).
-- [ ] **[CLAUDE]** Create `src/components/PaywallModal.tsx` — context-aware with the 4 scenarios: sequential lock, paid pack (no account), paid pack (has account), premium CTA.
+- [x] **[CLAUDE]** Rewrite `src/screens/HomeScreen.tsx` — header with streak + account buttons, continue card (if in-progress puzzle), Daily/Weekly/Monthly streak cards, scrollable pack list (free + paid from catalog), lock state driven by entitlementsStore.
+- [x] **[CLAUDE]** Rename `PackScreen.tsx` → `LibraryScreen.tsx`. Update to read completion per puzzle from PowerSync, use `canPlayPuzzle` for lock state, show paywall on locked tap.
+- [x] **[CLAUDE]** Update `src/screens/PuzzleScreen.tsx` — replace BoardView with PuzzleCanvas, make `loadPuzzle` async, save progress on `beforeRemove` event, remove 5-second interval autosave.
+- [x] **[CLAUDE]** Create `src/screens/StreaksScreen.tsx` — streak counts for daily/weekly/monthly, past archive list (premium only), premium upsell teaser for non-premium.
+- [x] **[CLAUDE]** Create `src/screens/AccountScreen.tsx` — sign-up/sign-in (anonymous state), signed-in state with entitlements, buy premium, restore purchases, sign out, settings toggles (replaces SettingsModal).
+- [x] **[CLAUDE]** Create `src/components/PaywallModal.tsx` — context-aware with the 4 scenarios: sequential lock, paid pack (no account), paid pack (has account), premium CTA.
 - [ ] **[YOU]** Walk through all screen flows: home → library → puzzle → win → next, home → streaks, home → account → sign up, paywall scenarios for each lock type.
 
 ---

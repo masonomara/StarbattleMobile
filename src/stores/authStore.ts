@@ -12,6 +12,7 @@ type AuthState = {
   initialize: () => Promise<void>;
   signInAnonymously: () => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -23,7 +24,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAnonymous: true,
 
   initialize: async () => {
-    GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, iosClientId: GOOGLE_IOS_CLIENT_ID });
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+      iosClientId: GOOGLE_IOS_CLIENT_ID,
+    });
 
     const {
       data: { session },
@@ -62,6 +66,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
     set({ user: data.user, isAnonymous: false });
     if (data?.user) await adapty.identify(data.user.id);
+  },
+
+  signInWithEmail: async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+    set({ session: data.session, user: data.user, isAnonymous: false });
+    if (data.user) await adapty.identify(data.user.id);
   },
 
   signInWithGoogle: async () => {

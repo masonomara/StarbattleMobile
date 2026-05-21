@@ -17,3 +17,13 @@ export type PackCatalogItem = {
   puzzleCount: number;
   storagePath?: string;
 };
+
+export type PaywallContext =
+  | { type: 'sequential'; packId: string; puzzleIndex: number }
+  | {
+      type: 'paid-pack';
+      packId: string;
+      packName: string;
+      priceUsd: number;
+      storagePath: string;
+    };

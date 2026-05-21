@@ -1,3 +1,4 @@
+import { db } from '../powersync/database';
 import type { Streak, StreakType } from '../types/state';
 
 export function getCurrentKey(type: StreakType, now = new Date()): string {
@@ -31,10 +32,16 @@ export function getPreviousKey(type: StreakType, now = new Date()): string {
   return getCurrentKey(type, prev);
 }
 
-export function getPuzzleIndex(type: StreakType, packSize: number, now = new Date()): number {
+export function getPuzzleIndex(
+  type: StreakType,
+  packSize: number,
+  now = new Date(),
+): number {
   const epoch = new Date('2025-01-01');
   const msPerDay = 86400000;
-  const daysSinceEpoch = Math.floor((now.getTime() - epoch.getTime()) / msPerDay);
+  const daysSinceEpoch = Math.floor(
+    (now.getTime() - epoch.getTime()) / msPerDay,
+  );
 
   switch (type) {
     case 'daily':
@@ -53,13 +60,46 @@ function getISOWeek(date: Date): number {
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
   const week1 = new Date(d.getFullYear(), 0, 4);
-  return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+  return (
+    1 +
+    Math.round(
+      ((d.getTime() - week1.getTime()) / 86400000 -
+        3 +
+        ((week1.getDay() + 6) % 7)) /
+        7,
+    )
+  );
+}
+
+export async function getArchivePuzzleId(
+  type: StreakType,
+  dateKey: string,
+): Promise<string | null> {
+  const result = await db.getOptional<{ puzzle_id: string }>(
+    'SELECT puzzle_id FROM streak_archive WHERE type = ? AND date_key = ?',
+    [type, dateKey],
+  );
+  return result?.puzzle_id ?? null;
+}
+
+export async function getPastArchive(
+  type: StreakType,
+  todayKey: string,
+): Promise<Array<{ dateKey: string; puzzleId: string }>> {
+  const rows = await db.getAll<{ date_key: string; puzzle_id: string }>(
+    'SELECT date_key, puzzle_id FROM streak_archive WHERE type = ? AND date_key <= ? ORDER BY date_key DESC',
+    [type, todayKey],
+  );
+  return rows.map(r => ({ dateKey: r.date_key, puzzleId: r.puzzle_id }));
 }
 
 export function getActiveStreak(streak: Streak, type: StreakType): number {
   const currentKey = getCurrentKey(type);
   const prevKey = getPreviousKey(type);
-  if (streak.lastCompletedKey === currentKey || streak.lastCompletedKey === prevKey) {
+  if (
+    streak.lastCompletedKey === currentKey ||
+    streak.lastCompletedKey === prevKey
+  ) {
     return streak.current;
   }
   return 0;
