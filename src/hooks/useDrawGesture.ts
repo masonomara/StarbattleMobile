@@ -11,7 +11,7 @@ export function useDrawGesture(
   savedScale: React.RefObject<number>,
   savedTranslateX: React.RefObject<number>,
   savedTranslateY: React.RefObject<number>,
-  boardLayout: React.RefObject<{ width: number; height: number }>,
+  canvasLayout: React.RefObject<{ x: number; y: number; width: number; height: number }>,
 ) {
   const strokeChanges = useRef<CellChange[]>([]);
   const visitedCells = useRef(new Set<number>());
@@ -19,17 +19,17 @@ export function useDrawGesture(
 
   const viewToCell = useCallback(
     (x: number, y: number): { row: number; col: number } | null => {
-      const layout = boardLayout.current;
-      if (!layout) return null;
+      const rect = canvasLayout.current;
+      if (rect.width === 0 || rect.height === 0) return null;
 
       const sc = savedScale.current;
       const tx = savedTranslateX.current;
       const ty = savedTranslateY.current;
       const boardPixels = cellSize * puzzleSize;
 
-      // Touch relative to board-area center (x,y are already view-relative)
-      const relX = x - layout.width / 2;
-      const relY = y - layout.height / 2;
+      // Touch relative to the canvas center in the gesture view's coordinate space
+      const relX = x - (rect.x + rect.width / 2);
+      const relY = y - (rect.y + rect.height / 2);
 
       // Reverse transform: subtract translate, divide by scale, shift to top-left origin
       const bx = (relX - tx) / sc + boardPixels / 2;
@@ -43,7 +43,7 @@ export function useDrawGesture(
       }
       return { row, col };
     },
-    [puzzleSize, savedScale, savedTranslateX, savedTranslateY, boardLayout, cellSize],
+    [puzzleSize, savedScale, savedTranslateX, savedTranslateY, canvasLayout, cellSize],
   );
 
   const markCell = useCallback((row: number, col: number) => {
@@ -126,5 +126,14 @@ export function useDrawGesture(
       committed.current = false;
     });
 
-  return { drawGesture };
+  const tapGesture = Gesture.Tap()
+    .maxDuration(300)
+    .onEnd(e => {
+      const state = usePuzzleStore.getState();
+      if (state.completed) return;
+      const cell = viewToCell(e.x, e.y);
+      if (cell) state.tapCell(cell.row, cell.col);
+    });
+
+  return { drawGesture, tapGesture };
 }

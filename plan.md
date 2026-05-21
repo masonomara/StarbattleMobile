@@ -2435,11 +2435,11 @@ These must be done before any code is written.
 
 ### Phase 9: Rendering (Skia Canvas)
 
-- [ ] **[CLAUDE]** Create `src/components/PuzzleCanvas.tsx` — single Skia canvas replacing `BoardView`, `CellView`, `CellGridSvg`, and `RegionBordersSvg`. Renders region fills, inner grid, region borders, star marks, X marks, hint ghosts.
-- [ ] **[CLAUDE]** Update `src/hooks/useDrawGesture.ts` for GH v3 — `activateAfterLongPress(300)`, new hooks API, worklet-safe coordinate math.
-- [ ] **[CLAUDE]** Update `src/hooks/useZoom.ts` for GH v3 — update pinch + pan syntax, keep spring physics and boundary clamping.
-- [ ] **[CLAUDE]** Update `src/utils/haptics.ts` — switch to `react-native-nitro-haptics` with `NitroModules.box(Haptics)` for worklet use.
-- [ ] **[CLAUDE]** Delete `src/components/BoardView.tsx`, `CellView.tsx`, `CellGridSvg.tsx`, `RegionBordersSvg.tsx`.
+- [x] **[CLAUDE]** Create `src/components/PuzzleCanvas.tsx` — single Skia canvas replacing `BoardView`, `CellView`, `CellGridSvg`, and `RegionBordersSvg`. Renders region fills, inner grid, region borders, star marks, X marks, hint ghosts.
+- [x] **[CLAUDE]** Update `src/hooks/useDrawGesture.ts` for GH v3 — `activateAfterLongPress(300)`, new hooks API, worklet-safe coordinate math.
+- [x] **[CLAUDE]** Update `src/hooks/useZoom.ts` for GH v3 — update pinch + pan syntax, keep spring physics and boundary clamping.
+- [x] **[CLAUDE]** Update `src/utils/haptics.ts` — switch to `react-native-nitro-haptics` with `NitroModules.box(Haptics)` for worklet use.
+- [x] **[CLAUDE]** Delete `src/components/BoardView.tsx`, `CellView.tsx`, `CellGridSvg.tsx`, `RegionBordersSvg.tsx`.
 - [ ] **[YOU]** Play a full puzzle. Verify: region colors, borders, grid lines, star placement, X marks, auto-marks, error highlighting, hint ghosts, pinch-zoom, drag-to-mark, haptics.
 
 ---

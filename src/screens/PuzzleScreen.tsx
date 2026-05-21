@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable, Animated } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -58,12 +58,19 @@ export function PuzzleScreen({
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
   const puzzle = usePuzzleStore(s => s.puzzle);
+  const cells = usePuzzleStore(s => s.cells);
+  const autoMarks = usePuzzleStore(s => s.autoMarks);
+  const errorCells = usePuzzleStore(s => s.errorCells);
+  const hintGhosts = usePuzzleStore(s => s.hintGhosts);
   const completed = usePuzzleStore(s => s.completed);
   const hideToolbar = useSettingsStore(s => s.settings.hideToolbar);
 
   const {
     pinchGesture,
     panGesture,
+    scale,
+    translateX,
+    translateY,
     savedScale,
     savedTranslateX,
     savedTranslateY,
@@ -71,24 +78,24 @@ export function PuzzleScreen({
     handleZoomReset,
   } = useZoom(gridSize, theme.cellSize);
 
-  const boardLayout = useRef({ width: 0, height: 0 });
-  const handleBoardAreaLayout = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    boardLayout.current = { width, height };
+  const canvasLayout = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const handleCanvasLayout = (e: LayoutChangeEvent) => {
+    const { x, y, width, height } = e.nativeEvent.layout;
+    canvasLayout.current = { x, y, width, height };
   };
 
-  const { drawGesture } = useDrawGesture(
+  const { drawGesture, tapGesture } = useDrawGesture(
     gridSize,
     theme.cellSize,
     savedScale,
     savedTranslateX,
     savedTranslateY,
-    boardLayout,
+    canvasLayout,
   );
 
   const gesture = Gesture.Simultaneous(
-    pinchGesture,
-    Gesture.Race(drawGesture, panGesture),
+    Gesture.Simultaneous(pinchGesture, panGesture),
+    Gesture.Race(drawGesture, tapGesture),
   );
 
   useEffect(() => {
@@ -139,9 +146,23 @@ export function PuzzleScreen({
             styles.boardArea,
             { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 80 },
           ]}
-          onLayout={handleBoardAreaLayout}
         >
-          <PuzzleCanvas />
+          <Animated.View
+            style={{
+              transform: [{ scale }, { translateX }, { translateY }],
+            }}
+            onLayout={handleCanvasLayout}
+          >
+            <PuzzleCanvas
+              puzzle={puzzle}
+              cells={cells}
+              autoMarks={autoMarks}
+              errorCells={errorCells}
+              hintGhosts={hintGhosts}
+              theme={theme}
+              canvasSize={theme.cellSize * puzzle.size}
+            />
+          </Animated.View>
         </View>
       </GestureDetector>
       {!hideToolbar && (
