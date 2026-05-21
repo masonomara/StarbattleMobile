@@ -3,7 +3,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from '../supabase/client';
 import { adapty } from 'react-native-adapty';
-import { GOOGLE_WEB_CLIENT_ID } from '../config';
+import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../config';
 
 type AuthState = {
   session: Session | null;
@@ -23,7 +23,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAnonymous: true,
 
   initialize: async () => {
-    GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+    GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, iosClientId: GOOGLE_IOS_CLIENT_ID });
 
     const {
       data: { session },

@@ -22,13 +22,7 @@ export default function App() {
       .getState()
       .initialize()
       .then(() => {
-        db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 })
-          .catch(e => console.error('[powersync] connect error:', e?.message ?? e));
-
-        // Temporary: log PowerSync status to validate connection
-        console.log('[powersync] initial:', JSON.stringify(db.currentStatus));
-        setTimeout(() => console.log('[powersync] 3s:', JSON.stringify(db.currentStatus)), 3000);
-        setTimeout(() => console.log('[powersync] 10s:', JSON.stringify(db.currentStatus)), 10000);
+        db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
 
         db.watch('SELECT * FROM user_entitlements LIMIT 1', [], {
           onResult: () => {

@@ -2283,9 +2283,9 @@ These must be done before any code is written.
 
 ### Phase 1: Supabase Schema
 
-- [ ] **[YOU]** In the Supabase SQL editor: run the full migration from Phase 1 — all `CREATE TABLE` statements, RLS policies, the `handle_new_user` trigger, the `add_owned_pack` RPC, and the free pack seed `INSERT`.
-- [ ] **[YOU]** Verify in the Supabase Table Editor that all tables exist: `packs`, `puzzle_progress`, `streaks`, `user_entitlements`, `adapty_events`, `streak_archive`.
-- [ ] **[YOU]** Confirm the 9 free pack rows are present in the `packs` table.
+- [x] **[YOU]** In the Supabase SQL editor: run the full migration from Phase 1 — all `CREATE TABLE` statements, RLS policies, the `handle_new_user` trigger, the `add_owned_pack` RPC, and the free pack seed `INSERT`.
+- [x] **[YOU]** Verify in the Supabase Table Editor that all tables exist: `packs`, `puzzle_progress`, `streaks`, `user_entitlements`, `adapty_events`, `streak_archive`.
+- [x] **[YOU]** Confirm the 9 free pack rows are present in the `packs` table.
 
 ---
 
