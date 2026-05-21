@@ -8,7 +8,7 @@ export async function fetchPaywall(placementId = 'main_paywall'): Promise<{
 }> {
   const paywall = await adapty.getPaywall(placementId);
   const products = await adapty.getPaywallProducts(paywall);
-return { paywall, products };
+  return { paywall, products };
 }
 
 export async function purchasePremium(): Promise<boolean> {
@@ -23,7 +23,10 @@ export async function purchasePremium(): Promise<boolean> {
   return false;
 }
 
-export async function purchasePack(packId: string): Promise<void> {
+export async function purchasePack(
+  packId: string,
+  storagePath: string,
+): Promise<void> {
   const { products } = await fetchPaywall();
   const product = products.find(
     p => p.vendorProductId === `starbattle_pack_${packId}`,
@@ -31,7 +34,7 @@ export async function purchasePack(packId: string): Promise<void> {
   if (!product) throw new Error(`Pack product not found: starbattle_pack_${packId}`);
 
   await adapty.makePurchase(product);
-  await downloadPack(packId);
+  await downloadPack(packId, storagePath);
 }
 
 export async function restorePurchases(): Promise<void> {
