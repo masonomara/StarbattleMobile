@@ -2384,7 +2384,7 @@ These must be done before any code is written.
 
 - [x] **[CLAUDE]** Create `src/stores/entitlementsStore.ts` — reads `user_entitlements` and `packs` from local SQLite, exposes `hasPackAccess`, `canPlayPuzzle`, `canPlayPack`.
 - [x] **[CLAUDE]** Wire `db.watch` on `user_entitlements` in `App.tsx` to reload entitlements on any sync update.
-- [ ] **[CLAUDE]** Create `src/hooks/useEntitlements.ts` — convenience hook over entitlementsStore for component use.
+- [x] **[CLAUDE]** Create `src/hooks/useEntitlements.ts` — convenience hook over entitlementsStore for component use.
 
 ---
 
@@ -2398,10 +2398,10 @@ These must be done before any code is written.
 
 ### Phase 6: Progress via PowerSync
 
-- [ ] **[CLAUDE]** Create `src/utils/progress.ts` — `saveProgress`, `loadProgress`, `getCompletedCountForPack`, `saveStreak`, `loadStreaks` — all reading/writing local SQLite via PowerSync.
-- [ ] **[CLAUDE]** Update `src/store.ts` — make `loadPuzzle` async (awaits `loadProgress`), replace all `persistProgress` calls with `saveProgress` (fire-and-forget), remove the 5-second autosave interval.
-- [ ] **[CLAUDE]** Delete `src/utils/persistProgress.ts` and remove all references.
-- [ ] **[YOU]** Play a puzzle partway through. Kill the app. Reopen. Verify progress is restored from SQLite.
+- [x] **[CLAUDE]** Create `src/utils/progress.ts` — `saveProgress`, `loadProgress`, `getCompletedCountForPack`, `saveStreak`, `loadStreaks` — all reading/writing local SQLite via PowerSync.
+- [x] **[CLAUDE]** Update `src/store.ts` — make `loadPuzzle` async (awaits `loadProgress`), replace all `persistProgress` calls with `saveProgress` (fire-and-forget), remove the 5-second autosave interval.
+- [x] **[CLAUDE]** Delete `src/utils/persistProgress.ts` and remove all references.
+- [x] **[YOU]** Play a puzzle partway through. Kill the app. Reopen. Verify progress is restored from SQLite.
 
 ---
 
