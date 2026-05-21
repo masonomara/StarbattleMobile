@@ -1,8 +1,8 @@
 import { PowerSyncDatabase } from '@powersync/react-native';
-import { OPSqliteOpenFactory } from '@powersync/op-sqlite';
+import { SQLJSOpenFactory } from '@powersync/adapter-sql-js';
 import { AppSchema } from './AppSchema';
 
 export const db = new PowerSyncDatabase({
   schema: AppSchema,
-  database: new OPSqliteOpenFactory({ dbFilename: 'starbattle.db' }),
+  database: new SQLJSOpenFactory({ dbFilename: 'starbattle.db' }),
 });
