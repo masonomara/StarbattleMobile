@@ -48,6 +48,10 @@ This document is the implementation blueprint for the alpha rebuild. It is groun
 
 **Offline guarantee:** All reads are against local SQLite. The app is fully playable without network. Writes queue and flush when connectivity returns.
 
+**PowerSync local SQLite adapter — alpha:** `@powersync/op-sqlite` and `@journeyapps/react-native-quick-sqlite` both install their JSI proxy via `RCTCxxBridge`, which was removed in RN 0.82. RN 0.84 is fully bridgeless (`RCTHost`), so neither adapter can initialize. The alpha uses `@powersync/adapter-sql-js` — a pure-JS / asm.js SQLite implementation (no native modules). Trade-off: the adapter is in-memory only; data does not persist to disk between app launches. PowerSync re-syncs from Supabase on each launch, so this is acceptable for alpha. A `SQLJSPersister` or a TurboModule-native adapter is required before production.
+
+**PowerSync write constraint:** PowerSync local tables are SQLite views backed by INSTEAD OF triggers. SQLite cannot execute `ON CONFLICT ... DO UPDATE` (UPSERT) against a view — that syntax bypasses triggers entirely. All writes to PowerSync-managed tables (`puzzle_progress`, `streaks`) must use SELECT + INSERT/UPDATE, never UPSERT.
+
 **Free pack distribution:** All 9 free pack JSON files are hosted in Supabase Storage as the source of truth. On startup, the app checks for newer versions and auto-downloads any updates in the background. The bundled JSON files (committed to the repo) are the offline fallback — if the download hasn't happened yet or the user is offline, the bundled version is used. Paid pack JSON files exist only in Supabase Storage and are downloaded after purchase.
 
 ---
@@ -492,16 +496,28 @@ export type Database = (typeof AppSchema)['types'];
 
 ### 2.3 Database Singleton
 
+> **RN 0.84 bridgeless:** op-sqlite is broken on RN 0.84 (requires `RCTCxxBridge`, removed in RN 0.82). Use `@powersync/adapter-sql-js` — pure JS, no native modules, no `pod install`. Trade-off: in-memory only (no disk persistence between launches). PowerSync re-syncs from Supabase on each launch, making this acceptable for alpha.
+
 ```typescript
 // src/powersync/database.ts
 import { PowerSyncDatabase } from '@powersync/react-native';
-import { OPSqliteOpenFactory } from '@powersync/op-sqlite';
+import { SQLJSOpenFactory } from '@powersync/adapter-sql-js';
 import { AppSchema } from './AppSchema';
 
 export const db = new PowerSyncDatabase({
   schema: AppSchema,
-  database: new OPSqliteOpenFactory({ dbFilename: 'starbattle.db' }),
+  database: new SQLJSOpenFactory({ dbFilename: 'starbattle.db' }),
 });
+```
+
+Also required in `metro.config.js` — add to inlineRequires blockList:
+```javascript
+[require.resolve('@powersync/adapter-sql-js')]: true,
+```
+
+And in `index.js` — add polyfill before other imports (sql.js requires `TextDecoder`, absent from Hermes on RN 0.84):
+```javascript
+import 'fast-text-encoding';
 ```
 
 ### 2.4 Supabase Connector
@@ -515,6 +531,7 @@ import {
   UpdateType,
 } from '@powersync/react-native';
 import { supabase } from '../supabase/client';
+import { POWERSYNC_URL } from '../config';
 
 export class SupabaseConnector implements PowerSyncBackendConnector {
   async fetchCredentials(): Promise<PowerSyncCredentials> {
@@ -524,7 +541,7 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     } = await supabase.auth.getSession();
     if (error || !session) throw new Error('No active session');
     return {
-      endpoint: process.env.POWERSYNC_URL!,
+      endpoint: POWERSYNC_URL,
       token: session.access_token,
     };
   }
@@ -566,28 +583,25 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
 ```typescript
 // src/supabase/client.ts
 import { createClient } from '@supabase/supabase-js';
-import { MMKV } from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 
-const mmkv = new MMKV({ id: 'supabase-auth' });
+const mmkv = createMMKV({ id: 'supabase-auth' });
 
-// MMKV adapter for Supabase auth token storage
+// MMKV v4 adapter for Supabase auth token storage
 const mmkvStorage = {
   getItem: (key: string) => mmkv.getString(key) ?? null,
   setItem: (key: string, value: string) => mmkv.set(key, value),
-  removeItem: (key: string) => mmkv.delete(key),
+  removeItem: (key: string) => mmkv.remove(key), // v4: .remove() not .delete()
 };
 
-export const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      storage: mmkvStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-    },
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: mmkvStorage,
+    autoRefreshToken: true,
+    persistSession: true,
   },
-);
+});
 ```
 
 ### 2.6 App Startup
@@ -600,14 +614,16 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Navigation } from './src/navigation';
 import { useAuthStore } from './src/stores/authStore';
 import { useSettingsStore } from './src/stores/settingsStore';
+import { useEntitlementsStore } from './src/stores/entitlementsStore';
 import { db } from './src/powersync/database';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
+import { ADAPTY_SDK_KEY } from './src/config';
 
 export default function App() {
   useEffect(() => {
-    // 1. Initialize Adapty
-    adapty.activate(process.env.ADAPTY_SDK_KEY!);
+    // 1. Initialize Adapty (.catch swallows "already activated" on Fast Refresh)
+    adapty.activate(ADAPTY_SDK_KEY).catch(() => {});
 
     // 2. Initialize settings from MMKV
     useSettingsStore.getState().initialize();
@@ -619,6 +635,14 @@ export default function App() {
       .then(() => {
         // 4. Connect PowerSync (needs auth session for the JWT)
         db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
+
+        // 5. Re-load entitlements whenever PowerSync syncs a new entitlements row
+        db.watch('SELECT * FROM user_entitlements LIMIT 1', [], {
+          onResult: () => {
+            const userId = useAuthStore.getState().user?.id;
+            if (userId) useEntitlementsStore.getState().loadEntitlements(userId);
+          },
+        });
       });
   }, []);
 
@@ -642,8 +666,15 @@ Anonymous-first: every app launch creates or restores a Supabase session. No sig
 // src/stores/authStore.ts
 import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from '../supabase/client';
 import { adapty } from 'react-native-adapty';
+import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../config';
+
+GoogleSignin.configure({
+  webClientId: GOOGLE_WEB_CLIENT_ID,
+  iosClientId: GOOGLE_IOS_CLIENT_ID, // required — without this, iOS sign-in fails
+});
 
 type AuthState = {
   session: Session | null;
@@ -653,6 +684,7 @@ type AuthState = {
   signInAnonymously: () => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signInWithApple: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -722,6 +754,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
     set({ session: data.session, user: data.user, isAnonymous: false });
     if (data.user) await adapty.identify(data.user.id);
+  },
+
+  signInWithGoogle: async () => {
+    await GoogleSignin.hasPlayServices();
+    const { data } = await GoogleSignin.signIn();
+    if (!data?.idToken) throw new Error('No Google ID token');
+    const { data: authData, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: data.idToken,
+    });
+    if (error) throw error;
+    set({ session: authData.session, user: authData.user, isAnonymous: false });
+    if (authData.user) await adapty.identify(authData.user.id);
   },
 
   signOut: async () => {
@@ -947,6 +992,8 @@ export function saveSettings(update: Partial<UserSettings>): void {
 
 Replace `persistProgress.ts` with PowerSync writes. All progress reads/writes go through the local SQLite db.
 
+> **PowerSync write constraint:** PowerSync local tables are SQLite views. SQLite cannot execute `ON CONFLICT ... DO UPDATE` against a view — INSTEAD OF triggers are bypassed by that syntax. Use SELECT + INSERT/UPDATE instead.
+
 ```typescript
 // src/utils/progress.ts
 import { db } from '../powersync/database';
@@ -954,7 +1001,6 @@ import { useAuthStore } from '../stores/authStore';
 import type { CellValue } from '../types/state';
 
 function rowId(userId: string, puzzleId: string): string {
-  // Deterministic ID so upserts work: hash of userId + puzzleId
   return `${userId}:${puzzleId}`;
 }
 
@@ -969,29 +1015,48 @@ export async function saveProgress(
   if (!userId) return;
 
   const now = new Date().toISOString();
-  await db.execute(
-    `INSERT INTO puzzle_progress
-       (id, user_id, puzzle_id, cells, auto_marks, time_ms, completed, completed_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(user_id, puzzle_id) DO UPDATE SET
-       cells = excluded.cells,
-       auto_marks = excluded.auto_marks,
-       time_ms = excluded.time_ms,
-       completed = excluded.completed,
-       completed_at = COALESCE(puzzle_progress.completed_at, excluded.completed_at),
-       updated_at = excluded.updated_at`,
-    [
-      rowId(userId, puzzleId),
-      userId,
-      puzzleId,
-      JSON.stringify(cells),
-      JSON.stringify([...autoMarks]),
-      timeMs,
-      completed ? 1 : 0,
-      completed ? now : null,
-      now,
-    ],
+  const id = rowId(userId, puzzleId);
+
+  // SELECT + INSERT/UPDATE — PowerSync views do not support ON CONFLICT DO UPDATE
+  const existing = await db.getOptional<{ id: string; completed_at: string | null }>(
+    'SELECT id, completed_at FROM puzzle_progress WHERE user_id = ? AND puzzle_id = ?',
+    [userId, puzzleId],
   );
+
+  if (existing) {
+    await db.execute(
+      `UPDATE puzzle_progress SET
+         cells = ?, auto_marks = ?, time_ms = ?, completed = ?,
+         completed_at = COALESCE(completed_at, ?), updated_at = ?
+       WHERE id = ?`,
+      [
+        JSON.stringify(cells),
+        JSON.stringify([...autoMarks]),
+        timeMs,
+        completed ? 1 : 0,
+        completed ? now : null,
+        now,
+        existing.id,
+      ],
+    );
+  } else {
+    await db.execute(
+      `INSERT INTO puzzle_progress
+         (id, user_id, puzzle_id, cells, auto_marks, time_ms, completed, completed_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        userId,
+        puzzleId,
+        JSON.stringify(cells),
+        JSON.stringify([...autoMarks]),
+        timeMs,
+        completed ? 1 : 0,
+        completed ? now : null,
+        now,
+      ],
+    );
+  }
 }
 
 export async function loadProgress(puzzleId: string): Promise<{
@@ -1050,22 +1115,26 @@ export async function saveStreak(
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return;
 
-  await db.execute(
-    `INSERT INTO streaks (id, user_id, type, current_count, last_completed_key, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT(user_id, type) DO UPDATE SET
-       current_count = excluded.current_count,
-       last_completed_key = excluded.last_completed_key,
-       updated_at = excluded.updated_at`,
-    [
-      `${userId}:${type}`,
-      userId,
-      type,
-      currentCount,
-      lastCompletedKey,
-      new Date().toISOString(),
-    ],
+  const now = new Date().toISOString();
+
+  // SELECT + INSERT/UPDATE — PowerSync views do not support ON CONFLICT DO UPDATE
+  const existing = await db.getOptional<{ id: string }>(
+    'SELECT id FROM streaks WHERE user_id = ? AND type = ?',
+    [userId, type],
   );
+
+  if (existing) {
+    await db.execute(
+      'UPDATE streaks SET current_count = ?, last_completed_key = ?, updated_at = ? WHERE id = ?',
+      [currentCount, lastCompletedKey, now, existing.id],
+    );
+  } else {
+    await db.execute(
+      `INSERT INTO streaks (id, user_id, type, current_count, last_completed_key, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [`${userId}:${type}`, userId, type, currentCount, lastCompletedKey, now],
+    );
+  }
 }
 
 export async function loadStreaks(): Promise<
@@ -2291,39 +2360,39 @@ These must be done before any code is written.
 
 ### Phase 2: PowerSync Setup
 
-- [ ] **[YOU]** In the PowerSync dashboard: deploy `sync-rules.yaml` from Phase 2.1. Confirm it validates without errors.
-- [ ] **[YOU]** Copy the PowerSync instance URL. Add it to your env as `POWERSYNC_URL`.
-- [ ] **[CLAUDE]** Create `src/powersync/AppSchema.ts` with the full client SQLite schema (packs, puzzle_progress, streaks, user_entitlements, streak_archive).
-- [ ] **[CLAUDE]** Create `src/powersync/database.ts` — PowerSync singleton using op-sqlite.
-- [ ] **[CLAUDE]** Create `src/powersync/Connector.ts` — `SupabaseConnector` with `fetchCredentials` and `uploadData`.
-- [ ] **[CLAUDE]** Create `src/supabase/client.ts` — Supabase JS client with MMKV auth storage adapter.
-- [ ] **[CLAUDE]** Update `App.tsx` — initialize sequence: Adapty → settings → auth → PowerSync connect.
-- [ ] **[YOU]** Launch app, confirm PowerSync connects without error (check console logs).
+- [x] **[YOU]** In the PowerSync dashboard: deploy `sync-rules.yaml` from Phase 2.1. Confirm it validates without errors.
+- [x] **[YOU]** Copy the PowerSync instance URL. Add it to your env as `POWERSYNC_URL`.
+- [x] **[CLAUDE]** Create `src/powersync/AppSchema.ts` with the full client SQLite schema (packs, puzzle_progress, streaks, user_entitlements, streak_archive).
+- [x] **[CLAUDE]** Create `src/powersync/database.ts` — PowerSync singleton using `@powersync/adapter-sql-js` (pure JS, RN 0.84 bridgeless compatible; replaces op-sqlite which is broken on RN 0.84).
+- [x] **[CLAUDE]** Create `src/powersync/Connector.ts` — `SupabaseConnector` with `fetchCredentials` and `uploadData`.
+- [x] **[CLAUDE]** Create `src/supabase/client.ts` — Supabase JS client with MMKV v4 auth storage adapter (`createMMKV`, `.remove()`).
+- [x] **[CLAUDE]** Update `App.tsx` — initialize sequence: Adapty → settings → auth → PowerSync connect → entitlements watcher.
+- [x] **[YOU]** Launch app, confirm PowerSync connects without error. Verified: `connected: true`, `hasSynced: true`, packs: 9, entitlements: 1 row, streaks: 3, write round-trip to Supabase confirmed.
 
 ---
 
 ### Phase 3: Auth Store
 
-- [ ] **[YOU]** In Supabase dashboard under Authentication → Providers: confirm Anonymous is enabled (already done in pre-setup). No additional configuration needed for anonymous auth.
-- [ ] **[CLAUDE]** Create `src/stores/authStore.ts` — anonymous-first, Apple Sign In, email sign-up/sign-in, sign-out, anon→account upgrade, Adapty identify.
-- [ ] **[CLAUDE]** Wire `authStore.initialize()` into `App.tsx` startup sequence.
-- [ ] **[YOU]** Run app. Verify an anonymous session is created on first launch and persists across restarts (check Supabase Auth → Users for the anonymous user row).
+- [x] **[YOU]** In Supabase dashboard under Authentication → Providers: confirm Anonymous is enabled (already done in pre-setup). No additional configuration needed for anonymous auth.
+- [x] **[CLAUDE]** Create `src/stores/authStore.ts` — anonymous-first, Apple Sign In, Google Sign In, email sign-up/sign-in, sign-out, anon→account upgrade, Adapty identify. `GOOGLE_IOS_CLIENT_ID` required alongside `GOOGLE_WEB_CLIENT_ID` in `GoogleSignin.configure()`.
+- [x] **[CLAUDE]** Wire `authStore.initialize()` into `App.tsx` startup sequence.
+- [x] **[YOU]** Run app. Verify an anonymous session is created on first launch and persists across restarts (check Supabase Auth → Users for the anonymous user row).
 
 ---
 
 ### Phase 4: Entitlements Store
 
-- [ ] **[CLAUDE]** Create `src/stores/entitlementsStore.ts` — reads `user_entitlements` and `packs` from local SQLite, exposes `hasPackAccess`, `canPlayPuzzle`, `canPlayPack`.
-- [ ] **[CLAUDE]** Wire `db.watch` on `user_entitlements` in `App.tsx` to reload entitlements on any sync update.
+- [x] **[CLAUDE]** Create `src/stores/entitlementsStore.ts` — reads `user_entitlements` and `packs` from local SQLite, exposes `hasPackAccess`, `canPlayPuzzle`, `canPlayPack`.
+- [x] **[CLAUDE]** Wire `db.watch` on `user_entitlements` in `App.tsx` to reload entitlements on any sync update.
 - [ ] **[CLAUDE]** Create `src/hooks/useEntitlements.ts` — convenience hook over entitlementsStore for component use.
 
 ---
 
 ### Phase 5: Settings Store
 
-- [ ] **[CLAUDE]** Create `src/stores/settingsStore.ts` — MMKV-backed settings, extracted from the old `userStore.ts`.
-- [ ] **[CLAUDE]** Update `src/storage.ts` — strip out progress and streak functions (those move to PowerSync), keep only settings get/set.
-- [ ] **[CLAUDE]** Wire `settingsStore.initialize()` into `App.tsx` startup (before auth).
+- [x] **[CLAUDE]** Create `src/stores/settingsStore.ts` — MMKV-backed settings, extracted from the old `userStore.ts`.
+- [x] **[CLAUDE]** Update `src/storage.ts` — strip out progress and streak functions (those move to PowerSync), keep only settings get/set.
+- [x] **[CLAUDE]** Wire `settingsStore.initialize()` into `App.tsx` startup (before auth).
 
 ---
 
