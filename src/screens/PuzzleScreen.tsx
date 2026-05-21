@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
@@ -19,28 +20,19 @@ import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { getCurrentKey, getPuzzleIndex } from '../utils/streakDate';
-import type { StreakType } from '../types/state';
+import type { RootStackParamList } from '../types/navigation';
 
 export function PuzzleScreen({
   route,
   navigation,
-}: {
-  route: {
-    params: {
-      packId?: string;
-      puzzleIndex?: number;
-      streakType?: string;
-    };
-  };
-  navigation: { goBack: () => void };
-}) {
+}: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
   const { packId, puzzleIndex, streakType } = route.params;
 
   const { rawPuzzle, puzzleId, gridSize, packName, isLastPuzzle } = (() => {
     if (streakType) {
-      const pack = streakPacks[streakType as StreakType];
-      const key = getCurrentKey(streakType as StreakType);
-      const idx = getPuzzleIndex(streakType as StreakType, pack.puzzles.length);
+      const pack = streakPacks[streakType];
+      const key = getCurrentKey(streakType);
+      const idx = getPuzzleIndex(streakType, pack.puzzles.length);
       return {
         rawPuzzle: pack.puzzles[idx],
         puzzleId: `${streakType}:${key}`,
@@ -160,7 +152,7 @@ export function PuzzleScreen({
         puzzleIndex={puzzleIndex ?? 0}
         packName={packName}
         isLastPuzzle={isLastPuzzle}
-        streakType={streakType as StreakType | undefined}
+        streakType={streakType}
       />
     </View>
   );

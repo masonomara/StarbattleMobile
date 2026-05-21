@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, FlatList, StyleSheet } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { packs } from '../packs';
 import { Header } from '../components/Header';
 import { SettingsButton } from '../components/SettingsButton';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
+import type { RootStackParamList } from '../types/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function PuzzleCell({
@@ -68,13 +70,7 @@ function PuzzleCell({
 export function LibraryScreen({
   route,
   navigation,
-}: {
-  route: { params: { packId: string } };
-  navigation: {
-    goBack: () => void;
-    navigate: (screen: string, params: object) => void;
-  };
-}) {
+}: NativeStackScreenProps<RootStackParamList, 'Library'>) {
   const { packId } = route.params;
   const pack = packs.find(p => p.id === packId);
   const theme = useTheme();

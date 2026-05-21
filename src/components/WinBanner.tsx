@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Text, Pressable, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types/navigation';
 import { usePuzzleStore } from '../store';
 import { loadStreaks, recordStreak } from '../utils/progress';
 import { getActiveStreak } from '../utils/streakDate';
@@ -26,10 +28,7 @@ export function WinBanner({
   const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
   const styles = createStyles(theme);
-  const navigation = useNavigation<{
-    goBack: () => void;
-    replace: (screen: string, params: object) => void;
-  }>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [streakCount, setStreakCount] = useState(0);
   const [bannerHeight, setBannerHeight] = useState(0);

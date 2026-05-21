@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { packs, streakPacks } from '../packs';
 import { Header } from '../components/Header';
 import { SettingsButton } from '../components/SettingsButton';
@@ -7,6 +8,7 @@ import { useTheme, type Theme } from '../hooks/useTheme';
 import { getCurrentKey, getActiveStreak } from '../utils/streakDate';
 import { loadStreaks, getCompletedCountForPack, loadProgress } from '../utils/progress';
 import type { StreakType, Streak } from '../types/state';
+import type { RootStackParamList } from '../types/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
@@ -19,9 +21,7 @@ const STREAK_LABELS: Record<StreakType, string> = {
 
 export function HomeScreen({
   navigation,
-}: {
-  navigation: { navigate: (screen: string, params?: object) => void };
-}) {
+}: NativeStackScreenProps<RootStackParamList, 'Home'>) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets);
