@@ -1,5 +1,12 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated, ActivityIndicator } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Animated,
+  ActivityIndicator,
+} from 'react-native';
+import ReAnimated from 'react-native-reanimated';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -19,15 +26,23 @@ import { saveProgress } from '../utils/progress';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
-import { getCurrentKey, getPuzzleIndex, archiveKeyToDate } from '../utils/streakDate';
+import {
+  getCurrentKey,
+  getPuzzleIndex,
+  archiveKeyToDate,
+} from '../utils/streakDate';
 import type { RootStackParamList } from '../types/navigation';
+import type { DrawLayerHandle } from '../types/state';
 
 export function PuzzleScreen({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
   const { packId, puzzleIndex, streakType } = route.params;
-  const rawParams = route.params as { isArchive?: boolean; archiveKey?: string };
+  const rawParams = route.params as {
+    isArchive?: boolean;
+    archiveKey?: string;
+  };
   const isArchive = rawParams.isArchive;
   const archiveKey = rawParams.archiveKey;
 
@@ -35,12 +50,18 @@ export function PuzzleScreen({
     if (streakType) {
       const pack = streakPacks[streakType];
       if (!pack) return null;
-      const key = isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
-      const date = isArchive && archiveKey ? archiveKeyToDate(streakType, archiveKey) : new Date();
+      const key =
+        isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
+      const date =
+        isArchive && archiveKey
+          ? archiveKeyToDate(streakType, archiveKey)
+          : new Date();
       const idx = getPuzzleIndex(streakType, pack.puzzles.length, date);
       return {
         rawPuzzle: pack.puzzles[idx],
-        puzzleId: isArchive ? `${streakType}:archive:${key}` : `${streakType}:${key}`,
+        puzzleId: isArchive
+          ? `${streakType}:archive:${key}`
+          : `${streakType}:${key}`,
         gridSize: pack.gridSize,
         packName: pack.name,
         isLastPuzzle: !isArchive,
@@ -73,14 +94,27 @@ export function PuzzleScreen({
   const cells = usePuzzleStore(s => s.cells);
   const errorCells = usePuzzleStore(s => s.errorCells);
   const hintGhosts = usePuzzleStore(s => s.hintGhosts);
-  const hideToolbar = useSettingsStore(s => s.settings.hideToolbar);
+  const alwaysShowToolbar = useSettingsStore(s => s.settings.alwaysShowToolbar);
+  const alwaysShowTimer = useSettingsStore(s => s.settings.alwaysShowTimer);
+  const [headerVisible, setHeaderVisible] = useState(false);
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(buttonOpacity, {
+      toValue: headerVisible ? 1 : 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  }, [headerVisible, buttonOpacity]);
+
+  useEffect(() => {
+    navigation.setOptions({ statusBarHidden: !headerVisible, statusBarAnimation: 'fade' });
+  }, [headerVisible, navigation]);
 
   const {
     pinchGesture,
     panGesture,
-    scale,
-    translateX,
-    translateY,
+    animatedStyle,
     savedScale,
     savedTranslateX,
     savedTranslateY,
@@ -88,10 +122,12 @@ export function PuzzleScreen({
     handleZoomReset,
   } = useZoom(gridSize, theme.cellSize);
 
-  const canvasLayout = useRef({ x: 0, y: 0, width: 0, height: 0 });
-  const handleCanvasLayout = (e: LayoutChangeEvent) => {
-    const { x, y, width, height } = e.nativeEvent.layout;
-    canvasLayout.current = { x, y, width, height };
+  const drawLayerRef = useRef<DrawLayerHandle>(null);
+
+  const boardLayout = useRef({ width: 0, height: 0 });
+  const handleBoardLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    boardLayout.current = { width, height };
   };
 
   const { drawGesture, tapGesture } = useDrawGesture(
@@ -100,15 +136,14 @@ export function PuzzleScreen({
     savedScale,
     savedTranslateX,
     savedTranslateY,
-    canvasLayout,
+    boardLayout,
+    drawLayerRef,
+    () => setHeaderVisible(v => !v),
   );
 
   const gesture = Gesture.Simultaneous(
     pinchGesture,
-    Gesture.Race(
-      drawGesture,
-      Gesture.Exclusive(panGesture, tapGesture),
-    ),
+    Gesture.Race(drawGesture, Gesture.Exclusive(panGesture, tapGesture)),
   );
 
   useEffect(() => {
@@ -143,7 +178,16 @@ export function PuzzleScreen({
 
   if (!puzzle) {
     return (
-      <View style={[{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.bg }]}>
+      <View
+        style={[
+          {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: theme.bg,
+          },
+        ]}
+      >
         <ActivityIndicator color={theme.accent} />
       </View>
     );
@@ -153,16 +197,32 @@ export function PuzzleScreen({
     <View style={styles.container}>
       <Header
         left={
-          <Pressable
-            style={styles.headerButton}
-            onPress={() => navigation.goBack()}
-            hitSlop={8}
+          <Animated.View
+            style={{ opacity: buttonOpacity }}
+            pointerEvents={headerVisible ? 'auto' : 'none'}
           >
-            <ChevronLeft size={26} color={theme.text} />
-          </Pressable>
+            <Pressable
+              style={styles.headerButton}
+              onPress={() => navigation.goBack()}
+              hitSlop={8}
+            >
+              <ChevronLeft size={26} color={theme.text} />
+            </Pressable>
+          </Animated.View>
         }
-        center={<HeaderTimer />}
-        right={<SettingsButton />}
+        center={
+          <Animated.View style={{ opacity: alwaysShowTimer ? 1 : buttonOpacity }}>
+            <HeaderTimer />
+          </Animated.View>
+        }
+        right={
+          <Animated.View
+            style={{ opacity: buttonOpacity }}
+            pointerEvents={headerVisible ? 'auto' : 'none'}
+          >
+            <SettingsButton />
+          </Animated.View>
+        }
       />
       <GestureDetector gesture={gesture}>
         <View
@@ -170,14 +230,13 @@ export function PuzzleScreen({
             styles.boardArea,
             { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 80 },
           ]}
+          onLayout={handleBoardLayout}
         >
-          <Animated.View
-            style={{
-              transform: [{ scale }, { translateX }, { translateY }],
-            }}
-            onLayout={handleCanvasLayout}
+          <ReAnimated.View
+            style={animatedStyle}
           >
             <PuzzleCanvas
+              ref={drawLayerRef}
               puzzle={puzzle}
               cells={cells}
               errorCells={errorCells}
@@ -185,12 +244,15 @@ export function PuzzleScreen({
               theme={theme}
               canvasSize={theme.cellSize * puzzle.size}
             />
-          </Animated.View>
+          </ReAnimated.View>
         </View>
       </GestureDetector>
-      {!hideToolbar && (
+      <Animated.View
+        style={{ opacity: alwaysShowToolbar ? 1 : buttonOpacity }}
+        pointerEvents={alwaysShowToolbar || headerVisible ? 'auto' : 'none'}
+      >
         <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
-      )}
+      </Animated.View>
       <WinBanner
         packId={packId ?? ''}
         puzzleIndex={puzzleIndex ?? 0}
@@ -211,17 +273,17 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
     },
     headerButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 24,
+      width: 48,
+      height: 48,
+      borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
+
+      backgroundColor: theme.bg,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 24,
       elevation: 8,
-      opacity: 0.97,
-      backgroundColor: theme.card,
-      shadowColor: theme.shadow,
+      zIndex: 0,
     },
   });

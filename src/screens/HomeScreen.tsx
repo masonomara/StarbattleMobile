@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { packs, streakPacks } from '../packs';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
-import { getCurrentKey, getActiveStreak } from '../utils/streakDate';
+import { getCurrentKey, getActiveStreak, getPuzzleIndex } from '../utils/streakDate';
 import {
   loadStreaks,
   getCompletedCountForPack,
@@ -15,9 +15,12 @@ import {
   getMostRecentInProgress,
 } from '../utils/progress';
 import { formatTime } from '../utils/formatTime';
+import { parsePuzzle } from '../utils/parsePuzzle';
+import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import type { StreakType, Streak } from '../types/state';
 import type { PackCatalogItem } from '../types/user';
 import type { RootStackParamList } from '../types/navigation';
+import type { Puzzle } from '../types/puzzle';
 
 const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 
@@ -64,6 +67,17 @@ export function HomeScreen({
   const styles = createStyles(theme, insets);
   const isFocused = useIsFocused();
   const { packCatalog, hasPackAccess } = useEntitlements();
+
+  const streakPreviews = useMemo<Record<StreakType, Puzzle>>(() => {
+    const result = {} as Record<StreakType, Puzzle>;
+    for (const type of STREAK_TYPES) {
+      const pack = streakPacks[type];
+      const idx = getPuzzleIndex(type, pack.puzzles.length);
+      const key = getCurrentKey(type);
+      result[type] = parsePuzzle(pack.puzzles[idx], `${type}:${key}`);
+    }
+    return result;
+  }, []);
 
   const [streaks, setStreaks] = useState<Streak[]>([]);
   const [completedPuzzleIds, setCompletedPuzzleIds] = useState<Set<string>>(
@@ -233,10 +247,19 @@ export function HomeScreen({
                     navigation.navigate('Puzzle', { streakType: type })
                   }
                 >
-                  <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
-                  <Text style={styles.streakMeta}>
-                    {pack.gridSize}×{pack.gridSize}
-                  </Text>
+                  <View style={styles.streakCardHeader}>
+                    <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                    <Text style={styles.streakMeta}>
+                      {pack.gridSize}×{pack.gridSize}
+                    </Text>
+                  </View>
+                  <View style={styles.streakThumbnailWrap}>
+                    <PuzzleThumbnail
+                      puzzle={streakPreviews[type]}
+                      size={220}
+                      theme={theme}
+                    />
+                  </View>
                   {streakCount > 0 && (
                     <Text style={styles.streakCount}>{streakCount}</Text>
                   )}
@@ -382,13 +405,10 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       color: theme.onAccent,
       opacity: 0.8,
     },
-      continueSection: {
+    continueSection: {
       paddingTop: 34,
-      flexDirection: 'column',
-      backgroundColor: theme.bg,
-
-     
       paddingHorizontal: theme.spacingXl,
+      backgroundColor: theme.bg,
     },
     streakSection: {
       paddingTop: 34,
@@ -418,38 +438,47 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
 
     streakCard: {
-   
       padding: theme.spacingLg,
+      paddingBottom: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.bg,
+      backgroundColor: theme.card,
       alignItems: 'center',
-      aspectRatio: 3 / 4,
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 1,
       shadowRadius: 8,
       elevation: 2,
       zIndex: 70,
-      width: 280,
+      width: 256,
     },
     streakCardCompleted: {
       opacity: 0.6,
     },
+    streakCardHeader: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 6,
+      marginBottom: theme.spacingMd,
+    },
     streakLabel: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeMd,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     streakMeta: {
       fontSize: 12,
       color: theme.textSecondary,
-      marginTop: 4,
+    },
+    streakThumbnailWrap: {
+      borderRadius: 4,
+      overflow: 'hidden',
     },
     streakCount: {
-      fontSize: 22,
+      fontSize: 18,
       fontWeight: theme.fontWeightSemibold,
       color: theme.accent,
-      marginTop: 8,
+      marginTop: theme.spacingMd,
     },
     sectionLabel: {
       fontSize: 22,

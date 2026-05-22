@@ -26,8 +26,8 @@ export type UserSettings = {
   autoXRegions: boolean;
   highlightErrors: boolean;
   coloredRegions: boolean;
-  showTimer: boolean;
-  hideToolbar: boolean;
+  alwaysShowTimer: boolean;
+  alwaysShowToolbar: boolean;
   theme: 'system' | 'light' | 'dark';
   haptics: boolean;
 };
@@ -41,4 +41,9 @@ export type CellChange = {
 export type Move = {
   changes: CellChange[];
   autoMarks: number[];
+};
+
+export type DrawLayerHandle = {
+  addCell: (idx: number, value: CellValue) => void;
+  reset: () => void;
 };

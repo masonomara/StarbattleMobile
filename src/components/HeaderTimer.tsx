@@ -1,19 +1,17 @@
 import React, { useEffect } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { usePuzzleStore } from '../store';
-import { useSettingsStore } from '../stores/settingsStore';
 import { formatTime } from '../utils/formatTime';
 import { useTheme, type Theme } from '../hooks/useTheme';
 
 export function HeaderTimer() {
   const timeMs = usePuzzleStore(s => s.timeMs);
   const completed = usePuzzleStore(s => s.completed);
-  const showTimer = useSettingsStore(s => s.settings.showTimer);
   const theme = useTheme();
   const styles = createStyles(theme);
 
   useEffect(() => {
-    if (completed || !showTimer) return;
+    if (completed) return;
     let last = Date.now();
     const id = setInterval(() => {
       const now = Date.now();
@@ -21,9 +19,7 @@ export function HeaderTimer() {
       last = now;
     }, 1000);
     return () => clearInterval(id);
-  }, [completed, showTimer]);
-
-  if (!showTimer) return null;
+  }, [completed]);
 
   return <Text style={styles.timer}>{formatTime(timeMs)}</Text>;
 }

@@ -51,87 +51,102 @@ export function Toolbar({ isZoomed, onZoomReset }: Props) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.toolbar, { bottom: insets.bottom - 12 }]}>
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          onZoomReset();
-        }}
-        disabled={zoomDisabled}
-        style={[styles.button, zoomDisabled && styles.disabled]}
-      >
-        <Minimize2 size={24} color={theme.text} />
-      </Pressable>
+    <>
+      <View style={[styles.toolbar, { bottom: insets.bottom - 12 }]}>
+        <View style={[styles.toolbarWrapper]}>
+          <Pressable
+            onPress={() => {
+              if (hapticsEnabled) hapticMedium();
+              onZoomReset();
+            }}
+            disabled={zoomDisabled}
+            style={styles.button}
+          >
+            <View style={zoomDisabled && styles.iconDisabled}>
+              <Minimize2 size={26} color={theme.text} />
+            </View>
+          </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          showHint();
-        }}
-        disabled={hintDisabled}
-        style={[
-          styles.button,
-          hasGhosts && { backgroundColor: theme.accent },
-          hintDisabled && styles.disabled,
-        ]}
-      >
-        <Lightbulb size={24} color={theme.text} />
-      </Pressable>
+          <Pressable
+            onPress={() => {
+              if (hapticsEnabled) hapticMedium();
+              showHint();
+            }}
+            disabled={hintDisabled}
+            style={[
+              styles.button,
+              hasGhosts && { backgroundColor: theme.accent },
+            ]}
+          >
+            <View style={hintDisabled && styles.iconDisabled}>
+              <Lightbulb size={26} color={theme.text} />
+            </View>
+          </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          cycleTapMode();
-        }}
-        disabled={completed}
-        style={[styles.button, completed && styles.disabled]}
-      >
-        {React.createElement(TAP_MODE_ICONS[tapMode], {
-          size: 24,
-          color: theme.text,
-        })}
-      </Pressable>
+          <Pressable
+            onPress={() => {
+              if (hapticsEnabled) hapticMedium();
+              cycleTapMode();
+            }}
+            disabled={completed}
+            style={styles.button}
+          >
+            <View style={completed && styles.iconDisabled}>
+              {React.createElement(TAP_MODE_ICONS[tapMode], {
+                size: 26,
+                color: theme.text,
+              })}
+            </View>
+          </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          undo();
-        }}
-        disabled={undoDisabled}
-        style={[styles.button, undoDisabled && styles.disabled]}
-      >
-        <Undo2 size={24} color={theme.text} />
-      </Pressable>
+          <Pressable
+            onPress={() => {
+              if (hapticsEnabled) hapticMedium();
+              undo();
+            }}
+            disabled={undoDisabled}
+            style={styles.button}
+          >
+            <View style={undoDisabled && styles.iconDisabled}>
+              <Undo2 size={26} color={theme.text} />
+            </View>
+          </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          redo();
-        }}
-        disabled={redoDisabled}
-        style={[styles.button, redoDisabled && styles.disabled]}
-      >
-        <Redo2 size={24} color={theme.text} />
-      </Pressable>
+          <Pressable
+            onPress={() => {
+              if (hapticsEnabled) hapticMedium();
+              redo();
+            }}
+            disabled={redoDisabled}
+            style={styles.button}
+          >
+            <View style={redoDisabled && styles.iconDisabled}>
+              <Redo2 size={26} color={theme.text} />
+            </View>
+          </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          Alert.alert(
-            'Clear Board',
-            'Are you sure you want to clear the board?',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Clear', style: 'destructive', onPress: clearBoard },
-            ],
-          );
-        }}
-        disabled={clearDisabled}
-        style={[styles.button, clearDisabled && styles.disabled]}
-      >
-        <Trash2 size={24} color={theme.text} />
-      </Pressable>
-    </View>
+          <Pressable
+            onPress={() => {
+              if (hapticsEnabled) hapticMedium();
+              Alert.alert(
+                'Clear Board',
+                'Are you sure you want to clear the board?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Clear', style: 'destructive', onPress: clearBoard },
+                ],
+              );
+            }}
+            disabled={clearDisabled}
+            style={styles.button}
+          >
+            <View style={clearDisabled && styles.iconDisabled}>
+              <Trash2 size={26} color={theme.text} />
+            </View>
+          </Pressable>
+        </View>
+      </View>
+    </>
   );
 }
 
@@ -143,10 +158,24 @@ const createStyles = (theme: Theme) =>
       right: theme.spacingLg,
       flexDirection: 'row',
       justifyContent: 'center',
-      gap: 8,
+    },
+    toolbarWrapper: {
+      gap: 4,
       display: 'flex',
+      flexDirection: 'row',
       padding: 4,
       margin: 0,
+      flex: 1,
+      maxWidth: 412,
+
+      borderRadius: 100,
+
+      backgroundColor: theme.bg,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 24,
+      elevation: 8,
+      zIndex: 0,
     },
     button: {
       height: 48,
@@ -156,13 +185,9 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
 
       borderRadius: 100,
+      zIndex: 100,
       backgroundColor: theme.bg,
-      borderWidth: 1,
-      borderColor: theme.bg,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.4,
-      shadowRadius: 48,
-      elevation: 8,
     },
-    disabled: { opacity: 0.4 },
+
+    iconDisabled: { opacity: 0.4 },
   });

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getSettings, saveSettings } from '../storage';
+import { DEFAULT_SETTINGS, getSettings, saveSettings } from '../storage';
 import type { UserSettings } from '../types/state';
 import { usePuzzleStore } from '../store';
 
@@ -10,7 +10,7 @@ type SettingsState = {
 };
 
 export const useSettingsStore = create<SettingsState>(set => ({
-  settings: getSettings(),
+  settings: DEFAULT_SETTINGS,
 
   initialize: () => {
     set({ settings: getSettings() });

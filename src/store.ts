@@ -312,15 +312,18 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const settings = useSettingsStore.getState().settings;
 
     set(state => {
+      const newCells = [...state.cells] as CellValue[];
       const newAutoMarks = new Set(state.autoMarks);
       for (const c of changes) {
-        if (state.cells[c.index] !== 2) newAutoMarks.delete(c.index);
+        newCells[c.index] = c.next;
+        if (c.next !== 2) newAutoMarks.delete(c.index);
       }
 
       const currentErrors = settings.highlightErrors
-        ? computeErrors(state.cells, size, puzzle)
+        ? computeErrors(newCells, size, puzzle)
         : new Set<number>();
       return {
+        cells: newCells,
         autoMarks: newAutoMarks,
         errorCells: currentErrors,
         moveLog: [

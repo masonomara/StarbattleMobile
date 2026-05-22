@@ -104,16 +104,16 @@ export function SettingsModal({ visible, onClose }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>General</Text>
           <ToggleRow
-            label="Show Timer"
-            value={settings.showTimer}
-            onToggle={v => updateSettings({ showTimer: v })}
+            label="Always show timer"
+            value={settings.alwaysShowTimer}
+            onToggle={v => updateSettings({ alwaysShowTimer: v })}
             styles={styles}
             theme={theme}
           />
           <ToggleRow
-            label="Hide Toolbar"
-            value={settings.hideToolbar}
-            onToggle={v => updateSettings({ hideToolbar: v })}
+            label="Always show toolbar"
+            value={settings.alwaysShowToolbar}
+            onToggle={v => updateSettings({ alwaysShowToolbar: v })}
             styles={styles}
             theme={theme}
           />

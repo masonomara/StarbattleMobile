@@ -5,15 +5,21 @@ import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { packs } from '../packs';
 import { PaywallModal } from '../components/PaywallModal';
+import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
+import { parsePuzzle } from '../utils/parsePuzzle';
 import type { RootStackParamList } from '../types/navigation';
 import type { PaywallContext } from '../types/user';
+import type { Puzzle } from '../types/puzzle';
+
+const CELL_SIZE = 110;
 
 type PuzzleCellProps = {
   packId: string;
   index: number;
+  puzzle: Puzzle | null;
   onPress: (index: number) => void;
   onLockedPress: (index: number) => void;
   styles: ReturnType<typeof createStyles>;
@@ -25,6 +31,7 @@ type PuzzleCellProps = {
 function PuzzleCell({
   packId,
   index,
+  puzzle,
   onPress,
   onLockedPress,
   styles,
@@ -48,27 +55,32 @@ function PuzzleCell({
         status === 'locked' ? onLockedPress(index) : onPress(index)
       }
     >
-      {status !== 'active' && (
-        <View style={styles.puzzleIcon}>
-          {status === 'completed' ? (
-            <Check size={32} color={theme.accent} />
-          ) : (
-            <Lock size={32} color={theme.textSecondary} />
-          )}
-        </View>
+      {puzzle && (
+        <PuzzleThumbnail puzzle={puzzle} size={CELL_SIZE} theme={theme} />
       )}
-      <Text
-        style={[
-          styles.puzzleNumber,
-          status === 'completed'
-            ? styles.puzzleNumberCompleted
-            : status === 'locked'
-            ? styles.puzzleNumberLocked
-            : styles.puzzleNumberActive,
-        ]}
-      >
-        {index + 1}
-      </Text>
+      <View style={styles.puzzleCellOverlay}>
+        {status !== 'active' && (
+          <View style={styles.puzzleIcon}>
+            {status === 'completed' ? (
+              <Check size={28} color={theme.accent} />
+            ) : (
+              <Lock size={28} color={theme.textSecondary} />
+            )}
+          </View>
+        )}
+        <Text
+          style={[
+            styles.puzzleNumber,
+            status === 'completed'
+              ? styles.puzzleNumberCompleted
+              : status === 'locked'
+              ? styles.puzzleNumberLocked
+              : styles.puzzleNumberActive,
+          ]}
+        >
+          {index + 1}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -91,6 +103,11 @@ export function LibraryScreen({
   const isFree = catalogPack?.isFree ?? true;
   const priceUsd = catalogPack?.priceUsd;
   const storagePath = catalogPack?.storagePath;
+
+  const parsedPuzzles = useMemo<Puzzle[]>(() => {
+    if (!bundledPack) return [];
+    return bundledPack.puzzles.map((raw, i) => parsePuzzle(raw, `${packId}:${i}`));
+  }, [packId, bundledPack]);
 
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
   const [completedCount, setCompletedCount] = useState(0);
@@ -159,6 +176,7 @@ export function LibraryScreen({
             key={index}
             packId={packId}
             index={index}
+            puzzle={parsedPuzzles[index] ?? null}
             onPress={i =>
               navigation.navigate('Puzzle', { packId, puzzleIndex: i })
             }
@@ -198,28 +216,36 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
     },
     puzzleCell: {
-      aspectRatio: 1,
-      height: 54,
-      width: 54,
-      margin: 8,
-      borderWidth: 2.5,
-      borderRadius: 0,
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 1,
+      height: CELL_SIZE,
+      width: CELL_SIZE,
+      margin: 6,
+      borderRadius: 4,
+      overflow: 'hidden',
+      elevation: 2,
       backgroundColor: theme.card,
       shadowColor: theme.shadow,
-      borderColor: theme.regionBorder,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 1,
+      shadowRadius: 4,
+    },
+    puzzleCellOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     puzzleIcon: {
       position: 'absolute',
-      opacity: 0.3,
+      opacity: 0.55,
     },
-    puzzleNumber: { fontSize: 18, fontWeight: '700' },
+    puzzleNumber: { fontSize: 16, fontWeight: '700' },
     puzzleNumberCompleted: { color: theme.accent },
     puzzleNumberActive: { color: theme.text },
     puzzleNumberLocked: { color: theme.textSecondary },
-    locked: { opacity: 0.5 },
+    locked: { opacity: 0.45 },
     headerButton: {
       width: 36,
       height: 36,
