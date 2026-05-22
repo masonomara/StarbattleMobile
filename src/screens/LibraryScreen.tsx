@@ -4,17 +4,16 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../packs';
-import type { RawPuzzle } from '../types/puzzle';
 import { PaywallModal } from '../components/PaywallModal';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useTheme } from '../hooks/useTheme';
-import type { Theme } from '../types/theme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
 import { parsePuzzle } from '../utils/parsePuzzle';
+import type { Theme } from '../types/theme';
+import type { RawPuzzle, Puzzle } from '../types/puzzle';
 import type { RootStackParamList } from '../types/navigation';
 import type { PaywallContext } from '../types/user';
-import type { Puzzle } from '../types/puzzle';
 
 const CELL_SIZE = 110;
 
@@ -132,8 +131,7 @@ export function LibraryScreen({
   }, [packId, puzzleCount]);
 
   function isPuzzlePlayable(index: number): boolean {
-    const packInCatalog = packCatalog.find(p => p.id === packId);
-    if (!packInCatalog) {
+    if (!catalogPack) {
       return index === 0 || completedSet.has(`${packId}:${index - 1}`);
     }
     return canPlayPuzzle(packId, index, completedCount);
@@ -150,7 +148,7 @@ export function LibraryScreen({
           storagePath,
         });
       } else {
-        // Pack metadata incomplete — send to account screen as fallback
+        // Pack metadata incomplete — sequential lock as fallback
         setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
       }
     } else {

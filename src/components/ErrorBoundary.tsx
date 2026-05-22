@@ -1,16 +1,13 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-
-interface Props {
-  children: React.ReactNode;
-  onReset?: () => void;
-}
+import type { ErrorBoundaryProps } from '../types/components';
 
 interface State {
   hasError: boolean;
 }
 
-export class ErrorBoundary extends React.Component<Props, State> {
+// Class component: React error boundaries cannot be implemented as functional components.
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
   state: State = { hasError: false };
 
   static getDerivedStateFromError(): State {
@@ -21,18 +18,17 @@ export class ErrorBoundary extends React.Component<Props, State> {
     console.error('Boundary caught:', error);
   }
 
+  private handleReset = () => {
+    this.setState({ hasError: false });
+    this.props.onReset?.();
+  };
+
   render() {
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
           <Text style={styles.message}>Something went wrong.</Text>
-          <Pressable
-            style={styles.button}
-            onPress={() => {
-              this.setState({ hasError: false });
-              this.props.onReset?.();
-            }}
-          >
+          <Pressable style={styles.button} onPress={this.handleReset}>
             <Text style={styles.buttonText}>Try Again</Text>
           </Pressable>
         </View>

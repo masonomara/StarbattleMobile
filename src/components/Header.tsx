@@ -1,26 +1,13 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import type { HeaderProps } from '../types/components';
 
-type HeaderProps = {
-  left?: React.ReactNode;
-  center?: React.ReactNode;
-  right?: React.ReactNode;
-  absolute?: boolean;
-};
-
-export function Header({
-  left,
-  center,
-  right,
-  absolute = true,
-}: HeaderProps) {
+export function Header({ left, center, right, absolute = true }: HeaderProps) {
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
-  const styles = createStyles(theme);
 
   return (
+    // box-none lets touches fall through the transparent header area to content below.
     <View
       pointerEvents="box-none"
       style={[
@@ -38,28 +25,26 @@ export function Header({
   );
 }
 
-const createStyles = (theme: Theme) =>
-  StyleSheet.create({
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 14,
-      minHeight: 48,
-    },
-    absolute: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      zIndex: 100,
-    },
-    side: {
-      width: 44,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    center: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-  });
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+  },
+  absolute: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  side: {
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

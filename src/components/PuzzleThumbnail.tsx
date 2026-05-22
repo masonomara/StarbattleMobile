@@ -1,13 +1,6 @@
 import React, { useMemo } from 'react';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import type { Puzzle } from '../types/puzzle';
-import type { Theme } from '../types/theme';
-
-type PuzzleThumbnailProps = {
-  puzzle: Puzzle;
-  size: number;
-  theme: Theme;
-};
+import type { PuzzleThumbnailProps } from '../types/components';
 
 export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   puzzle,
@@ -55,12 +48,9 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
 
   const outerBorderPath = useMemo(() => {
     const b = Skia.PathBuilder.Make();
-    const hw = borderW;
-    b.moveTo(hw, hw);
-    b.lineTo(size - hw, hw);
-    b.lineTo(size - hw, size - hw);
-    b.lineTo(hw, size - hw);
-    b.lineTo(hw, hw);
+    b.addRect(
+      Skia.XYWHRect(borderW, borderW, size - 2 * borderW, size - 2 * borderW),
+    );
     return b.detach();
   }, [size, borderW]);
 
@@ -68,6 +58,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   const bg = theme.isDark ? '#000000' : '#ffffff';
 
   return (
+    // pointerEvents="none" prevents the canvas from intercepting taps on its parent list item.
     <Canvas style={{ width: size, height: size }} pointerEvents="none">
       <Path path={outerBorderPath} color={bg} style="fill" />
       <Path

@@ -1,6 +1,14 @@
 import { db } from '../powersync/database';
 import type { Streak, StreakType } from '../types/state';
 
+export const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
+
+export const STREAK_LABELS: Record<StreakType, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+};
+
 export function getCurrentKey(type: StreakType, now = new Date()): string {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');

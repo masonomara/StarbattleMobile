@@ -1,17 +1,18 @@
 import React, { useEffect } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { usePuzzleStore } from '../store';
+import { useTheme } from '../hooks/useTheme';
 import { formatTime } from '../utils/formatTime';
-import { useTheme, type Theme } from '../hooks/useTheme';
 
 export function HeaderTimer() {
   const timeMs = usePuzzleStore(s => s.timeMs);
   const completed = usePuzzleStore(s => s.completed);
   const theme = useTheme();
-  const styles = createStyles(theme);
 
   useEffect(() => {
     if (completed) return;
+    // `let last` corrects for interval drift by measuring real elapsed time each tick.
+    // Imperative getState() avoids a stale closure over the tick function reference.
     let last = Date.now();
     const id = setInterval(() => {
       const now = Date.now();
@@ -21,15 +22,21 @@ export function HeaderTimer() {
     return () => clearInterval(id);
   }, [completed]);
 
-  return <Text style={styles.timer}>{formatTime(timeMs)}</Text>;
+  return (
+    <Text
+      style={[
+        styles.timer,
+        { fontSize: theme.fontSizeSubhead, color: theme.text },
+      ]}
+    >
+      {formatTime(timeMs)}
+    </Text>
+  );
 }
 
-const createStyles = (theme: Theme) =>
-  StyleSheet.create({
-    timer: {
-      fontSize: theme.fontSizeSubhead,
-      fontVariant: ['tabular-nums'],
-      fontWeight: 600,
-      color: theme.text,
-    },
-  });
+const styles = StyleSheet.create({
+  timer: {
+    fontVariant: ['tabular-nums'],
+    fontWeight: '600',
+  },
+});

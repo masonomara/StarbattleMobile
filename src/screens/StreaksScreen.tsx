@@ -4,26 +4,20 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChevronLeft, Lock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../components/Header';
+import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
-import type { Theme } from '../types/theme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { loadStreaks } from '../utils/progress';
 import {
   getCurrentKey,
   getActiveStreak,
   getPastArchive,
+  STREAK_TYPES,
+  STREAK_LABELS,
 } from '../utils/streakDate';
-import { useSettingsStore } from '../stores/settingsStore';
+import type { Theme } from '../types/theme';
 import type { StreakType, Streak } from '../types/state';
 import type { RootStackParamList } from '../types/navigation';
-
-const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
-
-const STREAK_LABELS: Record<StreakType, string> = {
-  daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
-};
 
 type ArchiveEntry = { dateKey: string; puzzleId: string };
 

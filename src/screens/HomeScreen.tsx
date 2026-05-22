@@ -5,65 +5,27 @@ import { useIsFocused } from '@react-navigation/native';
 import { Flame, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getStreakPack } from '../packs';
+import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
-import type { Theme } from '../types/theme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import {
   getCurrentKey,
   getActiveStreak,
   getPuzzleIndex,
+  STREAK_TYPES,
+  STREAK_LABELS,
 } from '../utils/streakDate';
 import {
   loadStreaks,
   getCompletedCountForPack,
   loadProgress,
-  getMostRecentInProgress,
 } from '../utils/progress';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
-import { useSettingsStore } from '../stores/settingsStore';
+import type { Theme } from '../types/theme';
 import type { StreakType, Streak } from '../types/state';
-import type { Pack } from '../types/puzzle';
-import type { PackCatalogItem } from '../types/user';
+import type { Pack, Puzzle } from '../types/puzzle';
 import type { RootStackParamList } from '../types/navigation';
-import type { Puzzle } from '../types/puzzle';
-
-const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
-
-const STREAK_LABELS: Record<StreakType, string> = {
-  daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
-};
-
-type PackDisplayItem = {
-  id: string;
-  name: string;
-  gridSize: number;
-  puzzleCount: number;
-  isFree: boolean;
-  priceUsd?: number;
-  storagePath?: string;
-};
-
-type ContinueCard = {
-  packId: string;
-  puzzleIndex: number;
-  packName: string;
-  timeMs: number;
-};
-
-function packFromCatalog(item: PackCatalogItem): PackDisplayItem {
-  return {
-    id: item.id,
-    name: item.name,
-    gridSize: item.gridSize,
-    puzzleCount: item.puzzleCount,
-    isFree: item.isFree,
-    priceUsd: item.priceUsd,
-    storagePath: item.storagePath,
-  };
-}
 
 export function HomeScreen({
   navigation,
@@ -111,17 +73,9 @@ export function HomeScreen({
   const [completedPerPack, setCompletedPerPack] = useState<
     Record<string, number>
   >({});
-  const [continueCard, setContinueCard] = useState<ContinueCard | null>(null);
 
-  const displayPacks: PackDisplayItem[] = packCatalog.map(packFromCatalog);
-
-  const freePacks = displayPacks.filter(p => p.isFree);
-  const paidPacks = displayPacks.filter(p => !p.isFree);
-
-  function isPackAccessible(packId: string): boolean {
-    if (packCatalog.length === 0) return true;
-    return hasPackAccess(packId);
-  }
+  const freePacks = packCatalog.filter(p => p.isFree);
+  const paidPacks = packCatalog.filter(p => !p.isFree);
 
   const load = useCallback(async () => {
     const rawStreaks = await loadStreaks();
@@ -143,31 +97,13 @@ export function HomeScreen({
     setCompletedPuzzleIds(completed);
 
     const counts: Record<string, number> = {};
-    for (const pack of displayPacks) {
+    for (const pack of packCatalog) {
       counts[pack.id] = await getCompletedCountForPack(
         pack.id,
         pack.puzzleCount,
       );
     }
     setCompletedPerPack(counts);
-
-    const inProgress = await getMostRecentInProgress();
-    if (inProgress) {
-      const catalogPack = packCatalog.find(p => p.id === inProgress.packId);
-      const packName = catalogPack?.name ?? inProgress.packId;
-      if (isPackAccessible(inProgress.packId)) {
-        setContinueCard({
-          packId: inProgress.packId,
-          puzzleIndex: inProgress.puzzleIndex,
-          packName,
-          timeMs: inProgress.timeMs,
-        });
-      } else {
-        setContinueCard(null);
-      }
-    } else {
-      setContinueCard(null);
-    }
   }, [packCatalog]);
 
   useEffect(() => {
@@ -197,10 +133,10 @@ export function HomeScreen({
       </View>
 
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: 57 + insets.top, paddingBottom: insets.bottom },
-        ]}
+        contentContainerStyle={{
+          paddingTop: 57 + insets.top,
+          paddingBottom: insets.bottom,
+        }}
       >
         <View style={styles.streakSection}>
           <ScrollView
@@ -249,7 +185,6 @@ export function HomeScreen({
                       {pack.gridSize}×{pack.gridSize}
                     </Text>
                   </View>
-
                   {streakCount > 0 && (
                     <Text style={styles.streakCount}>{streakCount}</Text>
                   )}
@@ -258,6 +193,7 @@ export function HomeScreen({
             })}
           </ScrollView>
         </View>
+
         <View style={styles.packSection}>
           {freePacks.length > 0 && (
             <>
@@ -346,7 +282,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     appTitle: {
       fontSize: 28,
       fontFamily: 'Bitter',
-      fontWeight: 600,
+      fontWeight: '600',
       color: theme.text,
     },
     headerRight: {
@@ -366,43 +302,8 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       elevation: 8,
       zIndex: 0,
     },
-    scrollContent: {},
-    continueCard: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: theme.spacingXl,
-      borderRadius: theme.radiusMd,
-      marginHorizontal: theme.spacingXl,
-      marginBottom: theme.spacingXl,
-      backgroundColor: theme.accent,
-    },
-    continueLabel: {
-      fontSize: theme.fontSizeCallout,
-      lineHeight: 21,
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.onAccent,
-
-      marginBottom: 4,
-    },
-    continueName: {
-      fontSize: theme.fontSizeCallout,
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.onAccent,
-    },
-    continueTime: {
-      fontSize: theme.fontSizeSubhead,
-      color: theme.onAccent,
-      opacity: 0.8,
-    },
-    continueSection: {
-      paddingTop: 34,
-      paddingHorizontal: theme.spacingXl,
-      backgroundColor: theme.bg,
-    },
     streakSection: {
       paddingTop: 34,
-      flexDirection: 'column',
       backgroundColor: theme.bg,
     },
     packSection: {
@@ -421,18 +322,10 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       overflow: 'visible',
       marginBottom: 34,
     },
-
     streakCard: {
       borderRadius: 16,
-      // padding: theme.spacingMd,
-      // backgroundColor: theme.card,
-
       alignItems: 'center',
       shadowColor: theme.text,
-      // shadowOffset: { width: 0, height: 4 },
-      // shadowOpacity: 0.1,
-      // shadowRadius: 24,
-      // elevation: 8,
     },
     streakCardCompleted: {
       opacity: 0.6,
@@ -444,11 +337,10 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     streakLabel: {
       color: theme.text,
-
       lineHeight: 28,
       fontSize: 22,
       fontFamily: 'Bitter',
-      fontWeight: 600,
+      fontWeight: '600',
       marginTop: 9,
     },
     streakMeta: {
@@ -460,11 +352,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     streakThumbnailWrap: {
       borderRadius: 4,
       backgroundColor: theme.card,
-
-      // shadowOffset: { width: 0, height: 8 },
-      // shadowOpacity: 0.15,
-      // shadowRadius: 8,
-      // elevation: 8,
     },
     streakCount: {
       fontSize: 18,

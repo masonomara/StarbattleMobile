@@ -1,26 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Ellipsis } from 'lucide-react-native';
-import { SettingsModal } from './SettingsModal';
+import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../types/theme';
 
+// The modal itself lives at the navigation root — this button just signals the store to open it.
 export function SettingsButton() {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const [visible, setVisible] = useState(false);
+  const openSettings = useSettingsStore(s => s.openSettings);
 
   return (
-    <>
-      <Pressable
-        onPress={() => setVisible(true)}
-        hitSlop={8}
-        style={styles.button}
-      >
-        <Ellipsis size={20} color={theme.text} />
-      </Pressable>
-      <SettingsModal visible={visible} onClose={() => setVisible(false)} />
-    </>
+    <Pressable onPress={openSettings} hitSlop={8} style={styles.button}>
+      <Ellipsis size={20} color={theme.text} />
+    </Pressable>
   );
 }
 

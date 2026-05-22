@@ -3,14 +3,14 @@ import { Animated, Text, Pressable, StyleSheet } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types/navigation';
 import { usePuzzleStore } from '../store';
 import { loadStreaks, recordStreak } from '../utils/progress';
-import { getActiveStreak } from '../utils/streakDate';
+import { getActiveStreak, STREAK_LABELS } from '../utils/streakDate';
 import { formatTime } from '../utils/formatTime';
 import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../types/theme';
-import type { StreakType, Streak } from '../types/state';
+import type { RootStackParamList } from '../types/navigation';
+import type { WinBannerProps } from '../types/components';
 
 export function WinBanner({
   packId,
@@ -18,18 +18,13 @@ export function WinBanner({
   packName,
   isLastPuzzle,
   streakType,
-}: {
-  packId: string;
-  puzzleIndex: number;
-  packName: string;
-  isLastPuzzle: boolean;
-  streakType?: StreakType;
-}) {
+}: WinBannerProps) {
   const completed = usePuzzleStore(s => s.completed);
   const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
   const styles = createStyles(theme);
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [streakCount, setStreakCount] = useState(0);
   const [bannerHeight, setBannerHeight] = useState(0);
@@ -41,54 +36,49 @@ export function WinBanner({
 
   useEffect(() => {
     if (!completed || !streakType) return;
-    async function handleStreakCompletion() {
-      await recordStreak(streakType!);
+    const type = streakType;
+    async function updateStreak() {
+      await recordStreak(type);
       const rawStreaks = await loadStreaks();
-      const found = rawStreaks.find(s => s.type === streakType);
+      const found = rawStreaks.find(s => s.type === type);
       if (found) {
-        const mapped: Streak = {
-          type: streakType!,
-          current: found.currentCount,
-          lastCompletedKey: found.lastCompletedKey,
-        };
-        setStreakCount(getActiveStreak(mapped, streakType!));
+        setStreakCount(
+          getActiveStreak(
+            {
+              type,
+              current: found.currentCount,
+              lastCompletedKey: found.lastCompletedKey,
+            },
+            type,
+          ),
+        );
       }
     }
-    handleStreakCompletion();
+    updateStreak();
   }, [completed, streakType]);
 
   useEffect(() => {
     if (!bannerHeight) return;
+    bannerTranslateY.setValue(bannerHeight);
     if (completed) {
-      bannerTranslateY.setValue(bannerHeight);
       Animated.spring(bannerTranslateY, {
         toValue: 0,
         damping: 30,
         stiffness: 300,
         useNativeDriver: true,
       }).start();
-    } else {
-      bannerTranslateY.setValue(bannerHeight);
     }
   }, [completed, bannerHeight, bannerTranslateY]);
 
   if (!completed) return null;
 
   const info = streakType
-    ? `${streakType.charAt(0).toUpperCase() + streakType.slice(1)} Challenge`
+    ? `${STREAK_LABELS[streakType]} Challenge`
     : `${packName} #${puzzleIndex + 1}`;
 
   const headline = streakType
     ? `Streak: ${streakCount}`
     : `Solved in ${formatTime(timeMs)}`;
-
-  const handlePress = () => {
-    if (streakType || isLastPuzzle) {
-      navigation.goBack();
-    } else {
-      navigation.replace('Puzzle', { packId, puzzleIndex: puzzleIndex + 1 });
-    }
-  };
 
   const buttonLabel = streakType
     ? 'Back to Home'
@@ -96,7 +86,16 @@ export function WinBanner({
     ? `Back to ${packName || 'Pack'}`
     : 'Next Puzzle';
 
+  function handlePress() {
+    if (streakType || isLastPuzzle) {
+      navigation.goBack();
+    } else {
+      navigation.replace('Puzzle', { packId, puzzleIndex: puzzleIndex + 1 });
+    }
+  }
+
   return (
+    // Hidden until bannerHeight is measured so the spring starts from the correct off-screen position.
     <Animated.View
       onLayout={onLayout}
       style={[
@@ -121,6 +120,7 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     winBanner: {
       position: 'absolute',
+      // bottom: -56 lets the banner slide up from below the viewport without leaving a gap at the screen edge.
       bottom: -56,
       left: 0,
       right: 0,

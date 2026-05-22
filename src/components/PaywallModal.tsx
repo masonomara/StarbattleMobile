@@ -7,38 +7,31 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { X } from 'lucide-react-native';
-import { useTheme } from '../hooks/useTheme';
-import type { Theme } from '../types/theme';
 import { useAuthStore } from '../stores/authStore';
+import { useSettingsStore } from '../stores/settingsStore';
+import { useTheme } from '../hooks/useTheme';
 import { purchasePremium, purchasePack } from '../utils/payments';
-import type { PaywallContext } from '../types/user';
-
-type Props = {
-  visible: boolean;
-  context: PaywallContext | null;
-  onClose: () => void;
-  onPurchaseSuccess?: () => void;
-  onNavigateToAccount: () => void;
-};
+import type { Theme } from '../types/theme';
+import type { PaywallModalProps } from '../types/components';
 
 export function PaywallModal({
-  visible,
   context,
   onClose,
   onPurchaseSuccess,
-  onNavigateToAccount,
-}: Props) {
+}: PaywallModalProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const isAnonymous = useAuthStore(s => s.isAnonymous);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handlePurchasePremium() {
+  if (!context) return null;
+
+  async function purchase(fn: () => Promise<unknown>) {
     setError(null);
     setLoading(true);
     try {
-      await purchasePremium();
+      await fn();
       onPurchaseSuccess?.();
       onClose();
     } catch (e) {
@@ -47,27 +40,6 @@ export function PaywallModal({
       setLoading(false);
     }
   }
-
-  async function handlePurchasePack(packId: string, storagePath: string) {
-    setError(null);
-    setLoading(true);
-    try {
-      await purchasePack(packId, storagePath);
-      onPurchaseSuccess?.();
-      onClose();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Purchase failed');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function handleNavigateToAccount() {
-    onClose();
-    onNavigateToAccount();
-  }
-
-  if (!visible || !context) return null;
 
   const renderContent = () => {
     if (context.type === 'sequential') {
@@ -79,7 +51,7 @@ export function PaywallModal({
           </Text>
           <Pressable
             style={[styles.primaryButton, loading && styles.disabled]}
-            onPress={handlePurchasePremium}
+            onPress={() => purchase(purchasePremium)}
             disabled={loading}
           >
             {loading ? (
@@ -105,7 +77,10 @@ export function PaywallModal({
             </Text>
             <Pressable
               style={styles.primaryButton}
-              onPress={handleNavigateToAccount}
+              onPress={() => {
+                onClose();
+                useSettingsStore.getState().openSettings();
+              }}
             >
               <Text style={styles.primaryButtonText}>Create Account</Text>
             </Pressable>
@@ -119,7 +94,7 @@ export function PaywallModal({
           <Pressable
             style={[styles.primaryButton, loading && styles.disabled]}
             onPress={() =>
-              handlePurchasePack(context.packId, context.storagePath)
+              purchase(() => purchasePack(context.packId, context.storagePath))
             }
             disabled={loading}
           >
@@ -133,7 +108,7 @@ export function PaywallModal({
           </Pressable>
           <Pressable
             style={[styles.secondaryButton, loading && styles.disabled]}
-            onPress={handlePurchasePremium}
+            onPress={() => purchase(purchasePremium)}
             disabled={loading}
           >
             <Text style={styles.secondaryButtonText}>
@@ -148,6 +123,7 @@ export function PaywallModal({
   };
 
   return (
+    // box-none lets the sheet receive touches while the absoluteFill Pressable behind it closes on tap-outside.
     <View style={styles.overlay} pointerEvents="box-none">
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       <View style={styles.sheet}>

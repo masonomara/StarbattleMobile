@@ -9,27 +9,24 @@ import {
   Pencil,
   Eraser,
 } from 'lucide-react-native';
-import { usePuzzleStore } from '../store';
-import { hapticMedium } from '../utils/haptics';
-import { useSettingsStore } from '../stores/settingsStore';
-import type { TapMode } from '../types/state';
-import { useTheme } from '../hooks/useTheme';
-import type { Theme } from '../types/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePuzzleStore } from '../store';
+import { useSettingsStore } from '../stores/settingsStore';
+import { useTheme } from '../hooks/useTheme';
+import { hapticMedium } from '../utils/haptics';
+import type { TapMode } from '../types/state';
+import type { Theme } from '../types/theme';
+import type { ToolbarProps } from '../types/components';
 
 const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   cycle: Pencil,
   erase: Eraser,
 };
 
-type Props = {
-  isZoomed: boolean;
-  onZoomReset: () => void;
-};
-
-export function Toolbar({ isZoomed, onZoomReset }: Props) {
+export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
   const hapticsEnabled = useSettingsStore(s => s.settings.haptics);
   const undo = usePuzzleStore(s => s.undo);
   const redo = usePuzzleStore(s => s.redo);
@@ -43,111 +40,84 @@ export function Toolbar({ isZoomed, onZoomReset }: Props) {
   const canUndo = usePuzzleStore(s => s.moveLog.length > 0);
   const canRedo = usePuzzleStore(s => s.redoStack.length > 0);
   const hasContent = usePuzzleStore(s => s.cells.some(c => c !== 0));
+
   const undoDisabled = !canUndo || completed;
   const redoDisabled = !canRedo || completed;
   const clearDisabled = !hasContent || completed;
-  const zoomDisabled = !isZoomed;
   const hintDisabled = completed || !hasHints;
 
-  const insets = useSafeAreaInsets();
+  const TapModeIcon = TAP_MODE_ICONS[tapMode];
+
+  function press(action: () => void) {
+    if (hapticsEnabled) hapticMedium();
+    action();
+  }
+
+  function handleClear() {
+    if (hapticsEnabled) hapticMedium();
+    Alert.alert('Clear Board', 'Are you sure you want to clear the board?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Clear', style: 'destructive', onPress: clearBoard },
+    ]);
+  }
 
   return (
-    <>
-      <View style={[styles.toolbar, { bottom: insets.bottom - 12 }]}>
-        <View style={[styles.toolbarWrapper]}>
-          <Pressable
-            onPress={() => {
-              if (hapticsEnabled) hapticMedium();
-              onZoomReset();
-            }}
-            disabled={zoomDisabled}
-            style={styles.button}
-          >
-            <View style={zoomDisabled && styles.iconDisabled}>
-              <Minimize2 size={26} color={theme.text} />
-            </View>
-          </Pressable>
+    // bottom offset intentionally overlaps the safe area by 12 pt for visual grounding.
+    <View style={[styles.toolbar, { bottom: insets.bottom - 12 }]}>
+      <View style={styles.toolbarWrapper}>
+        <Pressable
+          onPress={() => press(onZoomReset)}
+          disabled={!isZoomed}
+          style={[styles.button, !isZoomed && styles.buttonDisabled]}
+        >
+          <Minimize2 size={26} color={theme.text} />
+        </Pressable>
 
-          <Pressable
-            onPress={() => {
-              if (hapticsEnabled) hapticMedium();
-              showHint();
-            }}
-            disabled={hintDisabled}
-            style={[
-              styles.button,
-              hasGhosts && { backgroundColor: theme.accent },
-            ]}
-          >
-            <View style={hintDisabled && styles.iconDisabled}>
-              <Lightbulb size={26} color={theme.text} />
-            </View>
-          </Pressable>
+        <Pressable
+          onPress={() => press(showHint)}
+          disabled={hintDisabled}
+          style={[
+            styles.button,
+            hasGhosts && styles.buttonAccent,
+            hintDisabled && styles.buttonDisabled,
+          ]}
+        >
+          <Lightbulb size={26} color={theme.text} />
+        </Pressable>
 
-          <Pressable
-            onPress={() => {
-              if (hapticsEnabled) hapticMedium();
-              cycleTapMode();
-            }}
-            disabled={completed}
-            style={styles.button}
-          >
-            <View style={completed && styles.iconDisabled}>
-              {React.createElement(TAP_MODE_ICONS[tapMode], {
-                size: 26,
-                color: theme.text,
-              })}
-            </View>
-          </Pressable>
+        <Pressable
+          onPress={() => press(cycleTapMode)}
+          disabled={completed}
+          style={[styles.button, completed && styles.buttonDisabled]}
+        >
+          <TapModeIcon size={26} color={theme.text} />
+        </Pressable>
 
-          <Pressable
-            onPress={() => {
-              if (hapticsEnabled) hapticMedium();
-              undo();
-            }}
-            disabled={undoDisabled}
-            style={styles.button}
-          >
-            <View style={undoDisabled && styles.iconDisabled}>
-              <Undo2 size={26} color={theme.text} />
-            </View>
-          </Pressable>
+        <Pressable
+          onPress={() => press(undo)}
+          disabled={undoDisabled}
+          style={[styles.button, undoDisabled && styles.buttonDisabled]}
+        >
+          <Undo2 size={26} color={theme.text} />
+        </Pressable>
 
-          <Pressable
-            onPress={() => {
-              if (hapticsEnabled) hapticMedium();
-              redo();
-            }}
-            disabled={redoDisabled}
-            style={styles.button}
-          >
-            <View style={redoDisabled && styles.iconDisabled}>
-              <Redo2 size={26} color={theme.text} />
-            </View>
-          </Pressable>
+        <Pressable
+          onPress={() => press(redo)}
+          disabled={redoDisabled}
+          style={[styles.button, redoDisabled && styles.buttonDisabled]}
+        >
+          <Redo2 size={26} color={theme.text} />
+        </Pressable>
 
-          <Pressable
-            onPress={() => {
-              if (hapticsEnabled) hapticMedium();
-              Alert.alert(
-                'Clear Board',
-                'Are you sure you want to clear the board?',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Clear', style: 'destructive', onPress: clearBoard },
-                ],
-              );
-            }}
-            disabled={clearDisabled}
-            style={styles.button}
-          >
-            <View style={clearDisabled && styles.iconDisabled}>
-              <Trash2 size={26} color={theme.text} />
-            </View>
-          </Pressable>
-        </View>
+        <Pressable
+          onPress={handleClear}
+          disabled={clearDisabled}
+          style={[styles.button, clearDisabled && styles.buttonDisabled]}
+        >
+          <Trash2 size={26} color={theme.text} />
+        </Pressable>
       </View>
-    </>
+    </View>
   );
 }
 
@@ -162,15 +132,11 @@ const createStyles = (theme: Theme) =>
     },
     toolbarWrapper: {
       gap: 4,
-      display: 'flex',
       flexDirection: 'row',
       padding: 4,
-      margin: 0,
       flex: 1,
       maxWidth: 412,
-
       borderRadius: 100,
-
       backgroundColor: theme.bg,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.1,
@@ -184,11 +150,14 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-
       borderRadius: 100,
       zIndex: 100,
       backgroundColor: theme.bg,
     },
-
-    iconDisabled: { opacity: 0.4 },
+    buttonAccent: {
+      backgroundColor: theme.accent,
+    },
+    buttonDisabled: {
+      opacity: 0.4,
+    },
   });
