@@ -66,7 +66,7 @@ export function PaywallModal({
     onNavigateToAccount();
   }
 
-  if (!context) return null;
+  if (!visible || !context) return null;
 
   const renderContent = () => {
     if (context.type === 'sequential') {
@@ -145,8 +145,6 @@ export function PaywallModal({
 
     return null;
   };
-
-  if (!visible) return null;
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">

@@ -134,13 +134,10 @@ export function LibraryScreen({
   function handleLockedPress(index: number) {
     if (!isFree && !hasPackAccess(packId)) {
       if (priceUsd !== undefined && storagePath !== undefined) {
-        setPaywallContext({
-          type: 'paid-pack',
-          packId,
-          packName,
-          priceUsd,
-          storagePath,
-        });
+        setPaywallContext({ type: 'paid-pack', packId, packName, priceUsd, storagePath });
+      } else {
+        // Pack metadata incomplete — send to account screen as fallback
+        setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
       }
     } else {
       setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });

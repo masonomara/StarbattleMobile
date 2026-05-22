@@ -12,8 +12,8 @@ export function useDrawGesture(
   savedScale: SharedValue<number>,
   savedTranslateX: SharedValue<number>,
   savedTranslateY: SharedValue<number>,
-  boardLayout: React.RefObject<{ width: number; height: number }>,
-  drawLayerRef: React.RefObject<DrawLayerHandle>,
+  boardLayout: React.RefObject<{ width: number; height: number } | null>,
+  drawLayerRef: React.RefObject<DrawLayerHandle | null>,
   onOffCanvasTap?: () => void,
 ) {
   const strokeChanges = useRef<CellChange[]>([]);
@@ -23,7 +23,7 @@ export function useDrawGesture(
   const viewToCell = useCallback(
     (x: number, y: number): { row: number; col: number } | null => {
       const layout = boardLayout.current;
-      if (layout.width === 0 || layout.height === 0) return null;
+      if (!layout || layout.width === 0 || layout.height === 0) return null;
 
       const sc = savedScale.value;
       const tx = savedTranslateX.value;
