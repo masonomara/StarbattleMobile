@@ -21,22 +21,26 @@ const REGION_COLORS_DARK = [
 
 const NUM_COLORS = REGION_COLORS_LIGHT.length;
 
-// Static background — region fills, grid lines, region borders.
+// Static background — region fills, grid lines, region borders, outer border.
 // Wrapped in React.memo so it never re-renders during gameplay;
 // only rebuilds when the puzzle or theme changes.
 const BackgroundCanvas = React.memo(function BackgroundCanvas({
   puzzle,
   theme,
   canvasSize,
+  borderWidth,
   coloredRegions,
 }: {
   puzzle: Puzzle;
   theme: Theme;
   canvasSize: number;
+  borderWidth: number;
   coloredRegions: boolean;
 }) {
   const { size, regions } = puzzle;
   const cs = canvasSize / size;
+  const bw = borderWidth;
+  const totalSize = canvasSize + bw * 2;
   const regionColors = theme.isDark ? REGION_COLORS_DARK : REGION_COLORS_LIGHT;
 
   const regionFillPaths = useMemo(() => {
@@ -47,7 +51,7 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
         if (!builders.has(colorIdx)) {
           builders.set(colorIdx, Skia.PathBuilder.Make());
         }
-        builders.get(colorIdx)!.addRect(Skia.XYWHRect(col * cs, row * cs, cs, cs));
+        builders.get(colorIdx)!.addRect(Skia.XYWHRect(bw + col * cs, bw + row * cs, cs, cs));
       }
     }
     return [...builders.entries()].map(([colorIdx, b]) => ({
@@ -55,46 +59,50 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
       path: b.detach(),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle.id, canvasSize]);
+  }, [puzzle.id, canvasSize, bw]);
 
   const regionBorderPath = useMemo(() => {
     const rb = Skia.PathBuilder.Make();
+    // Horizontal segments — inner region boundaries plus outer top/bottom edges
     for (let row = 0; row <= size; row++) {
       for (let col = 0; col < size; col++) {
-        const isBoundary = row > 0 && row < size && regions[row - 1][col] !== regions[row][col];
-        if (isBoundary) {
-          rb.moveTo(col * cs, row * cs);
-          rb.lineTo((col + 1) * cs, row * cs);
+        const isOuter = row === 0 || row === size;
+        const isRegionBoundary = !isOuter && regions[row - 1][col] !== regions[row][col];
+        if (isOuter || isRegionBoundary) {
+          rb.moveTo(bw + col * cs, bw + row * cs);
+          rb.lineTo(bw + (col + 1) * cs, bw + row * cs);
         }
       }
     }
+    // Vertical segments — inner region boundaries plus outer left/right edges
     for (let row = 0; row < size; row++) {
       for (let col = 0; col <= size; col++) {
-        const isBoundary = col > 0 && col < size && regions[row][col - 1] !== regions[row][col];
-        if (isBoundary) {
-          rb.moveTo(col * cs, row * cs);
-          rb.lineTo(col * cs, (row + 1) * cs);
+        const isOuter = col === 0 || col === size;
+        const isRegionBoundary = !isOuter && regions[row][col - 1] !== regions[row][col];
+        if (isOuter || isRegionBoundary) {
+          rb.moveTo(bw + col * cs, bw + row * cs);
+          rb.lineTo(bw + col * cs, bw + (row + 1) * cs);
         }
       }
     }
     return rb.detach();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle.id, canvasSize]);
+  }, [puzzle.id, canvasSize, bw]);
 
   const innerGridPath = useMemo(() => {
     const b = Skia.PathBuilder.Make();
     for (let i = 1; i < size; i++) {
-      b.moveTo(i * cs, 0);
-      b.lineTo(i * cs, canvasSize);
-      b.moveTo(0, i * cs);
-      b.lineTo(canvasSize, i * cs);
+      b.moveTo(bw + i * cs, bw);
+      b.lineTo(bw + i * cs, bw + canvasSize);
+      b.moveTo(bw, bw + i * cs);
+      b.lineTo(bw + canvasSize, bw + i * cs);
     }
     return b.detach();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle.id, canvasSize]);
+  }, [puzzle.id, canvasSize, bw]);
 
   return (
-    <Canvas style={{ width: canvasSize, height: canvasSize }}>
+    <Canvas style={{ width: totalSize, height: totalSize }}>
       {regionFillPaths.map(({ colorIdx, path }) => (
         <Path
           key={`region-${colorIdx}`}
@@ -143,16 +151,6 @@ export const PuzzleCanvas = React.forwardRef<DrawLayerHandle, PuzzleCanvasProps>
         setPreviewMap(new Map());
       },
     }));
-
-    const outerBorderPath = useMemo(() => {
-      const b = Skia.PathBuilder.Make();
-      const hw = BORDER / 2;
-      b.moveTo(0, hw); b.lineTo(totalSize, hw);
-      b.moveTo(0, totalSize - hw); b.lineTo(totalSize, totalSize - hw);
-      b.moveTo(hw, 0); b.lineTo(hw, totalSize);
-      b.moveTo(totalSize - hw, 0); b.lineTo(totalSize - hw, totalSize);
-      return b.detach();
-    }, [totalSize]);
 
     // Rebuilt on stroke end (cells changes) or preview update — only 4 paths, O(n) loop
     const dynamicPaths = useMemo(() => {
@@ -207,18 +205,13 @@ export const PuzzleCanvas = React.forwardRef<DrawLayerHandle, PuzzleCanvasProps>
 
     return (
       <View style={{ width: totalSize, height: totalSize }}>
-        <Canvas style={{ position: 'absolute', top: 0, left: 0, width: totalSize, height: totalSize }}>
-          <Path path={outerBorderPath} color={theme.regionBorder} style="stroke" strokeWidth={BORDER} strokeCap="square" strokeJoin="miter" />
+        <BackgroundCanvas puzzle={puzzle} theme={theme} canvasSize={canvasSize} borderWidth={BORDER} coloredRegions={coloredRegions} />
+        <Canvas style={{ position: 'absolute', top: BORDER, left: BORDER, width: canvasSize, height: canvasSize }}>
+          <Path path={dynamicPaths.starNormal} color={theme.regionBorder} />
+          <Path path={dynamicPaths.starError} color="#E53935" />
+          <Path path={dynamicPaths.starGhost} color={theme.regionBorder + '55'} />
+          <Path path={dynamicPaths.marks} color={theme.markColor} style="stroke" strokeWidth={2} strokeCap="round" />
         </Canvas>
-        <View style={{ position: 'absolute', top: BORDER, left: BORDER, width: canvasSize, height: canvasSize }}>
-          <BackgroundCanvas puzzle={puzzle} theme={theme} canvasSize={canvasSize} coloredRegions={coloredRegions} />
-          <Canvas style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-            <Path path={dynamicPaths.starNormal} color={theme.regionBorder} />
-            <Path path={dynamicPaths.starError} color="#E53935" />
-            <Path path={dynamicPaths.starGhost} color={theme.regionBorder + '55'} />
-            <Path path={dynamicPaths.marks} color={theme.markColor} style="stroke" strokeWidth={2} strokeCap="round" />
-          </Canvas>
-        </View>
       </View>
     );
   },
