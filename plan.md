@@ -2452,7 +2452,7 @@ These must be done before any code is written.
 - [x] **[CLAUDE]** Create `src/screens/StreaksScreen.tsx` — streak counts for daily/weekly/monthly, past archive list (premium only), premium upsell teaser for non-premium.
 - [x] **[CLAUDE]** Create `src/screens/AccountScreen.tsx` — sign-up/sign-in (anonymous state), signed-in state with entitlements, buy premium, restore purchases, sign out, settings toggles (replaces SettingsModal).
 - [x] **[CLAUDE]** Create `src/components/PaywallModal.tsx` — context-aware with the 4 scenarios: sequential lock, paid pack (no account), paid pack (has account), premium CTA.
-- [ ] **[YOU]** Walk through all screen flows: home → library → puzzle → win → next, home → streaks, home → account → sign up, paywall scenarios for each lock type.
+- [x] **[YOU]** Walk through all screen flows: home → library → puzzle → win → next, home → streaks, home → account → sign up, paywall scenarios for each lock type.
 
 ---
 
@@ -2461,16 +2461,24 @@ These must be done before any code is written.
 - [x] **[CLAUDE]** Update `recordStreak` in `src/store.ts` (or extract to `src/utils/streakActions.ts`) — write via `saveStreak` (PowerSync) instead of MMKV.
 - [x] **[CLAUDE]** Add `getArchivePuzzleId` and `getPastArchive` to `src/utils/streakDate.ts` — query `streak_archive` from local SQLite.
 - [x] **[CLAUDE]** Wire `getPastArchive` into `StreaksScreen` to render the past puzzle list for premium users.
-- [ ] **[YOU]** Complete a daily puzzle. Verify streak counter increments and persists after app restart.
+- [x] **[YOU]** Complete a daily puzzle. Verify streak counter increments and persists after app restart.
 
 ---
 
 ### Phase 12: Pack Loading
 
-- [ ] **[CLAUDE]** Rewrite `src/packs/index.ts` — `refreshFreePacks` (background download from Supabase Storage), `downloadPaidPack`, `getPuzzlesForPack` (downloaded → bundled fallback priority).
-- [ ] **[CLAUDE]** Call `refreshFreePacks` in `App.tsx` after PowerSync connects (fire-and-forget).
+- [x] **[CLAUDE]** Rewrite `src/packs/index.ts` — `refreshFreePacks` (background download from Supabase Storage), `downloadPaidPack`, `getPuzzlesForPack` (downloaded → bundled fallback priority).
+- [x] **[CLAUDE]** Call `refreshFreePacks` in `App.tsx` after PowerSync connects (fire-and-forget).
 - [ ] **[YOU]** Upload the 9 free pack JSON files to Supabase Storage bucket `packs/` at paths matching pack IDs (e.g. `5x5-normal.json`). These files should already exist in the beta `packs/` folder — rename them to match the new IDs as needed.
 - [ ] **[YOU]** Verify `refreshFreePacks` downloads and overwrites local copies on app startup. Verify `getPuzzlesForPack` returns puzzles correctly for a free pack.
+- [ ] Pakes needed: 5×5 / 1★ - 60 puzzles
+6×6 / 1★ - 120 puzzles
+8×8 / 1★ - 120 puzzles
+10×10 / 2★ - 120 puzzles
+14×14 / 3★ - 120 puzzles
+17x17 / 4★ - 365 puzzles
+21x21 / 5★ - 52 puzzles
+25x25/ 6★ - 12 puzzles
 
 ---
 

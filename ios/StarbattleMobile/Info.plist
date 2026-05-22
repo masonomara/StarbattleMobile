@@ -34,7 +34,7 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -64,6 +64,10 @@
 				<string>com.googleusercontent.apps.312698113706-09ejigbp1khjkk1p1dmd5kafitptkfvu</string>
 			</array>
 		</dict>
+	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Bitter-Variable.ttf</string>
 	</array>
 </dict>
 </plist>

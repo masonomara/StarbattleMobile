@@ -218,12 +218,12 @@ const createStyles = (theme: Theme) =>
       color: theme.accent,
     },
     streakLabel: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       color: theme.textSecondary,
       marginTop: 4,
     },
     sectionTitle: {
-      fontSize: theme.fontSizeLg,
+      fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
       marginBottom: theme.spacingLg,
@@ -244,7 +244,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.accent,
     },
     tabText: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.textSecondary,
     },
@@ -262,14 +262,14 @@ const createStyles = (theme: Theme) =>
       marginBottom: theme.spacingMd,
     },
     archiveDate: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       color: theme.text,
     },
     archiveChevron: {
       transform: [{ rotate: '180deg' }],
     },
     emptyText: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       color: theme.textSecondary,
       textAlign: 'center',
       marginTop: theme.spacingXl,
@@ -282,12 +282,12 @@ const createStyles = (theme: Theme) =>
       gap: theme.spacingMd,
     },
     teaserTitle: {
-      fontSize: theme.fontSizeLg,
+      fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     teaserBody: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       color: theme.textSecondary,
       textAlign: 'center',
       lineHeight: 22,
@@ -302,7 +302,7 @@ const createStyles = (theme: Theme) =>
       marginTop: theme.spacingMd,
     },
     upgradeButtonText: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
     },

@@ -168,7 +168,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.highlight,
     },
     title: {
-      fontSize: theme.fontSizeLg,
+      fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
@@ -214,12 +214,12 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.innerBorder,
     },
     themeButtonTextActive: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
     },
     themeButtonTextInactive: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },

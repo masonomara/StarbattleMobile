@@ -19,9 +19,9 @@ export type Theme = {
   spacingLg: number;
   spacingXl: number;
   radiusMd: number;
-  fontSizeSm: number;
-  fontSizeMd: number;
-  fontSizeLg: number;
+  fontSizeSubhead: number;
+  fontSizeCallout: number;
+  fontSizeBody: number;
   fontWeightSemibold: '600';
   cellSize: number;
 };
@@ -40,9 +40,12 @@ const tokens = {
   spacingLg: 16,
   spacingXl: 24,
   radiusMd: 12,
-  fontSizeSm: 14,
-  fontSizeMd: 16,
-  fontSizeLg: 18,
+  fontSizeCpation2: 11,
+  fontSizeCpation1: 12,
+  fontSizeFootnote: 13,
+  fontSizeSubhead: 15,
+  fontSizeCallout: 16,
+  fontSizeBody: 17,
   fontWeightSemibold: '600' as const,
   cellSize: 32,
 };

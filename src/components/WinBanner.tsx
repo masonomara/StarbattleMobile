@@ -167,7 +167,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.onAccent,
     },
     winButtonText: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },

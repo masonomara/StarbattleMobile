@@ -96,8 +96,8 @@ export function PuzzleScreen({
   const hintGhosts = usePuzzleStore(s => s.hintGhosts);
   const alwaysShowToolbar = useSettingsStore(s => s.settings.alwaysShowToolbar);
   const alwaysShowTimer = useSettingsStore(s => s.settings.alwaysShowTimer);
-  const [headerVisible, setHeaderVisible] = useState(false);
-  const buttonOpacity = useRef(new Animated.Value(0)).current;
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const buttonOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.timing(buttonOpacity, {
@@ -278,7 +278,6 @@ const createStyles = (theme: Theme) =>
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
-
       backgroundColor: theme.bg,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.12,

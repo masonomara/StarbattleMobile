@@ -156,8 +156,9 @@ export const PuzzleCanvas = React.forwardRef<DrawLayerHandle, PuzzleCanvasProps>
 
     // Rebuilt on stroke end (cells changes) or preview update — only 4 paths, O(n) loop
     const dynamicPaths = useMemo(() => {
-      const r = cs * 0.3;
-      const half = cs * 0.22;
+      const outerR = cs * 0.34;
+      const innerR = outerR * 0.46;
+      const half = cs * 0.12;
 
       const starNormal = Skia.PathBuilder.Make();
       const starError = Skia.PathBuilder.Make();
@@ -177,7 +178,16 @@ export const PuzzleCanvas = React.forwardRef<DrawLayerHandle, PuzzleCanvasProps>
         if (value === 1 || ghost === 'star') {
           const isGhost = ghost === 'star' && value !== 1;
           const b = isGhost ? starGhost : errorCells.has(idx) ? starError : starNormal;
-          b.addOval(Skia.XYWHRect(cx - r, cy - r, r * 2, r * 2));
+          const cyAdj = cy + outerR * 0.02;
+          for (let p = 0; p < 10; p++) {
+            const angle = (p * Math.PI) / 5 - Math.PI / 2;
+            const rad = p % 2 === 0 ? outerR : innerR;
+            const x = cx + Math.cos(angle) * rad;
+            const y = cyAdj + Math.sin(angle) * rad;
+            if (p === 0) b.moveTo(x, y);
+            else b.lineTo(x, y);
+          }
+          b.close();
         } else if (value === 2 || ghost === 'mark') {
           marks.moveTo(cx - half, cy - half);
           marks.lineTo(cx + half, cy + half);

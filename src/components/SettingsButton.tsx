@@ -26,17 +26,16 @@ export function SettingsButton() {
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     button: {
-      width: 36,
-      height: 36,
-      borderRadius: 24,
+      width: 48,
+      height: 48,
+      borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
+      backgroundColor: theme.bg,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 24,
       elevation: 8,
-      opacity: 0.97,
-      backgroundColor: theme.card,
-      shadowColor: theme.shadow,
+      zIndex: 0,
     },
   });

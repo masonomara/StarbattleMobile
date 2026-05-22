@@ -479,7 +479,7 @@ const createStyles = (theme: Theme) =>
       letterSpacing: 0.5,
     },
     sectionBody: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       color: theme.textSecondary,
       lineHeight: 22,
     },
@@ -492,11 +492,11 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.card,
     },
     infoLabel: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       color: theme.textSecondary,
     },
     infoValue: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       color: theme.text,
       fontWeight: theme.fontWeightSemibold,
       maxWidth: '60%',
@@ -510,18 +510,18 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.accent,
     },
     premiumBadgeText: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
     },
     subLabel: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.textSecondary,
       marginTop: theme.spacingMd,
     },
     ownedPackName: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       color: theme.text,
     },
     primaryButton: {
@@ -532,7 +532,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.accent,
     },
     primaryButtonText: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
     },
@@ -544,7 +544,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.card,
     },
     secondaryButtonText: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
@@ -553,11 +553,11 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingMd,
     },
     linkText: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       color: theme.accent,
     },
     formTitle: {
-      fontSize: theme.fontSizeLg,
+      fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
@@ -567,11 +567,11 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacingLg,
       backgroundColor: theme.card,
       color: theme.text,
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
     },
     disabled: { opacity: 0.6 },
     error: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       color: theme.markColor,
       textAlign: 'center',
     },
@@ -610,12 +610,12 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.innerBorder,
     },
     themeButtonTextActive: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
     },
     themeButtonTextInactive: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },

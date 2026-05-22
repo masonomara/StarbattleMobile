@@ -27,7 +27,7 @@ export function HeaderTimer() {
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     timer: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       fontVariant: ['tabular-nums'],
       fontWeight: 600,
       color: theme.text,

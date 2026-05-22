@@ -177,14 +177,14 @@ export function HomeScreen({
             onPress={() => navigation.navigate('Streaks')}
             hitSlop={8}
           >
-            <Flame size={22} color={theme.text} />
+            <Flame size={24} color={theme.text} />
           </Pressable>
           <Pressable
             style={styles.headerIconButton}
             onPress={() => navigation.navigate('Account')}
             hitSlop={8}
           >
-            <User size={22} color={theme.text} />
+            <User size={24} color={theme.text} />
           </Pressable>
         </View>
       </View>
@@ -195,33 +195,8 @@ export function HomeScreen({
           { paddingTop: 57 + insets.top, paddingBottom: insets.bottom },
         ]}
       >
-        {continueCard && (
-          <View style={styles.continueSection}>
-            <Text style={styles.sectionLabel}>Continue Playing</Text>
-
-            <Pressable
-              style={styles.continueCard}
-              onPress={() =>
-                navigation.navigate('Puzzle', {
-                  packId: continueCard.packId,
-                  puzzleIndex: continueCard.puzzleIndex,
-                })
-              }
-            >
-              <View>
-                <Text style={styles.continueLabel}>Continue</Text>
-                <Text style={styles.continueName}>
-                  {continueCard.packName} #{continueCard.puzzleIndex + 1}
-                </Text>
-              </View>
-              <Text style={styles.continueTime}>
-                {formatTime(continueCard.timeMs)}
-              </Text>
-            </Pressable>
-          </View>
-        )}
+       
         <View style={styles.streakSection}>
-          <Text style={styles.sectionLabel}>Streaks</Text>
           <ScrollView
             style={styles.streakRow}
             horizontal
@@ -260,11 +235,11 @@ export function HomeScreen({
                   </View>
                   <View style={styles.streakCardHeader}>
                     <Text style={styles.streakLabel}>
-                      {STREAK_LABELS[type]} Special <Text style={styles.streakMeta}>
+                      {STREAK_LABELS[type]} Special
+                    </Text>
+                    <Text style={styles.streakMeta}>
                       {pack.gridSize}×{pack.gridSize}
                     </Text>
-                    </Text>
-                   
                   </View>
 
                   {streakCount > 0 && (
@@ -362,7 +337,8 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     appTitle: {
       fontSize: 28,
-      fontWeight: theme.fontWeightSemibold,
+      fontFamily: 'Bitter',
+      fontWeight: 600,
       color: theme.text,
     },
     headerRight: {
@@ -375,14 +351,12 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.card,
-      shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 1,
-      shadowRadius: 4,
-      elevation: 2,
-      borderWidth: 1,
-      borderColor: theme.bg,
+      backgroundColor: theme.bg,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 24,
+      elevation: 8,
+      zIndex: 0,
     },
     scrollContent: {},
     continueCard: {
@@ -396,19 +370,20 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       backgroundColor: theme.accent,
     },
     continueLabel: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeCallout,
+      lineHeight: 21,
       fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
-      opacity: 0.8,
+
       marginBottom: 4,
     },
     continueName: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
     },
     continueTime: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       color: theme.onAccent,
       opacity: 0.8,
     },
@@ -421,10 +396,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       paddingTop: 34,
       flexDirection: 'column',
       backgroundColor: theme.bg,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 56,
-      elevation: 8,
+   
     },
     packSection: {
       paddingTop: 34,
@@ -444,40 +416,48 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
 
     streakCard: {
-padding: theme.spacingMd,
       borderRadius: 16,
-      backgroundColor: theme.card,
+      // padding: theme.spacingMd,
+      // backgroundColor: theme.card,
 
       alignItems: 'center',
       shadowColor: theme.text,
-   shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 24,
-      elevation: 8,
-      gap: 11,
+      // shadowOffset: { width: 0, height: 4 },
+      // shadowOpacity: 0.1,
+      // shadowRadius: 24,
+      // elevation: 8,
     },
     streakCardCompleted: {
       opacity: 0.6,
     },
     streakCardHeader: {
       width: '100%',
-      flexDirection: 'row',
+      flexDirection: 'column',
       alignItems: 'baseline',
-
     },
     streakLabel: {
-      fontSize: theme.fontSizeMd,
-      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
+
+      lineHeight: 28,
+            fontSize: 22,
+      fontFamily: 'Bitter',
+      fontWeight: 600,
+      marginTop: 9,
     },
     streakMeta: {
-
-      color: theme.text,
+      color: theme.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+      marginTop: 2,
     },
     streakThumbnailWrap: {
       borderRadius: 4,
+      backgroundColor: theme.card,
 
-
+      // shadowOffset: { width: 0, height: 8 },
+      // shadowOpacity: 0.15,
+      // shadowRadius: 8,
+      // elevation: 8,
     },
     streakCount: {
       fontSize: 18,
@@ -508,22 +488,22 @@ padding: theme.spacingMd,
     },
     packInfo: { flex: 1 },
     packName: {
-      fontSize: theme.fontSizeLg,
+      fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     packMeta: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       marginTop: 4,
       color: theme.textSecondary,
     },
     packProgress: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.accent,
     },
     packPrice: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.textSecondary,
     },

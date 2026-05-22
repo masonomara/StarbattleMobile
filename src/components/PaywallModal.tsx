@@ -191,7 +191,7 @@ const createStyles = (theme: Theme) =>
       marginBottom: 4,
     },
     body: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       color: theme.textSecondary,
       lineHeight: 22,
       marginBottom: theme.spacingMd,
@@ -204,7 +204,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.accent,
     },
     primaryButtonText: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.onAccent,
     },
@@ -216,13 +216,13 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.highlight,
     },
     secondaryButtonText: {
-      fontSize: theme.fontSizeMd,
+      fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     disabled: { opacity: 0.6 },
     error: {
-      fontSize: theme.fontSizeSm,
+      fontSize: theme.fontSizeSubhead,
       color: theme.markColor,
       textAlign: 'center',
     },
