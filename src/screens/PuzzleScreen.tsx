@@ -25,7 +25,8 @@ import { useEntitlementsStore } from '../stores/entitlementsStore';
 import type { RawPuzzle } from '../types/puzzle';
 import { useSettingsStore } from '../stores/settingsStore';
 import { saveProgress } from '../utils/progress';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import {

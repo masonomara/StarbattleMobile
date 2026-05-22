@@ -4,7 +4,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChevronLeft, Lock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../components/Header';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { loadStreaks } from '../utils/progress';
 import {

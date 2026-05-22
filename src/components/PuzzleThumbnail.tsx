@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import type { Puzzle } from '../types/puzzle';
-import type { Theme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 
 type PuzzleThumbnailProps = {
   puzzle: Puzzle;

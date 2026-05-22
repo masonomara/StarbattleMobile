@@ -8,7 +8,7 @@ import {
 } from '@shopify/react-native-skia';
 import type { Puzzle } from '../types/puzzle';
 import type { CellValue, DrawLayerHandle } from '../types/state';
-import type { Theme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 
 const REGION_COLORS_LIGHT = [
   '#E8EAF6', '#E3F2FD', '#E8F5E9', '#FFF8E1', '#FCE4EC', '#F3E5F5',

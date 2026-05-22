@@ -3,7 +3,8 @@ import { Modal, View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { X } from 'lucide-react-native';
 import { Header } from './Header';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 import type { UserSettings } from '../types/state';
 
 type Props = {

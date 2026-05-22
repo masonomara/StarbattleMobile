@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { X } from 'lucide-react-native';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 import { useAuthStore } from '../stores/authStore';
 import { purchasePremium, purchasePack } from '../utils/payments';
 import type { PaywallContext } from '../types/user';

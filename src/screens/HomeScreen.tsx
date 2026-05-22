@@ -5,7 +5,8 @@ import { useIsFocused } from '@react-navigation/native';
 import { Flame, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getStreakPack } from '../packs';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import {
   getCurrentKey,
@@ -18,7 +19,6 @@ import {
   loadProgress,
   getMostRecentInProgress,
 } from '../utils/progress';
-import { formatTime } from '../utils/formatTime';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import type { StreakType, Streak } from '../types/state';

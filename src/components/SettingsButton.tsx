@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Ellipsis } from 'lucide-react-native';
 import { SettingsModal } from './SettingsModal';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 
 export function SettingsButton() {
   const theme = useTheme();

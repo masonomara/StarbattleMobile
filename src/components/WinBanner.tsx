@@ -8,7 +8,8 @@ import { usePuzzleStore } from '../store';
 import { loadStreaks, recordStreak } from '../utils/progress';
 import { getActiveStreak } from '../utils/streakDate';
 import { formatTime } from '../utils/formatTime';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
+import type { Theme } from '../types/theme';
 import type { StreakType, Streak } from '../types/state';
 
 export function WinBanner({
