@@ -3,7 +3,8 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { packs } from '../packs';
+import { getPuzzlesForPack } from '../packs';
+import type { RawPuzzle } from '../types/puzzle';
 import { PaywallModal } from '../components/PaywallModal';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useTheme, type Theme } from '../hooks/useTheme';
@@ -96,18 +97,22 @@ export function LibraryScreen({
   const { packCatalog, canPlayPuzzle, hasPackAccess } = useEntitlements();
 
   const catalogPack = packCatalog.find(p => p.id === packId);
-  const bundledPack = packs.find(p => p.id === packId);
-  const puzzleCount =
-    catalogPack?.puzzleCount ?? bundledPack?.puzzles.length ?? 0;
-  const packName = catalogPack?.name ?? bundledPack?.name ?? packId;
+  const puzzleCount = catalogPack?.puzzleCount ?? 0;
+  const packName = catalogPack?.name ?? packId;
   const isFree = catalogPack?.isFree ?? true;
   const priceUsd = catalogPack?.priceUsd;
   const storagePath = catalogPack?.storagePath;
 
+  const [rawPuzzles, setRawPuzzles] = useState<RawPuzzle[] | null>(null);
+
+  useEffect(() => {
+    getPuzzlesForPack(packId).then(setRawPuzzles).catch(() => {});
+  }, [packId]);
+
   const parsedPuzzles = useMemo<Puzzle[]>(() => {
-    if (!bundledPack) return [];
-    return bundledPack.puzzles.map((raw, i) => parsePuzzle(raw, `${packId}:${i}`));
-  }, [packId, bundledPack]);
+    if (!rawPuzzles) return [];
+    return rawPuzzles.map((raw, i) => parsePuzzle(raw, `${packId}:${i}`));
+  }, [packId, rawPuzzles]);
 
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
   const [completedCount, setCompletedCount] = useState(0);

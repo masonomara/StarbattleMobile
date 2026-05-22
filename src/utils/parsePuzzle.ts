@@ -11,6 +11,13 @@ export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
   const size = parseInt(match[1], 10);
   const stars = parseInt(match[2], 10);
 
+  if (!layout) throw new Error(`SBN layout missing for puzzle ${puzzleId}`);
+  if (layout.length < size * size) {
+    throw new Error(
+      `SBN layout too short: expected ${size * size} chars, got ${layout.length}`,
+    );
+  }
+
   const regions: number[][] = [];
   const regionCells: number[][] = [];
   for (let row = 0; row < size; row++) {
@@ -18,6 +25,9 @@ export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
     for (let col = 0; col < size; col++) {
       const char = layout[row * size + col];
       const regionIdx = LETTERS.indexOf(char.toUpperCase());
+      if (regionIdx < 0) {
+        throw new Error(`SBN: invalid region character '${char}' at [${row},${col}]`);
+      }
       rowData.push(regionIdx);
       if (!regionCells[regionIdx]) regionCells[regionIdx] = [];
       regionCells[regionIdx].push(row * size + col);

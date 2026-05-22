@@ -19,8 +19,10 @@ import { HeaderTimer } from '../components/HeaderTimer';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
 import { parsePuzzle } from '../utils/parsePuzzle';
-import { packs, streakPacks } from '../packs';
+import { streakPacks, getPuzzlesForPack } from '../packs';
 import { usePuzzleStore } from '../store';
+import { useEntitlementsStore } from '../stores/entitlementsStore';
+import type { RawPuzzle } from '../types/puzzle';
 import { useSettingsStore } from '../stores/settingsStore';
 import { saveProgress } from '../utils/progress';
 import { useTheme, type Theme } from '../hooks/useTheme';
@@ -46,38 +48,60 @@ export function PuzzleScreen({
   const isArchive = rawParams.isArchive;
   const archiveKey = rawParams.archiveKey;
 
-  const packData = useMemo(() => {
-    if (streakType) {
-      const pack = streakPacks[streakType];
-      if (!pack) return null;
-      const key =
-        isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
-      const date =
-        isArchive && archiveKey
-          ? archiveKeyToDate(streakType, archiveKey)
-          : new Date();
-      const idx = getPuzzleIndex(streakType, pack.puzzles.length, date);
-      return {
-        rawPuzzle: pack.puzzles[idx],
-        puzzleId: isArchive
-          ? `${streakType}:archive:${key}`
-          : `${streakType}:${key}`,
-        gridSize: pack.gridSize,
-        packName: pack.name,
-        isLastPuzzle: !isArchive,
-      };
-    }
-    const pack = packs.find(p => p.id === packId);
+  type PackData = {
+    rawPuzzle: RawPuzzle;
+    puzzleId: string;
+    gridSize: number;
+    packName: string;
+    isLastPuzzle: boolean;
+  };
+
+  // Streak packs are bundled (sync)
+  const streakPackData = useMemo<PackData | null>(() => {
+    if (!streakType) return null;
+    const pack = streakPacks[streakType];
     if (!pack) return null;
-    const idx = puzzleIndex ?? 0;
+    const key =
+      isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
+    const date =
+      isArchive && archiveKey
+        ? archiveKeyToDate(streakType, archiveKey)
+        : new Date();
+    const idx = getPuzzleIndex(streakType, pack.puzzles.length, date);
     return {
       rawPuzzle: pack.puzzles[idx],
-      puzzleId: `${packId}:${idx}`,
+      puzzleId: isArchive
+        ? `${streakType}:archive:${key}`
+        : `${streakType}:${key}`,
       gridSize: pack.gridSize,
       packName: pack.name,
-      isLastPuzzle: idx >= pack.puzzles.length - 1,
+      isLastPuzzle: !isArchive,
     };
-  }, [packId, puzzleIndex, streakType, isArchive, archiveKey]);
+  }, [streakType, isArchive, archiveKey]);
+
+  // Regular packs load from Supabase Storage (downloaded → bundled fallback)
+  const [regularPackData, setRegularPackData] = useState<PackData | null>(null);
+
+  useEffect(() => {
+    if (streakType || !packId) return;
+    setRegularPackData(null);
+    const idx = puzzleIndex ?? 0;
+    const catalog = useEntitlementsStore.getState().packCatalog;
+    const meta = catalog.find(p => p.id === packId);
+    getPuzzlesForPack(packId).then(puzzles => {
+      const raw = puzzles?.[idx];
+      if (!raw) { navigation.goBack(); return; }
+      setRegularPackData({
+        rawPuzzle: raw,
+        puzzleId: `${packId}:${idx}`,
+        gridSize: meta?.gridSize ?? parseInt(raw.sbn.split('x')[0], 10),
+        packName: meta?.name ?? packId,
+        isLastPuzzle: idx >= (meta?.puzzleCount ?? puzzles!.length) - 1,
+      });
+    }).catch(() => navigation.goBack());
+  }, [packId, puzzleIndex, streakType, navigation]);
+
+  const packData = streakPackData ?? regularPackData;
 
   const rawPuzzle = packData?.rawPuzzle;
   const puzzleId = packData?.puzzleId ?? '';
