@@ -21,6 +21,7 @@ import {
 } from '../utils/progress';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
+import { useSettingsStore } from '../stores/settingsStore';
 import type { StreakType, Streak } from '../types/state';
 import type { Pack } from '../types/puzzle';
 import type { PackCatalogItem } from '../types/user';
@@ -91,7 +92,10 @@ export function HomeScreen({
           packsResult[type] = pack;
           const idx = getPuzzleIndex(type, pack.puzzles.length);
           const key = getCurrentKey(type);
-          previewsResult[type] = parsePuzzle(pack.puzzles[idx], `${type}:${key}`);
+          previewsResult[type] = parsePuzzle(
+            pack.puzzles[idx],
+            `${type}:${key}`,
+          );
         }),
       );
       setLoadedStreakPacks(packsResult);
@@ -184,7 +188,7 @@ export function HomeScreen({
           </Pressable>
           <Pressable
             style={styles.headerIconButton}
-            onPress={() => navigation.navigate('Account')}
+            onPress={() => useSettingsStore.getState().openSettings()}
             hitSlop={8}
           >
             <User size={24} color={theme.text} />
@@ -198,7 +202,6 @@ export function HomeScreen({
           { paddingTop: 57 + insets.top, paddingBottom: insets.bottom },
         ]}
       >
-       
         <View style={styles.streakSection}>
           <ScrollView
             style={styles.streakRow}
@@ -401,7 +404,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       paddingTop: 34,
       flexDirection: 'column',
       backgroundColor: theme.bg,
-   
     },
     packSection: {
       paddingTop: 34,
@@ -444,7 +446,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       color: theme.text,
 
       lineHeight: 28,
-            fontSize: 22,
+      fontSize: 22,
       fontFamily: 'Bitter',
       fontWeight: 600,
       marginTop: 9,

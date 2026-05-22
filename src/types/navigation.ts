@@ -13,7 +13,6 @@ export type RootStackParamList = {
         puzzleIndex?: never;
       };
   Streaks: undefined;
-  Account: undefined;
 };
 
 declare global {

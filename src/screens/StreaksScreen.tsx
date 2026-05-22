@@ -13,6 +13,7 @@ import {
   getActiveStreak,
   getPastArchive,
 } from '../utils/streakDate';
+import { useSettingsStore } from '../stores/settingsStore';
 import type { StreakType, Streak } from '../types/state';
 import type { RootStackParamList } from '../types/navigation';
 
@@ -159,7 +160,7 @@ export function StreaksScreen({
             </Text>
             <Pressable
               style={styles.upgradeButton}
-              onPress={() => navigation.navigate('Account')}
+              onPress={() => useSettingsStore.getState().openSettings()}
             >
               <Text style={styles.upgradeButtonText}>
                 Unlock with Premium · $5.99

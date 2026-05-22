@@ -107,7 +107,9 @@ export function LibraryScreen({
   const [rawPuzzles, setRawPuzzles] = useState<RawPuzzle[] | null>(null);
 
   useEffect(() => {
-    getPuzzlesForPack(packId).then(setRawPuzzles).catch(() => {});
+    getPuzzlesForPack(packId)
+      .then(setRawPuzzles)
+      .catch(() => {});
   }, [packId]);
 
   const parsedPuzzles = useMemo<Puzzle[]>(() => {
@@ -140,7 +142,13 @@ export function LibraryScreen({
   function handleLockedPress(index: number) {
     if (!isFree && !hasPackAccess(packId)) {
       if (priceUsd !== undefined && storagePath !== undefined) {
-        setPaywallContext({ type: 'paid-pack', packId, packName, priceUsd, storagePath });
+        setPaywallContext({
+          type: 'paid-pack',
+          packId,
+          packName,
+          priceUsd,
+          storagePath,
+        });
       } else {
         // Pack metadata incomplete — send to account screen as fallback
         setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
@@ -159,7 +167,12 @@ export function LibraryScreen({
 
   return (
     <View style={styles.container}>
-      <View style={[styles.headerRow, { paddingTop: insets.top, height: 48 + insets.top }]}>
+      <View
+        style={[
+          styles.headerRow,
+          { paddingTop: insets.top, height: 48 + insets.top },
+        ]}
+      >
         <Pressable
           style={styles.headerButton}
           onPress={() => navigation.goBack()}
@@ -192,7 +205,6 @@ export function LibraryScreen({
         ))}
       </ScrollView>
       <PaywallModal
-        visible={paywallContext !== null}
         context={paywallContext}
         onClose={() => setPaywallContext(null)}
         onPurchaseSuccess={() => {
@@ -202,7 +214,6 @@ export function LibraryScreen({
             setCompletedCount(set.size);
           });
         }}
-        onNavigateToAccount={() => navigation.navigate('Account')}
       />
     </View>
   );
