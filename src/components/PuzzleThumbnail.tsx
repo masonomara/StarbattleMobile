@@ -68,7 +68,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   const bg = theme.isDark ? '#000000' : '#ffffff';
 
   return (
-    <Canvas style={{ width: size, height: size }}>
+    <Canvas style={{ width: size, height: size }} pointerEvents="none">
       <Path path={outerBorderPath} color={bg} style="fill" />
       <Path
         path={innerGridPath}

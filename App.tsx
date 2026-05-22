@@ -9,7 +9,6 @@ import { db } from './src/powersync/database';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
-import { packs, refreshFreePacks } from './src/packs';
 
 export default function App() {
   useEffect(() => {
@@ -22,8 +21,11 @@ export default function App() {
     // Open local SQLite immediately — fetchCredentials() retries once auth resolves
     db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
 
-    // Background refresh of bundled free packs from Supabase Storage (fire-and-forget)
-    refreshFreePacks(packs.map(p => p.id)).catch(() => {});
+    db.watch('SELECT id FROM packs WHERE published = 1 LIMIT 1', [], {
+      onResult: () => {
+        useEntitlementsStore.getState().loadPackCatalog();
+      },
+    });
 
     db.watch('SELECT * FROM user_entitlements LIMIT 1', [], {
       onResult: () => {

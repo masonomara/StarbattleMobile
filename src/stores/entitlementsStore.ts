@@ -5,6 +5,7 @@ import type { Entitlements, PackCatalogItem } from '../types/user';
 type EntitlementsState = {
   entitlements: Entitlements;
   packCatalog: PackCatalogItem[];
+  loadPackCatalog: () => Promise<void>;
   loadEntitlements: (userId: string) => Promise<void>;
   hasPackAccess: (packId: string) => boolean;
   canPlayPuzzle: (packId: string, puzzleIndex: number, completedCount: number) => boolean;
@@ -19,6 +20,32 @@ const DEFAULT_ENTITLEMENTS: Entitlements = {
 export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   entitlements: DEFAULT_ENTITLEMENTS,
   packCatalog: [],
+
+  loadPackCatalog: async () => {
+    const catalogRows = await db.getAll<{
+      id: string;
+      name: string;
+      grid_size: number;
+      stars: number;
+      difficulty: string;
+      is_free: number;
+      price_usd: number | null;
+      puzzle_count: number;
+      storage_path: string | null;
+    }>('SELECT * FROM packs WHERE published = 1 ORDER BY sort_order ASC NULLS LAST');
+    const packCatalog: PackCatalogItem[] = catalogRows.map(r => ({
+      id: r.id,
+      name: r.name,
+      gridSize: r.grid_size,
+      stars: r.stars,
+      difficulty: r.difficulty as 'normal' | 'hard',
+      isFree: r.is_free === 1,
+      priceUsd: r.price_usd ?? undefined,
+      puzzleCount: r.puzzle_count,
+      storagePath: r.storage_path ?? undefined,
+    }));
+    set({ packCatalog });
+  },
 
   loadEntitlements: async (userId: string) => {
     const [entRow] = await db.getAll<{
@@ -37,7 +64,7 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
       price_usd: number | null;
       puzzle_count: number;
       storage_path: string | null;
-    }>('SELECT * FROM packs WHERE published = 1 ORDER BY is_free DESC, grid_size ASC');
+    }>('SELECT * FROM packs WHERE published = 1 ORDER BY sort_order ASC NULLS LAST');
 
     const entitlements: Entitlements = entRow
       ? {

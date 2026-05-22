@@ -1,7 +1,5 @@
 import { NativeModules } from 'react-native';
 import { supabase } from '../supabase/client';
-import type { RawPuzzle } from '../types/puzzle';
-
 import type * as RNFSType from 'react-native-fs';
 
 function getRNFS(): typeof RNFSType | null {
@@ -31,34 +29,12 @@ export async function downloadPack(
     .from('packs')
     .download(storagePath);
   if (error) throw error;
-  const text = await (data as unknown as { text(): Promise<string> }).text();
+  const text = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsText(data);
+  });
   await rnfs.writeFile(`${packDir}/${packId}.json`, text, 'utf8');
 }
 
-export async function isPackDownloaded(packId: string): Promise<boolean> {
-  try {
-    const rnfs = getRNFS();
-    const packDir = getPackDir();
-    if (!rnfs || !packDir) return false;
-    return await rnfs.exists(`${packDir}/${packId}.json`);
-  } catch {
-    return false;
-  }
-}
-
-export async function loadDownloadedPack(
-  packId: string,
-): Promise<RawPuzzle[] | null> {
-  try {
-    const rnfs = getRNFS();
-    const packDir = getPackDir();
-    if (!rnfs || !packDir) return null;
-    const path = `${packDir}/${packId}.json`;
-    const exists = await rnfs.exists(path);
-    if (!exists) return null;
-    const raw = await rnfs.readFile(path, 'utf8');
-    return (JSON.parse(raw) as { puzzles: RawPuzzle[] }).puzzles;
-  } catch {
-    return null;
-  }
-}

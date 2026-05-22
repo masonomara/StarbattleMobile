@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
 import { Flame, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { packs, streakPacks } from '../packs';
+import { getStreakPack } from '../packs';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import {
@@ -22,6 +22,7 @@ import { formatTime } from '../utils/formatTime';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import type { StreakType, Streak } from '../types/state';
+import type { Pack } from '../types/puzzle';
 import type { PackCatalogItem } from '../types/user';
 import type { RootStackParamList } from '../types/navigation';
 import type { Puzzle } from '../types/puzzle';
@@ -72,15 +73,31 @@ export function HomeScreen({
   const isFocused = useIsFocused();
   const { packCatalog, hasPackAccess } = useEntitlements();
 
-  const streakPreviews = useMemo<Record<StreakType, Puzzle>>(() => {
-    const result = {} as Record<StreakType, Puzzle>;
-    for (const type of STREAK_TYPES) {
-      const pack = streakPacks[type];
-      const idx = getPuzzleIndex(type, pack.puzzles.length);
-      const key = getCurrentKey(type);
-      result[type] = parsePuzzle(pack.puzzles[idx], `${type}:${key}`);
+  const [loadedStreakPacks, setLoadedStreakPacks] = useState<
+    Partial<Record<StreakType, Pack>>
+  >({});
+  const [streakPreviews, setStreakPreviews] = useState<
+    Partial<Record<StreakType, Puzzle>>
+  >({});
+
+  useEffect(() => {
+    async function loadPreviews() {
+      const packsResult: Partial<Record<StreakType, Pack>> = {};
+      const previewsResult: Partial<Record<StreakType, Puzzle>> = {};
+      await Promise.all(
+        STREAK_TYPES.map(async type => {
+          const pack = await getStreakPack(type);
+          if (!pack) return;
+          packsResult[type] = pack;
+          const idx = getPuzzleIndex(type, pack.puzzles.length);
+          const key = getCurrentKey(type);
+          previewsResult[type] = parsePuzzle(pack.puzzles[idx], `${type}:${key}`);
+        }),
+      );
+      setLoadedStreakPacks(packsResult);
+      setStreakPreviews(previewsResult);
     }
-    return result;
+    loadPreviews();
   }, []);
 
   const [streaks, setStreaks] = useState<Streak[]>([]);
@@ -92,19 +109,7 @@ export function HomeScreen({
   >({});
   const [continueCard, setContinueCard] = useState<ContinueCard | null>(null);
 
-  const catalogMatchesBundled =
-    packCatalog.length > 0 &&
-    packCatalog.some(cp => packs.some(bp => bp.id === cp.id));
-
-  const displayPacks: PackDisplayItem[] = catalogMatchesBundled
-    ? packCatalog.map(packFromCatalog)
-    : packs.map(p => ({
-        id: p.id,
-        name: p.name,
-        gridSize: p.gridSize,
-        puzzleCount: p.puzzles.length,
-        isFree: true,
-      }));
+  const displayPacks: PackDisplayItem[] = packCatalog.map(packFromCatalog);
 
   const freePacks = displayPacks.filter(p => p.isFree);
   const paidPacks = displayPacks.filter(p => !p.isFree);
@@ -145,9 +150,7 @@ export function HomeScreen({
     const inProgress = await getMostRecentInProgress();
     if (inProgress) {
       const catalogPack = packCatalog.find(p => p.id === inProgress.packId);
-      const bundledPack = packs.find(p => p.id === inProgress.packId);
-      const packName =
-        catalogPack?.name ?? bundledPack?.name ?? inProgress.packId;
+      const packName = catalogPack?.name ?? inProgress.packId;
       if (isPackAccessible(inProgress.packId)) {
         setContinueCard({
           packId: inProgress.packId,
@@ -208,7 +211,9 @@ export function HomeScreen({
             }}
           >
             {STREAK_TYPES.map(type => {
-              const pack = streakPacks[type];
+              const pack = loadedStreakPacks[type];
+              const preview = streakPreviews[type];
+              if (!pack || !preview) return null;
               const key = getCurrentKey(type);
               const puzzleId = `${type}:${key}`;
               const isCompleted = completedPuzzleIds.has(puzzleId);
@@ -228,7 +233,7 @@ export function HomeScreen({
                 >
                   <View style={styles.streakThumbnailWrap}>
                     <PuzzleThumbnail
-                      puzzle={streakPreviews[type]}
+                      puzzle={preview}
                       size={220}
                       theme={theme}
                     />
