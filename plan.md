@@ -2458,9 +2458,9 @@ These must be done before any code is written.
 
 ### Phase 11: Streak System Update
 
-- [ ] **[CLAUDE]** Update `recordStreak` in `src/store.ts` (or extract to `src/utils/streakActions.ts`) — write via `saveStreak` (PowerSync) instead of MMKV.
-- [ ] **[CLAUDE]** Add `getArchivePuzzleId` and `getPastArchive` to `src/utils/streakDate.ts` — query `streak_archive` from local SQLite.
-- [ ] **[CLAUDE]** Wire `getPastArchive` into `StreaksScreen` to render the past puzzle list for premium users.
+- [x] **[CLAUDE]** Update `recordStreak` in `src/store.ts` (or extract to `src/utils/streakActions.ts`) — write via `saveStreak` (PowerSync) instead of MMKV.
+- [x] **[CLAUDE]** Add `getArchivePuzzleId` and `getPastArchive` to `src/utils/streakDate.ts` — query `streak_archive` from local SQLite.
+- [x] **[CLAUDE]** Wire `getPastArchive` into `StreaksScreen` to render the past puzzle list for premium users.
 - [ ] **[YOU]** Complete a daily puzzle. Verify streak counter increments and persists after app restart.
 
 ---

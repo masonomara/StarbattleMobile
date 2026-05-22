@@ -7,7 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { packs, streakPacks } from '../packs';
 import { useTheme, type Theme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
-import { getCurrentKey, getActiveStreak, getPuzzleIndex } from '../utils/streakDate';
+import {
+  getCurrentKey,
+  getActiveStreak,
+  getPuzzleIndex,
+} from '../utils/streakDate';
 import {
   loadStreaks,
   getCompletedCountForPack,
@@ -225,7 +229,7 @@ export function HomeScreen({
             contentContainerStyle={{
               paddingRight: theme.spacingXl,
               paddingLeft: theme.spacingXl,
-              gap: theme.spacingMd,
+              gap: 20,
             }}
           >
             {STREAK_TYPES.map(type => {
@@ -247,12 +251,6 @@ export function HomeScreen({
                     navigation.navigate('Puzzle', { streakType: type })
                   }
                 >
-                  <View style={styles.streakCardHeader}>
-                    <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
-                    <Text style={styles.streakMeta}>
-                      {pack.gridSize}×{pack.gridSize}
-                    </Text>
-                  </View>
                   <View style={styles.streakThumbnailWrap}>
                     <PuzzleThumbnail
                       puzzle={streakPreviews[type]}
@@ -260,6 +258,15 @@ export function HomeScreen({
                       theme={theme}
                     />
                   </View>
+                  <View style={styles.streakCardHeader}>
+                    <Text style={styles.streakLabel}>
+                      {STREAK_LABELS[type]} Special <Text style={styles.streakMeta}>
+                      {pack.gridSize}×{pack.gridSize}
+                    </Text>
+                    </Text>
+                   
+                  </View>
+
                   {streakCount > 0 && (
                     <Text style={styles.streakCount}>{streakCount}</Text>
                   )}
@@ -427,7 +434,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       shadowRadius: 56,
       elevation: 8,
       paddingHorizontal: theme.spacingXl,
-
     },
     streakRow: {
       flexDirection: 'row',
@@ -438,18 +444,17 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
 
     streakCard: {
-      padding: theme.spacingLg,
-      paddingBottom: theme.spacingMd,
-      borderRadius: theme.radiusMd,
+padding: theme.spacingMd,
+      borderRadius: 16,
       backgroundColor: theme.card,
+
       alignItems: 'center',
-      shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
-      elevation: 2,
-      zIndex: 70,
-      width: 256,
+      shadowColor: theme.text,
+   shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 24,
+      elevation: 8,
+      gap: 11,
     },
     streakCardCompleted: {
       opacity: 0.6,
@@ -458,8 +463,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       width: '100%',
       flexDirection: 'row',
       alignItems: 'baseline',
-      gap: 6,
-      marginBottom: theme.spacingMd,
+
     },
     streakLabel: {
       fontSize: theme.fontSizeMd,
@@ -467,12 +471,13 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       color: theme.text,
     },
     streakMeta: {
-      fontSize: 12,
-      color: theme.textSecondary,
+
+      color: theme.text,
     },
     streakThumbnailWrap: {
       borderRadius: 4,
-      overflow: 'hidden',
+
+
     },
     streakCount: {
       fontSize: 18,
