@@ -1,5 +1,5 @@
 import { NativeModules } from 'react-native';
-import { supabase } from '../supabase/client';
+import { supabase } from '../supabase';
 import type { RawPuzzle, Pack } from '../types/puzzle';
 import type { StreakType } from '../types/state';
 
@@ -71,4 +71,15 @@ export async function getStreakPack(type: StreakType): Promise<Pack | null> {
     console.error('[packs] getStreakPack failed:', type, e);
     return null;
   }
+}
+
+export async function downloadPack(packId: string, storagePath: string): Promise<void> {
+  const rnfs = getRNFS();
+  if (!rnfs) throw new Error('File system unavailable — run pod install');
+  const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+  await rnfs.mkdir(packDir).catch(() => {});
+  const { data, error } = await supabase.storage.from('packs').download(storagePath);
+  if (error) throw error;
+  const text = await blobToText(data);
+  await rnfs.writeFile(`${packDir}/${packId}.json`, text, 'utf8');
 }

@@ -5,7 +5,7 @@ import { Navigation } from './src/navigation';
 import { useAuthStore } from './src/stores/authStore';
 import { useSettingsStore } from './src/stores/settingsStore';
 import { useEntitlementsStore } from './src/stores/entitlementsStore';
-import { db } from './src/powersync/database';
+import { db } from './src/powersync/AppSchema';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';

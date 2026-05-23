@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { createMMKV } from 'react-native-mmkv';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
 
 const mmkv = createMMKV({ id: 'supabase-auth' });
 

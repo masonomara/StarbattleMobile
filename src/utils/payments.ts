@@ -1,6 +1,6 @@
 import { adapty } from 'react-native-adapty';
 import type { AdaptyPaywall, AdaptyPaywallProduct } from 'react-native-adapty';
-import { downloadPack } from '../packs/downloaded';
+import { downloadPack } from '../packs';
 
 export async function fetchPaywall(placementId = 'main_paywall'): Promise<{
   paywall: AdaptyPaywall;

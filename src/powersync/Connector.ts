@@ -4,7 +4,7 @@ import type {
   PowerSyncCredentials,
 } from '@powersync/react-native';
 import { UpdateType } from '@powersync/react-native';
-import { supabase } from '../supabase/client';
+import { supabase } from '../supabase';
 import { POWERSYNC_URL } from '../config';
 
 const FATAL_POSTGRES_CODES = [
