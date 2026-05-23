@@ -4,6 +4,12 @@ import type { Puzzle } from './puzzle';
 import type { CellValue, StreakType } from './state';
 import type { Theme } from './theme';
 
+export type CircleButtonProps = {
+  onPress: () => void;
+  children: ReactNode;
+  hitSlop?: number;
+};
+
 export type HeaderProps = {
   left?: ReactNode;
   center?: ReactNode;
