@@ -1,5 +1,3 @@
-export type UserRole = 'anonymous' | 'free' | 'premium';
-
 export type Entitlements = {
   isPremium: boolean;
   premiumPurchasedAt?: string;

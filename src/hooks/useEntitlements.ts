@@ -8,7 +8,6 @@ export function useEntitlements() {
       packCatalog: s.packCatalog,
       hasPackAccess: s.hasPackAccess,
       canPlayPuzzle: s.canPlayPuzzle,
-      canPlayPack: s.canPlayPack,
     })),
   );
 }
