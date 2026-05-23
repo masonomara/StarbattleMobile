@@ -1,9 +1,16 @@
 import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { supabase } from '../supabase/client';
+import { supabase } from '../supabase';
 import { adapty } from 'react-native-adapty';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../config';
+
+type SetState = (partial: Partial<{ session: Session | null; user: User | null; isAnonymous: boolean }>) => void;
+
+async function applySignIn(set: SetState, session: Session | null, user: User): Promise<void> {
+  set({ session, user, isAnonymous: false });
+  await adapty.identify(user.id);
+}
 
 type AuthState = {
   session: Session | null;
@@ -30,14 +37,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
 
     const {
-      data: { session },
+      data: { session: initialSession },
     } = await supabase.auth.getSession();
 
-    if (session) {
-      const isAnonymous = session.user.is_anonymous ?? true;
-      set({ session, user: session.user, isAnonymous });
+    if (initialSession) {
+      const isAnonymous = initialSession.user.is_anonymous ?? true;
+      set({ session: initialSession, user: initialSession.user, isAnonymous });
       if (!isAnonymous) {
-        await adapty.identify(session.user.id);
+        await adapty.identify(initialSession.user.id);
       }
     } else {
       await get().signInAnonymously();
@@ -64,18 +71,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUpWithEmail: async (email: string, password: string) => {
     const { data, error } = await supabase.auth.updateUser({ email, password });
     if (error) throw error;
-    set({ user: data.user, isAnonymous: false });
-    if (data?.user) await adapty.identify(data.user.id);
+    if (data.user) await applySignIn(set, null, data.user);
   },
 
   signInWithEmail: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    set({ session: data.session, user: data.user, isAnonymous: false });
-    if (data.user) await adapty.identify(data.user.id);
+    await applySignIn(set, data.session, data.user);
   },
 
   signInWithGoogle: async () => {
@@ -87,14 +89,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       token: response.data.idToken,
     });
     if (error) throw error;
-    set({ session: data.session, user: data.user, isAnonymous: false });
-    if (data.user) await adapty.identify(data.user.id);
+    await applySignIn(set, data.session, data.user);
   },
 
   signInWithApple: async () => {
-    const { appleAuth } = await import(
-      '@invertase/react-native-apple-authentication'
-    );
+    const { appleAuth } = await import('@invertase/react-native-apple-authentication');
     const credential = await appleAuth.performRequest({
       requestedOperation: appleAuth.Operation.LOGIN,
       requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
@@ -104,8 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       token: credential.identityToken!,
     });
     if (error) throw error;
-    set({ session: data.session, user: data.user, isAnonymous: false });
-    if (data.user) await adapty.identify(data.user.id);
+    await applySignIn(set, data.session, data.user);
   },
 
   signOut: async () => {

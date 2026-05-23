@@ -1,6 +1,35 @@
 import { create } from 'zustand';
-import { db } from '../powersync/database';
+import { db } from '../powersync/AppSchema';
 import type { Entitlements, PackCatalogItem } from '../types/user';
+
+type PackRow = {
+  id: string;
+  name: string;
+  grid_size: number;
+  stars: number;
+  difficulty: string;
+  is_free: number;
+  price_usd: number | null;
+  puzzle_count: number;
+  storage_path: string | null;
+};
+
+const PACK_QUERY =
+  'SELECT * FROM packs WHERE published = 1 ORDER BY sort_order ASC NULLS LAST';
+
+function mapPackRow(r: PackRow): PackCatalogItem {
+  return {
+    id: r.id,
+    name: r.name,
+    gridSize: r.grid_size,
+    stars: r.stars,
+    difficulty: r.difficulty as 'normal' | 'hard',
+    isFree: r.is_free === 1,
+    priceUsd: r.price_usd ?? undefined,
+    puzzleCount: r.puzzle_count,
+    storagePath: r.storage_path ?? undefined,
+  };
+}
 
 type EntitlementsState = {
   entitlements: Entitlements;
@@ -9,7 +38,6 @@ type EntitlementsState = {
   loadEntitlements: (userId: string) => Promise<void>;
   hasPackAccess: (packId: string) => boolean;
   canPlayPuzzle: (packId: string, puzzleIndex: number, completedCount: number) => boolean;
-  canPlayPack: (packId: string) => boolean;
 };
 
 const DEFAULT_ENTITLEMENTS: Entitlements = {
@@ -22,49 +50,19 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   packCatalog: [],
 
   loadPackCatalog: async () => {
-    const catalogRows = await db.getAll<{
-      id: string;
-      name: string;
-      grid_size: number;
-      stars: number;
-      difficulty: string;
-      is_free: number;
-      price_usd: number | null;
-      puzzle_count: number;
-      storage_path: string | null;
-    }>('SELECT * FROM packs WHERE published = 1 ORDER BY sort_order ASC NULLS LAST');
-    const packCatalog: PackCatalogItem[] = catalogRows.map(r => ({
-      id: r.id,
-      name: r.name,
-      gridSize: r.grid_size,
-      stars: r.stars,
-      difficulty: r.difficulty as 'normal' | 'hard',
-      isFree: r.is_free === 1,
-      priceUsd: r.price_usd ?? undefined,
-      puzzleCount: r.puzzle_count,
-      storagePath: r.storage_path ?? undefined,
-    }));
+    const packCatalog = (await db.getAll<PackRow>(PACK_QUERY)).map(mapPackRow);
     set({ packCatalog });
   },
 
   loadEntitlements: async (userId: string) => {
-    const [entRow] = await db.getAll<{
-      is_premium: number;
-      premium_purchased_at: string | null;
-      owned_pack_ids: string;
-    }>('SELECT * FROM user_entitlements WHERE id = ?', [userId]);
-
-    const catalogRows = await db.getAll<{
-      id: string;
-      name: string;
-      grid_size: number;
-      stars: number;
-      difficulty: string;
-      is_free: number;
-      price_usd: number | null;
-      puzzle_count: number;
-      storage_path: string | null;
-    }>('SELECT * FROM packs WHERE published = 1 ORDER BY sort_order ASC NULLS LAST');
+    const [entRow, catalogRows] = await Promise.all([
+      db.getOptional<{
+        is_premium: number;
+        premium_purchased_at: string | null;
+        owned_pack_ids: string;
+      }>('SELECT * FROM user_entitlements WHERE id = ?', [userId]),
+      db.getAll<PackRow>(PACK_QUERY),
+    ]);
 
     const entitlements: Entitlements = entRow
       ? {
@@ -74,19 +72,7 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
         }
       : DEFAULT_ENTITLEMENTS;
 
-    const packCatalog: PackCatalogItem[] = catalogRows.map(r => ({
-      id: r.id,
-      name: r.name,
-      gridSize: r.grid_size,
-      stars: r.stars,
-      difficulty: r.difficulty as 'normal' | 'hard',
-      isFree: r.is_free === 1,
-      priceUsd: r.price_usd ?? undefined,
-      puzzleCount: r.puzzle_count,
-      storagePath: r.storage_path ?? undefined,
-    }));
-
-    set({ entitlements, packCatalog });
+    set({ entitlements, packCatalog: catalogRows.map(mapPackRow) });
   },
 
   hasPackAccess: (packId: string) => {
@@ -99,13 +85,8 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   },
 
   canPlayPuzzle: (packId: string, puzzleIndex: number, completedCount: number) => {
-    const { entitlements } = get();
     if (!get().hasPackAccess(packId)) return false;
-    if (entitlements.isPremium) return true;
+    if (get().entitlements.isPremium) return true;
     return puzzleIndex <= completedCount;
-  },
-
-  canPlayPack: (packId: string) => {
-    return get().hasPackAccess(packId);
   },
 }));

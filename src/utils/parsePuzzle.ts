@@ -3,8 +3,7 @@ import type { RawPuzzle, Puzzle, HintStep } from '../types/puzzle';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
-  const parts = raw.sbn.split('.');
-  const [header, layout] = parts;
+  const [header, layout] = raw.sbn.split('.');
   const match = header.match(/^(\d+)x(\d+)$/);
   if (!match) throw new Error(`Bad SBN header: ${header}`);
 
@@ -14,7 +13,9 @@ export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
   if (!layout) throw new Error(`SBN layout missing for puzzle ${puzzleId}`);
   if (layout.length < size * size) {
     throw new Error(
-      `SBN layout too short: expected ${size * size} chars, got ${layout.length}`,
+      `SBN layout too short: expected ${size * size} chars, got ${
+        layout.length
+      }`,
     );
   }
 
@@ -23,14 +24,17 @@ export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
   for (let row = 0; row < size; row++) {
     const rowData: number[] = [];
     for (let col = 0; col < size; col++) {
-      const char = layout[row * size + col];
+      const flatIdx = row * size + col;
+      const char = layout[flatIdx];
       const regionIdx = LETTERS.indexOf(char.toUpperCase());
       if (regionIdx < 0) {
-        throw new Error(`SBN: invalid region character '${char}' at [${row},${col}]`);
+        throw new Error(
+          `SBN: invalid region character '${char}' at [${row},${col}]`,
+        );
       }
       rowData.push(regionIdx);
       if (!regionCells[regionIdx]) regionCells[regionIdx] = [];
-      regionCells[regionIdx].push(row * size + col);
+      regionCells[regionIdx].push(flatIdx);
     }
     regions.push(rowData);
   }

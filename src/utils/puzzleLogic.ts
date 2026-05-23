@@ -56,7 +56,9 @@ export function computeAutoXForStar(
 
   if (settings.autoXRegions) {
     const region = puzzle.regions[starRow][starCol];
-    marks.push(...collectZoneMarks(cells, puzzle.regionCells[region], puzzle.stars));
+    marks.push(
+      ...collectZoneMarks(cells, puzzle.regionCells[region], puzzle.stars),
+    );
   }
 
   return marks;
@@ -126,12 +128,12 @@ export function computeErrors(
   puzzle: Puzzle,
 ): Set<number> {
   const errors = new Set<number>();
-
   const starIndices: number[] = [];
   for (let i = 0; i < cells.length; i++) {
     if (cells[i] === 1) starIndices.push(i);
   }
 
+  // Adjacency: any two touching stars are both errors.
   for (let i = 0; i < starIndices.length; i++) {
     for (let j = i + 1; j < starIndices.length; j++) {
       const ri = Math.floor(starIndices[i] / boardSize);
@@ -145,44 +147,33 @@ export function computeErrors(
     }
   }
 
-  for (let r = 0; r < boardSize; r++) {
-    const rowStars: number[] = [];
-    for (let c = 0; c < boardSize; c++) {
-      const idx = r * boardSize + c;
-      if (cells[idx] === 1) rowStars.push(idx);
-    }
-    if (rowStars.length > puzzle.stars) {
-      for (const idx of rowStars) errors.add(idx);
-    }
-  }
-
-  for (let c = 0; c < boardSize; c++) {
-    const colStars: number[] = [];
-    for (let r = 0; r < boardSize; r++) {
-      const idx = r * boardSize + c;
-      if (cells[idx] === 1) colStars.push(idx);
-    }
-    if (colStars.length > puzzle.stars) {
-      for (const idx of colStars) errors.add(idx);
-    }
-  }
-
+  // Row, column, and region overcount in one pass over starIndices.
+  const rows = new Map<number, number[]>();
+  const cols = new Map<number, number[]>();
   const regionMap = new Map<number, number[]>();
-  for (let r = 0; r < boardSize; r++) {
-    for (let c = 0; c < boardSize; c++) {
-      const idx = r * boardSize + c;
-      if (cells[idx] === 1) {
-        const region = puzzle.regions[r][c];
-        if (!regionMap.has(region)) regionMap.set(region, []);
-        regionMap.get(region)!.push(idx);
+  for (const idx of starIndices) {
+    const r = Math.floor(idx / boardSize);
+    const c = idx % boardSize;
+    let arr = rows.get(r);
+    if (arr) arr.push(idx);
+    else rows.set(r, [idx]);
+    arr = cols.get(c);
+    if (arr) arr.push(idx);
+    else cols.set(c, [idx]);
+    arr = regionMap.get(puzzle.regions[r][c]);
+    if (arr) arr.push(idx);
+    else regionMap.set(puzzle.regions[r][c], [idx]);
+  }
+  const flagZone = (map: Map<number, number[]>) => {
+    for (const zone of map.values()) {
+      if (zone.length > puzzle.stars) {
+        for (const idx of zone) errors.add(idx);
       }
     }
-  }
-  for (const regionStars of regionMap.values()) {
-    if (regionStars.length > puzzle.stars) {
-      for (const idx of regionStars) errors.add(idx);
-    }
-  }
+  };
+  flagZone(rows);
+  flagZone(cols);
+  flagZone(regionMap);
 
   return errors;
 }

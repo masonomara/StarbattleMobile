@@ -1,11 +1,7 @@
-import { db } from '../powersync/database';
+import { db } from '../powersync/AppSchema';
 import { useAuthStore } from '../stores/authStore';
 import { getCurrentKey, getPreviousKey } from './streakDate';
-import type { CellValue, StreakType } from '../types/state';
-
-function progressId(userId: string, puzzleId: string): string {
-  return `${userId}:${puzzleId}`;
-}
+import type { CellValue, StreakType, Streak } from '../types/state';
 
 export async function saveProgress(
   puzzleId: string,
@@ -18,7 +14,7 @@ export async function saveProgress(
   if (!userId) return;
 
   const now = new Date().toISOString();
-  const id = progressId(userId, puzzleId);
+  const id = `${userId}:${puzzleId}`;
 
   const existing = await db.getOptional<{ id: string; completed_at: string | null }>(
     'SELECT id, completed_at FROM puzzle_progress WHERE user_id = ? AND puzzle_id = ?',
@@ -125,37 +121,6 @@ export async function getCompletedPuzzleIdsForPack(
   return new Set(rows.map(r => r.puzzle_id));
 }
 
-export async function getMostRecentInProgress(): Promise<{
-  puzzleId: string;
-  packId: string;
-  puzzleIndex: number;
-  timeMs: number;
-} | null> {
-  const userId = useAuthStore.getState().user?.id;
-  if (!userId) return null;
-
-  const row = await db.getOptional<{ puzzle_id: string; time_ms: number }>(
-    `SELECT puzzle_id, time_ms FROM puzzle_progress
-     WHERE user_id = ? AND completed = 0
-       AND puzzle_id NOT LIKE 'daily:%'
-       AND puzzle_id NOT LIKE 'weekly:%'
-       AND puzzle_id NOT LIKE 'monthly:%'
-     ORDER BY updated_at DESC LIMIT 1`,
-    [userId],
-  );
-
-  if (!row) return null;
-
-  const lastColon = row.puzzle_id.lastIndexOf(':');
-  if (lastColon === -1) return null;
-
-  const packId = row.puzzle_id.slice(0, lastColon);
-  const puzzleIndex = parseInt(row.puzzle_id.slice(lastColon + 1), 10);
-  if (isNaN(puzzleIndex)) return null;
-
-  return { puzzleId: row.puzzle_id, packId, puzzleIndex, timeMs: row.time_ms };
-}
-
 export async function saveStreak(
   type: string,
   currentCount: number,
@@ -185,16 +150,23 @@ export async function saveStreak(
   }
 }
 
-export async function loadStreaks(): Promise<
-  { type: string; currentCount: number; lastCompletedKey: string }[]
-> {
+export async function loadStreaks(): Promise<Streak[]> {
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return [];
 
-  return db.getAll(
-    'SELECT type, current_count as currentCount, last_completed_key as lastCompletedKey FROM streaks WHERE user_id = ?',
+  const rows = await db.getAll<{
+    type: string;
+    current_count: number;
+    last_completed_key: string;
+  }>(
+    'SELECT type, current_count, last_completed_key FROM streaks WHERE user_id = ?',
     [userId],
   );
+  return rows.map(r => ({
+    type: r.type as StreakType,
+    current: r.current_count,
+    lastCompletedKey: r.last_completed_key,
+  }));
 }
 
 export async function recordStreak(type: StreakType): Promise<void> {
