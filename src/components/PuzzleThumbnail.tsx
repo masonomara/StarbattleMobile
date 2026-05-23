@@ -6,11 +6,31 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   puzzle,
   size,
   theme,
+  coloredRegions,
 }: PuzzleThumbnailProps) {
   const { size: gridSize, regions } = puzzle;
   const cs = size / gridSize;
   const borderW = Math.max(1.5, cs * 0.15);
   const gridW = Math.max(0.5, cs * 0.04);
+
+  const regionFillPaths = useMemo(() => {
+    if (!coloredRegions) return null;
+    const builders = new Map<number, ReturnType<typeof Skia.PathBuilder.Make>>();
+    for (let row = 0; row < gridSize; row++) {
+      for (let col = 0; col < gridSize; col++) {
+        const colorIdx = regions[row][col] % theme.regionColors.length;
+        if (!builders.has(colorIdx)) {
+          builders.set(colorIdx, Skia.PathBuilder.Make());
+        }
+        builders.get(colorIdx)!.addRect(Skia.XYWHRect(col * cs, row * cs, cs, cs));
+      }
+    }
+    return [...builders.entries()].map(([colorIdx, b]) => ({
+      colorIdx,
+      path: b.detach(),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puzzle.id, size, coloredRegions]);
 
   const innerGridPath = useMemo(() => {
     const b = Skia.PathBuilder.Make();
@@ -54,21 +74,25 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
     return b.detach();
   }, [size, borderW]);
 
-  const ink = theme.isDark ? '#ffffff' : '#000000';
-  const bg = theme.isDark ? '#000000' : '#ffffff';
+  const ink = theme.regionBorder;
+  const bg = theme.bg;
+  const innerInk = theme.innerBorder;
 
   return (
     // pointerEvents="none" prevents the canvas from intercepting taps on its parent list item.
     <Canvas style={{ width: size, height: size }} pointerEvents="none">
       <Path path={outerBorderPath} color={bg} style="fill" />
+      {coloredRegions && regionFillPaths?.map(({ colorIdx, path }) => (
+        <Path key={colorIdx} path={path} color={theme.regionColors[colorIdx]} style="fill" />
+      ))}
       <Path
         path={innerGridPath}
-        color={ink}
+        color={innerInk}
         style="stroke"
         strokeWidth={gridW}
         strokeCap="square"
         strokeJoin="miter"
-        opacity={0.15}
+        opacity={0.5}
       />
       <Path
         path={regionBorderPath}

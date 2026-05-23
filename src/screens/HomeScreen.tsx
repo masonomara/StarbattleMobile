@@ -35,6 +35,7 @@ export function HomeScreen({
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets);
   const isFocused = useIsFocused();
+  const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, hasPackAccess } = useEntitlements();
 
   const [loadedStreakPacks, setLoadedStreakPacks] = useState<
@@ -116,7 +117,9 @@ export function HomeScreen({
           <CircleButton onPress={() => navigation.navigate('Streaks')}>
             <Flame size={24} color={theme.text} />
           </CircleButton>
-          <CircleButton onPress={() => useSettingsStore.getState().openSettings()}>
+          <CircleButton
+            onPress={() => useSettingsStore.getState().openSettings()}
+          >
             <User size={24} color={theme.text} />
           </CircleButton>
         </View>
@@ -165,6 +168,7 @@ export function HomeScreen({
                       puzzle={preview}
                       size={220}
                       theme={theme}
+                      coloredRegions={coloredRegions}
                     />
                   </View>
                   <View style={styles.streakCardHeader}>
@@ -287,6 +291,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       paddingTop: 34,
       backgroundColor: theme.bg,
       shadowOffset: { width: 0, height: 2 },
+      shadowColor: theme.shadow,
       shadowOpacity: 0.1,
       shadowRadius: 56,
       elevation: 8,
@@ -352,7 +357,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       backgroundColor: theme.card,
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 1,
+      shadowOpacity: .1,
       shadowRadius: 4,
       elevation: 2,
     },

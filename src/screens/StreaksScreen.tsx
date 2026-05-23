@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChevronLeft, Lock } from 'lucide-react-native';
+import { CircleButton } from '../components/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../components/Header';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -38,7 +39,14 @@ export function StreaksScreen({
 
   useEffect(() => {
     async function load() {
-      setStreaks(await loadStreaks());
+      const rawStreaks = await loadStreaks();
+      setStreaks(
+        rawStreaks.map(r => ({
+          type: r.type as StreakType,
+          current: r.currentCount,
+          lastCompletedKey: r.lastCompletedKey,
+        })),
+      );
 
       if (isPremium) {
         const results: Record<StreakType, ArchiveEntry[]> = {
@@ -61,13 +69,9 @@ export function StreaksScreen({
     <View style={styles.container}>
       <Header
         left={
-          <Pressable
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            hitSlop={8}
-          >
+          <CircleButton onPress={() => navigation.goBack()}>
             <ChevronLeft size={26} color={theme.text} />
-          </Pressable>
+          </CircleButton>
         }
         center={<Text style={styles.headerTitle}>Streaks</Text>}
       />
@@ -163,22 +167,9 @@ export function StreaksScreen({
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.bg },
+    container: { flex: 1, backgroundColor: theme.card },
     scrollContent: {
       paddingHorizontal: theme.spacingXl,
-    },
-    backButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.card,
-      shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
-      elevation: 8,
     },
     headerTitle: {
       fontSize: 16,
@@ -228,7 +219,7 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
-      backgroundColor: theme.highlight,
+      backgroundColor: theme.card,
     },
     tabActive: {
       backgroundColor: theme.accent,

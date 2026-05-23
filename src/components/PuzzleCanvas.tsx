@@ -7,36 +7,6 @@ import type { CellValue, DrawLayerHandle } from '../types/state';
 import type { Theme } from '../types/theme';
 import type { PuzzleCanvasProps } from '../types/components';
 
-const REGION_COLORS_LIGHT = [
-  '#E8EAF6',
-  '#E3F2FD',
-  '#E8F5E9',
-  '#FFF8E1',
-  '#FCE4EC',
-  '#F3E5F5',
-  '#E0F7FA',
-  '#FBE9E7',
-  '#F9FBE7',
-  '#EDE7F6',
-  '#E0F2F1',
-  '#FFF3E0',
-];
-const REGION_COLORS_DARK = [
-  '#283593',
-  '#1565C0',
-  '#2E7D32',
-  '#F9A825',
-  '#AD1457',
-  '#6A1B9A',
-  '#00838F',
-  '#BF360C',
-  '#827717',
-  '#4527A0',
-  '#00695C',
-  '#E65100',
-];
-
-const NUM_COLORS = REGION_COLORS_LIGHT.length;
 
 type BackgroundCanvasProps = {
   puzzle: Puzzle;
@@ -58,7 +28,7 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
   const cs = canvasSize / size;
   const bw = borderWidth;
   const totalSize = canvasSize + bw * 2;
-  const regionColors = theme.isDark ? REGION_COLORS_DARK : REGION_COLORS_LIGHT;
+  const regionColors = theme.regionColors;
 
   const regionFillPaths = useMemo(() => {
     const builders = new Map<
@@ -67,7 +37,7 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
     >();
     for (let row = 0; row < size; row++) {
       for (let col = 0; col < size; col++) {
-        const colorIdx = regions[row][col] % NUM_COLORS;
+        const colorIdx = regions[row][col] % regionColors.length;
         if (!builders.has(colorIdx)) {
           builders.set(colorIdx, Skia.PathBuilder.Make());
         }
@@ -253,7 +223,7 @@ export const PuzzleCanvas = React.forwardRef<
         }}
       >
         <Path path={dynamicPaths.starNormal} color={theme.regionBorder} />
-        <Path path={dynamicPaths.starError} color="#E53935" />
+        <Path path={dynamicPaths.starError} color={theme.errorStar} />
         <Path path={dynamicPaths.starGhost} color={theme.regionBorder + '55'} />
         <Path
           path={dynamicPaths.marks}

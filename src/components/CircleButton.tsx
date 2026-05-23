@@ -4,7 +4,11 @@ import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../types/theme';
 import type { CircleButtonProps } from '../types/components';
 
-export function CircleButton({ onPress, children, hitSlop = 8 }: CircleButtonProps) {
+export function CircleButton({
+  onPress,
+  children,
+  hitSlop = 8,
+}: CircleButtonProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
   return (
@@ -22,9 +26,10 @@ const createStyles = (theme: Theme) =>
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.bg,
+      backgroundColor: theme.card,
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
+      shadowColor: theme.shadow,
+      shadowOpacity: 0.1,
       shadowRadius: 24,
       elevation: 8,
     },

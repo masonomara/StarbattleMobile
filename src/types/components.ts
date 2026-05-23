@@ -41,6 +41,7 @@ export type PuzzleThumbnailProps = {
   puzzle: Puzzle;
   size: number;
   theme: Theme;
+  coloredRegions: boolean;
 };
 
 export type ToolbarProps = {

@@ -10,6 +10,8 @@ export type CellValue = 0 | 1 | 2; // 0=empty, 1=star, 2=marked
 
 export type TapMode = 'cycle' | 'erase';
 
+import type { ThemeName } from './theme';
+
 export type UserSettings = {
   autoXNeighbors: boolean;
   autoXRowsCols: boolean;
@@ -19,6 +21,7 @@ export type UserSettings = {
   alwaysShowTimer: boolean;
   alwaysShowToolbar: boolean;
   theme: 'system' | 'light' | 'dark';
+  palette: ThemeName;
   haptics: boolean;
 };
 

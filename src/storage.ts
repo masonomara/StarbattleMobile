@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   alwaysShowTimer: false,
   alwaysShowToolbar: false,
   theme: 'system',
+  palette: 'original',
   haptics: true,
 };
 

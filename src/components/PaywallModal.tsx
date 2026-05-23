@@ -135,7 +135,7 @@ const createStyles = (theme: Theme) =>
       right: 0,
       bottom: 0,
       justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0,0,0,0.4)',
+      backgroundColor: theme.overlay,
     },
     sheet: {
       backgroundColor: theme.card,
@@ -179,7 +179,7 @@ const createStyles = (theme: Theme) =>
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.highlight,
+      backgroundColor: theme.card,
     },
     secondaryButtonText: {
       fontSize: theme.fontSizeCallout,

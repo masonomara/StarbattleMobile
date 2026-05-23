@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
+import { CircleButton } from '../components/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../packs';
 import { Header } from '../components/Header';
@@ -9,6 +10,7 @@ import { PaywallModal } from '../components/PaywallModal';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
+import { useSettingsStore } from '../stores/settingsStore';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import type { Theme } from '../types/theme';
@@ -28,6 +30,7 @@ type PuzzleCellProps = {
   theme: Theme;
   completedSet: Set<string>;
   canPlay: boolean;
+  coloredRegions: boolean;
 };
 
 function PuzzleCell({
@@ -40,6 +43,7 @@ function PuzzleCell({
   theme,
   completedSet,
   canPlay,
+  coloredRegions,
 }: PuzzleCellProps) {
   const puzzleId = `${packId}:${index}`;
   const isCompleted = completedSet.has(puzzleId);
@@ -58,7 +62,7 @@ function PuzzleCell({
       }
     >
       {puzzle && (
-        <PuzzleThumbnail puzzle={puzzle} size={CELL_SIZE} theme={theme} />
+        <PuzzleThumbnail puzzle={puzzle} size={CELL_SIZE} theme={theme} coloredRegions={coloredRegions} />
       )}
       <View style={styles.puzzleCellOverlay}>
         {status !== 'active' && (
@@ -95,6 +99,7 @@ export function LibraryScreen({
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
+  const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, canPlayPuzzle, hasPackAccess } = useEntitlements();
 
   const catalogPack = packCatalog.find(p => p.id === packId);
@@ -169,13 +174,9 @@ export function LibraryScreen({
     <View style={styles.container}>
       <Header
         left={
-          <Pressable
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            hitSlop={8}
-          >
+          <CircleButton onPress={() => navigation.goBack()}>
             <ChevronLeft size={26} color={theme.text} />
-          </Pressable>
+          </CircleButton>
         }
         center={<Text style={styles.headerTitle}>{packName}</Text>}
       />
@@ -200,6 +201,7 @@ export function LibraryScreen({
             theme={theme}
             completedSet={completedSet}
             canPlay={isPuzzlePlayable(index)}
+            coloredRegions={coloredRegions}
           />
         ))}
       </ScrollView>
@@ -235,7 +237,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.card,
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 1,
+      shadowOpacity: 0.1,
       shadowRadius: 4,
     },
     puzzleCellOverlay: {
@@ -256,19 +258,6 @@ const createStyles = (theme: Theme) =>
     puzzleNumberActive: { color: theme.text },
     puzzleNumberLocked: { color: theme.textSecondary },
     locked: { opacity: 0.45 },
-    backButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.card,
-      shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
-      elevation: 8,
-    },
     headerTitle: {
       fontSize: 16,
       fontVariant: ['tabular-nums'],

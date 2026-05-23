@@ -1,3 +1,11 @@
+export type ThemeName =
+  | 'original'
+  | 'crimson'
+  | 'emerald'
+  | 'amber'
+  | 'violet'
+  | 'midnight';
+
 export type Theme = {
   isDark: boolean;
   bg: string;
@@ -12,6 +20,9 @@ export type Theme = {
   highlight: string;
   onHighlight: string;
   shadow: string;
+  overlay: string;
+  errorStar: string;
+  regionColors: string[];
   spacingMd: number;
   spacingLg: number;
   spacingXl: number;
