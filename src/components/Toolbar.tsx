@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePuzzleStore } from '../store';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
-import { hapticMedium } from '../utils/haptics';
+import { Haptics } from 'react-native-nitro-haptics';
 import type { TapMode } from '../types/state';
 import type { Theme } from '../types/theme';
 import type { ToolbarProps } from '../types/components';
@@ -49,12 +49,12 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
   const TapModeIcon = TAP_MODE_ICONS[tapMode];
 
   function press(action: () => void) {
-    if (hapticsEnabled) hapticMedium();
+    if (hapticsEnabled) Haptics.impact('medium');
     action();
   }
 
   function handleClear() {
-    if (hapticsEnabled) hapticMedium();
+    if (hapticsEnabled) Haptics.impact('medium');
     Alert.alert('Clear Board', 'Are you sure you want to clear the board?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Clear', style: 'destructive', onPress: clearBoard },

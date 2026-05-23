@@ -6,7 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from '../store';
 import { loadStreaks, recordStreak } from '../utils/progress';
 import { getActiveStreak, STREAK_LABELS } from '../utils/streakDate';
-import { formatTime } from '../utils/formatTime';
+
 import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../types/theme';
 import type { RootStackParamList } from '../types/navigation';
@@ -39,20 +39,9 @@ export function WinBanner({
     const type = streakType;
     async function updateStreak() {
       await recordStreak(type);
-      const rawStreaks = await loadStreaks();
-      const found = rawStreaks.find(s => s.type === type);
-      if (found) {
-        setStreakCount(
-          getActiveStreak(
-            {
-              type,
-              current: found.currentCount,
-              lastCompletedKey: found.lastCompletedKey,
-            },
-            type,
-          ),
-        );
-      }
+      const streaks = await loadStreaks();
+      const found = streaks.find(s => s.type === type);
+      if (found) setStreakCount(getActiveStreak(found, type));
     }
     updateStreak();
   }, [completed, streakType]);
@@ -173,3 +162,9 @@ const createStyles = (theme: Theme) =>
       color: theme.text,
     },
   });
+
+function formatTime(ms: number): string {
+  const min = Math.floor(ms / 60000);
+  const sec = Math.floor((ms % 60000) / 1000);
+  return `${min}:${String(sec).padStart(2, '0')}`;
+}

@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +9,7 @@ import { X } from 'lucide-react-native';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
+import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, purchasePack } from '../utils/payments';
 import type { Theme } from '../types/theme';
 import type { PaywallModalProps } from '../types/components';
@@ -22,23 +22,12 @@ export function PaywallModal({
   const theme = useTheme();
   const styles = createStyles(theme);
   const isAnonymous = useAuthStore(s => s.isAnonymous);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { loading, error, run } = useAsyncAction();
 
   if (!context) return null;
 
-  async function purchase(fn: () => Promise<unknown>) {
-    setError(null);
-    setLoading(true);
-    try {
-      await fn();
-      onPurchaseSuccess?.();
-      onClose();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Purchase failed');
-    } finally {
-      setLoading(false);
-    }
+  function purchase(fn: () => Promise<unknown>) {
+    run(fn, () => { onPurchaseSuccess?.(); onClose(); });
   }
 
   const renderContent = () => {

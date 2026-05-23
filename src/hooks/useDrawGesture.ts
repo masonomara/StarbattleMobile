@@ -3,7 +3,7 @@ import { Gesture } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import { usePuzzleStore } from '../store';
 import { useSettingsStore } from '../stores/settingsStore';
-import { hapticLight } from '../utils/haptics';
+import { Haptics } from 'react-native-nitro-haptics';
 import type { CellChange, DrawLayerHandle } from '../types/state';
 
 export function useDrawGesture(
@@ -67,7 +67,7 @@ export function useDrawGesture(
     }
 
     const settings = useSettingsStore.getState().settings;
-    if (settings.haptics) hapticLight();
+    if (settings.haptics) Haptics.impact('light');
   }, [drawLayerRef]);
 
   const drawGesture = Gesture.Pan()

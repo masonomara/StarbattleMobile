@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../packs';
+import { Header } from '../components/Header';
 import { PaywallModal } from '../components/PaywallModal';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useTheme } from '../hooks/useTheme';
@@ -117,18 +118,19 @@ export function LibraryScreen({
   }, [packId, rawPuzzles]);
 
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
-  const [completedCount, setCompletedCount] = useState(0);
+  const completedCount = completedSet.size;
   const [paywallContext, setPaywallContext] = useState<PaywallContext | null>(
     null,
   );
 
-  useEffect(() => {
+  const refreshCompleted = useCallback(() => {
     if (!puzzleCount) return;
-    getCompletedPuzzleIdsForPack(packId, puzzleCount).then(set => {
-      setCompletedSet(set);
-      setCompletedCount(set.size);
-    });
+    getCompletedPuzzleIdsForPack(packId, puzzleCount).then(setCompletedSet);
   }, [packId, puzzleCount]);
+
+  useEffect(() => {
+    refreshCompleted();
+  }, [refreshCompleted]);
 
   function isPuzzlePlayable(index: number): boolean {
     if (!catalogPack) {
@@ -165,25 +167,24 @@ export function LibraryScreen({
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.headerRow,
-          { paddingTop: insets.top, height: 48 + insets.top },
-        ]}
-      >
-        <Pressable
-          style={styles.headerButton}
-          onPress={() => navigation.goBack()}
-          hitSlop={8}
-        >
-          <ChevronLeft size={26} color={theme.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>{packName}</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <Header
+        left={
+          <Pressable
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            hitSlop={8}
+          >
+            <ChevronLeft size={26} color={theme.text} />
+          </Pressable>
+        }
+        center={<Text style={styles.headerTitle}>{packName}</Text>}
+      />
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.grid, { paddingBottom: insets.bottom }]}
+        contentContainerStyle={[
+          styles.grid,
+          { paddingTop: 48 + insets.top, paddingBottom: insets.bottom },
+        ]}
       >
         {puzzleIndices.map(index => (
           <PuzzleCell
@@ -207,10 +208,7 @@ export function LibraryScreen({
         onClose={() => setPaywallContext(null)}
         onPurchaseSuccess={() => {
           setPaywallContext(null);
-          getCompletedPuzzleIdsForPack(packId, puzzleCount).then(set => {
-            setCompletedSet(set);
-            setCompletedCount(set.size);
-          });
+          refreshCompleted();
         }}
       />
     </View>
@@ -258,34 +256,23 @@ const createStyles = (theme: Theme) =>
     puzzleNumberActive: { color: theme.text },
     puzzleNumberLocked: { color: theme.textSecondary },
     locked: { opacity: 0.45 },
-    headerButton: {
+    backButton: {
       width: 36,
       height: 36,
       borderRadius: 24,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: theme.card,
+      shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 1,
       shadowRadius: 8,
       elevation: 8,
-      opacity: 0.97,
-      backgroundColor: theme.card,
-      shadowColor: theme.shadow,
     },
     headerTitle: {
       fontSize: 16,
       fontVariant: ['tabular-nums'],
       fontWeight: '600',
       color: theme.text,
-    },
-    headerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: theme.spacingXl,
-      backgroundColor: theme.bg,
-    },
-    headerSpacer: {
-      width: 36,
     },
   });

@@ -38,14 +38,7 @@ export function StreaksScreen({
 
   useEffect(() => {
     async function load() {
-      const rawStreaks = await loadStreaks();
-      setStreaks(
-        rawStreaks.map(r => ({
-          type: r.type as StreakType,
-          current: r.currentCount,
-          lastCompletedKey: r.lastCompletedKey,
-        })),
-      );
+      setStreaks(await loadStreaks());
 
       if (isPremium) {
         const results: Record<StreakType, ArchiveEntry[]> = {
@@ -53,10 +46,11 @@ export function StreaksScreen({
           weekly: [],
           monthly: [],
         };
-        for (const type of STREAK_TYPES) {
-          const todayKey = getCurrentKey(type);
-          results[type] = await getPastArchive(type, todayKey);
-        }
+        await Promise.all(
+          STREAK_TYPES.map(async type => {
+            results[type] = await getPastArchive(type, getCurrentKey(type));
+          }),
+        );
         setArchiveByType(results);
       }
     }

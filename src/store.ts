@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { hapticLight, hapticSuccess } from './utils/haptics';
+import { Haptics } from 'react-native-nitro-haptics';
 import { useSettingsStore } from './stores/settingsStore';
 import {
   computeAutoXForStar,
@@ -15,7 +15,13 @@ import type { Puzzle } from './types/puzzle';
 const MAX_HISTORY = 50;
 
 let _saveTimer: ReturnType<typeof setTimeout> | null = null;
-function scheduleSave(puzzleId: string, cells: CellValue[], autoMarks: Set<number>, timeMs: number, completed: boolean) {
+function scheduleSave(
+  puzzleId: string,
+  cells: CellValue[],
+  autoMarks: Set<number>,
+  timeMs: number,
+  completed: boolean,
+) {
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
     _saveTimer = null;
@@ -57,7 +63,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   timeMs: 0,
   moveLog: [],
   redoStack: [],
-  tapMode: 'cycle' as TapMode,
+  tapMode: 'cycle',
   hintGhosts: new Map<number, 'star' | 'mark'>(),
   hintStepIndex: -1,
 
@@ -91,10 +97,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   },
 
   tapCell: (row: number, col: number) => {
-    const { cells, completed, puzzle, tapMode, autoMarks } = get();
+    const { cells, completed, puzzle, tapMode, autoMarks, hintGhosts } = get();
     if (completed || !puzzle) return;
 
-    if (get().hintGhosts.size > 0) {
+    if (hintGhosts.size > 0) {
       set({ hintGhosts: new Map(), hintStepIndex: -1 });
     }
 
@@ -114,13 +120,13 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
         if (current === 0) return;
         next = 0;
         break;
+      case 'cycle':
       default:
         next = current === 0 ? 2 : current === 2 ? 1 : 0;
         break;
     }
     changes.push({ index: idx, prev: current, next });
     newCells[idx] = next;
-
     newAutoMarks.delete(idx);
 
     if (next === 1) {
@@ -144,7 +150,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       );
     }
 
-    if (settings.haptics) hapticLight();
+    if (settings.haptics) Haptics.impact('light');
 
     const newErrors = settings.highlightErrors
       ? computeErrors(newCells, size, puzzle)
@@ -154,18 +160,20 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarks: newAutoMarks,
       errorCells: newErrors,
-      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(-MAX_HISTORY),
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(
+        -MAX_HISTORY,
+      ),
       redoStack: [],
     }));
 
     const won = checkWin(newCells, size, puzzle);
     if (won) {
-      if (settings.haptics) hapticSuccess();
+      if (settings.haptics) Haptics.notification('success');
       set({ completed: true });
     }
 
     const s = get();
-    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(puzzle.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   cycleTapMode: () => {
@@ -199,18 +207,20 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     set(state => ({
       cells: newCells,
       autoMarks: newAutoMarks,
-      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(-MAX_HISTORY),
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(
+        -MAX_HISTORY,
+      ),
       redoStack: [],
     }));
     const s = get();
-    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(puzzle.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   undo: () => {
-    const { moveLog, cells, completed, autoMarks } = get();
+    const { moveLog, cells, completed, autoMarks, hintGhosts, puzzle } = get();
     if (moveLog.length === 0 || completed) return;
 
-    if (get().hintGhosts.size > 0) {
+    if (hintGhosts.size > 0) {
       set({ hintGhosts: new Map(), hintStepIndex: -1 });
     }
 
@@ -231,9 +241,8 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     }
 
     const settings = useSettingsStore.getState().settings;
-    if (settings.haptics) hapticLight();
+    if (settings.haptics) Haptics.impact('light');
 
-    const { puzzle } = get();
     const undoErrors =
       settings.highlightErrors && puzzle
         ? computeErrors(newCells, puzzle.size, puzzle)
@@ -247,14 +256,15 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       redoStack: [...state.redoStack, redoMove].slice(-MAX_HISTORY),
     }));
     const s = get();
-    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   redo: () => {
-    const { redoStack, cells, autoMarks, completed } = get();
+    const { redoStack, cells, autoMarks, completed, hintGhosts, puzzle } =
+      get();
     if (redoStack.length === 0 || completed) return;
 
-    if (get().hintGhosts.size > 0) {
+    if (hintGhosts.size > 0) {
       set({ hintGhosts: new Map(), hintStepIndex: -1 });
     }
 
@@ -275,36 +285,35 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     }
 
     const settings = useSettingsStore.getState().settings;
-    if (settings.haptics) hapticLight();
+    if (settings.haptics) Haptics.impact('light');
 
-    const { puzzle } = get();
     const redoErrors =
       settings.highlightErrors && puzzle
-        ? computeErrors(newCells, puzzle!.size, puzzle!)
+        ? computeErrors(newCells, puzzle.size, puzzle)
         : new Set<number>();
 
     set(state => ({
       cells: newCells,
       autoMarks: new Set(entry.autoMarks),
       errorCells: redoErrors,
-      moveLog: [...state.moveLog, undoMove],
+      moveLog: [...state.moveLog, undoMove].slice(-MAX_HISTORY),
       redoStack: redoStack.slice(0, -1),
     }));
 
     const won = checkWin(newCells, puzzle!.size, puzzle!);
     if (won) {
-      if (settings.haptics) hapticSuccess();
+      if (settings.haptics) Haptics.notification('success');
       set({ completed: true });
     }
     const s = get();
-    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   applyDrawStroke: (changes: CellChange[]) => {
-    const { completed, puzzle } = get();
+    const { completed, puzzle, hintGhosts } = get();
     if (completed || !puzzle || changes.length === 0) return;
 
-    if (get().hintGhosts.size > 0) {
+    if (hintGhosts.size > 0) {
       set({ hintGhosts: new Map(), hintStepIndex: -1 });
     }
 
@@ -329,20 +338,20 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
         moveLog: [
           ...state.moveLog,
           { changes, autoMarks: [...state.autoMarks] },
-        ],
+        ].slice(-MAX_HISTORY),
         redoStack: [],
       };
     });
 
     const s = get();
-    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(puzzle.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   clearBoard: () => {
-    const { cells, completed, puzzle, autoMarks } = get();
+    const { cells, completed, puzzle, autoMarks, hintGhosts } = get();
     if (completed || !puzzle) return;
 
-    if (get().hintGhosts.size > 0) {
+    if (hintGhosts.size > 0) {
       set({ hintGhosts: new Map(), hintStepIndex: -1 });
     }
 
@@ -361,11 +370,13 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       cells: newCells,
       autoMarks: new Set<number>(),
       errorCells: new Set<number>(),
-      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(-MAX_HISTORY),
+      moveLog: [...state.moveLog, { changes, autoMarks: savedAutoMarks }].slice(
+        -MAX_HISTORY,
+      ),
       redoStack: [],
     }));
     const s = get();
-    scheduleSave(s.puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    scheduleSave(puzzle.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
   showHint: () => {

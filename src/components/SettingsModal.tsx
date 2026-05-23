@@ -16,6 +16,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
+import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, restorePurchases } from '../utils/payments';
 import type { Theme } from '../types/theme';
 import type { UserSettings } from '../types/state';
@@ -75,20 +76,7 @@ export function SettingsModal() {
   const [emailMode, setEmailMode] = useState<EmailMode>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function withLoading(fn: () => Promise<unknown>) {
-    setError(null);
-    setLoading(true);
-    try {
-      await fn();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { loading, error, setError, run: withLoading } = useAsyncAction();
 
   async function handleEmailSubmit() {
     if (!email || !password) {

@@ -2,12 +2,14 @@ import React, { useEffect } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { usePuzzleStore } from '../store';
 import { useTheme } from '../hooks/useTheme';
-import { formatTime } from '../utils/formatTime';
+
+import type { Theme } from '../types/theme';
 
 export function HeaderTimer() {
   const timeMs = usePuzzleStore(s => s.timeMs);
   const completed = usePuzzleStore(s => s.completed);
   const theme = useTheme();
+  const styles = createStyles(theme);
 
   useEffect(() => {
     if (completed) return;
@@ -22,21 +24,17 @@ export function HeaderTimer() {
     return () => clearInterval(id);
   }, [completed]);
 
-  return (
-    <Text
-      style={[
-        styles.timer,
-        { fontSize: theme.fontSizeSubhead, color: theme.text },
-      ]}
-    >
-      {formatTime(timeMs)}
-    </Text>
-  );
+  const min = Math.floor(timeMs / 60000);
+  const sec = Math.floor((timeMs % 60000) / 1000);
+  return <Text style={styles.timer}>{`${min}:${String(sec).padStart(2, '0')}`}</Text>;
 }
 
-const styles = StyleSheet.create({
-  timer: {
-    fontVariant: ['tabular-nums'],
-    fontWeight: '600',
-  },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    timer: {
+      fontVariant: ['tabular-nums'],
+      fontWeight: '600',
+      fontSize: theme.fontSizeSubhead,
+      color: theme.text,
+    },
+  });

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
 import { Flame, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getStreakPack } from '../packs';
+import { CircleButton } from '../components/CircleButton';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
@@ -78,31 +79,28 @@ export function HomeScreen({
   const paidPacks = packCatalog.filter(p => !p.isFree);
 
   const load = useCallback(async () => {
-    const rawStreaks = await loadStreaks();
-    setStreaks(
-      rawStreaks.map(r => ({
-        type: r.type as StreakType,
-        current: r.currentCount,
-        lastCompletedKey: r.lastCompletedKey,
-      })),
+    setStreaks(await loadStreaks());
+
+    const completedEntries = await Promise.all(
+      STREAK_TYPES.map(async type => {
+        const puzzleId = `${type}:${getCurrentKey(type)}`;
+        const prog = await loadProgress(puzzleId);
+        return prog?.completed ? puzzleId : null;
+      }),
+    );
+    setCompletedPuzzleIds(
+      new Set(completedEntries.filter((id): id is string => id !== null)),
     );
 
-    const completed = new Set<string>();
-    for (const type of STREAK_TYPES) {
-      const key = getCurrentKey(type);
-      const puzzleId = `${type}:${key}`;
-      const prog = await loadProgress(puzzleId);
-      if (prog?.completed) completed.add(puzzleId);
-    }
-    setCompletedPuzzleIds(completed);
-
     const counts: Record<string, number> = {};
-    for (const pack of packCatalog) {
-      counts[pack.id] = await getCompletedCountForPack(
-        pack.id,
-        pack.puzzleCount,
-      );
-    }
+    await Promise.all(
+      packCatalog.map(async pack => {
+        counts[pack.id] = await getCompletedCountForPack(
+          pack.id,
+          pack.puzzleCount,
+        );
+      }),
+    );
     setCompletedPerPack(counts);
   }, [packCatalog]);
 
@@ -115,20 +113,12 @@ export function HomeScreen({
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.appTitle}>Star Battle</Text>
         <View style={styles.headerRight}>
-          <Pressable
-            style={styles.headerIconButton}
-            onPress={() => navigation.navigate('Streaks')}
-            hitSlop={8}
-          >
+          <CircleButton onPress={() => navigation.navigate('Streaks')}>
             <Flame size={24} color={theme.text} />
-          </Pressable>
-          <Pressable
-            style={styles.headerIconButton}
-            onPress={() => useSettingsStore.getState().openSettings()}
-            hitSlop={8}
-          >
+          </CircleButton>
+          <CircleButton onPress={() => useSettingsStore.getState().openSettings()}>
             <User size={24} color={theme.text} />
-          </Pressable>
+          </CircleButton>
         </View>
       </View>
 
@@ -289,19 +279,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       flexDirection: 'row',
       gap: theme.spacingMd,
     },
-    headerIconButton: {
-      width: 48,
-      height: 48,
-      borderRadius: 100,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.bg,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 24,
-      elevation: 8,
-      zIndex: 0,
-    },
     streakSection: {
       paddingTop: 34,
       backgroundColor: theme.bg,
@@ -332,7 +309,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     streakCardHeader: {
       width: '100%',
-      flexDirection: 'column',
       alignItems: 'baseline',
     },
     streakLabel: {

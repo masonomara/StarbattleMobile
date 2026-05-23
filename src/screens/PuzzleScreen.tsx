@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
-  Pressable,
   Animated,
   ActivityIndicator,
 } from 'react-native';
@@ -11,11 +10,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import ReAnimated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Ellipsis } from 'lucide-react-native';
+import { CircleButton } from '../components/CircleButton';
 import { Header } from '../components/Header';
 import { HeaderTimer } from '../components/HeaderTimer';
 import { PuzzleCanvas } from '../components/PuzzleCanvas';
-import { SettingsButton } from '../components/SettingsButton';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
 import { usePuzzleStore } from '../store';
@@ -51,12 +50,10 @@ export function PuzzleScreen({
 }: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
   const { packId, puzzleIndex, streakType } = route.params;
   // Route params is a union — cast to access optional archive fields without narrowing each branch.
-  const rawParams = route.params as {
+  const { isArchive, archiveKey } = route.params as {
     isArchive?: boolean;
     archiveKey?: string;
   };
-  const isArchive = rawParams.isArchive;
-  const archiveKey = rawParams.archiveKey;
 
   const [streakPackData, setStreakPackData] = useState<PackData | null>(null);
 
@@ -114,12 +111,13 @@ export function PuzzleScreen({
   }, [packId, puzzleIndex, streakType, navigation]);
 
   const packData = streakPackData ?? regularPackData;
-
-  const rawPuzzle = packData?.rawPuzzle;
-  const puzzleId = packData?.puzzleId ?? '';
-  const gridSize = packData?.gridSize ?? 0;
-  const packName = packData?.packName ?? '';
-  const isLastPuzzle = packData?.isLastPuzzle ?? true;
+  const {
+    rawPuzzle,
+    puzzleId = '',
+    gridSize = 0,
+    packName = '',
+    isLastPuzzle = true,
+  } = packData ?? {};
 
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -132,6 +130,7 @@ export function PuzzleScreen({
   const hintGhosts = usePuzzleStore(s => s.hintGhosts);
   const alwaysShowToolbar = useSettingsStore(s => s.settings.alwaysShowToolbar);
   const alwaysShowTimer = useSettingsStore(s => s.settings.alwaysShowTimer);
+  const openSettings = useSettingsStore(s => s.openSettings);
   const [headerVisible, setHeaderVisible] = useState(true);
   const buttonOpacity = useRef(new Animated.Value(1)).current;
 
@@ -228,13 +227,9 @@ export function PuzzleScreen({
             style={{ opacity: buttonOpacity }}
             pointerEvents={headerVisible ? 'auto' : 'none'}
           >
-            <Pressable
-              style={styles.headerButton}
-              onPress={() => navigation.goBack()}
-              hitSlop={8}
-            >
+            <CircleButton onPress={() => navigation.goBack()}>
               <ChevronLeft size={26} color={theme.text} />
-            </Pressable>
+            </CircleButton>
           </Animated.View>
         }
         center={
@@ -249,7 +244,9 @@ export function PuzzleScreen({
             style={{ opacity: buttonOpacity }}
             pointerEvents={headerVisible ? 'auto' : 'none'}
           >
-            <SettingsButton />
+            <CircleButton onPress={openSettings}>
+                <Ellipsis size={20} color={theme.text} />
+              </CircleButton>
           </Animated.View>
         }
       />
@@ -304,18 +301,5 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    headerButton: {
-      width: 48,
-      height: 48,
-      borderRadius: 100,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.bg,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 24,
-      elevation: 8,
-      zIndex: 0,
     },
   });
