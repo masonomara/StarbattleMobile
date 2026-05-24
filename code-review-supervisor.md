@@ -205,7 +205,11 @@ function purchase(fn: () => Promise<unknown>) {
 
 ---
 
-### M-1 — Anonymous Sign-in Creates Server-Side Records Without User Disclosure
+### ~~M-1 — Anonymous Sign-in Creates Server-Side Records Without User Disclosure~~ ✅ CLOSED (by documentation)
+
+> **✅ CLOSED** — Resolved by documentation, not code. The privacy policy discloses that a pseudonymous session is created on first launch and that gameplay data syncs to the server. `PrivacyInfo.xcprivacy` declares `UserID` and `GameplayContent` as collected. The privacy policy link is surfaced in-app via `SettingsModal`. No code change required — legitimate interests is a valid GDPR basis for this processing.
+
+
 
 **File:** `src/stores/authStore.ts`, line 65–68
 
@@ -347,16 +351,9 @@ If a paid pack's database row has a null `storage_path`, the paywall silently sh
 
 ---
 
-### L-2 — `NSPrivacyCollectedDataTypes` Array Is Empty Despite Collecting User Data
+### ~~L-2 — `NSPrivacyCollectedDataTypes` Array Is Empty Despite Collecting User Data~~ ✅ FIXED
 
-**File:** `ios/StarbattleMobile/PrivacyInfo.xcprivacy`
-
-```xml
-<key>NSPrivacyCollectedDataTypes</key>
-<array/>
-```
-
-The privacy manifest declares no collected data types. The app collects email addresses (for account creation), user identifiers (anonymous Supabase UUIDs), gameplay data (puzzle progress, timing, streaks), and payment transaction information (via Adapty). Per Apple's required reasons API documentation and App Store submission requirements, the `NSPrivacyCollectedDataTypes` must accurately list collected data. Submitting an empty array when user data is collected could constitute a false declaration to Apple, and could trigger rejection or removal after review.
+> **✅ FIXED** — `PrivacyInfo.xcprivacy` now declares all four collected data types, all linked to identity, none used for tracking: `EmailAddress` (account creation), `UserID` (anonymous Supabase UUID), `GameplayContent` (progress, streaks, solve times), `PurchaseHistory` (IAP entitlements via Adapty). Purpose for all: `AppFunctionality`.
 
 ---
 
@@ -441,14 +438,14 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 | ~~H-2~~ | ~~HIGH~~     | ~~IAP~~           | ~~`purchasePremium` returns `false` without throwing; modal closes as success~~ ✅   |
 | ~~H-3~~ | ~~HIGH~~     | ~~IAP~~           | ~~Restore Purchases inaccessible to anonymous users~~ ✅ by design                   |
 | ~~H-4~~ | ~~HIGH~~     | ~~IAP/Consumer Law~~ | ~~No purchase terms disclosed at point of sale~~ ✅                              |
-| M-1     | MEDIUM       | Privacy           | Anonymous sign-in creates server records without disclosure                           |
+| ~~M-1~~ | ~~MEDIUM~~   | ~~Privacy~~       | ~~Anonymous sign-in creates server records without disclosure~~ ✅ by documentation  |
 | ~~M-2~~ | ~~MEDIUM~~   | ~~Data Integrity~~| ~~Progress save not awaited on navigation; data loss on exit/kill~~ ✅               |
 | ~~M-3~~ | ~~MEDIUM~~   | ~~Stability~~     | ~~`JSON.parse` unguarded on database fields; crash risk on corrupt data~~ ✅          |
 | M-4     | MEDIUM       | Game Integrity    | Streak dates computed client-side; no server validation; clock manipulation possible  |
 | M-5     | MEDIUM       | UX/Auth           | Email sign-up shows no confirmation prompt; no password reset; no strength validation |
 | ~~M-6~~ | ~~MEDIUM~~   | ~~IAP~~           | ~~Missing `storagePath` silently prevents paid pack purchase~~ ✅                     |
 | ~~L-1~~ | ~~LOW~~      | ~~App Store~~     | ~~Empty `NSLocationWhenInUseUsageDescription` in Info.plist~~ ✅                      |
-| L-2     | LOW          | App Store/Privacy | `NSPrivacyCollectedDataTypes` empty despite collecting user data                      |
+| ~~L-2~~ | ~~LOW~~      | ~~App Store/Privacy~~ | ~~`NSPrivacyCollectedDataTypes` empty despite collecting user data~~ ✅           |
 | ~~L-3~~ | ~~LOW~~      | ~~Privacy~~       | ~~Apple Sign-In requests full name scope; data never used~~ ✅                        |
 | L-4     | LOW          | Security          | Raw internal error messages surfaced to users                                         |
 | L-5     | LOW          | Data              | Sign-out creates unbounded orphan server records with no cleanup                      |
