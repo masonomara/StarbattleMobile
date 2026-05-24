@@ -5,7 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
 import { Flame, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getStreakPack } from '../packs';
+import { getStreakPack, getPuzzlesForPack } from '../packs';
 import { CircleButton } from '../components/CircleButton';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
@@ -24,14 +24,60 @@ import {
 } from '../utils/progress';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
+import { useProductPrice } from '../hooks/useProductPrice';
 import type {
   Theme,
   StreakType,
   Streak,
   Pack,
   Puzzle,
+  PackCatalogItem,
   RootStackParamList,
 } from '../types.ts';
+
+function PaidPackRow({
+  pack,
+  completed,
+  onPress,
+  styles,
+  preview,
+  theme,
+  coloredRegions,
+}: {
+  pack: PackCatalogItem;
+  completed: number;
+  onPress: () => void;
+  styles: ReturnType<typeof createStyles>;
+  preview: Puzzle | undefined;
+  theme: Theme;
+  coloredRegions: boolean;
+}) {
+  const price = useProductPrice(`starbattle_pack_${pack.id}`);
+  return (
+    <Pressable style={styles.packCard} onPress={onPress}>
+      {preview && (
+        <View style={styles.packThumb}>
+          <PuzzleThumbnail
+            puzzle={preview}
+            size={48}
+            theme={theme}
+            coloredRegions={coloredRegions}
+          />
+        </View>
+      )}
+      <View style={styles.packInfo}>
+        <Text style={styles.packName}>{pack.name}</Text>
+        <Text style={styles.packMeta}>
+          {completed}/{pack.puzzleCount}
+        </Text>
+      </View>
+      <Text style={styles.packPrice}>
+        {price ??
+          (pack.priceUsd != null ? `$${pack.priceUsd.toFixed(2)}` : '—')}
+      </Text>
+    </Pressable>
+  );
+}
 
 export function HomeScreen({
   navigation,
@@ -72,6 +118,23 @@ export function HomeScreen({
     }
     loadPreviews();
   }, []);
+
+  const [packPreviews, setPackPreviews] = useState<Record<string, Puzzle>>({});
+
+  useEffect(() => {
+    async function loadPackPreviews() {
+      const results: Record<string, Puzzle> = {};
+      await Promise.all(
+        packCatalog.map(async pack => {
+          const rawPuzzles = await getPuzzlesForPack(pack.id);
+          if (!rawPuzzles?.length) return;
+          results[pack.id] = parsePuzzle(rawPuzzles[0], `${pack.id}:0`);
+        }),
+      );
+      setPackPreviews(results);
+    }
+    loadPackPreviews();
+  }, [packCatalog]);
 
   const [streaks, setStreaks] = useState<Streak[]>([]);
   const [completedPuzzleIds, setCompletedPuzzleIds] = useState<Set<string>>(
@@ -144,9 +207,9 @@ export function HomeScreen({
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
-              paddingRight: theme.spacingXl,
-              paddingLeft: theme.spacingXl,
-              gap: 20,
+              paddingRight: 16,
+              paddingLeft: 16,
+              gap: 16,
             }}
           >
             {STREAK_TYPES.map(type => {
@@ -199,6 +262,7 @@ export function HomeScreen({
           <Text style={styles.sectionLabel}>Puzzle Library</Text>
           {freePacks.map(pack => {
             const completed = completedPerPack[pack.id] ?? 0;
+            const preview = packPreviews[pack.id];
             return (
               <Pressable
                 key={pack.id}
@@ -207,15 +271,25 @@ export function HomeScreen({
                   navigation.navigate('Library', { packId: pack.id })
                 }
               >
+                {preview && (
+                  <View style={styles.packThumb}>
+                    <PuzzleThumbnail
+                      puzzle={preview}
+                      size={48}
+                      theme={theme}
+                      coloredRegions={coloredRegions}
+                    />
+                  </View>
+                )}
                 <View style={styles.packInfo}>
                   <Text style={styles.packName}>{pack.name}</Text>
                   <Text style={styles.packMeta}>
-                    {pack.gridSize}×{pack.gridSize}
+                    {completed}/{pack.puzzleCount}
                   </Text>
                 </View>
-                <Text style={styles.packProgress}>
+                {/* <Text style={styles.packProgress}>
                   {completed}/{pack.puzzleCount}
-                </Text>
+                </Text> */}
               </Pressable>
             );
           })}
@@ -223,28 +297,48 @@ export function HomeScreen({
           {paidPacks.map(pack => {
             const hasAccess = hasPackAccess(pack.id);
             const completed = completedPerPack[pack.id] ?? 0;
+            const preview = packPreviews[pack.id];
+            if (hasAccess) {
+              return (
+                <Pressable
+                  key={pack.id}
+                  style={styles.packCard}
+                  onPress={() =>
+                    navigation.navigate('Library', { packId: pack.id })
+                  }
+                >
+                  {preview && (
+                    <View style={styles.packThumb}>
+                      <PuzzleThumbnail
+                        puzzle={preview}
+                        size={48}
+                        theme={theme}
+                        coloredRegions={coloredRegions}
+                      />
+                    </View>
+                  )}
+                  <View style={styles.packInfo}>
+                    <Text style={styles.packName}>{pack.name}</Text>
+                    <Text style={styles.packMeta}>
+                      {completed}/{pack.puzzleCount}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            }
             return (
-              <Pressable
+              <PaidPackRow
                 key={pack.id}
-                style={styles.packCard}
+                pack={pack}
+                completed={completed}
                 onPress={() =>
                   navigation.navigate('Library', { packId: pack.id })
                 }
-              >
-                <View style={styles.packInfo}>
-                  <Text style={styles.packName}>{pack.name}</Text>
-                  <Text style={styles.packMeta}>
-                    {completed}/{pack.puzzleCount}
-                  </Text>
-                </View>
-                {hasAccess ? (
-                  <Text style={styles.packProgress}> </Text>
-                ) : (
-                  <Text style={styles.packPrice}>
-                    ${pack.priceUsd?.toFixed(2) ?? '—'}
-                  </Text>
-                )}
-              </Pressable>
+                styles={styles}
+                preview={preview}
+                theme={theme}
+                coloredRegions={coloredRegions}
+              />
             );
           })}
         </View>
@@ -281,7 +375,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       gap: theme.spacingMd,
     },
     streakSection: {
-      paddingTop: 34,
+      paddingTop: 32,
       backgroundColor: theme.bg,
     },
     packSection: {
@@ -298,8 +392,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       marginBottom: 16,
     },
     streakCard: {
-      borderRadius: 16,
+      borderRadius: 8,
       alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.textSecondary + '33',
+      padding: 16,
     },
     streakCardCompleted: {
       opacity: 0.6,
@@ -350,9 +447,12 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       padding: 17,
       borderRadius: 4,
       marginBottom: 12,
-      backgroundColor: theme.card,
+      backgroundColor: theme.bg,
       borderWidth: 1,
       borderColor: theme.textSecondary + '33',
+    },
+    packThumb: {
+      marginRight: 14,
     },
     packInfo: { flex: 1 },
     packName: {
