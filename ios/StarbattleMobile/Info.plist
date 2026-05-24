@@ -59,6 +59,12 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>starbattle</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
 				<string>com.googleusercontent.apps.312698113706-09ejigbp1khjkk1p1dmd5kafitptkfvu</string>
 			</array>
 		</dict>

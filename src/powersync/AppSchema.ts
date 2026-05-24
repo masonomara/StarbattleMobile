@@ -1,5 +1,5 @@
 import { column, Schema, Table, PowerSyncDatabase } from '@powersync/react-native';
-import { SQLJSOpenFactory } from '@powersync/adapter-sql-js';
+import { OPSqliteOpenFactory } from '@powersync/op-sqlite';
 
 const packs = new Table({
   name: column.text,
@@ -67,5 +67,5 @@ export type Database = (typeof AppSchema)['types'];
 
 export const db = new PowerSyncDatabase({
   schema: AppSchema,
-  database: new SQLJSOpenFactory({ dbFilename: 'starbattle.db' }),
+  database: new OPSqliteOpenFactory({ dbFilename: 'starbattle.db' }),
 });

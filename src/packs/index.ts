@@ -23,6 +23,57 @@ function blobToText(blob: Blob): Promise<string> {
   });
 }
 
+// Verify that downloaded JSON has the expected pack structure.
+// Throws on malformed or tampered content before it is cached or parsed.
+function validatePackText(text: string): void {
+  const data = JSON.parse(text) as { puzzles?: unknown };
+  if (!Array.isArray(data?.puzzles) || data.puzzles.length === 0) {
+    throw new Error('Invalid pack: missing puzzles');
+  }
+  for (const p of data.puzzles as Array<{ sbn?: unknown }>) {
+    if (typeof p?.sbn !== 'string' || !/^\d+x\d+\./.test(p.sbn)) {
+      throw new Error('Invalid pack: malformed puzzle SBN');
+    }
+  }
+}
+
+// Replace each puzzle's solution array with a base64-encoded opaque string
+// before persisting to disk so solutions aren't stored as human-readable JSON.
+function encodeForDisk(text: string): string {
+  try {
+    const data = JSON.parse(text) as { puzzles?: RawPuzzle[] };
+    if (!Array.isArray(data?.puzzles)) return text;
+    return JSON.stringify({
+      ...data,
+      puzzles: data.puzzles.map(p => {
+        const { solution, ...rest } = p;
+        return { ...rest, _s: btoa(JSON.stringify(solution)) };
+      }),
+    });
+  } catch {
+    return text;
+  }
+}
+
+// Reverse encodeForDisk when loading cached pack data back from disk.
+function decodeFromDisk(text: string): string {
+  try {
+    const data = JSON.parse(text) as { puzzles?: Array<Record<string, unknown>> };
+    if (!Array.isArray(data?.puzzles)) return text;
+    if (!data.puzzles.some(p => '_s' in p)) return text;
+    return JSON.stringify({
+      ...data,
+      puzzles: data.puzzles.map(p => {
+        if (!('_s' in p)) return p;
+        const { _s, ...rest } = p;
+        return { ...rest, solution: JSON.parse(atob(_s as string)) };
+      }),
+    });
+  } catch {
+    return text;
+  }
+}
+
 async function fetchFromSupabase(storageKey: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from('packs')
@@ -37,13 +88,14 @@ async function fetchPack(storageKey: string): Promise<string> {
   if (rnfs) {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${storageKey}`;
     try {
-      return await rnfs.readFile(localPath, 'utf8');
+      return decodeFromDisk(await rnfs.readFile(localPath, 'utf8'));
     } catch {
       // not on disk yet — fall through to network
     }
     const text = await fetchFromSupabase(storageKey);
+    validatePackText(text);
     await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
-    await rnfs.writeFile(localPath, text, 'utf8').catch(() => {});
+    await rnfs.writeFile(localPath, encodeForDisk(text), 'utf8').catch(() => {});
     return text;
   }
   return fetchFromSupabase(storageKey);
@@ -99,7 +151,8 @@ export async function downloadPack(
     .download(storagePath);
   if (error) throw error;
   const text = await blobToText(data);
-  await rnfs.writeFile(`${packDir}/${packId}.json`, text, 'utf8');
-  // Warm the cache with the freshly downloaded content.
+  validatePackText(text);
+  await rnfs.writeFile(`${packDir}/${packId}.json`, encodeForDisk(text), 'utf8');
+  // Warm the cache with the original (decoded) content.
   packCache.set(`${packId}.json`, Promise.resolve(text));
 }

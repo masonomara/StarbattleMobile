@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@invertase/react-native-apple-authentication": "^2.5.1",
+    "@op-engineering/op-sqlite": "^15.2.14",
     "@opentelemetry/api": "^1.9.1",
     "@powersync/adapter-sql-js": "^0.0.18",
     "@powersync/op-sqlite": "^0.9.8",

@@ -95,7 +95,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
         ))}
       <Path
         path={innerGridPath}
-        color={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
+        color={rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1)}
         style="stroke"
         strokeWidth={gridW}
         strokeCap="square"

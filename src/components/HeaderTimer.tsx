@@ -39,5 +39,6 @@ const createStyles = (theme: Theme) =>
       fontWeight: '600',
       fontSize: 17,
       color: rgba(theme.isDark ? theme.white : theme.black, 1),
+     
     },
   });

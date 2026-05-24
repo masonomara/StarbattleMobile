@@ -173,7 +173,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
     },
     buttonAccent: {
-      backgroundColor: rgba(theme.lightGray, 1),
+      backgroundColor: rgba(theme.darkGray, 1),
     },
     buttonDisabled: {
       opacity: 0.4,

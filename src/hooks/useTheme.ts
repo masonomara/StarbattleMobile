@@ -11,8 +11,8 @@ export function buildTheme(colors: PaletteColors, isDark: boolean): Theme {
     regionColors: [
       colors.darkRed,     colors.darkGreen,    colors.darkYellow,
       colors.darkBlue,    colors.darkMagenta,  colors.darkCyan,
-      colors.lightRed,    colors.lightGreen,   colors.lightYellow,
-      colors.lightBlue,   colors.lightMagenta, colors.lightCyan,
+      colors.darkRed,    colors.darkGreen,   colors.darkYellow,
+      colors.darkBlue,   colors.darkMagenta, colors.darkCyan,
     ],
     regionColorAlpha: isDark ? 0.25 : 0.12,
     ...tokens,

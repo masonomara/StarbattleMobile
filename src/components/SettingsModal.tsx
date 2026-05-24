@@ -29,7 +29,7 @@ import { buildTheme } from '../hooks/useTheme';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../config';
 import type { Theme, UserSettings } from '../types';
 
-type EmailMode = 'signup' | 'signin' | null;
+type EmailMode = 'signup' | 'signin' | 'confirm-email' | 'forgot-password' | 'reset-sent' | null;
 
 const PREVIEW_GRID = [
   [0, 0, 1, 1],
@@ -248,6 +248,7 @@ export function SettingsModal() {
   const signInWithGoogle = useAuthStore(s => s.signInWithGoogle);
   const signUpWithEmail = useAuthStore(s => s.signUpWithEmail);
   const signInWithEmail = useAuthStore(s => s.signInWithEmail);
+  const requestPasswordReset = useAuthStore(s => s.requestPasswordReset);
   const signOut = useAuthStore(s => s.signOut);
   const deleteAccount = useAuthStore(s => s.deleteAccount);
 
@@ -260,20 +261,37 @@ export function SettingsModal() {
   const [password, setPassword] = useState('');
   const { loading, error, setError, run: withLoading } = useAsyncAction();
 
+  async function handleForgotPassword() {
+    if (!email) {
+      setError('Enter your email address first');
+      return;
+    }
+    await withLoading(async () => {
+      await requestPasswordReset(email);
+      setEmailMode('reset-sent');
+    });
+  }
+
   async function handleEmailSubmit() {
     if (!email || !password) {
       setError('Enter email and password');
       return;
     }
+    if (emailMode === 'signup' && password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
     await withLoading(async () => {
       if (emailMode === 'signup') {
         await signUpWithEmail(email, password);
+        setEmailMode('confirm-email');
+        setPassword('');
       } else {
         await signInWithEmail(email, password);
+        setEmailMode(null);
+        setEmail('');
+        setPassword('');
       }
-      setEmailMode(null);
-      setEmail('');
-      setPassword('');
     });
   }
 
@@ -355,7 +373,7 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={Platform.OS === 'ios' ? rgba(theme.lightBlue, 1) : rgba(theme.isDark ? theme.black : theme.white, 1)} />
+                        <ActivityIndicator color={Platform.OS === 'ios' ? rgba(theme.darkBlue, 1) : rgba(theme.isDark ? theme.black : theme.white, 1)} />
                       ) : (
                         <Text style={Platform.OS === 'ios' ? styles.secondaryButtonText : styles.primaryButtonText}>
                           Sign up with Google
@@ -383,8 +401,8 @@ export function SettingsModal() {
                   </>
                 )}
 
-                {emailMode !== null && (
-                  <>
+                {(emailMode === 'signup' || emailMode === 'signin') && (
+                  <View>
                     <Text style={styles.formTitle}>
                       {emailMode === 'signup' ? 'Create Account' : 'Sign In'}
                     </Text>
@@ -409,6 +427,14 @@ export function SettingsModal() {
                         emailMode === 'signup' ? 'new-password' : 'password'
                       }
                     />
+                    {emailMode === 'signup' && (
+                      <Text style={[
+                        styles.passwordHint,
+                        password.length >= 6 && styles.passwordHintMet,
+                      ]}>
+                        At least 6 characters
+                      </Text>
+                    )}
                     <Pressable
                       style={[styles.primaryButton, loading && styles.disabled]}
                       onPress={handleEmailSubmit}
@@ -424,6 +450,15 @@ export function SettingsModal() {
                         </Text>
                       )}
                     </Pressable>
+                    {emailMode === 'signin' && (
+                      <Pressable
+                        style={styles.linkButton}
+                        onPress={handleForgotPassword}
+                        disabled={loading}
+                      >
+                        <Text style={styles.linkText}>Forgot Password?</Text>
+                      </Pressable>
+                    )}
                     <Pressable
                       style={styles.linkButton}
                       onPress={() => {
@@ -433,7 +468,81 @@ export function SettingsModal() {
                     >
                       <Text style={styles.linkText}>Cancel</Text>
                     </Pressable>
-                  </>
+                  </View>
+                )}
+
+                {emailMode === 'forgot-password' && (
+                  <View>
+                    <Text style={styles.formTitle}>Reset Password</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Email"
+                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
+                      value={email}
+                      onChangeText={setEmail}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      autoComplete="email"
+                    />
+                    <Pressable
+                      style={[styles.primaryButton, loading && styles.disabled]}
+                      onPress={handleForgotPassword}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
+                      ) : (
+                        <Text style={styles.primaryButtonText}>Send Reset Link</Text>
+                      )}
+                    </Pressable>
+                    <Pressable
+                      style={styles.linkButton}
+                      onPress={() => { setEmailMode('signin'); setError(null); }}
+                    >
+                      <Text style={styles.linkText}>Back to Sign In</Text>
+                    </Pressable>
+                  </View>
+                )}
+
+                {emailMode === 'reset-sent' && (
+                  <View style={styles.confirmEmailBox}>
+                    <Text style={styles.confirmEmailTitle}>Check your inbox</Text>
+                    <Text style={styles.confirmEmailBody}>
+                      We sent a password reset link to{' '}
+                      <Text style={styles.confirmEmailAddress}>{email}</Text>.
+                    </Text>
+                    <Pressable
+                      style={styles.primaryButton}
+                      onPress={() => {
+                        setEmailMode(null);
+                        setEmail('');
+                        setError(null);
+                      }}
+                    >
+                      <Text style={styles.primaryButtonText}>Done</Text>
+                    </Pressable>
+                  </View>
+                )}
+
+                {emailMode === 'confirm-email' && (
+                  <View style={styles.confirmEmailBox}>
+                    <Text style={styles.confirmEmailTitle}>Check your inbox</Text>
+                    <Text style={styles.confirmEmailBody}>
+                      We sent a confirmation link to{' '}
+                      <Text style={styles.confirmEmailAddress}>{email}</Text>.
+                      Open it to finish creating your account.
+                    </Text>
+                    <Pressable
+                      style={styles.primaryButton}
+                      onPress={() => {
+                        setEmailMode(null);
+                        setEmail('');
+                        setError(null);
+                      }}
+                    >
+                      <Text style={styles.primaryButtonText}>Done</Text>
+                    </Pressable>
+                  </View>
                 )}
 
                 {error && <Text style={styles.error}>{error}</Text>}
@@ -629,7 +738,7 @@ export function SettingsModal() {
                         <Text
                           style={[
                             styles.swatchLabel,
-                            { color: rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.darkGray, 1) },
+                            { color: rgba(paletteTheme.isDark ? paletteTheme.darkGray : paletteTheme.darkGray, 1) },
                           ]}
                         >
                           {PALETTE_META[name].label}
@@ -668,7 +777,7 @@ const createStyles = (theme: Theme) => {
   const bg   = theme.isDark ? theme.black  : theme.white;
   const card = theme.isDark ? theme.darkGray  : theme.white;
   const fg   = theme.isDark ? theme.white : theme.black;
-  const dim  = theme.isDark ? theme.lightGray  : theme.darkGray;
+  const dim  = theme.isDark ? theme.darkGray  : theme.darkGray;
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -725,7 +834,7 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(theme.lightBlue, 1),
+      backgroundColor: rgba(theme.darkBlue, 1),
     },
     themeButtonInactive: {
       paddingHorizontal: theme.spacingLg,
@@ -791,7 +900,7 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(theme.lightBlue, 1),
+      backgroundColor: rgba(theme.darkBlue, 1),
     },
     premiumBadgeText: {
       fontSize: theme.fontSizeSubhead,
@@ -812,7 +921,7 @@ const createStyles = (theme: Theme) => {
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.lightBlue, 1),
+      backgroundColor: rgba(theme.darkBlue, 1),
     },
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
@@ -837,7 +946,7 @@ const createStyles = (theme: Theme) => {
     },
     linkText: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.lightBlue, 1),
+      color: rgba(theme.darkBlue, 1),
     },
     formTitle: {
       fontSize: theme.fontSizeBody,
@@ -862,7 +971,7 @@ const createStyles = (theme: Theme) => {
     destructiveButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.lightRed, 1),
+      color: rgba(theme.darkRed, 1),
     },
     legalLinks: {
       flexDirection: 'row',
@@ -879,6 +988,30 @@ const createStyles = (theme: Theme) => {
     legalSep: {
       fontSize: theme.fontSizeSubhead,
       color: rgba(dim, 1),
+    },
+    confirmEmailBox: {
+      gap: theme.spacingMd,
+    },
+    confirmEmailTitle: {
+      fontSize: theme.fontSizeBody,
+      fontWeight: theme.fontWeightSemibold,
+      color: rgba(fg, 1),
+    },
+    confirmEmailBody: {
+      fontSize: theme.fontSizeCallout,
+      color: rgba(dim, 1),
+      lineHeight: 22,
+    },
+    confirmEmailAddress: {
+      fontWeight: theme.fontWeightSemibold,
+      color: rgba(fg, 1),
+    },
+    passwordHint: {
+      fontSize: theme.fontSizeSubhead,
+      color: rgba(dim, 1),
+    },
+    passwordHintMet: {
+      color: rgba(theme.lightBlue, 1),
     },
     disabled: { opacity: 0.6 },
     error: {

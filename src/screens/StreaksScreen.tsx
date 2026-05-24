@@ -136,14 +136,14 @@ export function StreaksScreen() {
                     }}
                   >
                     <Text style={styles.archiveDate}>{entry.dateKey}</Text>
-                    <ChevronRight size={18} color={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)} />
+                    <ChevronRight size={18} color={rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1)} />
                   </Pressable>
                 ))
               )}
             </>
           ) : (
             <View style={styles.premiumTeaser}>
-              <Lock size={28} color={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)} />
+              <Lock size={28} color={rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1)} />
               <Text style={styles.teaserTitle}>Premium Feature</Text>
               <Text style={styles.teaserBody}>
                 Unlock access to every past daily, weekly, and monthly puzzle.
@@ -171,7 +171,7 @@ const createStyles = (theme: Theme) => {
     container: {
       flex: 1,
       paddingTop: theme.spacingXl,
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.lightGray, 1),
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
     },
     scrollContent: {
       paddingHorizontal: theme.spacingXl,
@@ -202,11 +202,11 @@ const createStyles = (theme: Theme) => {
     streakCount: {
       fontSize: 32,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.lightBlue, 1),
+      color: rgba(theme.darkBlue, 1),
     },
     streakLabel: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
       marginTop: 4,
     },
     sectionTitle: {
@@ -228,12 +228,12 @@ const createStyles = (theme: Theme) => {
       backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
     },
     tabActive: {
-      backgroundColor: rgba(theme.lightBlue, 1),
+      backgroundColor: rgba(theme.darkBlue, 1),
     },
     tabText: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
     },
     tabTextActive: {
       color: rgba(theme.isDark ? theme.black : theme.white, 1),
@@ -255,7 +255,7 @@ const createStyles = (theme: Theme) => {
 
     emptyText: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
       textAlign: 'center',
       marginTop: theme.spacingXl,
     },
@@ -273,7 +273,7 @@ const createStyles = (theme: Theme) => {
     },
     teaserBody: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
       textAlign: 'center',
       lineHeight: 22,
     },
@@ -283,7 +283,7 @@ const createStyles = (theme: Theme) => {
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.lightBlue, 1),
+      backgroundColor: rgba(theme.darkBlue, 1),
       marginTop: theme.spacingMd,
     },
     upgradeButtonText: {

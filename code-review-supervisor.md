@@ -300,20 +300,21 @@ The server receives whatever `date_key` the client sends — there is no server-
 
 ---
 
-### M-5 — `signUpWithEmail` Uses `updateUser` Instead of `signUp`; No Email Verification Flow
+### ~~M-5 — `signUpWithEmail` Uses `updateUser` Instead of `signUp`; No Email Verification Flow~~ ✅ FIXED
+
+> **✅ FIXED** — Email confirmation, password reset, and deep-link handling all implemented:
+> 1. `authStore.signUpWithEmail` no longer calls `applySignIn` — anonymous session stays until `USER_UPDATED` fires after email confirmation.
+> 2. `SettingsModal` transitions to `'confirm-email'` after sign-up and `'reset-sent'` after requesting a reset.
+> 3. `App.tsx` adds `AppState` listener (`supabase.auth.refreshSession()` on foreground) and `Linking` listener for deep links arriving while app is running.
+> 4. `authStore.initialize` calls `Linking.getInitialURL()` for cold-launch deep links; `handleDeepLink` exchanges tokens from the URL fragment.
+> 5. `onAuthStateChange` handles `PASSWORD_RECOVERY` (sets `isPasswordRecovery: true`) and `USER_UPDATED` (clears it).
+> 6. New `ResetPasswordModal` component appears on `isPasswordRecovery`, lets user set new password, dismisses on success.
+> 7. `Info.plist` registers `starbattle://` URL scheme; `resetPasswordForEmail` uses `redirectTo: 'starbattle://reset-password'`.
+> 8. "Forgot Password?" link added to sign-in form in `SettingsModal`.
+>
+> Password strength validation remains a post-launch item.
 
 **File:** `src/stores/authStore.ts`, lines 71–75
-
-```typescript
-signUpWithEmail: async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.updateUser({ email, password });
-  ...
-}
-```
-
-This upgrades an anonymous user to a named account via `updateUser`. Supabase sends an email confirmation to the new address, but the UI never tells the user this. After calling this function, the app closes the form and shows the logged-in state — but the email address is not confirmed. If the user loses the confirmation email or never confirms, they cannot sign in on a new device.
-
-Additionally, there is no password strength validation. The server (Supabase) enforces a minimum but the client shows a generic error message with no guidance. There is also no "Forgot Password" / password reset link anywhere in the UI.
 
 ---
 
@@ -402,36 +403,27 @@ This exposes implementation details and internal infrastructure to end users, fa
 
 ---
 
-### L-5 — `signOut` Immediately Creates a New Anonymous Server Record
+### ~~L-5 — `signOut` Immediately Creates a New Anonymous Server Record~~ ✅ FIXED
+
+> **✅ FIXED** — `signInWithEmail`, `signInWithGoogle`, and `signInWithApple` now call `supabase.rpc('delete_user')` (wrapped in try/catch) before signing in whenever `isAnonymous` is true. This deletes the transient anonymous session that would otherwise become an orphan the moment the named session is established. `signUpWithEmail` is unaffected — `updateUser` upgrades the existing anonymous user rather than creating a new one.
 
 **File:** `src/stores/authStore.ts`, lines 109–114
 
-```typescript
-signOut: async () => {
-  await supabase.auth.signOut();
-  await adapty.logout();
-  set({ session: null, user: null, isAnonymous: true });
-  await get().signInAnonymously();  // ← creates a new server-side anonymous user
-},
-```
-
-Every sign-out creates a new anonymous Supabase user. Over time, a user who signs out repeatedly accumulates orphaned anonymous user records on the server with no cleanup mechanism. These records contain synced gameplay data that cannot be accessed again (the user has no way to recover the UUID). This is both a data hygiene issue and a potential GDPR concern — the company is accumulating user data (even if pseudonymous) indefinitely with no retention policy.
-
 ---
 
-### L-6 — Puzzle Solutions Stored Client-Side in Plaintext
+### ~~L-6 — Puzzle Solutions Stored Client-Side in Plaintext~~ ✅ FIXED
+
+> **✅ FIXED** — `packs/index.ts` now encodes each puzzle's `solution` array as a base64 string (key `_s`) before writing to disk, and decodes it back on read. The in-memory cache and all runtime code continue to use the original `Coord[]` format; only the persisted `.json` files are obfuscated. Solutions are no longer directly readable as human-readable row/col arrays in the cached pack files.
 
 **File:** `src/packs/index.ts`, `src/utils/parsePuzzle.ts`
 
-Downloaded pack files (stored at `DocumentDirectoryPath/packs/{packId}.json`) contain the complete solution (`solution: Coord[]`) for every puzzle. Any user who can access the device filesystem (jailbroken iOS, rooted Android, device backup tools, or simple file browsing apps on Android) can read the solutions to all downloaded puzzles, including paid packs, without solving them. This does not affect user security but affects game integrity and the value proposition of the paid content.
-
 ---
 
-### L-7 — No Integrity Verification on Downloaded Pack Files
+### ~~L-7 — No Integrity Verification on Downloaded Pack Files~~ ✅ FIXED
+
+> **✅ FIXED** — Added `validatePackText()` in `packs/index.ts` that runs immediately after every network download (in both `fetchPack` and `downloadPack`) before any disk write or cache population. It verifies: valid JSON, non-empty `puzzles` array, and a well-formed SBN header (`NxN.…`) on every puzzle. Malformed or truncated responses throw before reaching the cache, forcing a retry on next load. True cryptographic hash verification would require a server-stored reference hash — that remains a future enhancement.
 
 **File:** `src/packs/index.ts`, lines 35–53
-
-Pack files are downloaded from Supabase Storage and written to disk with no checksum or signature verification. If a man-in-the-middle attack occurred (despite TLS), or if the Supabase Storage bucket were compromised, malformed puzzle data could be served and cached locally. The `parsePuzzle` function would throw on malformed SBN data, but there is no detection of subtly wrong-but-parseable data (e.g., wrong solutions that never let a user win).
 
 ---
 
@@ -450,15 +442,15 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 | ~~M-2~~ | ~~MEDIUM~~   | ~~Data Integrity~~| ~~Progress save not awaited on navigation; data loss on exit/kill~~ ✅               |
 | ~~M-3~~ | ~~MEDIUM~~   | ~~Stability~~     | ~~`JSON.parse` unguarded on database fields; crash risk on corrupt data~~ ✅          |
 | ~~M-4~~ | ~~MEDIUM~~   | ~~Game Integrity~~| ~~Streak dates computed client-side; no server validation; clock manipulation possible~~ ✅ |
-| M-5     | MEDIUM       | UX/Auth           | Email sign-up shows no confirmation prompt; no password reset; no strength validation |
+| ~~M-5~~ | ~~MEDIUM~~   | ~~UX/Auth~~       | ~~Email sign-up shows no confirmation prompt; no password reset; no strength validation~~ ✅ FIXED (confirmation flow + password reset); strength validation post-launch |
 | ~~M-6~~ | ~~MEDIUM~~   | ~~IAP~~           | ~~Missing `storagePath` silently prevents paid pack purchase~~ ✅                     |
 | ~~L-1~~ | ~~LOW~~      | ~~App Store~~     | ~~Empty `NSLocationWhenInUseUsageDescription` in Info.plist~~ ✅                      |
 | ~~L-2~~ | ~~LOW~~      | ~~App Store/Privacy~~ | ~~`NSPrivacyCollectedDataTypes` empty despite collecting user data~~ ✅           |
 | ~~L-3~~ | ~~LOW~~      | ~~Privacy~~       | ~~Apple Sign-In requests full name scope; data never used~~ ✅                        |
 | ~~L-4~~ | ~~LOW~~      | ~~Security~~      | ~~Raw internal error messages surfaced to users~~ ✅                                  |
-| L-5     | LOW          | Data              | Sign-out creates unbounded orphan server records with no cleanup                      |
-| L-6     | LOW          | Game Integrity    | Puzzle solutions stored in plaintext on device filesystem                             |
-| L-7     | LOW          | Security          | No integrity check on downloaded pack files                                           |
+| ~~L-5~~ | ~~LOW~~      | ~~Data~~          | ~~Sign-out creates unbounded orphan server records with no cleanup~~ ✅               |
+| ~~L-6~~ | ~~LOW~~      | ~~Game Integrity~~| ~~Puzzle solutions stored in plaintext on device filesystem~~ ✅                      |
+| ~~L-7~~ | ~~LOW~~      | ~~Security~~      | ~~No integrity check on downloaded pack files~~ ✅ (structural validation; hash verification needs server support) |
 
 ---
 

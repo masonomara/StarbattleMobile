@@ -90,9 +90,9 @@ export function HomeScreen({
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, hasPackAccess } = useEntitlements();
   const STREAK_TILE_COLORS = [
-    `rgba(${theme.lightGreen}, 1)`,
-    `rgba(${theme.lightCyan}, 1)`,
-    `rgba(${theme.lightMagenta}, 1)`,
+    `rgba(${theme.darkGreen}, 1)`,
+    `rgba(${theme.darkCyan}, 1)`,
+    `rgba(${theme.darkMagenta}, 1)`,
   ];
 
   const [loadedStreakPacks, setLoadedStreakPacks] = useState<
@@ -442,7 +442,7 @@ const createStyles = (
       letterSpacing: -0.42,
     },
     streakMeta: {
-      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
       fontSize: 13,
       lineHeight: 18,
       marginTop: 2,
@@ -450,12 +450,12 @@ const createStyles = (
     streakThumbnailWrap: {
       borderRadius: 8,
       overflow: 'hidden',
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.lightGray, 1),
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
     },
     streakCount: {
       fontSize: 16,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.lightBlue, 1),
+      color: rgba(theme.darkBlue, 1),
       marginTop: 4,
     },
     streakPlayButton: {
@@ -489,7 +489,7 @@ const createStyles = (
       marginBottom: 12,
       backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
       borderWidth: 1,
-      borderColor: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 0.2),
+      borderColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 0.2),
     },
     packThumb: {
       marginRight: 14,
@@ -506,19 +506,19 @@ const createStyles = (
       fontSize: 17,
       lineHeight: 22,
       fontWeight: 500,
-      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
       letterSpacing: -0.56,
       marginTop: 2,
     },
     packProgress: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.lightBlue, 1),
+      color: rgba(theme.darkBlue, 1),
     },
     packPrice: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
     },
   });
 };

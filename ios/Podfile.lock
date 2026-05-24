@@ -119,6 +119,28 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - op-sqlite (15.2.14):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - powersync-op-sqlite (0.9.8):
     - hermes-engine
     - powersync-sqlite-core (~> 0.4.12)
@@ -2320,6 +2342,7 @@ DEPENDENCIES:
   - NitroHaptics (from `../node_modules/react-native-nitro-haptics`)
   - NitroMmkv (from `../node_modules/react-native-mmkv`)
   - NitroModules (from `../node_modules/react-native-nitro-modules`)
+  - "op-sqlite (from `../node_modules/@op-engineering/op-sqlite`)"
   - "powersync-op-sqlite (from `../node_modules/@powersync/op-sqlite`)"
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
@@ -2434,6 +2457,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-mmkv"
   NitroModules:
     :path: "../node_modules/react-native-nitro-modules"
+  op-sqlite:
+    :path: "../node_modules/@op-engineering/op-sqlite"
   powersync-op-sqlite:
     :path: "../node_modules/@powersync/op-sqlite"
   RCTDeprecation:
@@ -2619,6 +2644,7 @@ SPEC CHECKSUMS:
   NitroHaptics: c9afb8ce5f3c46949f3c834fa6cf7994f7385e23
   NitroMmkv: c9fd61d98afd00a6e4e1656a415c28f7be0fd74e
   NitroModules: 97978583f36f88f7a348d5bf986d94bc4b340d0a
+  op-sqlite: bf77245014ddbbf8eda92a3805e012b1daad869f
   powersync-op-sqlite: a2799ee63162c156bc7b8cb0f24cb08a59d01c8d
   powersync-sqlite-core: 6ce0b8b254812855e4ec52899ddc3ac6a30bda12
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47

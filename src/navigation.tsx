@@ -7,6 +7,7 @@ import { LibraryScreen } from './screens/LibraryScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
 import { StreaksScreen } from './screens/StreaksScreen';
 import { SettingsModal } from './components/SettingsModal';
+import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
 import { rgba } from './themes/ansi';
@@ -71,6 +72,7 @@ export function Navigation() {
         <Stack.Screen name="Puzzle" component={WrappedPuzzle} />
       </Stack.Navigator>
       <SettingsModal />
+      <ResetPasswordModal />
       <StreaksScreen />
     </NavigationContainer>
   );

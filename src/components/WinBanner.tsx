@@ -140,7 +140,7 @@ const createStyles = (theme: Theme) =>
       lineHeight: 20,
       fontWeight: 600,
 
-      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
     },
     winTime: {
       fontSize: 15,
