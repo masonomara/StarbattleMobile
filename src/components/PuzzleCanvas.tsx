@@ -104,13 +104,13 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
       ))}
       <Path
         path={innerGridPath}
-        color={theme.innerBorder}
+        color={theme.textSecondary}
         style="stroke"
         strokeWidth={1}
       />
       <Path
         path={regionBorderPath}
-        color={theme.regionBorder}
+        color={theme.text}
         style="stroke"
         strokeWidth={3}
         strokeCap="square"
@@ -222,9 +222,9 @@ export const PuzzleCanvas = React.forwardRef<
           height: canvasSize,
         }}
       >
-        <Path path={dynamicPaths.starNormal} color={theme.regionBorder} />
-        <Path path={dynamicPaths.starError} color={theme.errorStar} />
-        <Path path={dynamicPaths.starGhost} color={theme.regionBorder + '55'} />
+        <Path path={dynamicPaths.starNormal} color={theme.text} />
+        <Path path={dynamicPaths.starError} color={theme.markColor} />
+        <Path path={dynamicPaths.starGhost} color={theme.text + '55'} />
         <Path
           path={dynamicPaths.marks}
           color={theme.markColor}

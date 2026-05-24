@@ -44,7 +44,7 @@ export function PaywallModal({
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={theme.onAccent} />
+              <ActivityIndicator color={theme.bg} />
             ) : (
               <Text style={styles.primaryButtonText}>
                 Unlock All with Premium · $5.99
@@ -88,7 +88,7 @@ export function PaywallModal({
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={theme.onAccent} />
+              <ActivityIndicator color={theme.bg} />
             ) : (
               <Text style={styles.primaryButtonText}>
                 Buy Pack · ${context.priceUsd.toFixed(2)}
@@ -135,7 +135,7 @@ const createStyles = (theme: Theme) =>
       right: 0,
       bottom: 0,
       justifyContent: 'flex-end',
-      backgroundColor: theme.overlay,
+      backgroundColor: theme.text + '66',
     },
     sheet: {
       backgroundColor: theme.card,
@@ -172,7 +172,7 @@ const createStyles = (theme: Theme) =>
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.onAccent,
+      color: theme.bg,
     },
     secondaryButton: {
       height: 52,

@@ -9,9 +9,9 @@ import type { CellChange, DrawLayerHandle } from '../types/state';
 export function useDrawGesture(
   puzzleSize: number,
   cellSize: number,
-  savedScale: SharedValue<number>,
-  savedTranslateX: SharedValue<number>,
-  savedTranslateY: SharedValue<number>,
+  scale: SharedValue<number>,
+  translateX: SharedValue<number>,
+  translateY: SharedValue<number>,
   boardLayout: React.RefObject<{ width: number; height: number } | null>,
   drawLayerRef: React.RefObject<DrawLayerHandle | null>,
   onOffCanvasTap?: () => void,
@@ -25,9 +25,9 @@ export function useDrawGesture(
       const layout = boardLayout.current;
       if (!layout || layout.width === 0 || layout.height === 0) return null;
 
-      const sc = savedScale.value;
-      const tx = savedTranslateX.value;
-      const ty = savedTranslateY.value;
+      const sc = scale.value;
+      const tx = translateX.value;
+      const ty = translateY.value;
       const boardPixels = cellSize * puzzleSize;
 
       const relX = x - layout.width / 2;
@@ -44,7 +44,7 @@ export function useDrawGesture(
       }
       return { row, col };
     },
-    [puzzleSize, savedScale, savedTranslateX, savedTranslateY, boardLayout, cellSize],
+    [puzzleSize, scale, translateX, translateY, boardLayout, cellSize],
   );
 
   const markCell = useCallback((row: number, col: number) => {

@@ -233,12 +233,13 @@ const createStyles = (theme: Theme) =>
       margin: 6,
       borderRadius: 4,
       overflow: 'hidden',
-      elevation: 2,
+
       backgroundColor: theme.card,
-      shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+           shadowOffset: { width: 0, height: 4 },
+      shadowColor: '#25292E',
+      shadowOpacity: 0.10,
+      shadowRadius: 24,
+      elevation: 8,
     },
     puzzleCellOverlay: {
       position: 'absolute',

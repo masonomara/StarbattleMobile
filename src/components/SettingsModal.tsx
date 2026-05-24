@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Modal,
+  Platform,
   View,
   Text,
   ScrollView,
@@ -107,7 +108,7 @@ function PalettePreview({
             y1={bw + i * cs}
             x2={S - bw}
             y2={bw + i * cs}
-            stroke={paletteTheme.innerBorder}
+            stroke={paletteTheme.textSecondary}
             strokeWidth={0.5}
           />
           <Line
@@ -115,7 +116,7 @@ function PalettePreview({
             y1={bw}
             x2={bw + i * cs}
             y2={S - bw}
-            stroke={paletteTheme.innerBorder}
+            stroke={paletteTheme.textSecondary}
             strokeWidth={0.5}
           />
         </React.Fragment>
@@ -127,7 +128,7 @@ function PalettePreview({
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
-          stroke={paletteTheme.regionBorder}
+          stroke={paletteTheme.text}
           strokeWidth={1.5}
         />
       ))}
@@ -138,7 +139,7 @@ function PalettePreview({
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
-          stroke={paletteTheme.regionBorder}
+          stroke={paletteTheme.text}
           strokeWidth={1.5}
         />
       ))}
@@ -148,12 +149,12 @@ function PalettePreview({
         width={S - bw}
         height={S - bw}
         fill="none"
-        stroke={paletteTheme.regionBorder}
+        stroke={paletteTheme.text}
         strokeWidth={bw}
       />
       <Path
         d={starPath(STAR.cx, STAR.cy, cs * 0.33)}
-        fill={paletteTheme.regionBorder}
+        fill={paletteTheme.text}
       />
       <Line
         x1={MARK1.cx - MR}
@@ -220,7 +221,7 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: theme.innerBorder, true: theme.accent }}
+        trackColor={{ false: theme.textSecondary, true: theme.accent }}
         thumbColor="#FFFFFF"
       />
     </View>
@@ -239,6 +240,7 @@ export function SettingsModal() {
   const isAnonymous = useAuthStore(s => s.isAnonymous);
   const user = useAuthStore(s => s.user);
   const signInWithApple = useAuthStore(s => s.signInWithApple);
+  const signInWithGoogle = useAuthStore(s => s.signInWithGoogle);
   const signUpWithEmail = useAuthStore(s => s.signUpWithEmail);
   const signInWithEmail = useAuthStore(s => s.signInWithEmail);
   const signOut = useAuthStore(s => s.signOut);
@@ -305,16 +307,35 @@ export function SettingsModal() {
 
                 {emailMode === null && (
                   <>
+                    {Platform.OS === 'ios' && (
+                      <Pressable
+                        style={[styles.primaryButton, loading && styles.disabled]}
+                        onPress={() => withLoading(signInWithApple)}
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <ActivityIndicator color={theme.bg} />
+                        ) : (
+                          <Text style={styles.primaryButtonText}>
+                            Sign up with Apple
+                          </Text>
+                        )}
+                      </Pressable>
+                    )}
+
                     <Pressable
-                      style={[styles.primaryButton, loading && styles.disabled]}
-                      onPress={() => withLoading(signInWithApple)}
+                      style={[
+                        Platform.OS === 'ios' ? styles.secondaryButton : styles.primaryButton,
+                        loading && styles.disabled,
+                      ]}
+                      onPress={() => withLoading(signInWithGoogle)}
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={theme.onAccent} />
+                        <ActivityIndicator color={Platform.OS === 'ios' ? theme.accent : theme.bg} />
                       ) : (
-                        <Text style={styles.primaryButtonText}>
-                          Sign up with Apple
+                        <Text style={Platform.OS === 'ios' ? styles.secondaryButtonText : styles.primaryButtonText}>
+                          Sign up with Google
                         </Text>
                       )}
                     </Pressable>
@@ -371,7 +392,7 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={theme.onAccent} />
+                        <ActivityIndicator color={theme.bg} />
                       ) : (
                         <Text style={styles.primaryButtonText}>
                           {emailMode === 'signup'
@@ -416,7 +437,7 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={theme.onAccent} />
+                        <ActivityIndicator color={theme.bg} />
                       ) : (
                         <Text style={styles.primaryButtonText}>
                           Buy Premium · $5.99
@@ -660,12 +681,12 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.innerBorder,
+      backgroundColor: theme.textSecondary,
     },
     themeButtonTextActive: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.onAccent,
+      color: theme.bg,
     },
     themeButtonTextInactive: {
       fontSize: theme.fontSizeSubhead,
@@ -725,7 +746,7 @@ const createStyles = (theme: Theme) =>
     premiumBadgeText: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.onAccent,
+      color: theme.bg,
     },
     subLabel: {
       fontSize: theme.fontSizeSubhead,
@@ -746,7 +767,7 @@ const createStyles = (theme: Theme) =>
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.onAccent,
+      color: theme.bg,
     },
     secondaryButton: {
       height: 52,

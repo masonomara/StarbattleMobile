@@ -13,7 +13,7 @@ const MIN_ZOOM = 0.67;
 const MAX_ZOOM = 3;
 const PAN_PADDING = 120;
 
-const SPRING_CONFIG = { damping: 20, stiffness: 200, overshootClamping: true } as const;
+const SPRING_CONFIG = { damping: 19, stiffness: 90 } as const;
 
 export function useZoom(puzzleSize: number, cellSize: number) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -32,9 +32,9 @@ export function useZoom(puzzleSize: number, cellSize: number) {
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: scale.value },
       { translateX: translateX.value },
       { translateY: translateY.value },
+      { scale: scale.value },
     ],
   }));
 
@@ -110,6 +110,9 @@ export function useZoom(puzzleSize: number, cellSize: number) {
     pinchGesture,
     panGesture,
     animatedStyle,
+    scale,
+    translateX,
+    translateY,
     savedScale,
     savedTranslateX,
     savedTranslateY,

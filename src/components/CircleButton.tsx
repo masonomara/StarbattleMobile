@@ -28,7 +28,7 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       backgroundColor: theme.card,
       shadowOffset: { width: 0, height: 4 },
-      shadowColor: theme.shadow,
+      shadowColor: '#25292E',
       shadowOpacity: 0.1,
       shadowRadius: 24,
       elevation: 8,

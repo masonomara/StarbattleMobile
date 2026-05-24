@@ -187,11 +187,11 @@ const createStyles = (theme: Theme) =>
       borderRadius: theme.radiusMd,
       padding: theme.spacingLg,
       alignItems: 'center',
-      shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 1,
-      shadowRadius: 4,
-      elevation: 2,
+           shadowOffset: { width: 0, height: 4 },
+      shadowColor: '#25292E',
+      shadowOpacity: 0.10,
+      shadowRadius: 24,
+      elevation: 8,
     },
     streakCount: {
       fontSize: 32,
@@ -230,7 +230,7 @@ const createStyles = (theme: Theme) =>
       color: theme.textSecondary,
     },
     tabTextActive: {
-      color: theme.onAccent,
+      color: theme.bg,
     },
     archiveRow: {
       flexDirection: 'row',
@@ -285,6 +285,6 @@ const createStyles = (theme: Theme) =>
     upgradeButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.onAccent,
+      color: theme.bg,
     },
   });

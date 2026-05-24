@@ -74,9 +74,9 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
     return b.detach();
   }, [size, borderW]);
 
-  const ink = theme.regionBorder;
+  const ink = theme.text;
   const bg = theme.bg;
-  const innerInk = theme.innerBorder;
+  const innerInk = theme.textSecondary;
 
   return (
     // pointerEvents="none" prevents the canvas from intercepting taps on its parent list item.

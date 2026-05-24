@@ -290,11 +290,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     packSection: {
       paddingTop: 34,
       backgroundColor: theme.bg,
-      shadowOffset: { width: 0, height: 2 },
-      shadowColor: theme.shadow,
-      shadowOpacity: 0.1,
-      shadowRadius: 56,
-      elevation: 8,
+
       paddingHorizontal: theme.spacingXl,
     },
     streakRow: {
@@ -307,7 +303,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     streakCard: {
       borderRadius: 16,
       alignItems: 'center',
-      shadowColor: theme.text,
     },
     streakCardCompleted: {
       opacity: 0.6,
@@ -355,7 +350,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       borderRadius: theme.radiusMd,
       marginBottom: theme.spacingMd,
       backgroundColor: theme.card,
-      shadowColor: theme.shadow,
+      shadowColor: '#25292E',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: .1,
       shadowRadius: 4,
