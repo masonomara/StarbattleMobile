@@ -22,6 +22,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, restorePurchases } from '../utils/payments';
+import { useProductPrice } from '../hooks/useProductPrice';
 import { PALETTES, PALETTE_META, PALETTE_NAMES } from '../themes/palettes';
 import { PRIVACY_POLICY_URL } from '../config';
 import type { Theme, UserSettings } from '../types';
@@ -248,6 +249,8 @@ export function SettingsModal() {
   const signOut = useAuthStore(s => s.signOut);
   const deleteAccount = useAuthStore(s => s.deleteAccount);
 
+  const premiumPrice = useProductPrice('sb_premium_599');
+
   const { entitlements, packCatalog } = useEntitlements();
 
   const [emailMode, setEmailMode] = useState<EmailMode>(null);
@@ -458,7 +461,7 @@ export function SettingsModal() {
                         <ActivityIndicator color={theme.bg} />
                       ) : (
                         <Text style={styles.primaryButtonText}>
-                          Buy Premium · $5.99
+                          {premiumPrice ? `Buy Premium · ${premiumPrice}` : 'Buy Premium'}
                         </Text>
                       )}
                     </Pressable>

@@ -8,6 +8,7 @@ import { Header } from '../components/Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
+import { useProductPrice } from '../hooks/useProductPrice';
 import { loadStreaks } from '../utils/progress';
 import {
   getCurrentKey,
@@ -25,6 +26,7 @@ export function StreaksScreen() {
   const styles = createStyles(theme);
   const { entitlements } = useEntitlements();
   const isPremium = entitlements.isPremium;
+  const premiumPrice = useProductPrice('sb_premium_599');
 
   const streaksModalVisible = useSettingsStore(s => s.streaksModalVisible);
   const closeStreaks = useSettingsStore(s => s.closeStreaks);
@@ -150,7 +152,7 @@ export function StreaksScreen() {
                 onPress={() => useSettingsStore.getState().openSettings()}
               >
                 <Text style={styles.upgradeButtonText}>
-                  Unlock with Premium · $5.99
+                  {premiumPrice ? `Unlock with Premium · ${premiumPrice}` : 'Unlock with Premium'}
                 </Text>
               </Pressable>
             </View>

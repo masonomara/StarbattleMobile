@@ -10,6 +10,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { useAsyncAction } from '../hooks/useAsyncAction';
+import { useProductPrice } from '../hooks/useProductPrice';
 import { purchasePremium, purchasePack } from '../utils/payments';
 import type { Theme, PaywallModalProps } from '../types';
 
@@ -22,6 +23,11 @@ export function PaywallModal({
   const styles = createStyles(theme);
   const isAnonymous = useAuthStore(s => s.isAnonymous);
   const { loading, error, run } = useAsyncAction();
+
+  const premiumPrice = useProductPrice('sb_premium_599');
+  const packPrice = useProductPrice(
+    context?.type === 'paid-pack' ? `starbattle_pack_${context.packId}` : '',
+  );
 
   if (!context) return null;
 
@@ -46,7 +52,9 @@ export function PaywallModal({
               <ActivityIndicator color={theme.bg} />
             ) : (
               <Text style={styles.primaryButtonText}>
-                Unlock All with Premium · $5.99
+                {premiumPrice
+                  ? `Unlock All with Premium · ${premiumPrice}`
+                  : 'Unlock All with Premium'}
               </Text>
             )}
           </Pressable>
@@ -60,8 +68,8 @@ export function PaywallModal({
           <>
             <Text style={styles.title}>{context.packName}</Text>
             <Text style={styles.body}>
-              Create an account to purchase this pack for $
-              {context.priceUsd.toFixed(2)}.
+              Create an account to purchase this pack
+              {packPrice ? ` for ${packPrice}` : ''}.
             </Text>
             <Pressable
               style={styles.primaryButton}
@@ -90,7 +98,7 @@ export function PaywallModal({
               <ActivityIndicator color={theme.bg} />
             ) : (
               <Text style={styles.primaryButtonText}>
-                Buy Pack · ${context.priceUsd.toFixed(2)}
+                {packPrice ? `Buy Pack · ${packPrice}` : 'Buy Pack'}
               </Text>
             )}
           </Pressable>
@@ -100,7 +108,9 @@ export function PaywallModal({
             disabled={loading}
           >
             <Text style={styles.secondaryButtonText}>
-              Buy Premium · $5.99 · All Packs
+              {premiumPrice
+                ? `Buy Premium · ${premiumPrice} · All Packs`
+                : 'Buy Premium · All Packs'}
             </Text>
           </Pressable>
         </>
