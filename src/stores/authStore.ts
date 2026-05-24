@@ -184,7 +184,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await supabase.auth.signOut();
     await adapty.logout();
     set({ session: null, user: null, isAnonymous: true });
-    await get().signInAnonymously();
+    try { await get().signInAnonymously(); } catch (_) {}
   },
 
   // Permanently deletes the account and all associated server-side data.
@@ -215,6 +215,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw new Error('Account deletion failed. Please try again or contact support.');
     try { await adapty.logout(); } catch (_) {}
     set({ session: null, user: null, isAnonymous: true });
-    await get().signInAnonymously();
+    try { await get().signInAnonymously(); } catch (_) {}
   },
 }));

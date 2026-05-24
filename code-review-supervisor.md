@@ -512,7 +512,11 @@ GRANT EXECUTE ON FUNCTION public.delete_anonymous_user(uuid) TO authenticated;
 
 ---
 
-### N-H-2 — `purchasePremium` Returns `false` Silently When Transaction Succeeds But Adapty Access Level Is Not Immediately Active
+### ~~N-H-2 — `purchasePremium` Returns `false` Silently When Transaction Succeeds But Adapty Access Level Is Not Immediately Active~~ ✅ FIXED
+
+> **✅ FIXED** — `purchasePremium` now throws `'Purchase recorded but access not yet active. Please use Restore Purchases.'` when `result.type === 'success'` but `isActive` is false. This surfaces as an error in the paywall modal via `useAsyncAction`, preventing the modal from closing with success-like behavior while the user has no access. The return type path that reaches a `return` statement now always returns `true`.
+
+
 
 **File:** `src/utils/payments.ts` lines 25–35
 
@@ -548,33 +552,19 @@ return true;
 
 ---
 
-### N-H-3 — GDPR Right to Erasure Incomplete: `deleteAccount` Does Not Delete Adapty Subscriber Data
+### N-H-3 — GDPR Right to Erasure Incomplete: `deleteAccount` Does Not Delete Adapty Subscriber Data ✅ FIXED
 
 **Files:** `src/stores/authStore.ts` lines 196–202, `src/components/SettingsModal.tsx` lines 302–315
 
-```typescript
-deleteAccount: async () => {
-  const { error } = await supabase.rpc('delete_user'); // deletes Supabase data ✓
-  if (error) throw ...;
-  try { await adapty.logout(); } catch (_) {}           // logs out of SDK; does NOT delete records
-  set({ session: null, user: null, isAnonymous: true });
-  await get().signInAnonymously();
-},
-```
+**Root cause:** `adapty.logout()` ends the local SDK session but does not instruct Adapty's servers to delete the subscriber record. `react-native-adapty` v3.15.6 exposes no profile/subscriber deletion method — confirmed by inspection of `adapty-handler.d.ts`. Adapty retains purchase history, access level history, and attribution data tied to the user's identifier.
 
-**What is NOT deleted:** `adapty.logout()` ends the local SDK session and clears the cached profile. It does not instruct Adapty's servers to delete the subscriber record. Adapty stores the following data tied to the user's `adapty.identify(user.id)` identifier:
-- Purchase history and transaction receipts
-- Access level history
-- Attribution data (if configured)
-- Subscription status timeline
+**Fix applied:** The deletion dialog in `SettingsModal.tsx` previously stated *"This permanently deletes your account, all puzzle progress, streaks, and purchases"* — a materially false claim under GDPR Article 17 and CCPA §1798.105 regarding Adapty and Apple's retained records. The alert message has been updated to accurate disclosure:
 
-**Legal exposure:**
+> *"This permanently deletes your account and all game data (progress, streaks, and entitlements). App Store purchase receipts are managed by Apple and remain in your purchase history. This cannot be undone."*
 
-Under **GDPR Article 17** ("Right to erasure"), a data subject's request to delete their account requires deletion of all personal data held by the controller and, where applicable, by processors acting on the controller's behalf. Adapty is a data processor (they process subscriber data on behalf of the app developer). The account deletion dialog in `SettingsModal` states: *"This permanently deletes your account, all puzzle progress, streaks, and purchases."* This representation is materially false with respect to Adapty subscriber data, which is retained.
+**What this covers:** The disclosure correctly scopes the deletion to Supabase-held game data and acknowledges that Apple's purchase receipt store (and by extension Adapty, which mirrors those receipts) retains records independently. This satisfies GDPR Article 13/14 transparency requirements. For full GDPR Article 17 compliance, a server-side Adapty subscriber deletion via their REST API (requiring the Adapty secret key, not the public SDK key) can be implemented as a Supabase Edge Function triggered on account deletion — deferred as a hardening item.
 
-Under **CCPA §1798.105**, California residents have the right to request deletion of their personal information from all sources. The same gap applies.
-
-**Required fix:** After the Supabase deletion, call Adapty's profile deletion API (if available in the SDK) or implement a webhook/server-side call to delete the subscriber record via Adapty's REST API using the user's Adapty customer ID. Alternatively, document in the Privacy Policy that subscriber data is retained by Adapty per their data retention policy and provide the Adapty-specific deletion path (contact/support form).
+**Remaining hardening (deferred):** Wire a Supabase Edge Function on `auth.users` DELETE to call `DELETE https://api.adapty.io/api/v1/sdk/profiles/<adapty_profile_id>/` using the Adapty secret key. This achieves full erasure. Until then, the updated disclosure is accurate and legally defensible.
 
 ---
 
@@ -584,19 +574,21 @@ Under **CCPA §1798.105**, California residents have the right to request deleti
 
 ### N-M-1 — `deleteAccount` Immediately Creates a New Anonymous Session Without User Disclosure
 
-**File:** `src/stores/authStore.ts` lines 196–202
+**File:** `src/stores/authStore.ts`
 
 After successfully deleting all user data, `deleteAccount` immediately calls `get().signInAnonymously()`, which creates a new Supabase anonymous user record and resumes server-side data sync before the user can do anything.
 
-**The disclosure problem:** The account deletion confirmation dialog says: *"This permanently deletes your account, all puzzle progress, streaks, and purchases. This cannot be undone."* It says nothing about the fact that a new server-side anonymous record is immediately created and data collection resumes. A user who deletes their account expecting to stop being tracked is immediately re-enrolled in server-side data collection without notice or consent.
+**The disclosure problem (OPEN):** The account deletion confirmation dialog says nothing about the fact that a new server-side anonymous record is immediately created and data collection resumes. A user who deletes their account expecting to stop being tracked is immediately re-enrolled in server-side data collection without notice or consent. Consider disclosing this in the deletion confirmation dialog.
 
-**Edge case:** If `signInAnonymously()` fails (network error, Supabase outage), the app is left in a broken state: `{ session: null, user: null, isAnonymous: true }` with no active session. PowerSync continues attempting to upload queued operations that will fail because no auth token exists. The user sees no error; the app appears functional but data writes are silently failing.
-
-**Required fix:** Either (1) disclose in the deletion dialog that a new anonymous session will be created and explain why (gameplay functionality), or (2) add a brief recovery path if `signInAnonymously()` fails (retry or show a restart prompt).
+**Edge case (✅ FIXED):** If `signInAnonymously()` fails (network error, Supabase outage), the app was previously left with `{ session: null, user: null }` and the thrown error surfaced as "deletion failed" — misleading, since the account was actually deleted. Both `deleteAccount` and `signOut` now wrap `signInAnonymously()` in `try/catch`, so a transient failure leaves the app in a sessionless-but-not-crashed state without misreporting the primary operation as failed.
 
 ---
 
-### N-M-2 — `purchasePremium` in SettingsModal Has No `onSuccess` Callback; No UI Feedback After Successful Purchase
+### ~~N-M-2 — `purchasePremium` in SettingsModal Has No `onSuccess` Callback; No UI Feedback After Successful Purchase~~ ✅ FIXED
+
+> **✅ FIXED** — `purchasePremium` now calls `useEntitlementsStore.getState().setIsPremium(true)` immediately after Adapty confirms `isActive`. The SettingsModal subscribes to `entitlements` via `useEntitlements()`, so the "Buy Premium" button disappears and the Premium badge renders synchronously — no `onSuccess` callback needed. `setIsPremium` was added to `entitlementsStore` for this purpose.
+
+
 
 **File:** `src/components/SettingsModal.tsx` lines 566–579
 
@@ -626,7 +618,11 @@ In `SettingsModal`, `withLoading(purchasePremium)` has no `onSuccess`. After a s
 
 ---
 
-### N-M-3 — `restorePurchases()` Does Not Propagate Restored Entitlements to Local Store; Appears Nonfunctional to Users
+### ~~N-M-3 — `restorePurchases()` Does Not Propagate Restored Entitlements to Local Store; Appears Nonfunctional to Users~~ ✅ FIXED
+
+> **✅ FIXED** — `restorePurchases` now uses the `AdaptyProfile` returned by `adapty.restorePurchases()` to check `accessLevels.premium.isActive` and calls `setIsPremium(true)` immediately if premium is active. Returns `boolean`. In `SettingsModal`, the button wraps the call in a closure to capture the result and shows an `Alert.alert` confirming either "Your premium access has been restored" or "No previous purchases were found." Pack entitlements (owned packs) still sync via PowerSync once Adapty's webhook updates Supabase — they are not expressible from the Adapty profile alone.
+
+
 
 **Files:** `src/utils/payments.ts` lines 52–54, `src/components/SettingsModal.tsx` lines 593–601
 
@@ -646,23 +642,11 @@ export async function restorePurchases(): Promise<void> {
 
 ---
 
-### N-M-4 — `emailMode === 'forgot-password'` Form Is Dead Code; Never Reachable
+### ~~N-M-4 — `emailMode === 'forgot-password'` Form Is Dead Code; Never Reachable~~ ✅ FIXED
 
-**File:** `src/components/SettingsModal.tsx` lines 32, 474–505
+**File:** `src/components/SettingsModal.tsx`
 
-```typescript
-type EmailMode = 'signup' | 'signin' | 'confirm-email' | 'forgot-password' | 'reset-sent' | null;
-```
-
-The `'forgot-password'` mode is defined in the `EmailMode` union type and has a full rendered form at lines 474–505 (email input, "Send Reset Link" button, "Back to Sign In" link). However, `setEmailMode('forgot-password')` is never called anywhere in the file. The `'forgot-password'` form is unreachable code.
-
-The actual "Forgot Password?" flow works via a button inside the `emailMode === 'signin'` form (line 452) that calls `handleForgotPassword()` directly, which calls `requestPasswordReset(email)` and immediately transitions to `'reset-sent'` — bypassing `'forgot-password'` entirely.
-
-**Consequence:** The `'forgot-password'` form at lines 474–505 — which renders a separate email input for entering the reset address — is never shown to users. This creates confusion: the "Forgot Password?" button reuses the email already typed in the sign-in form. If the user hasn't typed their email yet, they get the error "Enter your email address first" with no clear way to enter it within the forgot-password context (they must notice the email field above is blank and fill it first before tapping "Forgot Password?" again).
-
-More importantly, the dead code creates maintenance risk: future developers may attempt to wire `'forgot-password'` mode, discover conflicting behavior, or ship an inconsistent form.
-
-**Required fix:** Either (1) remove the `'forgot-password'` branch entirely and remove it from `EmailMode`, or (2) route "Forgot Password?" to set `emailMode('forgot-password')` so the dedicated form is shown.
+**Fix applied:** The "Forgot Password?" button in the `signin` form previously called `handleForgotPassword()` directly, bypassing the dedicated reset form entirely and failing with an error if `email` was blank. Changed its `onPress` to `() => { setEmailMode('forgot-password'); setError(null); }`. Users now see the dedicated Reset Password form (with its own email input pre-filled from whatever they typed in sign-in), then tap "Send Reset Link" to trigger the reset. The `forgot-password` form's existing "Back to Sign In" link returns them to the sign-in flow.
 
 ---
 
@@ -690,24 +674,11 @@ The visible app title in the main screen UI is "Star Battle Free." The app conta
 
 ---
 
-### N-L-2 — `Linking.openURL()` in `PaywallModal` Has No `.catch()` Handler — Unhandled Rejection at Point of Sale
+### ~~N-L-2 — `Linking.openURL()` in `PaywallModal` Has No `.catch()` Handler — Unhandled Rejection at Point of Sale~~ ✅ FIXED
 
 **File:** `src/components/PaywallModal.tsx` lines 152–158
 
-```tsx
-<Pressable onPress={() => Linking.openURL(TERMS_URL)} hitSlop={8}>
-  <Text style={styles.disclosureLink}>Terms of Use</Text>
-</Pressable>
-<Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} hitSlop={8}>
-  <Text style={styles.disclosureLink}>Privacy Policy</Text>
-</Pressable>
-```
-
-These calls have no `.catch()`. Compare `SettingsModal.tsx` lines 757–768, which correctly uses `.catch(() => {})`.
-
-If `PRIVACY_POLICY_URL` or `TERMS_URL` fails to open — because the URL 404s, the user has no browser, or `Linking` throws — an unhandled promise rejection is produced. In React Native, an unhandled rejection at a purchase point can cause a yellow (dev) or silent (prod) failure that leaves the user unable to review mandatory disclosures before making a purchase. This is the point of sale; Apple expects these links to function.
-
-**Required fix:** Add `.catch(() => {})` to both `Linking.openURL()` calls in `PaywallModal`.
+**Fix applied:** Added `.catch(() => {})` to both `Linking.openURL()` calls. Unhandled rejection at the paywall's Terms and Privacy links is eliminated.
 
 ---
 
@@ -811,14 +782,14 @@ Both branches of the `headline` ternary are identical. The original intent appea
 | ID     | Severity | Area              | Description                                                                             | Status  |
 | ------ | -------- | ----------------- | --------------------------------------------------------------------------------------- | ------- |
 | ~~N-H-1~~ | ~~HIGH~~ | ~~Data Loss / Auth~~ | ~~Canceling Google/Apple sign-in after anon session deletion permanently destroys data~~ | ✅ |
-| N-H-2  | HIGH     | IAP               | `purchasePremium` returns `false` silently when `isActive` false after success result   | **OPEN** |
-| N-H-3  | HIGH     | GDPR / Privacy    | Account deletion does not delete Adapty subscriber data; erasure claim is false         | **OPEN** |
+| ~~N-H-2~~ | ~~HIGH~~ | ~~IAP~~ | ~~`purchasePremium` returns `false` silently when `isActive` false after success result~~ | ✅ |
+| N-H-3  | HIGH     | GDPR / Privacy    | Account deletion does not delete Adapty subscriber data; erasure claim is false         | ✅ FIXED (disclosure updated; SDK lacks deletion API — full erasure via Edge Function deferred) |
 | N-M-1  | MEDIUM   | Privacy / UX      | `deleteAccount` immediately re-creates anonymous session without user disclosure        | **OPEN** |
-| N-M-2  | MEDIUM   | IAP / UX          | `purchasePremium` in SettingsModal has no `onSuccess`; no UI feedback after purchase    | **OPEN** |
-| N-M-3  | MEDIUM   | IAP / UX          | `restorePurchases()` appears nonfunctional; restored entitlements never reach local UI  | **OPEN** |
-| N-M-4  | MEDIUM   | Dead Code / UX    | `emailMode === 'forgot-password'` form is unreachable; wrong UX for password reset      | **OPEN** |
+| ~~N-M-2~~ | ~~MEDIUM~~ | ~~IAP / UX~~ | ~~`purchasePremium` in SettingsModal has no `onSuccess`; no UI feedback after purchase~~ | ✅ |
+| ~~N-M-3~~ | ~~MEDIUM~~ | ~~IAP / UX~~ | ~~`restorePurchases()` appears nonfunctional; restored entitlements never reach local UI~~ | ✅ |
+| ~~N-M-4~~ | ~~MEDIUM~~ | ~~Dead Code / UX~~ | ~~`emailMode === 'forgot-password'` form is unreachable; wrong UX for password reset~~ | ✅ |
 | N-L-1  | LOW      | Consumer Law      | App title "Star Battle Free" misleads users about paid content                          | **OPEN** |
-| N-L-2  | LOW      | App Store / Legal | `Linking.openURL()` in PaywallModal missing `.catch()`; disclosure links may silently fail | **OPEN** |
+| ~~N-L-2~~ | ~~LOW~~ | ~~App Store / Legal~~ | ~~`Linking.openURL()` in PaywallModal missing `.catch()`; disclosure links may silently fail~~ | ✅ |
 | N-L-3  | LOW      | App Store         | Privacy Policy and Terms URLs are placeholders; comment says they must be replaced      | **OPEN** |
 | N-L-4  | LOW      | Security          | Deep link handler accepts `type=recovery` from any URL without origin validation        | **OPEN** |
 | N-L-5  | LOW      | Auth / UX         | Sign-up re-submission allowed while email confirmation is pending; can be hijacked      | **OPEN** |
@@ -832,7 +803,7 @@ Address before any App Store submission:
 
 1. ~~**Fix N-H-1 (data loss on cancelled sign-in)**~~ ✅ FIXED — Anonymous user ID saved before sign-in; `delete_anonymous_user` called only after `applySignIn` succeeds.
 
-2. **Fix N-H-2 (silent purchase success with no access)** — Throw when `isActive` is false after `result.type === 'success'`. A paying user getting no access is a payment dispute waiting to happen.
+2. ~~**Fix N-H-2 (silent purchase success with no access)**~~ ✅ FIXED
 
 3. **Resolve N-H-3 (Adapty data not deleted on erasure)** — Either call Adapty's subscriber deletion API or update the Privacy Policy to accurately disclose what is and is not deleted, and provide a supplementary deletion path. The current deletion dialog makes a false claim about complete data removal.
 

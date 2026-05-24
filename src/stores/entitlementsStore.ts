@@ -36,6 +36,7 @@ type EntitlementsState = {
   packCatalog: PackCatalogItem[];
   loadPackCatalog: () => Promise<void>;
   loadEntitlements: (userId: string) => Promise<void>;
+  setIsPremium: (val: boolean) => void;
   hasPackAccess: (packId: string) => boolean;
   canPlayPuzzle: (packId: string, puzzleIndex: number, completedCount: number) => boolean;
 };
@@ -52,6 +53,10 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   loadPackCatalog: async () => {
     const packCatalog = (await db.getAll<PackRow>(PACK_QUERY)).map(mapPackRow);
     set({ packCatalog });
+  },
+
+  setIsPremium: (val: boolean) => {
+    set(state => ({ entitlements: { ...state.entitlements, isPremium: val } }));
   },
 
   loadEntitlements: async (userId: string) => {

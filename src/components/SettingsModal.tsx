@@ -302,7 +302,7 @@ export function SettingsModal() {
   function confirmDeleteAccount() {
     Alert.alert(
       'Delete Account',
-      'This permanently deletes your account, all puzzle progress, streaks, and purchases. This cannot be undone.',
+      'This permanently deletes your account and all game data (progress, streaks, and entitlements). App Store purchase receipts are managed by Apple and remain in your purchase history. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -453,7 +453,7 @@ export function SettingsModal() {
                     {emailMode === 'signin' && (
                       <Pressable
                         style={styles.linkButton}
-                        onPress={handleForgotPassword}
+                        onPress={() => { setEmailMode('forgot-password'); setError(null); }}
                         disabled={loading}
                       >
                         <Text style={styles.linkText}>Forgot Password?</Text>
@@ -592,7 +592,18 @@ export function SettingsModal() {
 
                 <Pressable
                   style={[styles.secondaryButton, loading && styles.disabled]}
-                  onPress={() => withLoading(restorePurchases)}
+                  onPress={() => {
+                    let wasPremium = false;
+                    withLoading(
+                      async () => { wasPremium = await restorePurchases(); },
+                      () => Alert.alert(
+                        'Purchases Restored',
+                        wasPremium
+                          ? 'Your premium access has been restored.'
+                          : 'No previous purchases were found on this account.',
+                      ),
+                    );
+                  }}
                   disabled={loading}
                 >
                   <Text style={styles.secondaryButtonText}>

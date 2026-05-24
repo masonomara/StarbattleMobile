@@ -1,6 +1,7 @@
 import { adapty } from 'react-native-adapty';
 import type { AdaptyPaywallProduct } from 'react-native-adapty';
 import { downloadPack } from '../packs';
+import { useEntitlementsStore } from '../stores/entitlementsStore';
 
 let _productsPromise: Promise<AdaptyPaywallProduct[]> | null = null;
 
@@ -29,7 +30,11 @@ export async function purchasePremium(): Promise<boolean> {
 
   const result = await adapty.makePurchase(product);
   if (result.type === 'success') {
-    return result.profile.accessLevels?.premium?.isActive ?? false;
+    if (!(result.profile.accessLevels?.premium?.isActive ?? false)) {
+      throw new Error('Purchase recorded but access not yet active. Please use Restore Purchases.');
+    }
+    useEntitlementsStore.getState().setIsPremium(true);
+    return true;
   }
   throw new Error('Purchase did not complete. Please try again.');
 }
@@ -49,6 +54,13 @@ export async function purchasePack(
   await downloadPack(packId, storagePath);
 }
 
-export async function restorePurchases(): Promise<void> {
-  await adapty.restorePurchases();
+// Returns true if premium access was found and activated, false otherwise.
+// Pack entitlements sync automatically via PowerSync once Adapty's webhook fires.
+export async function restorePurchases(): Promise<boolean> {
+  const profile = await adapty.restorePurchases();
+  const isPremium = profile.accessLevels?.premium?.isActive ?? false;
+  if (isPremium) {
+    useEntitlementsStore.getState().setIsPremium(true);
+  }
+  return isPremium;
 }

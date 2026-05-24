@@ -149,11 +149,11 @@ export function PaywallModal({
         {error && <Text style={styles.error}>{error}</Text>}
         <View style={styles.disclosureContainer}>
           <View style={styles.disclosureLinks}>
-            <Pressable onPress={() => Linking.openURL(TERMS_URL)} hitSlop={8}>
+            <Pressable onPress={() => Linking.openURL(TERMS_URL).catch(() => {})} hitSlop={8}>
               <Text style={styles.disclosureLink}>Terms of Use</Text>
             </Pressable>
             <Text style={styles.disclosureSep}>·</Text>
-            <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} hitSlop={8}>
+            <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} hitSlop={8}>
               <Text style={styles.disclosureLink}>Privacy Policy</Text>
             </Pressable>
           </View>
