@@ -48,11 +48,13 @@ Every production secret is checked into source control in plain text. The Adapty
 
 ---
 
-### C-2 — No Privacy Policy, No Account Deletion, No Data Disclosure
+### ~~C-2 — No Privacy Policy, No Account Deletion, No Data Disclosure~~ ✅ FIXED
+
+> **✅ FIXED** — Privacy Policy link added to `SettingsModal` (placeholder URL in `src/config.ts`). Delete Account flow added to `SettingsModal` with confirmation alert; `authStore.deleteAccount` calls `supabase.rpc('delete_user')` and cascades to all related data.
 
 **Files:** `src/screens/HomeScreen.tsx`, `src/components/SettingsModal.tsx`, `src/components/PaywallModal.tsx`
 
-**Risk:** App Store rejection, GDPR Article 17, CCPA §1798.105, Apple Guideline 5.1.1(v)
+~~**Risk:** App Store rejection, GDPR Article 17, CCPA §1798.105, Apple Guideline 5.1.1(v)~~
 
 The app creates server-side user records (Supabase anonymous auth), syncs user gameplay data (puzzle progress, timing, streaks) to a remote server via PowerSync, collects email addresses, and processes payments — yet the UI contains no link to a Privacy Policy or Terms of Service anywhere, and the Settings modal offers no account deletion option.
 
@@ -414,28 +416,28 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 
 ## Summary Table
 
-| ID  | Severity | Area              | Description                                                                           |
-| --- | -------- | ----------------- | ------------------------------------------------------------------------------------- |
-| ~~C-1~~ | ~~CRITICAL~~ | ~~Security~~ | ~~All production credentials hardcoded in source~~ ✅ |
-| C-2 | CRITICAL | Privacy/Legal     | No privacy policy, no account deletion, undisclosed server-side anon auth             |
-| C-3 | CRITICAL | IAP/Consumer Law  | Prices hardcoded in USD, never from store                                             |
-| H-1 | HIGH     | IAP               | `purchasePack` delivers content before verifying purchase success                     |
-| H-2 | HIGH     | IAP               | `purchasePremium` returns `false` without throwing; modal closes as success           |
-| H-3 | HIGH     | IAP               | Restore Purchases inaccessible to anonymous users                                     |
-| H-4 | HIGH     | IAP/Consumer Law  | No subscription/purchase terms disclosed at point of sale                             |
-| M-1 | MEDIUM   | Privacy           | Anonymous sign-in creates server records without disclosure                           |
-| M-2 | MEDIUM   | Data Integrity    | Progress save not awaited on navigation; data loss on exit/kill                       |
-| M-3 | MEDIUM   | Stability         | `JSON.parse` unguarded on database fields; crash risk on corrupt data                 |
-| M-4 | MEDIUM   | Game Integrity    | Streak dates computed client-side; no server validation; clock manipulation possible  |
-| M-5 | MEDIUM   | UX/Auth           | Email sign-up shows no confirmation prompt; no password reset; no strength validation |
-| M-6 | MEDIUM   | IAP               | Missing `storagePath` silently prevents paid pack purchase                            |
-| L-1 | LOW      | App Store         | Empty `NSLocationWhenInUseUsageDescription` in Info.plist                             |
-| L-2 | LOW      | App Store/Privacy | `NSPrivacyCollectedDataTypes` empty despite collecting user data                      |
-| L-3 | LOW      | Privacy           | Apple Sign-In requests full name scope; data never used (GDPR minimization)           |
-| L-4 | LOW      | Security          | Raw internal error messages surfaced to users                                         |
-| L-5 | LOW      | Data              | Sign-out creates unbounded orphan server records with no cleanup                      |
-| L-6 | LOW      | Game Integrity    | Puzzle solutions stored in plaintext on device filesystem                             |
-| L-7 | LOW      | Security          | No integrity check on downloaded pack files                                           |
+| ID      | Severity     | Area              | Description                                                                           |
+| ------- | ------------ | ----------------- | ------------------------------------------------------------------------------------- |
+| ~~C-1~~ | ~~CRITICAL~~ | ~~Security~~      | ~~All production credentials hardcoded in source~~ ✅                                 |
+| ~~C-2~~ | ~~CRITICAL~~ | ~~Privacy/Legal~~ | ~~No privacy policy, no account deletion, undisclosed server-side anon auth~~ ✅     |
+| C-3     | CRITICAL     | IAP/Consumer Law  | Prices hardcoded in USD, never from store                                             |
+| H-1     | HIGH         | IAP               | `purchasePack` delivers content before verifying purchase success                     |
+| H-2     | HIGH         | IAP               | `purchasePremium` returns `false` without throwing; modal closes as success           |
+| H-3     | HIGH         | IAP               | Restore Purchases inaccessible to anonymous users                                     |
+| H-4     | HIGH         | IAP/Consumer Law  | No subscription/purchase terms disclosed at point of sale                             |
+| M-1     | MEDIUM       | Privacy           | Anonymous sign-in creates server records without disclosure                           |
+| M-2     | MEDIUM       | Data Integrity    | Progress save not awaited on navigation; data loss on exit/kill                       |
+| M-3     | MEDIUM       | Stability         | `JSON.parse` unguarded on database fields; crash risk on corrupt data                 |
+| M-4     | MEDIUM       | Game Integrity    | Streak dates computed client-side; no server validation; clock manipulation possible  |
+| M-5     | MEDIUM       | UX/Auth           | Email sign-up shows no confirmation prompt; no password reset; no strength validation |
+| M-6     | MEDIUM       | IAP               | Missing `storagePath` silently prevents paid pack purchase                            |
+| L-1     | LOW          | App Store         | Empty `NSLocationWhenInUseUsageDescription` in Info.plist                             |
+| L-2     | LOW          | App Store/Privacy | `NSPrivacyCollectedDataTypes` empty despite collecting user data                      |
+| L-3     | LOW          | Privacy           | Apple Sign-In requests full name scope; data never used (GDPR minimization)           |
+| L-4     | LOW          | Security          | Raw internal error messages surfaced to users                                         |
+| L-5     | LOW          | Data              | Sign-out creates unbounded orphan server records with no cleanup                      |
+| L-6     | LOW          | Game Integrity    | Puzzle solutions stored in plaintext on device filesystem                             |
+| L-7     | LOW          | Security          | No integrity check on downloaded pack files                                           |
 
 ---
 
@@ -449,7 +451,7 @@ Before any public release, address in this sequence:
 
 3. **Display store-sourced prices (C-3)** — Replace all hardcoded price strings with `product.localizedPrice` from the Adapty product object. The data is already fetched.
 
-4. **Add Privacy Policy, ToS, and account deletion (C-2)** — These are hard App Store submission requirements. Without them, the app will not be approved.
+4. ~~**Add Privacy Policy, ToS, and account deletion (C-2)** — These are hard App Store submission requirements. Without them, the app will not be approved.~~ ✅ FIXED
 
 5. **Fix the `NSPrivacyCollectedDataTypes` manifest (L-2)** and **remove empty location usage string (L-1)** — Required for App Store submission compliance.
 

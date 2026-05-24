@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+  Alert,
+  Linking,
   Modal,
   Platform,
   View,
@@ -21,6 +23,7 @@ import { useEntitlements } from '../hooks/useEntitlements';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, restorePurchases } from '../utils/payments';
 import { PALETTES, PALETTE_META, PALETTE_NAMES } from '../themes/palettes';
+import { PRIVACY_POLICY_URL } from '../config';
 import type { Theme, UserSettings } from '../types';
 
 type EmailMode = 'signup' | 'signin' | null;
@@ -243,6 +246,7 @@ export function SettingsModal() {
   const signUpWithEmail = useAuthStore(s => s.signUpWithEmail);
   const signInWithEmail = useAuthStore(s => s.signInWithEmail);
   const signOut = useAuthStore(s => s.signOut);
+  const deleteAccount = useAuthStore(s => s.deleteAccount);
 
   const { entitlements, packCatalog } = useEntitlements();
 
@@ -271,6 +275,21 @@ export function SettingsModal() {
   const ownedPacks = packCatalog.filter(p =>
     entitlements.ownedPackIds.includes(p.id),
   );
+
+  function confirmDeleteAccount() {
+    Alert.alert(
+      'Delete Account',
+      'This permanently deletes your account, all puzzle progress, streaks, and purchases. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => withLoading(deleteAccount),
+        },
+      ],
+    );
+  }
 
   return (
     <Modal
@@ -473,6 +492,13 @@ export function SettingsModal() {
                 >
                   <Text style={styles.secondaryButtonText}>Sign Out</Text>
                 </Pressable>
+                <Pressable
+                  style={[styles.destructiveButton, loading && styles.disabled]}
+                  onPress={confirmDeleteAccount}
+                  disabled={loading}
+                >
+                  <Text style={styles.destructiveButtonText}>Delete Account</Text>
+                </Pressable>
 
                 {error && <Text style={styles.error}>{error}</Text>}
               </>
@@ -611,6 +637,14 @@ export function SettingsModal() {
               </View>
             </View>
           </View>
+
+          {/* Legal */}
+          <Pressable
+            style={styles.privacyLink}
+            onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})}
+          >
+            <Text style={styles.privacyLinkText}>Privacy Policy</Text>
+          </Pressable>
         </ScrollView>
       </View>
     </Modal>
@@ -800,6 +834,26 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.card,
       color: theme.text,
       fontSize: theme.fontSizeCallout,
+    },
+    destructiveButton: {
+      height: 52,
+      borderRadius: theme.radiusMd,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.card,
+    },
+    destructiveButtonText: {
+      fontSize: theme.fontSizeCallout,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.markColor, // TODO: replace with theme.error once that token exists
+    },
+    privacyLink: {
+      alignItems: 'center',
+      paddingVertical: theme.spacingLg,
+    },
+    privacyLinkText: {
+      fontSize: theme.fontSizeSubhead,
+      color: theme.textSecondary,
     },
     disabled: { opacity: 0.6 },
     error: {

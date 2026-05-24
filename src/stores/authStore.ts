@@ -23,6 +23,7 @@ type AuthState = {
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -109,6 +110,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     await supabase.auth.signOut();
     await adapty.logout();
+    set({ session: null, user: null, isAnonymous: true });
+    await get().signInAnonymously();
+  },
+
+  // Permanently deletes the account and all associated server-side data.
+  //
+  // REQUIRED: Run this SQL once in the Supabase SQL editor to enable deletion:
+  //
+  //   CREATE OR REPLACE FUNCTION public.delete_user()
+  //   RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+  //   AS $$ BEGIN DELETE FROM auth.users WHERE id = auth.uid(); END; $$;
+  //
+  //   GRANT EXECUTE ON FUNCTION public.delete_user() TO authenticated;
+  //
+  // The CASCADE on auth.users propagates to puzzle_progress, streaks,
+  // user_entitlements, and streak_archive automatically.
+  deleteAccount: async () => {
+    const { error } = await supabase.rpc('delete_user');
+    if (error) throw new Error('Account deletion failed. Please try again or contact support.');
+    try { await adapty.logout(); } catch (_) {}
     set({ session: null, user: null, isAnonymous: true });
     await get().signInAnonymously();
   },

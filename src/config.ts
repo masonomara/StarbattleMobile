@@ -5,3 +5,6 @@ export const ADAPTY_SDK_KEY = process.env.ADAPTY_SDK_KEY ?? (() => { throw new E
 export const GOOGLE_WEB_CLIENT_ID = process.env.GOOGLE_WEB_CLIENT_ID ?? (() => { throw new Error('Missing env var: GOOGLE_WEB_CLIENT_ID'); })();
 // iOS OAuth 2.0 client ID — create at console.cloud.google.com → Credentials → Create → iOS, bundle: com.omaratechnologydesign.starbattle
 export const GOOGLE_IOS_CLIENT_ID = process.env.GOOGLE_IOS_CLIENT_ID ?? (() => { throw new Error('Missing env var: GOOGLE_IOS_CLIENT_ID'); })();
+
+// Replace with the real URL before App Store submission.
+export const PRIVACY_POLICY_URL = 'https://omaratechnologydesign.com/starbattle/privacy';
