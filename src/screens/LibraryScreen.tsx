@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, FlatList, StyleSheet, useWindowDimensions } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { CircleButton } from '../components/CircleButton';
@@ -13,10 +14,7 @@ import { useEntitlements } from '../hooks/useEntitlements';
 import { useSettingsStore } from '../stores/settingsStore';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
 import { parsePuzzle } from '../utils/parsePuzzle';
-import type { Theme } from '../types/theme';
-import type { RawPuzzle, Puzzle } from '../types/puzzle';
-import type { RootStackParamList } from '../types/navigation';
-import type { PaywallContext } from '../types/user';
+import type { Theme, RawPuzzle, Puzzle, RootStackParamList, PaywallContext } from '../types.ts';
 
 const CELL_SIZE = 110;
 
@@ -97,8 +95,10 @@ export function LibraryScreen({
 }: NativeStackScreenProps<RootStackParamList, 'Library'>) {
   const { packId } = route.params;
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const numColumns = Math.max(2, Math.floor((width - 2 * theme.spacingLg) / (CELL_SIZE + 12)));
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, canPlayPuzzle, hasPackAccess } = useEntitlements();
 
@@ -133,39 +133,68 @@ export function LibraryScreen({
     getCompletedPuzzleIdsForPack(packId, puzzleCount).then(setCompletedSet);
   }, [packId, puzzleCount]);
 
-  useEffect(() => {
-    refreshCompleted();
-  }, [refreshCompleted]);
+  useFocusEffect(
+    useCallback(() => {
+      refreshCompleted();
+    }, [refreshCompleted]),
+  );
 
-  function isPuzzlePlayable(index: number): boolean {
-    if (!catalogPack) {
-      return index === 0 || completedSet.has(`${packId}:${index - 1}`);
-    }
-    return canPlayPuzzle(packId, index, completedCount);
-  }
+  const isPuzzlePlayable = useCallback(
+    (index: number): boolean => {
+      if (!catalogPack) {
+        return index === 0 || completedSet.has(`${packId}:${index - 1}`);
+      }
+      return canPlayPuzzle(packId, index, completedCount);
+    },
+    [catalogPack, completedSet, packId, canPlayPuzzle, completedCount],
+  );
 
-  function handleLockedPress(index: number) {
-    if (!isFree && !hasPackAccess(packId)) {
-      if (priceUsd !== undefined && storagePath !== undefined) {
-        setPaywallContext({
-          type: 'paid-pack',
-          packId,
-          packName,
-          priceUsd,
-          storagePath,
-        });
+  const handleLockedPress = useCallback(
+    (index: number) => {
+      if (!isFree && !hasPackAccess(packId)) {
+        if (priceUsd !== undefined && storagePath !== undefined) {
+          setPaywallContext({ type: 'paid-pack', packId, packName, priceUsd, storagePath });
+        } else {
+          setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
+        }
       } else {
-        // Pack metadata incomplete — sequential lock as fallback
         setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
       }
-    } else {
-      setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
-    }
-  }
+    },
+    [isFree, hasPackAccess, packId, priceUsd, storagePath, packName],
+  );
 
-  const puzzleIndices = useMemo(
-    () => Array.from({ length: puzzleCount }, (_, i) => i),
-    [puzzleCount],
+  const rows = useMemo(() => {
+    const result: number[][] = [];
+    for (let i = 0; i < puzzleCount; i += numColumns) {
+      result.push(
+        Array.from({ length: Math.min(numColumns, puzzleCount - i) }, (_, j) => i + j),
+      );
+    }
+    return result;
+  }, [puzzleCount, numColumns]);
+
+  const renderRow = useCallback(
+    ({ item: rowIndices }: { item: number[] }) => (
+      <View style={styles.row}>
+        {rowIndices.map(index => (
+          <PuzzleCell
+            key={index}
+            packId={packId}
+            index={index}
+            puzzle={parsedPuzzles[index] ?? null}
+            onPress={i => navigation.navigate('Puzzle', { packId, puzzleIndex: i })}
+            onLockedPress={handleLockedPress}
+            styles={styles}
+            theme={theme}
+            completedSet={completedSet}
+            canPlay={isPuzzlePlayable(index)}
+            coloredRegions={coloredRegions}
+          />
+        ))}
+      </View>
+    ),
+    [packId, parsedPuzzles, handleLockedPress, styles, theme, completedSet, isPuzzlePlayable, coloredRegions, navigation],
   );
 
   if (!puzzleCount) return null;
@@ -180,31 +209,16 @@ export function LibraryScreen({
         }
         center={<Text style={styles.headerTitle}>{packName}</Text>}
       />
-      <ScrollView
+      <FlatList
+        data={rows}
+        keyExtractor={item => String(item[0])}
+        renderItem={renderRow}
         style={styles.scroll}
         contentContainerStyle={[
-          styles.grid,
+          styles.gridContent,
           { paddingTop: 48 + insets.top, paddingBottom: insets.bottom },
         ]}
-      >
-        {puzzleIndices.map(index => (
-          <PuzzleCell
-            key={index}
-            packId={packId}
-            index={index}
-            puzzle={parsedPuzzles[index] ?? null}
-            onPress={i =>
-              navigation.navigate('Puzzle', { packId, puzzleIndex: i })
-            }
-            onLockedPress={handleLockedPress}
-            styles={styles}
-            theme={theme}
-            completedSet={completedSet}
-            canPlay={isPuzzlePlayable(index)}
-            coloredRegions={coloredRegions}
-          />
-        ))}
-      </ScrollView>
+      />
       <PaywallModal
         context={paywallContext}
         onClose={() => setPaywallContext(null)}
@@ -221,10 +235,11 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
     scroll: { flex: 1 },
-    grid: {
+    gridContent: {
       padding: theme.spacingLg,
+    },
+    row: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       justifyContent: 'center',
     },
     puzzleCell: {
