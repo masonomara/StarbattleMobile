@@ -40,10 +40,12 @@ export const GOOGLE_IOS_CLIENT_ID = '312698113706-09ejig...';
 
 ---
 
-### [SEC-2] `purchasePack` Ignores Purchase Result — Free Content Bypass
+### ~~[SEC-2] `purchasePack` Ignores Purchase Result — Free Content Bypass~~ ✅ FIXED
+
+> **✅ FIXED** — `purchasePack` now checks `result.type !== 'success'` and throws before calling `downloadPack`. `purchasePremium` also now throws on failure instead of returning `false`.
 
 **File**: `src/utils/payments.ts`, lines 26–38  
-**Severity**: Critical
+~~**Severity**: Critical~~
 
 ```ts
 export async function purchasePack(packId: string, storagePath: string): Promise<void> {
@@ -340,7 +342,7 @@ All other imports in the project use `from '../types.ts'` with the explicit `.ts
 | ID | File | Severity | Category | Description |
 |----|------|----------|----------|-------------|
 | ~~SEC-1~~ | ~~`src/config.ts`~~ | ~~Critical~~ | ~~Security~~ | ~~Production API keys hardcoded in git~~ ✅ |
-| SEC-2 | `src/utils/payments.ts` | Critical | Security | `purchasePack` ignores purchase result |
+| ~~SEC-2~~ | ~~`src/utils/payments.ts`~~ | ~~Critical~~ | ~~Security~~ | ~~`purchasePack` ignores purchase result~~ ✅ |
 | SEC-3 | `src/packs/index.ts` | High | Security | No server-side entitlement check on paid content |
 | SEC-4 | `src/stores/authStore.ts:103` | High | Security | Non-null assertion on nullable Apple token |
 | BUG-1 | `src/store.ts:315` | Medium | Bug | Draw-erase of stars leaves stale auto-marks |

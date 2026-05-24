@@ -19,12 +19,9 @@ Apple's documentation states `identityToken` can be `null` in rare failure cases
 if (!credential.identityToken) throw new Error('Apple sign-in: missing identity token');
 ```
 
-### 1.3 `purchasePack` does not verify purchase success — `payments.ts:36`
-```ts
-await adapty.makePurchase(product);   // result ignored
-await downloadPack(packId, storagePath);
-```
-`purchasePremium` checks `result.type === 'success'`, but `purchasePack` discards the result entirely. Adapty throws on hard failures (cancelled, payment declined), but if the purchase flow completes in an ambiguous state without throwing, the pack is downloaded without a successful entitlement. Compare with the `purchasePremium` pattern and apply consistently.
+### ~~1.3 `purchasePack` does not verify purchase success — `payments.ts:36`~~ ✅ FIXED
+
+> **✅ FIXED** — `purchasePack` now checks `result.type !== 'success'` and throws. `purchasePremium` also throws on failure instead of returning `false`.
 
 ### 1.4 JSON.parse without validation — `progress.ts:82`, `entitlementsStore.ts:71`
 ```ts
@@ -172,13 +169,9 @@ textSecondary: '#575279',   // same value
 ```
 Every UI element that uses `textSecondary` to visually de-emphasize metadata (pack meta, streak labels, secondary descriptions) will be visually identical to primary text in the "Rose Pine" light theme.
 
-### 3.7 Premium price `'$5.99'` is hardcoded in four places
-- `StreaksScreen.tsx:152`
-- `PaywallModal.tsx:49`
-- `PaywallModal.tsx:103`
-- `SettingsModal.tsx:442`
+### ~~3.7 Premium price `'$5.99'` is hardcoded in four places~~ ✅ FIXED
 
-The actual price lives in the Adapty paywall product. When the price changes, four UI strings must be manually updated. The premium product price should be fetched from `adapty.getPaywall` / `adapty.getPaywallProducts` and stored centrally, not hardcoded.
+> **✅ FIXED** — `useProductPrice` hook added; all price strings in `PaywallModal`, `SettingsModal`, `StreaksScreen`, and `HomeScreen` now use localized prices fetched from Adapty at runtime.
 
 ### 3.8 All pack thumbnails are parsed eagerly in `LibraryScreen` — `LibraryScreen.tsx:120-123`
 ```ts
@@ -248,7 +241,7 @@ The settings store directly invokes a method on the puzzle store inside its own 
 |---|------|----------|----------|
 | ~~1.1~~ | ~~`config.ts`~~ | ~~Security~~ | ~~High~~ ✅ |
 | 1.2 | `authStore.ts:103` | Security | Medium |
-| 1.3 | `payments.ts:36` | Security / Correctness | Medium |
+| ~~1.3~~ | ~~`payments.ts:36`~~ | ~~Security / Correctness~~ | ~~Medium~~ ✅ |
 | 1.4 | `progress.ts`, `entitlementsStore.ts` | Security / Stability | Medium |
 | 1.5 | `packs/index.ts` | Security | Low |
 | 2.1 | `AppSchema.ts` | Performance | High |
@@ -265,7 +258,7 @@ The settings store directly invokes a method on the puzzle store inside its own 
 | 3.4 | `settingsStore.ts` | Scope | Low |
 | 3.5 | `StreaksScreen.tsx` + `navigation.tsx` | Naming | Low |
 | 3.6 | `palettes.ts:105-106` | Visual bug | Medium |
-| 3.7 | Multiple files | Fragility | Low |
+| ~~3.7~~ | ~~Multiple files~~ | ~~Fragility~~ | ~~Low~~ ✅ |
 | 3.8 | `LibraryScreen.tsx:120` | Performance | Low |
 | 3.9 | Three screen files | Clarity | Low |
 | 3.10 | `useZoom.ts` | Scope | Low |

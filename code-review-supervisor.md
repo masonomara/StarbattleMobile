@@ -74,16 +74,15 @@ The app creates server-side user records (Supabase anonymous auth), syncs user g
 
 **Required actions:** Add a Privacy Policy link (both in-app and App Store listing). Add a Delete Account flow that removes all server-side data (Supabase user row, puzzle_progress, streaks, user_entitlements). Either align the anonymous auth implementation with the spec (truly local-only) or update data disclosures to accurately describe server-side anonymous user creation.
 
-<!-- we need to work on the delete account flow -->
-<!-- add a palcehodler link for the pricacy policy, i wil add the link later -->
-
 ---
 
-### C-3 — In-App Purchase Prices Hardcoded in USD in UI
+### ~~C-3 — In-App Purchase Prices Hardcoded in USD in UI~~ ✅ FIXED
+
+> **✅ FIXED** — `useProductPrice` hook added in `src/hooks/useProductPrice.ts`. All price strings in `PaywallModal`, `SettingsModal`, `StreaksScreen`, and `HomeScreen` now use localized prices fetched from Adapty at runtime via `getLocalizedPrice`.
 
 **Files:** `src/components/PaywallModal.tsx` (lines 49, 103), `src/components/SettingsModal.tsx` (line 444), `src/screens/StreaksScreen.tsx` (line 152), `src/screens/HomeScreen.tsx` (line 243)
 
-**Risk:** App Store rejection, EU consumer protection law, misleading advertising liability
+~~**Risk:** App Store rejection, EU consumer protection law, misleading advertising liability~~
 
 The UI displays hardcoded dollar amounts that are never sourced from the App Store:
 
@@ -120,7 +119,9 @@ The `fetchPaywall()` function in `payments.ts` does retrieve `AdaptyPaywallProdu
 
 ---
 
-### H-1 — `purchasePack` Does Not Verify Purchase Success Before Delivering Content
+### ~~H-1 — `purchasePack` Does Not Verify Purchase Success Before Delivering Content~~ ✅ FIXED
+
+> **✅ FIXED** — `purchasePack` now checks `result.type !== 'success'` and throws before calling `downloadPack`.
 
 **File:** `src/utils/payments.ts`, lines 26–38
 
@@ -149,7 +150,9 @@ Compare `purchasePremium` in the same file, which correctly checks `result.type 
 
 ---
 
-### H-2 — `purchasePremium` Returns `false` on Failure Without Throwing; `onSuccess` Fires Anyway
+### ~~H-2 — `purchasePremium` Returns `false` on Failure Without Throwing; `onSuccess` Fires Anyway~~ ✅ FIXED
+
+> **✅ FIXED** — `purchasePremium` now throws `'Purchase did not complete. Please try again.'` instead of returning `false`, so `useAsyncAction` surfaces the error and `onSuccess` never fires on failure.
 
 **Files:** `src/utils/payments.ts` lines 14–24, `src/components/PaywallModal.tsx` lines 28–31, `src/hooks/useAsyncAction.ts` lines 7–18
 
@@ -420,9 +423,9 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 | ------- | ------------ | ----------------- | ------------------------------------------------------------------------------------- |
 | ~~C-1~~ | ~~CRITICAL~~ | ~~Security~~      | ~~All production credentials hardcoded in source~~ ✅                                 |
 | ~~C-2~~ | ~~CRITICAL~~ | ~~Privacy/Legal~~ | ~~No privacy policy, no account deletion, undisclosed server-side anon auth~~ ✅     |
-| C-3     | CRITICAL     | IAP/Consumer Law  | Prices hardcoded in USD, never from store                                             |
-| H-1     | HIGH         | IAP               | `purchasePack` delivers content before verifying purchase success                     |
-| H-2     | HIGH         | IAP               | `purchasePremium` returns `false` without throwing; modal closes as success           |
+| ~~C-3~~ | ~~CRITICAL~~ | ~~IAP/Consumer Law~~ | ~~Prices hardcoded in USD, never from store~~ ✅                                  |
+| ~~H-1~~ | ~~HIGH~~     | ~~IAP~~           | ~~`purchasePack` delivers content before verifying purchase success~~ ✅              |
+| ~~H-2~~ | ~~HIGH~~     | ~~IAP~~           | ~~`purchasePremium` returns `false` without throwing; modal closes as success~~ ✅   |
 | H-3     | HIGH         | IAP               | Restore Purchases inaccessible to anonymous users                                     |
 | H-4     | HIGH         | IAP/Consumer Law  | No subscription/purchase terms disclosed at point of sale                             |
 | M-1     | MEDIUM       | Privacy           | Anonymous sign-in creates server records without disclosure                           |
@@ -447,9 +450,9 @@ Before any public release, address in this sequence:
 
 1. ~~**Rotate all credentials (C-1)** — The current Supabase anon key, Adapty key, and Google OAuth IDs must be rotated immediately. Then move secrets to environment-based configuration excluded from version control.~~ ✅ FIXED
 
-2. **Fix IAP revenue leaks (H-1, H-2)** — `purchasePack` must check purchase outcome before delivering content. `purchasePremium` must throw on failure. These are revenue-critical defects.
+2. ~~**Fix IAP revenue leaks (H-1, H-2)** — `purchasePack` must check purchase outcome before delivering content. `purchasePremium` must throw on failure. These are revenue-critical defects.~~ ✅ FIXED
 
-3. **Display store-sourced prices (C-3)** — Replace all hardcoded price strings with `product.localizedPrice` from the Adapty product object. The data is already fetched.
+3. ~~**Display store-sourced prices (C-3)** — Replace all hardcoded price strings with `product.localizedPrice` from the Adapty product object. The data is already fetched.~~ ✅ FIXED
 
 4. ~~**Add Privacy Policy, ToS, and account deletion (C-2)** — These are hard App Store submission requirements. Without them, the app will not be approved.~~ ✅ FIXED
 

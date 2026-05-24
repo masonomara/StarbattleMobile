@@ -198,7 +198,9 @@ if (!puzzleCount) return null;
 
 While the pack catalog is loading (or if the pack ID doesn't exist), the entire screen silently renders nothing — no spinner, no error, nothing. This happens every time you navigate to Library before the catalog has loaded. The screen should show an `ActivityIndicator` here instead of returning `null`.
 
-### 14. Premium Price `$5.99` Hardcoded in Four Places
+### ~~14. Premium Price `$5.99` Hardcoded in Four Places~~ ✅ FIXED
+
+> **✅ FIXED** — `useProductPrice` hook fetches localized price from Adapty at runtime. All price strings now use the live store price.
 
 ```
 src/screens/StreaksScreen.tsx:152        "Unlock with Premium · $5.99"
