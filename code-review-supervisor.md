@@ -282,7 +282,11 @@ These `JSON.parse` calls are unguarded. If the local SQLite database contains a 
 
 ---
 
-### M-4 — Streak Date Key Computed from Device Clock; No Server-Side Validation
+### ~~M-4 — Streak Date Key Computed from Device Clock; No Server-Side Validation~~ ✅ FIXED
+
+> **✅ FIXED** — `recordStreak` now rejects any update where `currentKey < existing.last_completed_key`. Daily/weekly/monthly keys are zero-padded ISO strings that sort lexicographically, so a key earlier than the last-recorded one means the device clock has been moved backward. This closes the re-claim attack without requiring a server round-trip or migration. Setting the clock forward to access future archive entries is self-limiting — the `streak_archive` table only contains rows the admin has pre-populated, so future entries simply don't exist locally.
+
+
 
 **File:** `src/utils/streakDate.ts`, `src/utils/progress.ts` lines 172–194
 
@@ -376,7 +380,11 @@ The app requests the user's full name from Apple but never stores or displays it
 
 ---
 
-### L-4 — Internal API Error Messages Exposed Directly to Users
+### ~~L-4 — Internal API Error Messages Exposed Directly to Users~~ ✅ FIXED
+
+> **✅ FIXED** — `useAsyncAction` now passes all errors through `toUserMessage()` before displaying. Known Supabase auth errors map to plain-English strings. User-cancelled flows (Google/Apple sign-in) return `null` so no error is shown. Postgres/RLS internals are caught and replaced with a generic fallback. Our own already-friendly messages from `payments.ts` and `authStore.ts` pass through unchanged.
+
+
 
 **File:** `src/hooks/useAsyncAction.ts`, line 13
 
@@ -441,13 +449,13 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 | ~~M-1~~ | ~~MEDIUM~~   | ~~Privacy~~       | ~~Anonymous sign-in creates server records without disclosure~~ ✅ by documentation  |
 | ~~M-2~~ | ~~MEDIUM~~   | ~~Data Integrity~~| ~~Progress save not awaited on navigation; data loss on exit/kill~~ ✅               |
 | ~~M-3~~ | ~~MEDIUM~~   | ~~Stability~~     | ~~`JSON.parse` unguarded on database fields; crash risk on corrupt data~~ ✅          |
-| M-4     | MEDIUM       | Game Integrity    | Streak dates computed client-side; no server validation; clock manipulation possible  |
+| ~~M-4~~ | ~~MEDIUM~~   | ~~Game Integrity~~| ~~Streak dates computed client-side; no server validation; clock manipulation possible~~ ✅ |
 | M-5     | MEDIUM       | UX/Auth           | Email sign-up shows no confirmation prompt; no password reset; no strength validation |
 | ~~M-6~~ | ~~MEDIUM~~   | ~~IAP~~           | ~~Missing `storagePath` silently prevents paid pack purchase~~ ✅                     |
 | ~~L-1~~ | ~~LOW~~      | ~~App Store~~     | ~~Empty `NSLocationWhenInUseUsageDescription` in Info.plist~~ ✅                      |
 | ~~L-2~~ | ~~LOW~~      | ~~App Store/Privacy~~ | ~~`NSPrivacyCollectedDataTypes` empty despite collecting user data~~ ✅           |
 | ~~L-3~~ | ~~LOW~~      | ~~Privacy~~       | ~~Apple Sign-In requests full name scope; data never used~~ ✅                        |
-| L-4     | LOW          | Security          | Raw internal error messages surfaced to users                                         |
+| ~~L-4~~ | ~~LOW~~      | ~~Security~~      | ~~Raw internal error messages surfaced to users~~ ✅                                  |
 | L-5     | LOW          | Data              | Sign-out creates unbounded orphan server records with no cleanup                      |
 | L-6     | LOW          | Game Integrity    | Puzzle solutions stored in plaintext on device filesystem                             |
 | L-7     | LOW          | Security          | No integrity check on downloaded pack files                                           |

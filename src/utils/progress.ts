@@ -190,6 +190,11 @@ export async function recordStreak(type: StreakType): Promise<void> {
 
   if (existing?.last_completed_key === currentKey) return;
 
+  // Reject if the device clock appears to have been set backwards — ISO keys
+  // are zero-padded and sort lexicographically, so a key that is less than
+  // an already-recorded key means the clock has moved backward.
+  if (existing && currentKey < existing.last_completed_key) return;
+
   const prevKey = getPreviousKey(type);
   const newCount =
     existing?.last_completed_key === prevKey ? existing.current_count + 1 : 1;
