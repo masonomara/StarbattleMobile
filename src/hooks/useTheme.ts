@@ -1,7 +1,23 @@
 import { useColorScheme } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
-import { PALETTES } from '../themes/palettes';
+import { PALETTES, tokens } from '../themes/palettes';
+import type { PaletteColors } from '../themes/palettes';
 import type { Theme } from '../types.ts';
+
+export function buildTheme(colors: PaletteColors, isDark: boolean): Theme {
+  return {
+    isDark,
+    ...colors,
+    regionColors: [
+      colors.darkRed,     colors.darkGreen,    colors.darkYellow,
+      colors.darkBlue,    colors.darkMagenta,  colors.darkCyan,
+      colors.lightRed,    colors.lightGreen,   colors.lightYellow,
+      colors.lightBlue,   colors.lightMagenta, colors.lightCyan,
+    ],
+    regionColorAlpha: isDark ? 0.25 : 0.12,
+    ...tokens,
+  };
+}
 
 export function useTheme(): Theme {
   const systemScheme = useColorScheme();
@@ -13,6 +29,6 @@ export function useTheme(): Theme {
     themePref === 'light' ? false :
     systemScheme === 'dark';
 
-  const pair = PALETTES[palette] ?? PALETTES.original;
-  return isDark ? pair.dark : pair.light;
+  const colors = (PALETTES[palette] ?? PALETTES.original)[isDark ? 'dark' : 'light'];
+  return buildTheme(colors, isDark);
 }

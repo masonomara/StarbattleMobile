@@ -9,6 +9,7 @@ import { StreaksScreen } from './screens/StreaksScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
+import { rgba } from './themes/ansi';
 import type { RootStackParamList } from './types';
 // Side-effect import: loads the global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.
@@ -48,11 +49,12 @@ function WrappedPuzzle(
 
 export function Navigation() {
   const theme = useTheme();
+  const bgColor = rgba(theme.isDark ? theme.black : theme.white, 1);
   const navTheme = {
     ...(theme.isDark ? DarkTheme : DefaultTheme),
     colors: {
       ...(theme.isDark ? DarkTheme : DefaultTheme).colors,
-      background: theme.bg,
+      background: bgColor,
     },
   };
   return (
@@ -61,7 +63,7 @@ export function Navigation() {
         screenOptions={{
           headerShown: false,
           statusBarStyle: theme.isDark ? 'light' : 'dark',
-          contentStyle: { backgroundColor: theme.bg },
+          contentStyle: { backgroundColor: bgColor },
         }}
       >
         <Stack.Screen name="Home" component={WrappedHome} />

@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { Text } from './Text';
 import { usePuzzleStore } from '../store';
 import { useTheme } from '../hooks/useTheme';
-
+import { rgba } from '../themes/ansi';
 import type { Theme } from '../types';
 
 export function HeaderTimer() {
@@ -27,7 +27,9 @@ export function HeaderTimer() {
 
   const min = Math.floor(timeMs / 60000);
   const sec = Math.floor((timeMs % 60000) / 1000);
-  return <Text style={styles.timer}>{`${min}:${String(sec).padStart(2, '0')}`}</Text>;
+  return (
+    <Text style={styles.timer}>{`${min}:${String(sec).padStart(2, '0')}`}</Text>
+  );
 }
 
 const createStyles = (theme: Theme) =>
@@ -35,7 +37,7 @@ const createStyles = (theme: Theme) =>
     timer: {
       fontVariant: ['tabular-nums'],
       fontWeight: '600',
-      fontSize: theme.fontSizeSubhead,
-      color: theme.text,
+      fontSize: 17,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
     },
   });

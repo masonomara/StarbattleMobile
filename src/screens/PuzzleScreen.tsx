@@ -16,6 +16,7 @@ import { usePuzzleStore } from '../store';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
+import { rgba } from '../themes/ansi';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { getStreakPack, getPuzzlesForPack } from '../packs';
@@ -242,7 +243,7 @@ export function PuzzleScreen({
   if (!isReady || !puzzle) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={theme.accent} />
+        <ActivityIndicator color={rgba(theme.lightBlue, 1)} />
       </View>
     );
   }
@@ -256,7 +257,7 @@ export function PuzzleScreen({
             pointerEvents={headerVisible ? 'auto' : 'none'}
           >
             <CircleButton onPress={() => navigation.goBack()}>
-              <ChevronLeft size={26} color={theme.text} />
+              <ChevronLeft size={26} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
             </CircleButton>
           </Animated.View>
         }
@@ -273,7 +274,7 @@ export function PuzzleScreen({
             pointerEvents={headerVisible ? 'auto' : 'none'}
           >
             <CircleButton onPress={openSettings}>
-              <Ellipsis size={20} color={theme.text} />
+              <Ellipsis size={20} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
             </CircleButton>
           </Animated.View>
         }
@@ -318,12 +319,12 @@ export function PuzzleScreen({
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.bg },
+    container: { flex: 1, backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1) },
     loading: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: theme.bg,
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
     },
     boardArea: {
       flex: 1,

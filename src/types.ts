@@ -159,17 +159,30 @@ export type Pack = {
 
 // THEME
 
-export type ThemeName = 'original' | 'crimson' | 'emerald';
+export type ThemeName = 'original' | 'crimson' | 'gruvbox';
 
 export type Theme = {
   isDark: boolean;
-  bg: string;
-  card: string;
-  text: string;
-  textSecondary: string;
-  markColor: string;
-  accent: string;
+  // 16 color slots — all stored as 'r, g, b' RGB tuples
+  black: string;
+  darkRed: string;
+  darkGreen: string;
+  darkYellow: string;
+  darkBlue: string;
+  darkMagenta: string;
+  darkCyan: string;
+  lightGray: string;
+  darkGray: string;
+  lightRed: string;
+  lightGreen: string;
+  lightYellow: string;
+  lightBlue: string;
+  lightMagenta: string;
+  lightCyan: string;
+  white: string;
+  // Derived — 12 chromatic slots for region fills
   regionColors: string[];
+  regionColorAlpha: number;
   spacingMd: number;
   spacingLg: number;
   spacingXl: number;

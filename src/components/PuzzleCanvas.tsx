@@ -2,6 +2,7 @@ import React, { useImperativeHandle, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+import { rgba } from '../themes/ansi';
 import type { Puzzle, CellValue, DrawLayerHandle, Theme, PuzzleCanvasProps } from '../types';
 
 
@@ -96,18 +97,18 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
         <Path
           key={`region-${colorIdx}`}
           path={path}
-          color={coloredRegions ? regionColors[colorIdx] : theme.bg}
+          color={coloredRegions ? rgba(regionColors[colorIdx], theme.regionColorAlpha) : rgba(theme.isDark ? theme.black : theme.white, 1)}
         />
       ))}
       <Path
         path={innerGridPath}
-        color={theme.textSecondary}
+        color={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
         style="stroke"
         strokeWidth={1}
       />
       <Path
         path={regionBorderPath}
-        color={theme.text}
+        color={rgba(theme.isDark ? theme.white : theme.black, 1)}
         style="stroke"
         strokeWidth={3}
         strokeCap="square"
@@ -219,12 +220,12 @@ export const PuzzleCanvas = React.forwardRef<
           height: canvasSize,
         }}
       >
-        <Path path={dynamicPaths.starNormal} color={theme.text} />
-        <Path path={dynamicPaths.starError} color={theme.markColor} />
-        <Path path={dynamicPaths.starGhost} color={theme.text + '55'} />
+        <Path path={dynamicPaths.starNormal} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
+        <Path path={dynamicPaths.starError} color={rgba(theme.lightRed, 1)} />
+        <Path path={dynamicPaths.starGhost} color={rgba(theme.isDark ? theme.white : theme.black, 0.33)} />
         <Path
           path={dynamicPaths.marks}
-          color={theme.markColor}
+          color={rgba(theme.lightRed, 1)}
           style="stroke"
           strokeWidth={2}
           strokeCap="round"

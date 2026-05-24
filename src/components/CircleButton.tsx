@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
+import { rgba } from '../themes/ansi';
 import type { Theme, CircleButtonProps } from '../types';
 
 export function CircleButton({
@@ -25,9 +26,9 @@ const createStyles = (theme: Theme) =>
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.card,
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
       shadowOffset: { width: 0, height: 4 },
-      shadowColor: '#25292E',
+      shadowColor: '#000000',
       shadowOpacity: 0.1,
       shadowRadius: 24,
       elevation: 8,

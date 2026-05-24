@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePuzzleStore } from '../store';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
+import { rgba } from '../themes/ansi';
 import { Haptics } from 'react-native-nitro-haptics';
 import type { TapMode, Theme, ToolbarProps } from '../types';
 
@@ -68,7 +69,10 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
           disabled={!isZoomed}
           style={[styles.button, !isZoomed && styles.buttonDisabled]}
         >
-          <Minimize2 size={26} color={theme.text} />
+          <Minimize2
+            size={26}
+            color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+          />
         </Pressable>
 
         <Pressable
@@ -80,7 +84,10 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
             hintDisabled && styles.buttonDisabled,
           ]}
         >
-          <Lightbulb size={26} color={theme.text} />
+          <Lightbulb
+            size={26}
+            color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+          />
         </Pressable>
 
         <Pressable
@@ -88,7 +95,10 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
           disabled={completed}
           style={[styles.button, completed && styles.buttonDisabled]}
         >
-          <TapModeIcon size={26} color={theme.text} />
+          <TapModeIcon
+            size={26}
+            color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+          />
         </Pressable>
 
         <Pressable
@@ -96,7 +106,10 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
           disabled={undoDisabled}
           style={[styles.button, undoDisabled && styles.buttonDisabled]}
         >
-          <Undo2 size={26} color={theme.text} />
+          <Undo2
+            size={26}
+            color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+          />
         </Pressable>
 
         <Pressable
@@ -104,7 +117,10 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
           disabled={redoDisabled}
           style={[styles.button, redoDisabled && styles.buttonDisabled]}
         >
-          <Redo2 size={26} color={theme.text} />
+          <Redo2
+            size={26}
+            color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+          />
         </Pressable>
 
         <Pressable
@@ -112,7 +128,10 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
           disabled={clearDisabled}
           style={[styles.button, clearDisabled && styles.buttonDisabled]}
         >
-          <Trash2 size={26} color={theme.text} />
+          <Trash2
+            size={26}
+            color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+          />
         </Pressable>
       </View>
     </View>
@@ -135,7 +154,7 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       maxWidth: 412,
       borderRadius: 100,
-      backgroundColor: theme.card,
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
       shadowOffset: { width: 0, height: 4 },
       shadowColor: '#25292E',
       shadowOpacity: 0.1,
@@ -151,10 +170,10 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       borderRadius: 100,
       zIndex: 100,
-      backgroundColor: theme.card,
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
     },
     buttonAccent: {
-      backgroundColor: theme.accent,
+      backgroundColor: rgba(theme.lightGray, 1),
     },
     buttonDisabled: {
       opacity: 0.4,

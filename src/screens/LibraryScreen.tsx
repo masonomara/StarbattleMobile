@@ -17,6 +17,7 @@ import { Header } from '../components/Header';
 import { PaywallModal } from '../components/PaywallModal';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useTheme } from '../hooks/useTheme';
+import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useSettingsStore } from '../stores/settingsStore';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
@@ -86,9 +87,9 @@ function PuzzleCell({
         {status !== 'active' && (
           <View style={styles.puzzleIcon}>
             {status === 'completed' ? (
-              <Check size={28} color={theme.accent} />
+              <Check size={28} color={rgba(theme.lightBlue, 1)} />
             ) : (
-              <Lock size={28} color={theme.textSecondary} />
+              <Lock size={28} color={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)} />
             )}
           </View>
         )}
@@ -253,7 +254,7 @@ export function LibraryScreen({
       <Header
         left={
           <CircleButton onPress={() => navigation.goBack()}>
-            <ChevronLeft size={26} color={theme.text} />
+            <ChevronLeft size={26} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
           </CircleButton>
         }
         center={<Text style={styles.headerTitle}>{packName}</Text>}
@@ -280,9 +281,9 @@ export function LibraryScreen({
   );
 }
 
-const createStyles = (theme: Theme, cellSize: number) =>
-  StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.bg },
+const createStyles = (theme: Theme, cellSize: number) => {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1) },
     scroll: { flex: 1 },
     gridContent: {
       padding: 16,
@@ -296,7 +297,7 @@ const createStyles = (theme: Theme, cellSize: number) =>
       width: cellSize,
       margin: 8,
 
-      backgroundColor: theme.card,
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.lightGray, 1),
     },
     puzzleCellOverlay: {
       position: 'absolute',
@@ -312,14 +313,15 @@ const createStyles = (theme: Theme, cellSize: number) =>
       opacity: 0.55,
     },
     puzzleNumber: { fontSize: 16, fontWeight: '700' },
-    puzzleNumberCompleted: { color: theme.accent },
-    puzzleNumberActive: { color: theme.text },
-    puzzleNumberLocked: { color: theme.textSecondary },
+    puzzleNumberCompleted: { color: rgba(theme.lightBlue, 1) },
+    puzzleNumberActive: { color: rgba(theme.isDark ? theme.white : theme.black, 1) },
+    puzzleNumberLocked: { color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1) },
     locked: { opacity: 0.45 },
     headerTitle: {
       fontSize: 16,
       fontVariant: ['tabular-nums'],
       fontWeight: '600',
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
     },
   });
+};

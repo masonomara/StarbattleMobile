@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+import { rgba } from '../themes/ansi';
 import type { PuzzleThumbnailProps } from '../types';
 
 export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
@@ -79,26 +80,22 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
     return b.detach();
   }, [size, borderW]);
 
-  const ink = theme.text;
-  const bg = theme.bg;
-  const innerInk = theme.textSecondary;
-
   return (
     // pointerEvents="none" prevents the canvas from intercepting taps on its parent list item.
     <Canvas style={{ width: size, height: size }} pointerEvents="none">
-      <Path path={outerBorderPath} color={bg} style="fill" />
+      <Path path={outerBorderPath} color={rgba(theme.isDark ? theme.black : theme.white, 1)} style="fill" />
       {coloredRegions &&
         regionFillPaths?.map(({ colorIdx, path }) => (
           <Path
             key={colorIdx}
             path={path}
-            color={theme.regionColors[colorIdx]}
+            color={rgba(theme.regionColors[colorIdx], theme.regionColorAlpha)}
             style="fill"
           />
         ))}
       <Path
         path={innerGridPath}
-        color={innerInk}
+        color={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
         style="stroke"
         strokeWidth={gridW}
         strokeCap="square"
@@ -106,7 +103,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
       />
       <Path
         path={regionBorderPath}
-        color={ink}
+        color={rgba(theme.isDark ? theme.white : theme.black, 1)}
         style="stroke"
         strokeWidth={borderW}
         strokeCap="square"
@@ -114,7 +111,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
       />
       <Path
         path={outerBorderPath}
-        color={ink}
+        color={rgba(theme.isDark ? theme.white : theme.black, 1)}
         style="stroke"
         strokeWidth={borderW}
         strokeCap="square"

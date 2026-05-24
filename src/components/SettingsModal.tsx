@@ -19,11 +19,13 @@ import { Header } from './Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../hooks/useTheme';
+import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, restorePurchases } from '../utils/payments';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { PALETTES, PALETTE_META, PALETTE_NAMES } from '../themes/palettes';
+import { buildTheme } from '../hooks/useTheme';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../config';
 import type { Theme, UserSettings } from '../types';
 
@@ -87,7 +89,7 @@ function PalettePreview({
 }) {
   return (
     <Svg width={S} height={S}>
-      <Rect x={0} y={0} width={S} height={S} fill={paletteTheme.bg} />
+      <Rect x={0} y={0} width={S} height={S} fill={rgba(paletteTheme.isDark ? paletteTheme.black : paletteTheme.white, 1)} />
       {PREVIEW_GRID.map((row, r) =>
         row.map((regionIdx, c) => (
           <Rect
@@ -98,8 +100,8 @@ function PalettePreview({
             height={cs}
             fill={
               coloredRegions
-                ? paletteTheme.regionColors[regionIdx]
-                : paletteTheme.bg
+                ? rgba(paletteTheme.regionColors[regionIdx], paletteTheme.regionColorAlpha)
+                : rgba(paletteTheme.isDark ? paletteTheme.black : paletteTheme.white, 1)
             }
           />
         )),
@@ -111,7 +113,7 @@ function PalettePreview({
             y1={bw + i * cs}
             x2={S - bw}
             y2={bw + i * cs}
-            stroke={paletteTheme.textSecondary}
+            stroke={rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.darkGray, 1)}
             strokeWidth={0.5}
           />
           <Line
@@ -119,7 +121,7 @@ function PalettePreview({
             y1={bw}
             x2={bw + i * cs}
             y2={S - bw}
-            stroke={paletteTheme.textSecondary}
+            stroke={rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.darkGray, 1)}
             strokeWidth={0.5}
           />
         </React.Fragment>
@@ -131,7 +133,7 @@ function PalettePreview({
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
-          stroke={paletteTheme.text}
+          stroke={rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1)}
           strokeWidth={1.5}
         />
       ))}
@@ -142,7 +144,7 @@ function PalettePreview({
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
-          stroke={paletteTheme.text}
+          stroke={rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1)}
           strokeWidth={1.5}
         />
       ))}
@@ -152,19 +154,19 @@ function PalettePreview({
         width={S - bw}
         height={S - bw}
         fill="none"
-        stroke={paletteTheme.text}
+        stroke={rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1)}
         strokeWidth={bw}
       />
       <Path
         d={starPath(STAR.cx, STAR.cy, cs * 0.33)}
-        fill={paletteTheme.text}
+        fill={rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1)}
       />
       <Line
         x1={MARK1.cx - MR}
         y1={MARK1.cy - MR}
         x2={MARK1.cx + MR}
         y2={MARK1.cy + MR}
-        stroke={paletteTheme.markColor}
+        stroke={rgba(paletteTheme.lightRed, 1)}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -173,7 +175,7 @@ function PalettePreview({
         y1={MARK1.cy - MR}
         x2={MARK1.cx - MR}
         y2={MARK1.cy + MR}
-        stroke={paletteTheme.markColor}
+        stroke={rgba(paletteTheme.lightRed, 1)}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -182,7 +184,7 @@ function PalettePreview({
         y1={MARK2.cy - MR}
         x2={MARK2.cx + MR}
         y2={MARK2.cy + MR}
-        stroke={paletteTheme.markColor}
+        stroke={rgba(paletteTheme.lightRed, 1)}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -191,7 +193,7 @@ function PalettePreview({
         y1={MARK2.cy - MR}
         x2={MARK2.cx - MR}
         y2={MARK2.cy + MR}
-        stroke={paletteTheme.markColor}
+        stroke={rgba(paletteTheme.lightRed, 1)}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -224,7 +226,7 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: theme.textSecondary, true: theme.accent }}
+        trackColor={{ false: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1), true: rgba(theme.lightBlue, 1) }}
         thumbColor="#FFFFFF"
       />
     </View>
@@ -307,7 +309,7 @@ export function SettingsModal() {
           center={<Text style={styles.title}>Star Battle</Text>}
           right={
             <Pressable onPress={closeSettings} hitSlop={8}>
-              <X size={24} color={theme.text} />
+              <X size={24} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
             </Pressable>
           }
         />
@@ -335,7 +337,7 @@ export function SettingsModal() {
                         disabled={loading}
                       >
                         {loading ? (
-                          <ActivityIndicator color={theme.bg} />
+                          <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
                         ) : (
                           <Text style={styles.primaryButtonText}>
                             Sign up with Apple
@@ -353,7 +355,7 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={Platform.OS === 'ios' ? theme.accent : theme.bg} />
+                        <ActivityIndicator color={Platform.OS === 'ios' ? rgba(theme.lightBlue, 1) : rgba(theme.isDark ? theme.black : theme.white, 1)} />
                       ) : (
                         <Text style={Platform.OS === 'ios' ? styles.secondaryButtonText : styles.primaryButtonText}>
                           Sign up with Google
@@ -389,7 +391,7 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Email"
-                      placeholderTextColor={theme.textSecondary}
+                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
                       value={email}
                       onChangeText={setEmail}
                       autoCapitalize="none"
@@ -399,7 +401,7 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Password"
-                      placeholderTextColor={theme.textSecondary}
+                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
                       value={password}
                       onChangeText={setPassword}
                       secureTextEntry
@@ -413,7 +415,7 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={theme.bg} />
+                        <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
                       ) : (
                         <Text style={styles.primaryButtonText}>
                           {emailMode === 'signup'
@@ -458,7 +460,7 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={theme.bg} />
+                        <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
                       ) : (
                         <Text style={styles.primaryButtonText}>
                           {premiumPrice ? `Buy Premium · ${premiumPrice}` : 'Buy Premium'}
@@ -609,16 +611,15 @@ export function SettingsModal() {
                 <View style={styles.swatchGrid}>
                   {PALETTE_NAMES.map(name => {
                     const active = settings.palette === name;
-                    const paletteTheme =
-                      PALETTES[name][theme.isDark ? 'dark' : 'light'];
+                    const paletteTheme = buildTheme(PALETTES[name][theme.isDark ? 'dark' : 'light'], theme.isDark);
                     return (
                       <Pressable
                         key={name}
                         onPress={() => updateSettings({ palette: name })}
                         style={[
                           styles.swatchCard,
-                          { backgroundColor: paletteTheme.bg },
-                          active && { borderColor: paletteTheme.text },
+                          { backgroundColor: rgba(paletteTheme.isDark ? paletteTheme.black : paletteTheme.white, 1) },
+                          active && { borderColor: rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1) },
                         ]}
                       >
                         <PalettePreview
@@ -628,7 +629,7 @@ export function SettingsModal() {
                         <Text
                           style={[
                             styles.swatchLabel,
-                            { color: paletteTheme.textSecondary },
+                            { color: rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.darkGray, 1) },
                           ]}
                         >
                           {PALETTE_META[name].label}
@@ -663,17 +664,21 @@ export function SettingsModal() {
   );
 }
 
-const createStyles = (theme: Theme) =>
-  StyleSheet.create({
+const createStyles = (theme: Theme) => {
+  const bg   = theme.isDark ? theme.black  : theme.white;
+  const card = theme.isDark ? theme.darkGray  : theme.white;
+  const fg   = theme.isDark ? theme.white : theme.black;
+  const dim  = theme.isDark ? theme.lightGray  : theme.darkGray;
+  return StyleSheet.create({
     container: {
       flex: 1,
       paddingTop: theme.spacingXl,
-      backgroundColor: theme.card,
+      backgroundColor: rgba(card, 1),
     },
     title: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
+      color: rgba(fg, 1),
     },
     scrollContent: {
       paddingHorizontal: theme.spacingXl,
@@ -686,17 +691,17 @@ const createStyles = (theme: Theme) =>
     sectionTitle: {
       fontSize: 13,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.textSecondary,
+      color: rgba(dim, 1),
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     sectionBody: {
       fontSize: theme.fontSizeCallout,
-      color: theme.textSecondary,
+      color: rgba(dim, 1),
       lineHeight: 22,
     },
     menuWrapper: {
-      backgroundColor: theme.card,
+      backgroundColor: rgba(card, 1),
       borderRadius: theme.radiusMd,
     },
     row: {
@@ -710,7 +715,7 @@ const createStyles = (theme: Theme) =>
     rowLabel: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
+      color: rgba(fg, 1),
     },
     themeButtons: {
       flexDirection: 'row',
@@ -720,23 +725,23 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.accent,
+      backgroundColor: rgba(theme.lightBlue, 1),
     },
     themeButtonInactive: {
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.textSecondary,
+      backgroundColor: rgba(dim, 1),
     },
     themeButtonTextActive: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.bg,
+      color: rgba(bg, 1),
     },
     themeButtonTextInactive: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
+      color: rgba(fg, 1),
     },
     paletteRow: {
       paddingVertical: 12,
@@ -768,15 +773,15 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingMd,
       paddingHorizontal: theme.spacingLg,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.card,
+      backgroundColor: rgba(card, 1),
     },
     infoLabel: {
       fontSize: theme.fontSizeCallout,
-      color: theme.textSecondary,
+      color: rgba(dim, 1),
     },
     infoValue: {
       fontSize: theme.fontSizeCallout,
-      color: theme.text,
+      color: rgba(fg, 1),
       fontWeight: theme.fontWeightSemibold,
       maxWidth: '60%',
       textAlign: 'right',
@@ -786,45 +791,45 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.accent,
+      backgroundColor: rgba(theme.lightBlue, 1),
     },
     premiumBadgeText: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.bg,
+      color: rgba(bg, 1),
     },
     subLabel: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.textSecondary,
+      color: rgba(dim, 1),
     },
     ownedPackName: {
       fontSize: theme.fontSizeCallout,
-      color: theme.text,
+      color: rgba(fg, 1),
     },
     primaryButton: {
       height: 52,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.accent,
+      backgroundColor: rgba(theme.lightBlue, 1),
     },
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.bg,
+      color: rgba(bg, 1),
     },
     secondaryButton: {
       height: 52,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.card,
+      backgroundColor: rgba(card, 1),
     },
     secondaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
+      color: rgba(fg, 1),
     },
     linkButton: {
       alignItems: 'center',
@@ -832,19 +837,19 @@ const createStyles = (theme: Theme) =>
     },
     linkText: {
       fontSize: theme.fontSizeSubhead,
-      color: theme.accent,
+      color: rgba(theme.lightBlue, 1),
     },
     formTitle: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
+      color: rgba(fg, 1),
     },
     input: {
       height: 52,
       borderRadius: theme.radiusMd,
       paddingHorizontal: theme.spacingLg,
-      backgroundColor: theme.card,
-      color: theme.text,
+      backgroundColor: rgba(card, 1),
+      color: rgba(fg, 1),
       fontSize: theme.fontSizeCallout,
     },
     destructiveButton: {
@@ -852,12 +857,12 @@ const createStyles = (theme: Theme) =>
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.card,
+      backgroundColor: rgba(card, 1),
     },
     destructiveButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.markColor, // TODO: replace with theme.error once that token exists
+      color: rgba(theme.lightRed, 1),
     },
     legalLinks: {
       flexDirection: 'row',
@@ -868,17 +873,18 @@ const createStyles = (theme: Theme) =>
     },
     privacyLinkText: {
       fontSize: theme.fontSizeSubhead,
-      color: theme.textSecondary,
+      color: rgba(dim, 1),
       textDecorationLine: 'underline',
     },
     legalSep: {
       fontSize: theme.fontSizeSubhead,
-      color: theme.textSecondary,
+      color: rgba(dim, 1),
     },
     disabled: { opacity: 0.6 },
     error: {
       fontSize: theme.fontSizeSubhead,
-      color: theme.markColor,
+      color: rgba(theme.lightRed, 1),
       textAlign: 'center',
     },
   });
+};

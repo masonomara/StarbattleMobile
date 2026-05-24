@@ -10,6 +10,7 @@ import { X } from 'lucide-react-native';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
+import { rgba } from '../themes/ansi';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { purchasePremium, purchasePack } from '../utils/payments';
@@ -51,7 +52,7 @@ export function PaywallModal({
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={theme.bg} />
+              <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
             ) : (
               <Text style={styles.primaryButtonText}>
                 {premiumPrice
@@ -97,7 +98,7 @@ export function PaywallModal({
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={theme.bg} />
+              <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
             ) : (
               <Text style={styles.primaryButtonText}>
                 {packPrice ? `Buy Pack · ${packPrice}` : 'Buy Pack'}
@@ -142,7 +143,7 @@ export function PaywallModal({
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       <View style={styles.sheet}>
         <Pressable style={styles.closeButton} onPress={onClose} hitSlop={8}>
-          <X size={20} color={theme.textSecondary} />
+          <X size={20} color={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)} />
         </Pressable>
         {renderContent()}
         {error && <Text style={styles.error}>{error}</Text>}
@@ -171,10 +172,10 @@ const createStyles = (theme: Theme) =>
       right: 0,
       bottom: 0,
       justifyContent: 'flex-end',
-      backgroundColor: theme.text + '66',
+      backgroundColor: rgba(theme.isDark ? theme.white : theme.black, 0.4),
     },
     sheet: {
-      backgroundColor: theme.card,
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.lightGray, 1),
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
       paddingHorizontal: theme.spacingXl,
@@ -189,12 +190,12 @@ const createStyles = (theme: Theme) =>
     title: {
       fontSize: 20,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
       marginBottom: 4,
     },
     body: {
       fontSize: theme.fontSizeCallout,
-      color: theme.textSecondary,
+      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
       lineHeight: 22,
       marginBottom: theme.spacingMd,
     },
@@ -203,29 +204,29 @@ const createStyles = (theme: Theme) =>
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.accent,
+      backgroundColor: rgba(theme.lightBlue, 1),
     },
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.bg,
+      color: rgba(theme.isDark ? theme.black : theme.white, 1),
     },
     secondaryButton: {
       height: 52,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.card,
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.lightGray, 1),
     },
     secondaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
     },
     disabled: { opacity: 0.6 },
     error: {
       fontSize: theme.fontSizeSubhead,
-      color: theme.markColor,
+      color: rgba(theme.lightRed, 1),
       textAlign: 'center',
     },
     disclosureContainer: {
@@ -239,11 +240,11 @@ const createStyles = (theme: Theme) =>
     },
     disclosureLink: {
       fontSize: 11,
-      color: theme.textSecondary,
+      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
       textDecorationLine: 'underline',
     },
     disclosureSep: {
       fontSize: 11,
-      color: theme.textSecondary,
+      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
     },
   });

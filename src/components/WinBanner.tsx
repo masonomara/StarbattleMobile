@@ -9,6 +9,7 @@ import { loadStreaks, recordStreak } from '../utils/progress';
 import { getActiveStreak, STREAK_LABELS } from '../utils/streakDate';
 
 import { useTheme } from '../hooks/useTheme';
+import { rgba } from '../themes/ansi';
 import type { Theme, RootStackParamList, WinBannerProps } from '../types';
 
 export function WinBanner({
@@ -124,10 +125,10 @@ const createStyles = (theme: Theme) =>
       shadowOpacity: 0.24,
       shadowRadius: 24,
       elevation: 8,
-      backgroundColor: theme.card,
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
     },
     winText: {
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
       lineHeight: 34,
       fontSize: 28,
       fontFamily: 'Bricolage Grotesque',
@@ -139,14 +140,14 @@ const createStyles = (theme: Theme) =>
       lineHeight: 20,
       fontWeight: 600,
 
-      color: theme.textSecondary,
+      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
     },
     winTime: {
       fontSize: 15,
       lineHeight: 20,
       fontWeight: 600,
-      marginTop:0,
-      color: theme.text,
+      marginTop: 0,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
     },
     winButton: {
       height: 56,
@@ -155,12 +156,13 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: theme.spacingXl,
-      backgroundColor: theme.text,
+
+      backgroundColor: rgba(theme.isDark ? theme.white : theme.black, 1),
     },
     winButtonText: {
-      fontSize: 17,
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.bg,
+      fontSize: 19,
+      fontWeight: 700,
+      color: rgba(theme.isDark ? theme.black : theme.white, 1),
     },
   });
 

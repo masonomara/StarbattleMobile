@@ -9,6 +9,7 @@ import { getStreakPack, getPuzzlesForPack } from '../packs';
 import { CircleButton } from '../components/CircleButton';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
+import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
 import {
   getCurrentKey,
@@ -79,8 +80,6 @@ function PaidPackRow({
   );
 }
 
-const STREAK_TILE_COLORS = ['#8FD6AE', '#81D0E7', '#D3C2FA'];
-
 export function HomeScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
@@ -90,6 +89,11 @@ export function HomeScreen({
   const isFocused = useIsFocused();
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, hasPackAccess } = useEntitlements();
+  const STREAK_TILE_COLORS = [
+    `rgba(${theme.lightGreen}, 1)`,
+    `rgba(${theme.lightCyan}, 1)`,
+    `rgba(${theme.lightMagenta}, 1)`,
+  ];
 
   const [loadedStreakPacks, setLoadedStreakPacks] = useState<
     Partial<Record<StreakType, Pack>>
@@ -187,12 +191,18 @@ export function HomeScreen({
           <CircleButton
             onPress={() => useSettingsStore.getState().openStreaks()}
           >
-            <Flame size={24} color={theme.text} />
+            <Flame
+              size={24}
+              color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+            />
           </CircleButton>
           <CircleButton
             onPress={() => useSettingsStore.getState().openSettings()}
           >
-            <User size={24} color={theme.text} />
+            <User
+              size={24}
+              color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+            />
           </CircleButton>
         </View>
       </View>
@@ -357,9 +367,12 @@ export function HomeScreen({
   );
 }
 
-const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
-  StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.bg },
+const createStyles = (
+  theme: Theme,
+  insets: { top: number; bottom: number },
+) => {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1) },
     header: {
       position: 'absolute',
       top: 0,
@@ -371,13 +384,13 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       justifyContent: 'space-between',
       paddingHorizontal: 16,
       height: 57 + insets.top,
-      backgroundColor: theme.bg,
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
     },
     appTitle: {
       fontSize: 24,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
       letterSpacing: -0.42,
     },
     headerRight: {
@@ -386,11 +399,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     streakSection: {
       paddingTop: 32,
-      backgroundColor: theme.bg,
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
     },
     packSection: {
       paddingTop: 16,
-      backgroundColor: theme.bg,
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
 
       paddingHorizontal: 16,
     },
@@ -414,14 +427,14 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       flexDirection: 'column',
       gap: 12,
       alignItems: 'flex-start',
-      width: '100%'
+      width: '100%',
     },
     streakCardHeader: {
       flex: 1,
       justifyContent: 'center',
     },
     streakLabel: {
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
       lineHeight: 37,
       fontSize: 30,
       fontFamily: 'Bricolage Grotesque',
@@ -429,7 +442,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       letterSpacing: -0.42,
     },
     streakMeta: {
-      color: theme.textSecondary,
+      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
       fontSize: 13,
       lineHeight: 18,
       marginTop: 2,
@@ -437,25 +450,25 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     streakThumbnailWrap: {
       borderRadius: 8,
       overflow: 'hidden',
-      backgroundColor: theme.card,
+      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.lightGray, 1),
     },
     streakCount: {
       fontSize: 16,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.accent,
+      color: rgba(theme.lightBlue, 1),
       marginTop: 4,
     },
     streakPlayButton: {
       borderRadius: 108,
-     
+
       alignItems: 'center',
       height: 56,
-      backgroundColor: 'rgba(0,0,0,0.12)',
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
     },
     streakPlayButtonText: {
       fontSize: 19,
       fontWeight: '600',
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
     },
     sectionLabel: {
       lineHeight: 30,
@@ -464,7 +477,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       fontSize: 24,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
       letterSpacing: -0.33,
     },
     packCard: {
@@ -474,9 +487,9 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       padding: 17,
       borderRadius: 4,
       marginBottom: 12,
-      backgroundColor: theme.bg,
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
       borderWidth: 1,
-      borderColor: theme.textSecondary + '33',
+      borderColor: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 0.2),
     },
     packThumb: {
       marginRight: 14,
@@ -486,25 +499,26 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       fontSize: 17,
       lineHeight: 22,
       fontWeight: 700,
-      color: theme.text,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
       letterSpacing: -0.56,
     },
     packMeta: {
       fontSize: 17,
       lineHeight: 22,
       fontWeight: 500,
-      color: theme.textSecondary,
+      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
       letterSpacing: -0.56,
       marginTop: 2,
     },
     packProgress: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.accent,
+      color: rgba(theme.lightBlue, 1),
     },
     packPrice: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: theme.textSecondary,
+      color: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1),
     },
   });
+};

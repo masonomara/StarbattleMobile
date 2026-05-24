@@ -32,24 +32,36 @@ async function fetchFromSupabase(storageKey: string): Promise<string> {
   return blobToText(data);
 }
 
-async function loadPack(storageKey: string): Promise<string> {
+async function fetchPack(storageKey: string): Promise<string> {
   const rnfs = getRNFS();
   if (rnfs) {
-    const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
-    await rnfs.mkdir(packDir).catch(() => {});
-    const localPath = `${packDir}/${storageKey}`;
+    const localPath = `${rnfs.DocumentDirectoryPath}/packs/${storageKey}`;
     try {
-      if (await rnfs.exists(localPath)) {
-        return rnfs.readFile(localPath, 'utf8');
-      }
+      return await rnfs.readFile(localPath, 'utf8');
     } catch {
-      /* fall through */
+      // not on disk yet — fall through to network
     }
     const text = await fetchFromSupabase(storageKey);
+    await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
     await rnfs.writeFile(localPath, text, 'utf8').catch(() => {});
     return text;
   }
   return fetchFromSupabase(storageKey);
+}
+
+// In-memory cache keyed by storageKey. Stores the in-flight or resolved
+// Promise so concurrent callers for the same key share one fetch.
+const packCache = new Map<string, Promise<string>>();
+
+function loadPack(storageKey: string): Promise<string> {
+  const cached = packCache.get(storageKey);
+  if (cached) return cached;
+
+  const promise = fetchPack(storageKey);
+  packCache.set(storageKey, promise);
+  // Evict on failure so the next call retries rather than re-throwing instantly.
+  promise.catch(() => packCache.delete(storageKey));
+  return promise;
 }
 
 export async function getPuzzlesForPack(
@@ -88,4 +100,6 @@ export async function downloadPack(
   if (error) throw error;
   const text = await blobToText(data);
   await rnfs.writeFile(`${packDir}/${packId}.json`, text, 'utf8');
+  // Warm the cache with the freshly downloaded content.
+  packCache.set(`${packId}.json`, Promise.resolve(text));
 }

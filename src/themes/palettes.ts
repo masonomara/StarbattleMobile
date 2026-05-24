@@ -1,6 +1,6 @@
-import type { Theme, ThemeName } from '../types.ts';
+import type { ThemeName } from '../types.ts';
 
-const tokens = {
+export const tokens = {
   spacingMd: 12,
   spacingLg: 16,
   spacingXl: 24,
@@ -12,129 +12,126 @@ const tokens = {
   cellSize: 36,
 };
 
-const regionColorsLight = [
-  '#E8EAF6', // indigo
-  '#E3F2FD', // blue
-  '#E8F5E9', // green
-  '#FFF8E1', // amber
-  '#FCE4EC', // rose
-  '#F3E5F5', // purple
-  '#E0F7FA', // cyan
-  '#FBE9E7', // red-orange
-  '#F9FBE7', // lime
-  '#EDE7F6', // deep purple
-  '#E0F2F1', // teal
-  '#FFF3E0', // orange
-];
-
-const regionColorsDark = [
-  '#283593', // indigo
-  '#1565C0', // blue
-  '#2E7D32', // green
-  '#F9A825', // amber
-  '#AD1457', // rose
-  '#6A1B9A', // purple
-  '#00838F', // cyan
-  '#BF360C', // red-orange
-  '#827717', // lime
-  '#4527A0', // deep purple
-  '#00695C', // teal
-  '#E65100', // orange
-];
-
-// ─── BLURPLE ─────────────────────────────────────────────────────────────────
-
-const originalLight: Theme = {
-  isDark: false,
-  bg: '#ffffff',
-  card: '#ffffff',
-  text: '#1F2328',
-  textSecondary: '#59636E',
-  accent: '#0969da',
-  markColor: '#d1242f',
-  regionColors: regionColorsLight,
-  ...tokens,
+export type PaletteColors = {
+  black: string;
+  darkRed: string;
+  darkGreen: string;
+  darkYellow: string;
+  darkBlue: string;
+  darkMagenta: string;
+  darkCyan: string;
+  lightGray: string;
+  darkGray: string;
+  lightRed: string;
+  lightGreen: string;
+  lightYellow: string;
+  lightBlue: string;
+  lightMagenta: string;
+  lightCyan: string;
+  white: string;
 };
 
-const originalDark: Theme = {
-  isDark: true,
-  bg: '#0d1117',
-  card: '#151B23',
-  text: '#F0F6FC',
-  textSecondary: '#9198A1',
-  accent: '#4493f8',
-  markColor: '#f85149',
-  regionColors: regionColorsDark,
-  ...tokens,
+// ─── ORIGINAL ────────────────────────────────────────────────────────────────
+
+const originalLight: PaletteColors = {
+  black: '#1f2328',
+  darkRed: '#cf222e',
+  darkGreen: '#08872B',
+  darkYellow: '#A06100',
+  darkBlue: '#0969da',
+  darkMagenta: '#8250df',
+  darkCyan: '#1b7c83',
+  lightGray: '192, 192, 192',
+  darkGray: '128, 128, 128',
+  lightRed: '#a40e26',
+  lightGreen: '#EBF9F4',
+  lightYellow: '#BE7D00',
+  lightBlue: '#218bff',
+  lightMagenta: '#a475f9',
+  lightCyan: '#3192aa',
+  white: '255, 255, 255',
 };
+
+const originalDark: PaletteColors = { ...originalLight };
 
 // ─── CRIMSON ─────────────────────────────────────────────────────────────────
 
-const crimsonLight: Theme = {
-  isDark: false,
-  bg: '#F6F8FA',
-  card: '#F6F8FA',
-  text: '#1F2328',
-  textSecondary: '#6E7781',
-  accent: '#0969DA',
-  markColor: '#CF222E',
-  regionColors: regionColorsLight,
-  ...tokens,
+const crimsonLight: PaletteColors = {
+  black: '0, 0, 0',
+  darkRed: '160, 20, 20',
+  darkGreen: '0, 120, 40',
+  darkYellow: '160, 80, 0',
+  darkBlue: '60, 0, 120',
+  darkMagenta: '140, 0, 80',
+  darkCyan: '0, 100, 120',
+  lightGray: '192, 192, 192',
+  darkGray: '128, 128, 128',
+  lightRed: '255, 60, 60',
+  lightGreen: '60, 220, 100',
+  lightYellow: '255, 160, 0',
+  lightBlue: '220, 20, 60',
+  lightMagenta: '255, 60, 140',
+  lightCyan: '0, 220, 220',
+  white: '255, 255, 255',
 };
 
-const crimsonDark: Theme = {
-  isDark: true,
-  bg: '#010409',
-  card: '#484F58',
-  text: '#E6EDF3',
-  textSecondary: '#B1BAC4',
-  accent: '#89b4fa',
-  markColor: '#f38ba8',
-  regionColors: regionColorsDark,
-  ...tokens,
+const crimsonDark: PaletteColors = { ...crimsonLight };
+
+// ─── GRUVBOX ─────────────────────────────────────────────────────────────────
+
+const gruvboxDark: PaletteColors = {
+  black: '40, 40, 40',
+  darkRed: '204, 36, 29',
+  darkGreen: '152, 151, 26',
+  darkYellow: '215, 153, 33',
+  darkBlue: '69, 133, 136',
+  darkMagenta: '177, 98, 134',
+  darkCyan: '104, 157, 106',
+  lightGray: '168, 153, 132',
+  darkGray: '146, 131, 116',
+  lightRed: '251, 73, 52',
+  lightGreen: '184, 187, 38',
+  lightYellow: '250, 189, 47',
+  lightBlue: '131, 165, 152',
+  lightMagenta: '211, 134, 155',
+  lightCyan: '142, 192, 124',
+  white: '235, 219, 178',
 };
 
-// ─── EMERALD ─────────────────────────────────────────────────────────────────
-
-const emeraldLight: Theme = {
-  isDark: false,
-  bg: '#FFFAF3',
-  card: '#FFFAF3',
-  text: '#575279',
-  textSecondary: '#575279',
-  accent: '#907AA9',
-  markColor: '#B4637A',
-  regionColors: regionColorsLight,
-  ...tokens,
-};
-
-const emeraldDark: Theme = {
-  isDark: true,
-  bg: '#141A17',
-  card: '#1A221E',
-  text: '#E4EFE8',
-  textSecondary: '#A8C4B0',
-  accent: '#10B981',
-  markColor: '#F57970',
-  regionColors: regionColorsDark,
-  ...tokens,
+const gruvboxLight: PaletteColors = {
+  black: '60, 56, 54',
+  darkRed: '157, 0, 6',
+  darkGreen: '121, 116, 14',
+  darkYellow: '181, 118, 20',
+  darkBlue: '7, 102, 120',
+  darkMagenta: '143, 63, 113',
+  darkCyan: '66, 123, 88',
+  darkGray: '124, 111, 100',
+  lightGray: '146, 131, 116',
+  lightRed: '204, 36, 29',
+  lightGreen: '152, 151, 26',
+  lightYellow: '215, 153, 33',
+  lightBlue: '69, 133, 136',
+  lightMagenta: '177, 98, 134',
+  lightCyan: '104, 157, 106',
+  white: '251, 241, 199',
 };
 
 // ─── Exports ─────────────────────────────────────────────────────────────────
 
-export const PALETTES: Record<ThemeName, { light: Theme; dark: Theme }> = {
+export const PALETTES: Record<
+  ThemeName,
+  { light: PaletteColors; dark: PaletteColors }
+> = {
   original: { light: originalLight, dark: originalDark },
   crimson: { light: crimsonLight, dark: crimsonDark },
-  emerald: { light: emeraldLight, dark: emeraldDark },
+  gruvbox: { light: gruvboxLight, dark: gruvboxDark },
 };
 
-export const PALETTE_META: Record<
-  ThemeName,
-  { label: string; accent: string }
-> = {
-  original: { label: 'Original', accent: '#ffffff' },
-  crimson: { label: 'Latte', accent: '#EFF1F5' },
-  emerald: { label: 'Rose Pine', accent: '#907AA9' },
+export const PALETTE_META: Record<ThemeName, { label: string }> = {
+  original: { label: 'Original' },
+  crimson: { label: 'Crimson' },
+  gruvbox: { label: 'Gruvbox' },
 };
 
 export const PALETTE_NAMES = Object.keys(PALETTES) as ThemeName[];
