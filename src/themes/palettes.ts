@@ -41,7 +41,7 @@ const originalLight: PaletteColors = {
   darkBlue: '9, 105, 208',
   darkMagenta: '191, 57, 137',
   darkCyan: '23, 155, 155',
-  lightGray: '239, 242, 245',
+  lightGray: '209, 217, 224',
   darkGray: '89, 99, 110',
   lightRed: '255, 226, 224',
   lightGreen: '235, 249, 244',
