@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Pressable, FlatList, StyleSheet, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Pressable,
+  FlatList,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native';
 import { Text } from '../components/Text';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -15,9 +21,15 @@ import { useEntitlements } from '../hooks/useEntitlements';
 import { useSettingsStore } from '../stores/settingsStore';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
 import { parsePuzzle } from '../utils/parsePuzzle';
-import type { Theme, RawPuzzle, Puzzle, RootStackParamList, PaywallContext } from '../types.ts';
+import type {
+  Theme,
+  RawPuzzle,
+  Puzzle,
+  RootStackParamList,
+  PaywallContext,
+} from '../types.ts';
 
-const CELL_SIZE = 110;
+const NUM_COLS = 3;
 
 type PuzzleCellProps = {
   packId: string;
@@ -30,6 +42,7 @@ type PuzzleCellProps = {
   completedSet: Set<string>;
   canPlay: boolean;
   coloredRegions: boolean;
+  cellSize: number;
 };
 
 function PuzzleCell({
@@ -43,6 +56,7 @@ function PuzzleCell({
   completedSet,
   canPlay,
   coloredRegions,
+  cellSize,
 }: PuzzleCellProps) {
   const puzzleId = `${packId}:${index}`;
   const isCompleted = completedSet.has(puzzleId);
@@ -61,7 +75,12 @@ function PuzzleCell({
       }
     >
       {puzzle && (
-        <PuzzleThumbnail puzzle={puzzle} size={CELL_SIZE} theme={theme} coloredRegions={coloredRegions} />
+        <PuzzleThumbnail
+          puzzle={puzzle}
+          size={cellSize}
+          theme={theme}
+          coloredRegions={coloredRegions}
+        />
       )}
       <View style={styles.puzzleCellOverlay}>
         {status !== 'active' && (
@@ -96,10 +115,16 @@ export function LibraryScreen({
 }: NativeStackScreenProps<RootStackParamList, 'Library'>) {
   const { packId } = route.params;
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const numColumns = Math.max(2, Math.floor((width - 2 * theme.spacingLg) / (CELL_SIZE + 12)));
+  const numColumns = NUM_COLS;
+  const cellSize = Math.floor(
+    (width - 2 * theme.spacingLg - numColumns * 12) / numColumns,
+  );
+  const styles = useMemo(
+    () => createStyles(theme, cellSize),
+    [theme, cellSize],
+  );
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, canPlayPuzzle, hasPackAccess } = useEntitlements();
 
@@ -154,7 +179,13 @@ export function LibraryScreen({
     (index: number) => {
       if (!isFree && !hasPackAccess(packId)) {
         if (priceUsd !== undefined && storagePath !== undefined) {
-          setPaywallContext({ type: 'paid-pack', packId, packName, priceUsd, storagePath });
+          setPaywallContext({
+            type: 'paid-pack',
+            packId,
+            packName,
+            priceUsd,
+            storagePath,
+          });
         } else {
           setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
         }
@@ -169,7 +200,10 @@ export function LibraryScreen({
     const result: number[][] = [];
     for (let i = 0; i < puzzleCount; i += numColumns) {
       result.push(
-        Array.from({ length: Math.min(numColumns, puzzleCount - i) }, (_, j) => i + j),
+        Array.from(
+          { length: Math.min(numColumns, puzzleCount - i) },
+          (_, j) => i + j,
+        ),
       );
     }
     return result;
@@ -184,18 +218,32 @@ export function LibraryScreen({
             packId={packId}
             index={index}
             puzzle={parsedPuzzles[index] ?? null}
-            onPress={i => navigation.navigate('Puzzle', { packId, puzzleIndex: i })}
+            onPress={i =>
+              navigation.navigate('Puzzle', { packId, puzzleIndex: i })
+            }
             onLockedPress={handleLockedPress}
             styles={styles}
             theme={theme}
             completedSet={completedSet}
             canPlay={isPuzzlePlayable(index)}
             coloredRegions={coloredRegions}
+            cellSize={cellSize}
           />
         ))}
       </View>
     ),
-    [packId, parsedPuzzles, handleLockedPress, styles, theme, completedSet, isPuzzlePlayable, coloredRegions, navigation],
+    [
+      packId,
+      parsedPuzzles,
+      handleLockedPress,
+      styles,
+      theme,
+      completedSet,
+      isPuzzlePlayable,
+      coloredRegions,
+      cellSize,
+      navigation,
+    ],
   );
 
   if (!puzzleCount) return null;
@@ -232,30 +280,23 @@ export function LibraryScreen({
   );
 }
 
-const createStyles = (theme: Theme) =>
+const createStyles = (theme: Theme, cellSize: number) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.bg },
     scroll: { flex: 1 },
     gridContent: {
-      padding: theme.spacingLg,
+      padding: 16,
     },
     row: {
       flexDirection: 'row',
       justifyContent: 'center',
     },
     puzzleCell: {
-      height: CELL_SIZE,
-      width: CELL_SIZE,
-      margin: 6,
-      borderRadius: 4,
-      overflow: 'hidden',
+      height: cellSize,
+      width: cellSize,
+      margin: 8,
 
       backgroundColor: theme.card,
-           shadowOffset: { width: 0, height: 4 },
-      shadowColor: '#25292E',
-      shadowOpacity: 0.10,
-      shadowRadius: 24,
-      elevation: 8,
     },
     puzzleCellOverlay: {
       position: 'absolute',
