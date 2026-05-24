@@ -9,8 +9,7 @@ import {
   checkWin,
 } from './utils/puzzleLogic';
 import { loadProgress, saveProgress } from './utils/progress';
-import type { CellValue, Move, CellChange, TapMode } from './types/state';
-import type { Puzzle } from './types/puzzle';
+import { CellChange, CellValue, Move, Puzzle, TapMode } from './types';
 
 const MAX_HISTORY = 50;
 
@@ -35,6 +34,7 @@ type PuzzleState = {
   autoMarks: Set<number>;
   errorCells: Set<number>;
   completed: boolean;
+  loadedAsCompleted: boolean;
   timeMs: number;
   moveLog: Move[];
   redoStack: Move[];
@@ -60,6 +60,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
   autoMarks: new Set<number>(),
   errorCells: new Set<number>(),
   completed: false,
+  loadedAsCompleted: false,
   timeMs: 0,
   moveLog: [],
   redoStack: [],
@@ -75,6 +76,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       autoMarks: new Set<number>(),
       errorCells: new Set<number>(),
       completed: false,
+      loadedAsCompleted: false,
       timeMs: 0,
       moveLog: [],
       redoStack: [],
@@ -88,6 +90,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
           cells: saved.cells,
           autoMarks: new Set(saved.autoMarks),
           completed: saved.completed,
+          loadedAsCompleted: saved.completed,
           timeMs: saved.timeMs,
         });
       }

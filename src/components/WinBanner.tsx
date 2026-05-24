@@ -8,9 +8,7 @@ import { loadStreaks, recordStreak } from '../utils/progress';
 import { getActiveStreak, STREAK_LABELS } from '../utils/streakDate';
 
 import { useTheme } from '../hooks/useTheme';
-import type { Theme } from '../types/theme';
-import type { RootStackParamList } from '../types/navigation';
-import type { WinBannerProps } from '../types/components';
+import type { Theme, RootStackParamList, WinBannerProps } from '../types';
 
 export function WinBanner({
   packId,
@@ -20,13 +18,14 @@ export function WinBanner({
   streakType,
 }: WinBannerProps) {
   const completed = usePuzzleStore(s => s.completed);
+  const loadedAsCompleted = usePuzzleStore(s => s.loadedAsCompleted);
   const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
   const styles = createStyles(theme);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const [streakCount, setStreakCount] = useState(0);
+  const [_streakCount, setStreakCount] = useState(0);
   const [bannerHeight, setBannerHeight] = useState(0);
   const bannerTranslateY = useRef(new Animated.Value(0)).current;
 
@@ -38,13 +37,13 @@ export function WinBanner({
     if (!completed || !streakType) return;
     const type = streakType;
     async function updateStreak() {
-      await recordStreak(type);
+      if (!loadedAsCompleted) await recordStreak(type);
       const streaks = await loadStreaks();
       const found = streaks.find(s => s.type === type);
       if (found) setStreakCount(getActiveStreak(found, type));
     }
     updateStreak();
-  }, [completed, streakType]);
+  }, [completed, streakType, loadedAsCompleted]);
 
   useEffect(() => {
     if (!bannerHeight) return;
@@ -66,7 +65,7 @@ export function WinBanner({
     : `${packName} #${puzzleIndex + 1}`;
 
   const headline = streakType
-    ? `Streak: ${streakCount}`
+    ? `Solved in ${formatTime(timeMs)}`
     : `Solved in ${formatTime(timeMs)}`;
 
   const buttonLabel = streakType
@@ -132,22 +131,21 @@ const createStyles = (theme: Theme) =>
       fontSize: 28,
       fontFamily: 'Bitter',
       fontWeight: 700,
-            marginTop: 8,
+      marginTop: 8,
     },
     winInfo: {
       fontSize: 15,
       lineHeight: 20,
       fontWeight: 600,
-      letterSpacing: -0.1,
+
       color: theme.textSecondary,
     },
     winTime: {
-      fontSize: 16,
+      fontSize: 15,
       lineHeight: 20,
-      fontWeight: theme.fontWeightSemibold,
-      letterSpacing: -0.1,
+      fontWeight: 600,
+      marginTop:0,
       color: theme.text,
-
     },
     winButton: {
       height: 56,
