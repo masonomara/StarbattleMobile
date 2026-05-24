@@ -17,9 +17,11 @@ MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg8+2s...
 
 This is almost certainly an Apple App Store Connect subscription notification key. Private keys must never be in source control. Rotate it immediately and add `*.p8` to `.gitignore`. Even after removal from git history (via `git filter-repo`), treat the current key as compromised.
 
-### 2. Real Production API Keys Hardcoded in `src/config.ts`
+### ~~2. Real Production API Keys Hardcoded in `src/config.ts`~~ ✅ FIXED
 
-All secrets live in committed source:
+> **✅ FIXED** — Secrets moved to `.env` (gitignored) and injected at build time via `babel-plugin-transform-inline-env-vars`. Fail-fast guards added in `src/config.ts`.
+
+~~All secrets live in committed source:~~
 
 ```ts
 export const SUPABASE_ANON_KEY = 'eyJhbGciOi...';

@@ -119,7 +119,9 @@ export function HomeScreen({
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.appTitle}>Star Battle Free</Text>
         <View style={styles.headerRight}>
-          <CircleButton onPress={() => useSettingsStore.getState().openStreaks()}>
+          <CircleButton
+            onPress={() => useSettingsStore.getState().openStreaks()}
+          >
             <Flame size={24} color={theme.text} />
           </CircleButton>
           <CircleButton
@@ -288,7 +290,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       paddingTop: 34,
       backgroundColor: theme.bg,
 
-      paddingHorizontal: theme.spacingXl,
+      paddingHorizontal: 16,
     },
     streakRow: {
       flexDirection: 'row',
@@ -344,21 +346,20 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: theme.spacingXl,
-      borderRadius: theme.radiusMd,
+      padding: 17,
+      borderRadius: 4,
       marginBottom: theme.spacingMd,
       backgroundColor: theme.card,
-      shadowColor: '#25292E',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.textSecondary + '33',
     },
     packInfo: { flex: 1 },
     packName: {
-      fontSize: theme.fontSizeBody,
-      fontWeight: theme.fontWeightSemibold,
+      fontSize: 17,
+      lineHeight: 22,
+      fontWeight: 700,
       color: theme.text,
+      letterSpacing: -0.56,
     },
     packMeta: {
       fontSize: theme.fontSizeSubhead,

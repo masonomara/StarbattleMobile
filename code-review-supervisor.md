@@ -14,11 +14,13 @@ This review examines StarbattleMobile for liability exposure, regulatory complia
 
 ---
 
-### C-1 — All Production Credentials Hardcoded in Source Code
+### ~~C-1 — All Production Credentials Hardcoded in Source Code~~ ✅ FIXED
+
+> **✅ FIXED** — Secrets moved to `.env` (gitignored) and injected at build time via `babel-plugin-transform-inline-env-vars`. Fail-fast guards added in `src/config.ts` — each var throws with a clear message if missing at startup.
 
 **File:** `src/config.ts`
 
-**Risk:** Credential exposure, unauthorized API access, payment fraud, App Store rejection
+~~**Risk:** Credential exposure, unauthorized API access, payment fraud, App Store rejection~~
 
 ```typescript
 export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
@@ -414,7 +416,7 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 
 | ID  | Severity | Area              | Description                                                                           |
 | --- | -------- | ----------------- | ------------------------------------------------------------------------------------- |
-| C-1 | CRITICAL | Security          | All production credentials hardcoded in source                                        |
+| ~~C-1~~ | ~~CRITICAL~~ | ~~Security~~ | ~~All production credentials hardcoded in source~~ ✅ |
 | C-2 | CRITICAL | Privacy/Legal     | No privacy policy, no account deletion, undisclosed server-side anon auth             |
 | C-3 | CRITICAL | IAP/Consumer Law  | Prices hardcoded in USD, never from store                                             |
 | H-1 | HIGH     | IAP               | `purchasePack` delivers content before verifying purchase success                     |
@@ -441,7 +443,7 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 
 Before any public release, address in this sequence:
 
-1. **Rotate all credentials (C-1)** — The current Supabase anon key, Adapty key, and Google OAuth IDs must be rotated immediately. Then move secrets to environment-based configuration excluded from version control.
+1. ~~**Rotate all credentials (C-1)** — The current Supabase anon key, Adapty key, and Google OAuth IDs must be rotated immediately. Then move secrets to environment-based configuration excluded from version control.~~ ✅ FIXED
 
 2. **Fix IAP revenue leaks (H-1, H-2)** — `purchasePack` must check purchase outcome before delivering content. `purchasePremium` must throw on failure. These are revenue-critical defects.
 

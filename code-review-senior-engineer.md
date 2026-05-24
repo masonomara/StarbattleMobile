@@ -14,10 +14,12 @@ The codebase is a React Native Star Battle puzzle app with Supabase + PowerSync 
 
 ## Critical Security Issues
 
-### [SEC-1] Production API Keys Hardcoded in Version-Controlled Source
+### ~~[SEC-1] Production API Keys Hardcoded in Version-Controlled Source~~ ✅ FIXED
+
+> **✅ FIXED** — Secrets moved to `.env` (gitignored) and injected at build time via `babel-plugin-transform-inline-env-vars`. Fail-fast guards added in `src/config.ts` — each var throws with a clear message if missing at startup.
 
 **File**: `src/config.ts`  
-**Severity**: Critical
+**Severity**: ~~Critical~~
 
 Every secret the app uses is hardcoded as a plain string literal committed to git:
 
@@ -337,7 +339,7 @@ All other imports in the project use `from '../types.ts'` with the explicit `.ts
 
 | ID | File | Severity | Category | Description |
 |----|------|----------|----------|-------------|
-| SEC-1 | `src/config.ts` | Critical | Security | Production API keys hardcoded in git |
+| ~~SEC-1~~ | ~~`src/config.ts`~~ | ~~Critical~~ | ~~Security~~ | ~~Production API keys hardcoded in git~~ ✅ |
 | SEC-2 | `src/utils/payments.ts` | Critical | Security | `purchasePack` ignores purchase result |
 | SEC-3 | `src/packs/index.ts` | High | Security | No server-side entitlement check on paid content |
 | SEC-4 | `src/stores/authStore.ts:103` | High | Security | Non-null assertion on nullable Apple token |

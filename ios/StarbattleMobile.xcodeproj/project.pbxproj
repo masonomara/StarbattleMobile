@@ -8,28 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		48CC074B91584BABA82B22BD /* BricolageGrotesque-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		8179B8D3979465D293FBEEC0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		C10ABB28B40D19C36B43D964 /* libPods-StarbattleMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */; };
-		48CC074B91584BABA82B22BD /* BricolageGrotesque-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */; };
 		A8CAB1CE2D6F4F5A88215494 /* Karla-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EA7850AD4E604866A21311CB /* Karla-Variable.ttf */; };
+		C10ABB28B40D19C36B43D964 /* libPods-StarbattleMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A4F8E1C42B456789ABCDEF12 /* StarbattleMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = StarbattleMobile.entitlements; path = StarbattleMobile/StarbattleMobile.entitlements; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* StarbattleMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StarbattleMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = StarbattleMobile/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = StarbattleMobile/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = StarbattleMobile/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2374ABD2F16982C478070F16 /* Pods-StarbattleMobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.debug.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.debug.xcconfig"; sourceTree = "<group>"; };
+		3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "BricolageGrotesque-Variable.ttf"; path = "../assets/fonts/BricolageGrotesque-Variable.ttf"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = StarbattleMobile/AppDelegate.swift; sourceTree = "<group>"; };
 		773607658C213B2CF388C76D /* Pods-StarbattleMobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.release.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.release.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = StarbattleMobile/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		A4F8E1C42B456789ABCDEF12 /* StarbattleMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = StarbattleMobile.entitlements; path = StarbattleMobile/StarbattleMobile.entitlements; sourceTree = "<group>"; };
 		E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-StarbattleMobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA7850AD4E604866A21311CB /* Karla-Variable.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Karla-Variable.ttf"; path = "../assets/fonts/Karla-Variable.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */ = {isa = PBXFileReference; name = "BricolageGrotesque-Variable.ttf"; path = "../assets/fonts/BricolageGrotesque-Variable.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		EA7850AD4E604866A21311CB /* Karla-Variable.ttf */ = {isa = PBXFileReference; name = "Karla-Variable.ttf"; path = "../assets/fonts/Karla-Variable.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +96,16 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		B1A9BBC04A1B4DF4BF7403D5 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */,
+				EA7850AD4E604866A21311CB /* Karla-Variable.ttf */,
+			);
+			name = Resources;
+			path = "";
+			sourceTree = "<group>";
+		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -104,16 +114,6 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
-		};
-		B1A9BBC04A1B4DF4BF7403D5 /* Resources */ = {
-			isa = "PBXGroup";
-			children = (
-				3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */,
-				EA7850AD4E604866A21311CB /* Karla-Variable.ttf */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-			path = "";
 		};
 /* End PBXGroup section */
 

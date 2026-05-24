@@ -6,12 +6,9 @@
 
 ## 1. Security
 
-### 1.1 All API keys are hardcoded in committed source — `src/config.ts`
-```
-SUPABASE_ANON_KEY, POWERSYNC_URL, ADAPTY_SDK_KEY,
-GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID
-```
-All live in a `.ts` file that is committed to the repository. Anyone with read access to the repo has every key. These belong in environment variables (`EXPO_PUBLIC_*`) or a build-time secrets manager. The Supabase anon key is technically designed for client exposure, but the Adapty SDK key and PowerSync URL are not.
+### ~~1.1 All API keys are hardcoded in committed source — `src/config.ts`~~ ✅ FIXED
+
+> **✅ FIXED** — Secrets moved to `.env` (gitignored) and injected at build time via `babel-plugin-transform-inline-env-vars`. Fail-fast guards added in `src/config.ts`.
 
 ### 1.2 Force-unwrap of Apple identity token — `authStore.ts:103`
 ```ts
@@ -249,7 +246,7 @@ The settings store directly invokes a method on the puzzle store inside its own 
 
 | # | File | Category | Severity |
 |---|------|----------|----------|
-| 1.1 | `config.ts` | Security | High |
+| ~~1.1~~ | ~~`config.ts`~~ | ~~Security~~ | ~~High~~ ✅ |
 | 1.2 | `authStore.ts:103` | Security | Medium |
 | 1.3 | `payments.ts:36` | Security / Correctness | Medium |
 | 1.4 | `progress.ts`, `entitlementsStore.ts` | Security / Stability | Medium |
