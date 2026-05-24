@@ -10,19 +10,24 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
 }: PuzzleThumbnailProps) {
   const { size: gridSize, regions } = puzzle;
   const cs = size / gridSize;
-  const borderW = Math.max(1.5, cs * 0.15);
-  const gridW = Math.max(0.5, cs * 0.04);
+  const borderW = Math.min(cs * 0.18, 3);
+  const gridW = Math.min(cs * 0.06, 1);
 
   const regionFillPaths = useMemo(() => {
     if (!coloredRegions) return null;
-    const builders = new Map<number, ReturnType<typeof Skia.PathBuilder.Make>>();
+    const builders = new Map<
+      number,
+      ReturnType<typeof Skia.PathBuilder.Make>
+    >();
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
         const colorIdx = regions[row][col] % theme.regionColors.length;
         if (!builders.has(colorIdx)) {
           builders.set(colorIdx, Skia.PathBuilder.Make());
         }
-        builders.get(colorIdx)!.addRect(Skia.XYWHRect(col * cs, row * cs, cs, cs));
+        builders
+          .get(colorIdx)!
+          .addRect(Skia.XYWHRect(col * cs, row * cs, cs, cs));
       }
     }
     return [...builders.entries()].map(([colorIdx, b]) => ({
@@ -69,7 +74,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   const outerBorderPath = useMemo(() => {
     const b = Skia.PathBuilder.Make();
     b.addRect(
-      Skia.XYWHRect(borderW, borderW, size - 2 * borderW, size - 2 * borderW),
+      Skia.XYWHRect(borderW / 2, borderW / 2, size - borderW, size - borderW),
     );
     return b.detach();
   }, [size, borderW]);
@@ -82,9 +87,15 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
     // pointerEvents="none" prevents the canvas from intercepting taps on its parent list item.
     <Canvas style={{ width: size, height: size }} pointerEvents="none">
       <Path path={outerBorderPath} color={bg} style="fill" />
-      {coloredRegions && regionFillPaths?.map(({ colorIdx, path }) => (
-        <Path key={colorIdx} path={path} color={theme.regionColors[colorIdx]} style="fill" />
-      ))}
+      {coloredRegions &&
+        regionFillPaths?.map(({ colorIdx, path }) => (
+          <Path
+            key={colorIdx}
+            path={path}
+            color={theme.regionColors[colorIdx]}
+            style="fill"
+          />
+        ))}
       <Path
         path={innerGridPath}
         color={innerInk}
@@ -92,7 +103,6 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
         strokeWidth={gridW}
         strokeCap="square"
         strokeJoin="miter"
-        opacity={0.5}
       />
       <Path
         path={regionBorderPath}
