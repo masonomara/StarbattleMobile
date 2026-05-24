@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Navigation } from './src/navigation';
+import { useTheme } from './src/hooks/useTheme';
 import { useAuthStore } from './src/stores/authStore';
 import { useSettingsStore } from './src/stores/settingsStore';
 import { useEntitlementsStore } from './src/stores/entitlementsStore';
@@ -11,6 +12,8 @@ import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
 
 export default function App() {
+  const theme = useTheme();
+
   useEffect(() => {
     adapty.activate(ADAPTY_SDK_KEY).catch(() => {
       // Swallow "already activated" error on Fast Refresh in dev
@@ -38,7 +41,7 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.bg }}>
       <SafeAreaProvider>
         <Navigation />
       </SafeAreaProvider>
