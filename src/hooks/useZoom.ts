@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
 import {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  cancelAnimation,
   runOnJS,
 } from 'react-native-reanimated';
 import { Gesture } from 'react-native-gesture-handler';
@@ -13,7 +14,7 @@ const MIN_ZOOM = 0.67;
 const MAX_ZOOM = 3;
 const PAN_PADDING = 120;
 
-const SPRING_CONFIG = { damping: 19, stiffness: 90 } as const;
+const SPRING_CONFIG = { stiffness: 750 } as const;
 
 export function useZoom(puzzleSize: number, cellSize: number) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -27,6 +28,11 @@ export function useZoom(puzzleSize: number, cellSize: number) {
   const savedTranslateY = useSharedValue(0);
 
   const [isZoomed, setIsZoomed] = useState(false);
+
+  const lastGestureEndRef = useRef<number>(0);
+  const recordGestureEnd = useCallback(() => {
+    lastGestureEndRef.current = Date.now();
+  }, []);
 
   const boardPixels = cellSize * puzzleSize;
 
@@ -67,6 +73,7 @@ export function useZoom(puzzleSize: number, cellSize: number) {
       }
 
       runOnJS(setIsZoomed)(clampedScale !== DEFAULT_ZOOM);
+      runOnJS(recordGestureEnd)();
     });
 
   const panGesture = Gesture.Pan()
@@ -94,9 +101,14 @@ export function useZoom(puzzleSize: number, cellSize: number) {
         translateX.value = withSpring(cx, SPRING_CONFIG);
         translateY.value = withSpring(cy, SPRING_CONFIG);
       }
+
+      runOnJS(recordGestureEnd)();
     });
 
   const handleZoomReset = useCallback(() => {
+    cancelAnimation(scale);
+    cancelAnimation(translateX);
+    cancelAnimation(translateY);
     scale.value = withSpring(DEFAULT_ZOOM, SPRING_CONFIG);
     translateX.value = withSpring(0, SPRING_CONFIG);
     translateY.value = withSpring(0, SPRING_CONFIG);
@@ -118,5 +130,6 @@ export function useZoom(puzzleSize: number, cellSize: number) {
     savedTranslateY,
     isZoomed,
     handleZoomReset,
+    lastGestureEndRef,
   };
 }

@@ -1,10 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  Animated,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, Animated, ActivityIndicator } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -31,10 +26,12 @@ import {
 } from '../utils/streakDate';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { saveProgress } from '../utils/progress';
-import type { Theme } from '../types/theme';
-import type { RawPuzzle } from '../types/puzzle';
-import type { RootStackParamList } from '../types/navigation';
-import type { DrawLayerHandle } from '../types/state';
+import type {
+  Theme,
+  RawPuzzle,
+  RootStackParamList,
+  DrawLayerHandle,
+} from '../types.ts';
 
 type PackData = {
   rawPuzzle: RawPuzzle;
@@ -131,6 +128,7 @@ export function PuzzleScreen({
   const alwaysShowToolbar = useSettingsStore(s => s.settings.alwaysShowToolbar);
   const alwaysShowTimer = useSettingsStore(s => s.settings.alwaysShowTimer);
   const openSettings = useSettingsStore(s => s.openSettings);
+  const [isReady, setIsReady] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const buttonOpacity = useRef(new Animated.Value(1)).current;
 
@@ -153,29 +151,37 @@ export function PuzzleScreen({
     pinchGesture,
     panGesture,
     animatedStyle,
-    scale,
-    translateX,
-    translateY,
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
     isZoomed,
     handleZoomReset,
+    lastGestureEndRef,
   } = useZoom(gridSize, theme.cellSize);
 
   const drawLayerRef = useRef<DrawLayerHandle>(null);
 
-  const boardLayout = useRef({ width: 0, height: 0 });
+  const boardLayout = useRef({ width: 0, height: 0, centerY: 0 });
   const handleBoardLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
-    boardLayout.current = { width, height };
+    const paddingTop = insets.top + 48;
+    const paddingBottom = insets.bottom + 80;
+    boardLayout.current = {
+      width,
+      height,
+      centerY: (height + paddingTop - paddingBottom) / 2,
+    };
   };
 
   const { drawGesture, tapGesture } = useDrawGesture(
     gridSize,
     theme.cellSize,
-    scale,
-    translateX,
-    translateY,
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
     boardLayout,
     drawLayerRef,
+    lastGestureEndRef,
     () => setHeaderVisible(v => !v),
   );
 
@@ -190,6 +196,7 @@ export function PuzzleScreen({
     try {
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
       loadPuzzle(parsed);
+      setIsReady(true);
     } catch {
       navigation.goBack();
     }
@@ -211,7 +218,7 @@ export function PuzzleScreen({
     return unsubscribe;
   }, [navigation]);
 
-  if (!puzzle) {
+  if (!isReady || !puzzle) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={theme.accent} />
@@ -245,8 +252,8 @@ export function PuzzleScreen({
             pointerEvents={headerVisible ? 'auto' : 'none'}
           >
             <CircleButton onPress={openSettings}>
-                <Ellipsis size={20} color={theme.text} />
-              </CircleButton>
+              <Ellipsis size={20} color={theme.text} />
+            </CircleButton>
           </Animated.View>
         }
       />

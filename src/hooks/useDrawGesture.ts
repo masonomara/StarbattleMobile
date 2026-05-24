@@ -4,16 +4,17 @@ import type { SharedValue } from 'react-native-reanimated';
 import { usePuzzleStore } from '../store';
 import { useSettingsStore } from '../stores/settingsStore';
 import { Haptics } from 'react-native-nitro-haptics';
-import type { CellChange, DrawLayerHandle } from '../types/state';
+import type { CellChange, DrawLayerHandle } from '../types.ts';
 
 export function useDrawGesture(
   puzzleSize: number,
   cellSize: number,
-  scale: SharedValue<number>,
-  translateX: SharedValue<number>,
-  translateY: SharedValue<number>,
-  boardLayout: React.RefObject<{ width: number; height: number } | null>,
+  savedScale: SharedValue<number>,
+  savedTranslateX: SharedValue<number>,
+  savedTranslateY: SharedValue<number>,
+  boardLayout: React.RefObject<{ width: number; height: number; centerY: number } | null>,
   drawLayerRef: React.RefObject<DrawLayerHandle | null>,
+  lastGestureEndRef: React.RefObject<number>,
   onOffCanvasTap?: () => void,
 ) {
   const strokeChanges = useRef<CellChange[]>([]);
@@ -25,13 +26,13 @@ export function useDrawGesture(
       const layout = boardLayout.current;
       if (!layout || layout.width === 0 || layout.height === 0) return null;
 
-      const sc = scale.value;
-      const tx = translateX.value;
-      const ty = translateY.value;
+      const sc = savedScale.value;
+      const tx = savedTranslateX.value;
+      const ty = savedTranslateY.value;
       const boardPixels = cellSize * puzzleSize;
 
       const relX = x - layout.width / 2;
-      const relY = y - layout.height / 2;
+      const relY = y - layout.centerY;
 
       const bx = (relX - tx) / sc + boardPixels / 2;
       const by = (relY - ty) / sc + boardPixels / 2;
@@ -44,7 +45,7 @@ export function useDrawGesture(
       }
       return { row, col };
     },
-    [puzzleSize, scale, translateX, translateY, boardLayout, cellSize],
+    [puzzleSize, savedScale, savedTranslateX, savedTranslateY, boardLayout, cellSize],
   );
 
   const markCell = useCallback((row: number, col: number) => {
@@ -81,6 +82,9 @@ export function useDrawGesture(
       committed.current = false;
 
       if (usePuzzleStore.getState().completed || e.numberOfPointers > 1) return;
+
+      // Suppress draw if a pan/pinch just ended to prevent ghost marks during zoom/pan
+      if (Date.now() - lastGestureEndRef.current < 300) return;
 
       const cell = viewToCell(e.x, e.y);
       if (cell) markCell(cell.row, cell.col);
