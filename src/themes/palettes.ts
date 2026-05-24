@@ -1,4 +1,4 @@
-import type { Theme, ThemeName } from '../types/theme';
+import type { Theme, ThemeName } from '../types.ts';
 
 const tokens = {
   spacingMd: 12,
@@ -9,7 +9,7 @@ const tokens = {
   fontSizeCallout: 16,
   fontSizeBody: 17,
   fontWeightSemibold: '600' as const,
-  cellSize: 32,
+  cellSize: 36,
 };
 
 const regionColorsLight = [

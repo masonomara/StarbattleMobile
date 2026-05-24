@@ -1,7 +1,6 @@
 import { NativeModules } from 'react-native';
 import { supabase } from '../supabase';
-import type { RawPuzzle, Pack } from '../types/puzzle';
-import type { StreakType } from '../types/state';
+import type { RawPuzzle, Pack, StreakType } from '../types.ts';
 
 import type * as RNFSType from 'react-native-fs';
 
@@ -43,7 +42,9 @@ async function loadPack(storageKey: string): Promise<string> {
       if (await rnfs.exists(localPath)) {
         return rnfs.readFile(localPath, 'utf8');
       }
-    } catch { /* fall through */ }
+    } catch {
+      /* fall through */
+    }
     const text = await fetchFromSupabase(storageKey);
     await rnfs.writeFile(localPath, text, 'utf8').catch(() => {});
     return text;
@@ -73,12 +74,17 @@ export async function getStreakPack(type: StreakType): Promise<Pack | null> {
   }
 }
 
-export async function downloadPack(packId: string, storagePath: string): Promise<void> {
+export async function downloadPack(
+  packId: string,
+  storagePath: string,
+): Promise<void> {
   const rnfs = getRNFS();
   if (!rnfs) throw new Error('File system unavailable — run pod install');
   const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
   await rnfs.mkdir(packDir).catch(() => {});
-  const { data, error } = await supabase.storage.from('packs').download(storagePath);
+  const { data, error } = await supabase.storage
+    .from('packs')
+    .download(storagePath);
   if (error) throw error;
   const text = await blobToText(data);
   await rnfs.writeFile(`${packDir}/${packId}.json`, text, 'utf8');
