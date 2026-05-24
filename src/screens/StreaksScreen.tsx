@@ -83,11 +83,11 @@ export function StreaksScreen() {
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.streakGrid}>
-            {STREAK_TYPES.map(type => {
+            {STREAK_TYPES.map((type, i) => {
               const found = streaks.find(s => s.type === type);
               const count = found ? getActiveStreak(found, type) : 0;
               return (
-                <View key={type} style={styles.streakTile}>
+                <View key={type} style={[styles.streakTile, { backgroundColor: STREAK_TILE_COLORS[i] }]}>
                   <Text style={styles.streakCount}>{count}</Text>
                   <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
                 </View>
@@ -163,6 +163,8 @@ export function StreaksScreen() {
   );
 }
 
+const STREAK_TILE_COLORS = ['#8FD6AE', '#81D0E7', '#D3C2FA'];
+
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
@@ -187,7 +189,6 @@ const createStyles = (theme: Theme) =>
     },
     streakTile: {
       flex: 1,
-      backgroundColor: theme.bg,
       borderRadius: theme.radiusMd,
       padding: theme.spacingLg,
       alignItems: 'center',

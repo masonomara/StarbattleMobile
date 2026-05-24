@@ -3,6 +3,7 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Text } from './Text';
 import { X } from 'lucide-react-native';
@@ -12,6 +13,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { purchasePremium, purchasePack } from '../utils/payments';
+import { PRIVACY_POLICY_URL, TERMS_URL } from '../config';
 import type { Theme, PaywallModalProps } from '../types';
 
 export function PaywallModal({
@@ -130,6 +132,17 @@ export function PaywallModal({
         </Pressable>
         {renderContent()}
         {error && <Text style={styles.error}>{error}</Text>}
+        <View style={styles.disclosureContainer}>
+          <View style={styles.disclosureLinks}>
+            <Pressable onPress={() => Linking.openURL(TERMS_URL)} hitSlop={8}>
+              <Text style={styles.disclosureLink}>Terms of Use</Text>
+            </Pressable>
+            <Text style={styles.disclosureSep}>·</Text>
+            <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} hitSlop={8}>
+              <Text style={styles.disclosureLink}>Privacy Policy</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -200,5 +213,23 @@ const createStyles = (theme: Theme) =>
       fontSize: theme.fontSizeSubhead,
       color: theme.markColor,
       textAlign: 'center',
+    },
+    disclosureContainer: {
+      marginTop: theme.spacingMd,
+    },
+    disclosureLinks: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 6,
+    },
+    disclosureLink: {
+      fontSize: 11,
+      color: theme.textSecondary,
+      textDecorationLine: 'underline',
+    },
+    disclosureSep: {
+      fontSize: 11,
+      color: theme.textSecondary,
     },
   });

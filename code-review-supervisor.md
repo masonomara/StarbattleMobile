@@ -175,25 +175,29 @@ function purchase(fn: () => Promise<unknown>) {
 
 ---
 
-### H-3 — Missing Restore Purchases for Anonymous Users
+### ~~H-3 — Missing Restore Purchases for Anonymous Users~~ ✅ CLOSED (by design)
 
-**File:** `src/components/SettingsModal.tsx`, lines 309–478
+> **✅ CLOSED** — By product design, anonymous users cannot make purchases. The `PaywallModal` for anonymous users in a paid-pack context routes them to create an account before any transaction can occur. Because no purchase path exists for anonymous users, Apple's Guideline 3.1.1 ("Restore Purchases must appear wherever a purchase can be made") does not apply to the anonymous flow. Restricting "Restore Purchases" to `!isAnonymous` is correct and defensible.
 
-The "Restore Purchases" button is only rendered when `!isAnonymous`. Anonymous users have no way to restore purchases they may have made on a previously created account or on another device. Apple App Store Guideline 3.1.1 and the Human Interface Guidelines require that wherever an in-app purchase is offered, a "Restore Purchases" option must also be present.
+**File:** `src/components/SettingsModal.tsx`
 
-A returning user who is anonymous (e.g., after uninstalling and reinstalling the app) and opens the paywall has no mechanism to restore prior purchases without first creating an account — but the flow for creating an account is in Settings, not in the paywall. The paywall for anonymous paid-pack users redirects to Settings, but without a restore option visible, users who already own content may purchase it again.
+~~The "Restore Purchases" button is only rendered when `!isAnonymous`. Anonymous users have no way to restore purchases they may have made without first creating an account.~~
 
 ---
 
-### H-4 — No Subscription Terms Disclosed at Point of Purchase
+### ~~H-4 — No Purchase Terms Disclosed at Point of Sale~~ ✅ FIXED
+
+> **✅ FIXED** — Both `PaywallModal` and `SettingsModal` now show "Terms of Use · Privacy Policy" links at all purchase points. Auto-renewal language was intentionally omitted: per `docs/plan.md` Phase 7.1, both Premium (`sb_premium_599`, $5.99) and individual packs (`starbattle_pack_{id}`, $1.99) are **one-time non-consumable IAPs** — not auto-renewable subscriptions. Showing subscription disclosure language would be inaccurate and potentially misleading to reviewers.
+
+> **📝 Note:** `docs/plan.md` Phase 7.1 names the premium product `starbattle_premium` — that is a stale reference. The authoritative product ID is `sb_premium_599`, used consistently throughout the codebase (`payments.ts`, all `useProductPrice` calls). Adapty and App Store Connect are configured with `sb_premium_599`. No code change needed; update the plan doc when convenient.
 
 **File:** `src/components/PaywallModal.tsx`, `src/components/SettingsModal.tsx`
 
-Neither the paywall modal nor the settings purchase buttons display any terms describing what "Premium" includes, whether it is a subscription or one-time purchase, or a link to Terms of Service or Privacy Policy at the point of purchase.
+~~Neither the paywall modal nor the settings purchase buttons display any terms or a link to Terms of Service or Privacy Policy at the point of purchase.~~
 
-**Apple App Store Guideline 3.1.2 (Auto-Renewable Subscriptions)**: If this is a subscription, the paywall must clearly state the price, billing frequency, free trial details (if any), and cancellation information. If it is a one-time purchase, that should be made clear to distinguish it from a subscription.
+~~**Apple App Store Guideline 3.1.1**: Price strings and purchase terms must be shown at point of sale.~~
 
-**EU Directive 2011/83/EU (Consumer Rights)**: For digital content purchases, the consumer must be informed of the main characteristics, total price, and the right of withdrawal before being bound by a contract.
+~~**EU Directive 2011/83/EU (Consumer Rights)**: For digital content purchases, the consumer must be informed of the main characteristics, total price, and the right of withdrawal before being bound by a contract.~~
 
 ---
 
@@ -325,16 +329,9 @@ If a paid pack's database row has a null `storage_path`, the paywall silently sh
 
 ---
 
-### L-1 — Empty `NSLocationWhenInUseUsageDescription` in Info.plist
+### ~~L-1 — Empty `NSLocationWhenInUseUsageDescription` in Info.plist~~ ✅ FIXED
 
-**File:** `ios/StarbattleMobile/Info.plist`, line 32
-
-```xml
-<key>NSLocationWhenInUseUsageDescription</key>
-<string/>
-```
-
-A location usage description key is present with an empty string value. The app does not use location. An empty usage description string causes App Store rejection if any library in the binary triggers the location permission prompt, and generates App Store reviewer scrutiny. It should be removed entirely if location is not used.
+> **✅ FIXED** — Key removed from `Info.plist`. The app does not use location.
 
 ---
 
@@ -426,15 +423,15 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 | ~~C-3~~ | ~~CRITICAL~~ | ~~IAP/Consumer Law~~ | ~~Prices hardcoded in USD, never from store~~ ✅                                  |
 | ~~H-1~~ | ~~HIGH~~     | ~~IAP~~           | ~~`purchasePack` delivers content before verifying purchase success~~ ✅              |
 | ~~H-2~~ | ~~HIGH~~     | ~~IAP~~           | ~~`purchasePremium` returns `false` without throwing; modal closes as success~~ ✅   |
-| H-3     | HIGH         | IAP               | Restore Purchases inaccessible to anonymous users                                     |
-| H-4     | HIGH         | IAP/Consumer Law  | No subscription/purchase terms disclosed at point of sale                             |
+| ~~H-3~~ | ~~HIGH~~     | ~~IAP~~           | ~~Restore Purchases inaccessible to anonymous users~~ ✅ by design                   |
+| ~~H-4~~ | ~~HIGH~~     | ~~IAP/Consumer Law~~ | ~~No purchase terms disclosed at point of sale~~ ✅                              |
 | M-1     | MEDIUM       | Privacy           | Anonymous sign-in creates server records without disclosure                           |
 | M-2     | MEDIUM       | Data Integrity    | Progress save not awaited on navigation; data loss on exit/kill                       |
 | M-3     | MEDIUM       | Stability         | `JSON.parse` unguarded on database fields; crash risk on corrupt data                 |
 | M-4     | MEDIUM       | Game Integrity    | Streak dates computed client-side; no server validation; clock manipulation possible  |
 | M-5     | MEDIUM       | UX/Auth           | Email sign-up shows no confirmation prompt; no password reset; no strength validation |
 | M-6     | MEDIUM       | IAP               | Missing `storagePath` silently prevents paid pack purchase                            |
-| L-1     | LOW          | App Store         | Empty `NSLocationWhenInUseUsageDescription` in Info.plist                             |
+| ~~L-1~~ | ~~LOW~~      | ~~App Store~~     | ~~Empty `NSLocationWhenInUseUsageDescription` in Info.plist~~ ✅                      |
 | L-2     | LOW          | App Store/Privacy | `NSPrivacyCollectedDataTypes` empty despite collecting user data                      |
 | L-3     | LOW          | Privacy           | Apple Sign-In requests full name scope; data never used (GDPR minimization)           |
 | L-4     | LOW          | Security          | Raw internal error messages surfaced to users                                         |
@@ -462,4 +459,4 @@ Before any public release, address in this sequence:
 
 7. **Wrap `JSON.parse` calls in try/catch (M-3)** — Prevents crash on corrupted local data.
 
-8. **Add Restore Purchases to paywall for anonymous users (H-3)** — Required by App Store guidelines.
+8. ~~**Add Restore Purchases to paywall for anonymous users (H-3)**~~ ✅ CLOSED — anonymous users cannot purchase; the requirement does not apply to this flow.

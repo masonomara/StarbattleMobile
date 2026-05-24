@@ -24,7 +24,7 @@ import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, restorePurchases } from '../utils/payments';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { PALETTES, PALETTE_META, PALETTE_NAMES } from '../themes/palettes';
-import { PRIVACY_POLICY_URL } from '../config';
+import { PRIVACY_POLICY_URL, TERMS_URL } from '../config';
 import type { Theme, UserSettings } from '../types';
 
 type EmailMode = 'signup' | 'signin' | null;
@@ -642,12 +642,21 @@ export function SettingsModal() {
           </View>
 
           {/* Legal */}
-          <Pressable
-            style={styles.privacyLink}
-            onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})}
-          >
-            <Text style={styles.privacyLinkText}>Privacy Policy</Text>
-          </Pressable>
+          <View style={styles.legalLinks}>
+            <Pressable
+              onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
+              hitSlop={8}
+            >
+              <Text style={styles.privacyLinkText}>Terms of Use</Text>
+            </Pressable>
+            <Text style={styles.legalSep}>·</Text>
+            <Pressable
+              onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})}
+              hitSlop={8}
+            >
+              <Text style={styles.privacyLinkText}>Privacy Policy</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </View>
     </Modal>
@@ -850,11 +859,19 @@ const createStyles = (theme: Theme) =>
       fontWeight: theme.fontWeightSemibold,
       color: theme.markColor, // TODO: replace with theme.error once that token exists
     },
-    privacyLink: {
+    legalLinks: {
+      flexDirection: 'row',
+      justifyContent: 'center',
       alignItems: 'center',
       paddingVertical: theme.spacingLg,
+      gap: 6,
     },
     privacyLinkText: {
+      fontSize: theme.fontSizeSubhead,
+      color: theme.textSecondary,
+      textDecorationLine: 'underline',
+    },
+    legalSep: {
       fontSize: theme.fontSizeSubhead,
       color: theme.textSecondary,
     },

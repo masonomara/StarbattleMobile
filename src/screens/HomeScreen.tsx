@@ -79,6 +79,8 @@ function PaidPackRow({
   );
 }
 
+const STREAK_TILE_COLORS = ['#8FD6AE', '#81D0E7', '#D3C2FA'];
+
 export function HomeScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
@@ -212,7 +214,7 @@ export function HomeScreen({
               gap: 16,
             }}
           >
-            {STREAK_TYPES.map(type => {
+            {STREAK_TYPES.map((type, i) => {
               const pack = loadedStreakPacks[type];
               const preview = streakPreviews[type];
               if (!pack || !preview) return null;
@@ -223,36 +225,44 @@ export function HomeScreen({
               const streakCount = found ? getActiveStreak(found, type) : 0;
 
               return (
-                <Pressable
+                <View
                   key={type}
                   style={[
                     styles.streakCard,
+                    { backgroundColor: STREAK_TILE_COLORS[i] },
                     isCompleted && styles.streakCardCompleted,
                   ]}
-                  onPress={() =>
-                    navigation.navigate('Puzzle', { streakType: type })
-                  }
                 >
-                  <View style={styles.streakThumbnailWrap}>
-                    <PuzzleThumbnail
-                      puzzle={preview}
-                      size={220}
-                      theme={theme}
-                      coloredRegions={coloredRegions}
-                    />
+                  <View style={styles.streakTopRow}>
+                    <View style={styles.streakThumbnailWrap}>
+                      <PuzzleThumbnail
+                        puzzle={preview}
+                        size={96}
+                        theme={theme}
+                        coloredRegions={coloredRegions}
+                      />
+                    </View>
+                    <View style={styles.streakCardHeader}>
+                      <Text style={styles.streakLabel}>
+                        {STREAK_LABELS[type]} Special
+                      </Text>
+                      <Text style={styles.streakMeta}>
+                        {pack.gridSize}×{pack.gridSize}
+                      </Text>
+                      {isCompleted && streakCount > 0 && (
+                        <Text style={styles.streakCount}>{streakCount}</Text>
+                      )}
+                    </View>
                   </View>
-                  <View style={styles.streakCardHeader}>
-                    <Text style={styles.streakLabel}>
-                      {STREAK_LABELS[type]} Special
-                    </Text>
-                    <Text style={styles.streakMeta}>
-                      {pack.gridSize}×{pack.gridSize}
-                    </Text>
-                  </View>
-                  {isCompleted && streakCount > 0 && (
-                    <Text style={styles.streakCount}>{streakCount}</Text>
-                  )}
-                </Pressable>
+                  <Pressable
+                    style={styles.streakPlayButton}
+                    onPress={() =>
+                      navigation.navigate('Puzzle', { streakType: type })
+                    }
+                  >
+                    <Text style={styles.streakPlayButtonText}>Play Puzzle</Text>
+                  </Pressable>
+                </View>
               );
             })}
           </ScrollView>
@@ -359,16 +369,16 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: theme.spacingXl,
+      paddingHorizontal: 16,
       height: 57 + insets.top,
       backgroundColor: theme.bg,
     },
     appTitle: {
-      fontSize: 22,
+      fontSize: 24,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       color: theme.text,
-      letterSpacing: -0.33,
+      letterSpacing: -0.42,
     },
     headerRight: {
       flexDirection: 'row',
@@ -392,26 +402,30 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       marginBottom: 16,
     },
     streakCard: {
-      borderRadius: 8,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: theme.textSecondary + '33',
+      borderRadius: 12,
       padding: 16,
+      gap: 12,
+      width: 260,
     },
     streakCardCompleted: {
       opacity: 0.6,
     },
+    streakTopRow: {
+      flexDirection: 'column',
+      gap: 12,
+      alignItems: 'flex-start',
+      width: '100%'
+    },
     streakCardHeader: {
-      width: '100%',
-      alignItems: 'baseline',
+      flex: 1,
+      justifyContent: 'center',
     },
     streakLabel: {
       color: theme.text,
-      lineHeight: 34,
-      fontSize: 28,
+      lineHeight: 37,
+      fontSize: 30,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
-      marginTop: 9,
       letterSpacing: -0.42,
     },
     streakMeta: {
@@ -421,14 +435,27 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       marginTop: 2,
     },
     streakThumbnailWrap: {
-      borderRadius: 4,
+      borderRadius: 8,
+      overflow: 'hidden',
       backgroundColor: theme.card,
     },
     streakCount: {
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: theme.fontWeightSemibold,
       color: theme.accent,
-      marginTop: theme.spacingMd,
+      marginTop: 4,
+    },
+    streakPlayButton: {
+      borderRadius: 108,
+     
+      alignItems: 'center',
+      height: 56,
+      backgroundColor: 'rgba(0,0,0,0.12)',
+    },
+    streakPlayButtonText: {
+      fontSize: 19,
+      fontWeight: '600',
+      color: theme.text,
     },
     sectionLabel: {
       lineHeight: 30,
