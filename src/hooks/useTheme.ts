@@ -9,10 +9,18 @@ export function buildTheme(colors: PaletteColors, isDark: boolean): Theme {
     isDark,
     ...colors,
     regionColors: [
-      colors.darkRed,     colors.darkGreen,    colors.darkYellow,
-      colors.darkBlue,    colors.darkMagenta,  colors.darkCyan,
-      colors.darkRed,    colors.darkGreen,   colors.darkYellow,
-      colors.darkBlue,   colors.darkMagenta, colors.darkCyan,
+      colors.darkRed,
+      colors.darkGreen,
+      colors.darkYellow,
+      colors.darkBlue,
+      colors.darkMagenta,
+      colors.darkCyan,
+      colors.lightRed,
+      colors.lightGreen,
+      colors.lightYellow,
+      colors.lightBlue,
+      colors.lightMagenta,
+      colors.lightCyan,
     ],
     regionColorAlpha: isDark ? 0.25 : 0.12,
     ...tokens,
@@ -25,10 +33,14 @@ export function useTheme(): Theme {
   const palette = useSettingsStore(s => s.settings.palette);
 
   const isDark =
-    themePref === 'dark' ? true :
-    themePref === 'light' ? false :
-    systemScheme === 'dark';
+    themePref === 'dark'
+      ? true
+      : themePref === 'light'
+      ? false
+      : systemScheme === 'dark';
 
-  const colors = (PALETTES[palette] ?? PALETTES.original)[isDark ? 'dark' : 'light'];
+  const colors = (PALETTES[palette] ?? PALETTES.original)[
+    isDark ? 'dark' : 'light'
+  ];
   return buildTheme(colors, isDark);
 }

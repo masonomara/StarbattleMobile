@@ -120,19 +120,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInWithEmail: async (email: string, password: string) => {
-    // Clean up the transient anonymous session so it doesn't become an orphan.
-    if (get().isAnonymous) {
-      try { await supabase.rpc('delete_user'); } catch (_) {}
-    }
+    // Capture before sign-in — state changes once applySignIn fires.
+    const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
+    // Clean up the now-orphaned anonymous record only after sign-in succeeds.
+    // A failed cleanup is acceptable (orphan); a pre-sign-in delete on a failed
+    // sign-in would permanently destroy the anonymous user's progress.
+    if (anonId) {
+      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch (_) {}
+    }
   },
 
   signInWithGoogle: async () => {
-    if (get().isAnonymous) {
-      try { await supabase.rpc('delete_user'); } catch (_) {}
-    }
+    const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
     if (!response.data?.idToken) throw new Error('No Google ID token');
@@ -142,12 +144,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
+    if (anonId) {
+      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch (_) {}
+    }
   },
 
   signInWithApple: async () => {
-    if (get().isAnonymous) {
-      try { await supabase.rpc('delete_user'); } catch (_) {}
-    }
+    const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
     const { appleAuth } = await import('@invertase/react-native-apple-authentication');
     const credential = await appleAuth.performRequest({
       requestedOperation: appleAuth.Operation.LOGIN,
@@ -159,6 +162,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
+    if (anonId) {
+      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch (_) {}
+    }
   },
 
   requestPasswordReset: async (email: string) => {
@@ -183,13 +189,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   // Permanently deletes the account and all associated server-side data.
   //
-  // REQUIRED: Run this SQL once in the Supabase SQL editor to enable deletion:
+  // REQUIRED: Two SQL functions must exist in Supabase. Run once in the SQL editor:
   //
+  //   -- Deletes the currently authenticated user (used by deleteAccount).
   //   CREATE OR REPLACE FUNCTION public.delete_user()
   //   RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
   //   AS $$ BEGIN DELETE FROM auth.users WHERE id = auth.uid(); END; $$;
-  //
   //   GRANT EXECUTE ON FUNCTION public.delete_user() TO authenticated;
+  //
+  //   -- Deletes a specific anonymous user by ID (used after upgrading to a named
+  //   -- account). The is_anonymous guard prevents IDOR exploitation — a named
+  //   -- user's ID passed here simply produces no-op.
+  //   CREATE OR REPLACE FUNCTION public.delete_anonymous_user(target_id uuid)
+  //   RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+  //   AS $$
+  //   BEGIN
+  //     DELETE FROM auth.users WHERE id = target_id AND is_anonymous = true;
+  //   END; $$;
+  //   GRANT EXECUTE ON FUNCTION public.delete_anonymous_user(uuid) TO authenticated;
   //
   // The CASCADE on auth.users propagates to puzzle_progress, streaks,
   // user_entitlements, and streak_archive automatically.

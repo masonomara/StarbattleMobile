@@ -89,11 +89,6 @@ export function HomeScreen({
   const isFocused = useIsFocused();
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, hasPackAccess } = useEntitlements();
-  const STREAK_TILE_COLORS = [
-    `rgba(${theme.darkGreen}, 1)`,
-    `rgba(${theme.darkCyan}, 1)`,
-    `rgba(${theme.darkMagenta}, 1)`,
-  ];
 
   const [loadedStreakPacks, setLoadedStreakPacks] = useState<
     Partial<Record<StreakType, Pack>>
@@ -221,7 +216,7 @@ export function HomeScreen({
             contentContainerStyle={{
               paddingRight: 16,
               paddingLeft: 16,
-              gap: 16,
+              gap: 12,
             }}
           >
             {STREAK_TYPES.map((type, i) => {
@@ -235,11 +230,15 @@ export function HomeScreen({
               const streakCount = found ? getActiveStreak(found, type) : 0;
 
               return (
-                <View
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate('Puzzle', { streakType: type })
+                  }
                   key={type}
                   style={[
                     styles.streakCard,
-                    { backgroundColor: STREAK_TILE_COLORS[i] },
+
+                    // { backgroundColor: STREAK_TILE_COLORS[i] },
                     isCompleted && styles.streakCardCompleted,
                   ]}
                 >
@@ -247,7 +246,7 @@ export function HomeScreen({
                     <View style={styles.streakThumbnailWrap}>
                       <PuzzleThumbnail
                         puzzle={preview}
-                        size={96}
+                        size={240}
                         theme={theme}
                         coloredRegions={coloredRegions}
                       />
@@ -257,22 +256,14 @@ export function HomeScreen({
                         {STREAK_LABELS[type]} Special
                       </Text>
                       <Text style={styles.streakMeta}>
-                        {pack.gridSize}×{pack.gridSize}
+                        {/* {pack.gridSize}×{pack.gridSize} */}7 Day Streak
                       </Text>
                       {isCompleted && streakCount > 0 && (
                         <Text style={styles.streakCount}>{streakCount}</Text>
                       )}
                     </View>
                   </View>
-                  <Pressable
-                    style={styles.streakPlayButton}
-                    onPress={() =>
-                      navigation.navigate('Puzzle', { streakType: type })
-                    }
-                  >
-                    <Text style={styles.streakPlayButtonText}>Play Puzzle</Text>
-                  </Pressable>
-                </View>
+                </Pressable>
               );
             })}
           </ScrollView>
@@ -372,7 +363,10 @@ const createStyles = (
   insets: { top: number; bottom: number },
 ) => {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1) },
+    container: {
+      flex: 1,
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+    },
     header: {
       position: 'absolute',
       top: 0,
@@ -417,21 +411,24 @@ const createStyles = (
     streakCard: {
       borderRadius: 12,
       padding: 16,
-      gap: 12,
-      width: 260,
+      gap: 0,
+      justifyContent: 'flex-start',
+
+      borderWidth: 2,
+      borderColor: rgba(theme.isDark ? theme.darkGray : theme.lightGray, 1),
     },
     streakCardCompleted: {
       opacity: 0.6,
     },
     streakTopRow: {
       flexDirection: 'column',
-      gap: 12,
+      gap: 16,
       alignItems: 'flex-start',
       width: '100%',
     },
     streakCardHeader: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
     },
     streakLabel: {
       color: rgba(theme.isDark ? theme.white : theme.black, 1),
@@ -442,13 +439,15 @@ const createStyles = (
       letterSpacing: -0.42,
     },
     streakMeta: {
-      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
-      fontSize: 13,
-      lineHeight: 18,
-      marginTop: 2,
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      fontSize: 17,
+      lineHeight: 22,
+      marginTop: 4,
+      textAlign: 'left',
+      marginBottom: 4,
+      fontWeight: 600,
     },
     streakThumbnailWrap: {
-      borderRadius: 8,
       overflow: 'hidden',
       backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
     },
@@ -459,11 +458,13 @@ const createStyles = (
       marginTop: 4,
     },
     streakPlayButton: {
-      borderRadius: 108,
-
+      borderRadius: 8,
       alignItems: 'center',
       height: 56,
-      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+      borderWidth: 2,
+      justifyContent: 'center',
+      borderColor: rgba(theme.isDark ? theme.white : theme.black, 1),
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.darkBlue, 1),
     },
     streakPlayButtonText: {
       fontSize: 19,

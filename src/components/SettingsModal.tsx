@@ -358,7 +358,7 @@ export function SettingsModal() {
                           <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
                         ) : (
                           <Text style={styles.primaryButtonText}>
-                            Sign up with Apple
+                            Continue with Apple
                           </Text>
                         )}
                       </Pressable>
@@ -376,7 +376,7 @@ export function SettingsModal() {
                         <ActivityIndicator color={Platform.OS === 'ios' ? rgba(theme.darkBlue, 1) : rgba(theme.isDark ? theme.black : theme.white, 1)} />
                       ) : (
                         <Text style={Platform.OS === 'ios' ? styles.secondaryButtonText : styles.primaryButtonText}>
-                          Sign up with Google
+                          Continue with Google
                         </Text>
                       )}
                     </Pressable>
@@ -395,7 +395,7 @@ export function SettingsModal() {
                       onPress={() => setEmailMode('signin')}
                     >
                       <Text style={styles.linkText}>
-                        Already have an account? Sign in
+                        Sign in with Email
                       </Text>
                     </Pressable>
                   </>
