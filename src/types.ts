@@ -207,6 +207,7 @@ export type PaywallContext =
       type: 'paid-pack';
       packId: string;
       packName: string;
-      priceUsd: number;
+      priceUsd: number | undefined;
       storagePath: string;
-    };
+    }
+  | { type: 'unavailable'; packId: string; packName: string };

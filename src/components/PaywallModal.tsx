@@ -119,6 +119,20 @@ export function PaywallModal({
       );
     }
 
+    if (context.type === 'unavailable') {
+      return (
+        <>
+          <Text style={styles.title}>{context.packName}</Text>
+          <Text style={styles.body}>
+            This pack isn't available for purchase right now. Please check back later.
+          </Text>
+          <Pressable style={styles.primaryButton} onPress={onClose}>
+            <Text style={styles.primaryButtonText}>Got it</Text>
+          </Pressable>
+        </>
+      );
+    }
+
     return null;
   };
 

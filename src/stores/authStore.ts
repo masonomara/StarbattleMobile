@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { appleAuth } = await import('@invertase/react-native-apple-authentication');
     const credential = await appleAuth.performRequest({
       requestedOperation: appleAuth.Operation.LOGIN,
-      requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      requestedScopes: [appleAuth.Scope.EMAIL],
     });
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'apple',

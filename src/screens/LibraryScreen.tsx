@@ -178,7 +178,7 @@ export function LibraryScreen({
   const handleLockedPress = useCallback(
     (index: number) => {
       if (!isFree && !hasPackAccess(packId)) {
-        if (priceUsd !== undefined && storagePath !== undefined) {
+        if (storagePath !== undefined) {
           setPaywallContext({
             type: 'paid-pack',
             packId,
@@ -187,7 +187,7 @@ export function LibraryScreen({
             storagePath,
           });
         } else {
-          setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
+          setPaywallContext({ type: 'unavailable', packId, packName });
         }
       } else {
         setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });

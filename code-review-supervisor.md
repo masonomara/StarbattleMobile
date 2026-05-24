@@ -301,7 +301,11 @@ Additionally, there is no password strength validation. The server (Supabase) en
 
 ---
 
-### M-6 — `storagePath` Absent Silently Prevents Paid Pack Purchase
+### ~~M-6 — `storagePath` Absent Silently Prevents Paid Pack Purchase~~ ✅ FIXED
+
+> **✅ FIXED** — `handleLockedPress` in `LibraryScreen` now sets `type: 'unavailable'` when `storagePath` is missing, which shows a "not available right now" message in `PaywallModal` instead of silently falling through to the sequential paywall. `unavailable` variant added to `PaywallContext` type in `types.ts`. Also removed the now-incorrect `priceUsd !== undefined` guard — price display is handled separately via `useProductPrice`.
+
+
 
 **File:** `src/screens/LibraryScreen.tsx`, lines 152–163
 
@@ -348,7 +352,11 @@ The privacy manifest declares no collected data types. The app collects email ad
 
 ---
 
-### L-3 — Apple Sign-In Requests `FULL_NAME` Scope That Is Never Used
+### ~~L-3 — Apple Sign-In Requests `FULL_NAME` Scope That Is Never Used~~ ✅ FIXED
+
+> **✅ FIXED** — `appleAuth.Scope.FULL_NAME` removed from the sign-in request in `authStore.ts`. Only `EMAIL` is requested.
+
+
 
 **File:** `src/stores/authStore.ts`, lines 96–107
 
@@ -430,10 +438,10 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 | M-3     | MEDIUM       | Stability         | `JSON.parse` unguarded on database fields; crash risk on corrupt data                 |
 | M-4     | MEDIUM       | Game Integrity    | Streak dates computed client-side; no server validation; clock manipulation possible  |
 | M-5     | MEDIUM       | UX/Auth           | Email sign-up shows no confirmation prompt; no password reset; no strength validation |
-| M-6     | MEDIUM       | IAP               | Missing `storagePath` silently prevents paid pack purchase                            |
+| ~~M-6~~ | ~~MEDIUM~~   | ~~IAP~~           | ~~Missing `storagePath` silently prevents paid pack purchase~~ ✅                     |
 | ~~L-1~~ | ~~LOW~~      | ~~App Store~~     | ~~Empty `NSLocationWhenInUseUsageDescription` in Info.plist~~ ✅                      |
 | L-2     | LOW          | App Store/Privacy | `NSPrivacyCollectedDataTypes` empty despite collecting user data                      |
-| L-3     | LOW          | Privacy           | Apple Sign-In requests full name scope; data never used (GDPR minimization)           |
+| ~~L-3~~ | ~~LOW~~      | ~~Privacy~~       | ~~Apple Sign-In requests full name scope; data never used~~ ✅                        |
 | L-4     | LOW          | Security          | Raw internal error messages surfaced to users                                         |
 | L-5     | LOW          | Data              | Sign-out creates unbounded orphan server records with no cleanup                      |
 | L-6     | LOW          | Game Integrity    | Puzzle solutions stored in plaintext on device filesystem                             |
