@@ -68,7 +68,7 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
       ? {
           isPremium: entRow.is_premium === 1,
           premiumPurchasedAt: entRow.premium_purchased_at ?? undefined,
-          ownedPackIds: JSON.parse(entRow.owned_pack_ids || '[]'),
+          ownedPackIds: (() => { try { return JSON.parse(entRow.owned_pack_ids || '[]'); } catch { return []; } })(),
         }
       : DEFAULT_ENTITLEMENTS;
 

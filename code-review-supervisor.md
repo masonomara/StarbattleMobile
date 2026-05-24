@@ -225,7 +225,11 @@ Under GDPR's legitimate interests basis, this could potentially be justified —
 
 ---
 
-### M-2 — Progress Data Saved Without `await` on Navigation; Potential Data Loss
+### ~~M-2 — Progress Data Saved Without `await` on Navigation; Potential Data Loss~~ ✅ FIXED
+
+> **✅ FIXED** — `beforeRemove` now calls `e.preventDefault()`, awaits `saveProgress` via `.finally()`, then dispatches the original navigation action. Added an `AppState` listener that fires a fire-and-forget save whenever the app goes to `background` or `inactive`, covering the app-kill case.
+
+
 
 **File:** `src/screens/PuzzleScreen.tsx`, lines 206–218
 
@@ -253,7 +257,11 @@ User-facing consequence: players could solve puzzles and lose their completion r
 
 ---
 
-### M-3 — `JSON.parse` Without Error Handling on Database Values
+### ~~M-3 — `JSON.parse` Without Error Handling on Database Values~~ ✅ FIXED
+
+> **✅ FIXED** — `loadProgress` in `progress.ts` now wraps both `JSON.parse` calls in a try/catch, returning `null` on parse failure (puzzle loads fresh instead of crashing). `loadEntitlements` in `entitlementsStore.ts` wraps `owned_pack_ids` parse in a try/catch, falling back to `[]` so the app stays functional if that field is corrupt.
+
+
 
 **File:** `src/stores/entitlementsStore.ts` line 71, `src/utils/progress.ts` lines 80–83
 
@@ -434,8 +442,8 @@ Pack files are downloaded from Supabase Storage and written to disk with no chec
 | ~~H-3~~ | ~~HIGH~~     | ~~IAP~~           | ~~Restore Purchases inaccessible to anonymous users~~ ✅ by design                   |
 | ~~H-4~~ | ~~HIGH~~     | ~~IAP/Consumer Law~~ | ~~No purchase terms disclosed at point of sale~~ ✅                              |
 | M-1     | MEDIUM       | Privacy           | Anonymous sign-in creates server records without disclosure                           |
-| M-2     | MEDIUM       | Data Integrity    | Progress save not awaited on navigation; data loss on exit/kill                       |
-| M-3     | MEDIUM       | Stability         | `JSON.parse` unguarded on database fields; crash risk on corrupt data                 |
+| ~~M-2~~ | ~~MEDIUM~~   | ~~Data Integrity~~| ~~Progress save not awaited on navigation; data loss on exit/kill~~ ✅               |
+| ~~M-3~~ | ~~MEDIUM~~   | ~~Stability~~     | ~~`JSON.parse` unguarded on database fields; crash risk on corrupt data~~ ✅          |
 | M-4     | MEDIUM       | Game Integrity    | Streak dates computed client-side; no server validation; clock manipulation possible  |
 | M-5     | MEDIUM       | UX/Auth           | Email sign-up shows no confirmation prompt; no password reset; no strength validation |
 | ~~M-6~~ | ~~MEDIUM~~   | ~~IAP~~           | ~~Missing `storagePath` silently prevents paid pack purchase~~ ✅                     |

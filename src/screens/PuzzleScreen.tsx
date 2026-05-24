@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Animated, ActivityIndicator, AppState } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -203,7 +203,8 @@ export function PuzzleScreen({
   }, [packData, rawPuzzle, puzzleId, loadPuzzle, navigation]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', () => {
+    const unsubscribe = navigation.addListener('beforeRemove', e => {
+      e.preventDefault();
       const state = usePuzzleStore.getState();
       if (state.puzzle) {
         saveProgress(
@@ -212,11 +213,31 @@ export function PuzzleScreen({
           state.autoMarks,
           state.timeMs,
           state.completed,
-        );
+        ).finally(() => navigation.dispatch(e.data.action));
+      } else {
+        navigation.dispatch(e.data.action);
       }
     });
     return unsubscribe;
   }, [navigation]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', nextState => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        const state = usePuzzleStore.getState();
+        if (state.puzzle) {
+          saveProgress(
+            state.puzzle.id,
+            state.cells,
+            state.autoMarks,
+            state.timeMs,
+            state.completed,
+          );
+        }
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   if (!isReady || !puzzle) {
     return (

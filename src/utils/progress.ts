@@ -77,12 +77,16 @@ export async function loadProgress(puzzleId: string): Promise<{
   );
 
   if (!row) return null;
-  return {
-    cells: JSON.parse(row.cells),
-    autoMarks: JSON.parse(row.auto_marks ?? '[]'),
-    timeMs: row.time_ms,
-    completed: row.completed === 1,
-  };
+  try {
+    return {
+      cells: JSON.parse(row.cells),
+      autoMarks: JSON.parse(row.auto_marks ?? '[]'),
+      timeMs: row.time_ms,
+      completed: row.completed === 1,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function getCompletedCountForPack(
