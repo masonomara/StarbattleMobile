@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeScreen } from './screens/HomeScreen';
@@ -9,10 +9,10 @@ import { StreaksScreen } from './screens/StreaksScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
-import type { RootStackParamList } from './types/navigation';
+import type { RootStackParamList } from './types';
 // Side-effect import: loads the global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.
-import './types/navigation';
+import './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -48,20 +48,28 @@ function WrappedPuzzle(
 
 export function Navigation() {
   const theme = useTheme();
+  const navTheme = {
+    ...(theme.isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(theme.isDark ? DarkTheme : DefaultTheme).colors,
+      background: theme.bg,
+    },
+  };
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navTheme}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
           statusBarStyle: theme.isDark ? 'light' : 'dark',
+          contentStyle: { backgroundColor: theme.bg },
         }}
       >
         <Stack.Screen name="Home" component={WrappedHome} />
         <Stack.Screen name="Library" component={WrappedLibrary} />
         <Stack.Screen name="Puzzle" component={WrappedPuzzle} />
-        <Stack.Screen name="Streaks" component={StreaksScreen} />
       </Stack.Navigator>
       <SettingsModal />
+      <StreaksScreen />
     </NavigationContainer>
   );
 }

@@ -23,10 +23,14 @@ import {
 } from '../utils/progress';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
-import type { Theme } from '../types/theme';
-import type { StreakType, Streak } from '../types/state';
-import type { Pack, Puzzle } from '../types/puzzle';
-import type { RootStackParamList } from '../types/navigation';
+import type {
+  Theme,
+  StreakType,
+  Streak,
+  Pack,
+  Puzzle,
+  RootStackParamList,
+} from '../types.ts';
 
 export function HomeScreen({
   navigation,
@@ -114,7 +118,7 @@ export function HomeScreen({
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.appTitle}>Star Battle</Text>
         <View style={styles.headerRight}>
-          <CircleButton onPress={() => navigation.navigate('Streaks')}>
+          <CircleButton onPress={() => useSettingsStore.getState().openStreaks()}>
             <Flame size={24} color={theme.text} />
           </CircleButton>
           <CircleButton
@@ -179,7 +183,7 @@ export function HomeScreen({
                       {pack.gridSize}×{pack.gridSize}
                     </Text>
                   </View>
-                  {streakCount > 0 && (
+                  {isCompleted && streakCount > 0 && (
                     <Text style={styles.streakCount}>{streakCount}</Text>
                   )}
                 </Pressable>
@@ -189,68 +193,59 @@ export function HomeScreen({
         </View>
 
         <View style={styles.packSection}>
-          {freePacks.length > 0 && (
-            <>
-              <Text style={styles.sectionLabel}>Packs</Text>
-              {freePacks.map(pack => {
-                const completed = completedPerPack[pack.id] ?? 0;
-                return (
-                  <Pressable
-                    key={pack.id}
-                    style={styles.packCard}
-                    onPress={() =>
-                      navigation.navigate('Library', { packId: pack.id })
-                    }
-                  >
-                    <View style={styles.packInfo}>
-                      <Text style={styles.packName}>{pack.name}</Text>
-                      <Text style={styles.packMeta}>
-                        {pack.gridSize}×{pack.gridSize}
-                      </Text>
-                    </View>
-                    <Text style={styles.packProgress}>
-                      {completed}/{pack.puzzleCount}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </>
-          )}
+          <Text style={styles.sectionLabel}>Packs</Text>
+          {freePacks.map(pack => {
+            const completed = completedPerPack[pack.id] ?? 0;
+            return (
+              <Pressable
+                key={pack.id}
+                style={styles.packCard}
+                onPress={() =>
+                  navigation.navigate('Library', { packId: pack.id })
+                }
+              >
+                <View style={styles.packInfo}>
+                  <Text style={styles.packName}>{pack.name}</Text>
+                  <Text style={styles.packMeta}>
+                    {pack.gridSize}×{pack.gridSize}
+                  </Text>
+                </View>
+                <Text style={styles.packProgress}>
+                  {completed}/{pack.puzzleCount}
+                </Text>
+              </Pressable>
+            );
+          })}
 
-          {paidPacks.length > 0 && (
-            <>
-              <Text style={styles.sectionLabel}>More Packs</Text>
-              {paidPacks.map(pack => {
-                const hasAccess = hasPackAccess(pack.id);
-                const completed = completedPerPack[pack.id] ?? 0;
-                return (
-                  <Pressable
-                    key={pack.id}
-                    style={styles.packCard}
-                    onPress={() =>
-                      navigation.navigate('Library', { packId: pack.id })
-                    }
-                  >
-                    <View style={styles.packInfo}>
-                      <Text style={styles.packName}>{pack.name}</Text>
-                      <Text style={styles.packMeta}>
-                        {pack.gridSize}×{pack.gridSize}
-                      </Text>
-                    </View>
-                    {hasAccess ? (
-                      <Text style={styles.packProgress}>
-                        {completed}/{pack.puzzleCount}
-                      </Text>
-                    ) : (
-                      <Text style={styles.packPrice}>
-                        ${pack.priceUsd?.toFixed(2) ?? '—'}
-                      </Text>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </>
-          )}
+          {paidPacks.map(pack => {
+            const hasAccess = hasPackAccess(pack.id);
+            const completed = completedPerPack[pack.id] ?? 0;
+            return (
+              <Pressable
+                key={pack.id}
+                style={styles.packCard}
+                onPress={() =>
+                  navigation.navigate('Library', { packId: pack.id })
+                }
+              >
+                <View style={styles.packInfo}>
+                  <Text style={styles.packName}>{pack.name}</Text>
+                  <Text style={styles.packMeta}>
+                    {pack.gridSize}×{pack.gridSize}
+                  </Text>
+                </View>
+                {hasAccess ? (
+                  <Text style={styles.packProgress}>
+                    {completed}/{pack.puzzleCount}
+                  </Text>
+                ) : (
+                  <Text style={styles.packPrice}>
+                    ${pack.priceUsd?.toFixed(2) ?? '—'}
+                  </Text>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
       </ScrollView>
     </View>
@@ -352,7 +347,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       backgroundColor: theme.card,
       shadowColor: '#25292E',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: .1,
+      shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 2,
     },

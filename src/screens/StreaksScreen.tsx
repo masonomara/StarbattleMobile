@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ChevronLeft, Lock } from 'lucide-react-native';
-import { CircleButton } from '../components/CircleButton';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { X, Lock, ChevronRight } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header } from '../components/Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
@@ -16,20 +15,21 @@ import {
   STREAK_TYPES,
   STREAK_LABELS,
 } from '../utils/streakDate';
-import type { Theme } from '../types/theme';
-import type { StreakType, Streak } from '../types/state';
-import type { RootStackParamList } from '../types/navigation';
+import type { Theme, StreakType, Streak, RootStackParamList } from '../types';
 
 type ArchiveEntry = { dateKey: string; puzzleId: string };
 
-export function StreaksScreen({
-  navigation,
-}: NativeStackScreenProps<RootStackParamList, 'Streaks'>) {
+export function StreaksScreen() {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
   const { entitlements } = useEntitlements();
   const isPremium = entitlements.isPremium;
+
+  const streaksModalVisible = useSettingsStore(s => s.streaksModalVisible);
+  const closeStreaks = useSettingsStore(s => s.closeStreaks);
+
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [streaks, setStreaks] = useState<Streak[]>([]);
   const [archiveByType, setArchiveByType] = useState<
@@ -38,15 +38,10 @@ export function StreaksScreen({
   const [activeTab, setActiveTab] = useState<StreakType>('daily');
 
   useEffect(() => {
+    if (!streaksModalVisible) return;
     async function load() {
       const rawStreaks = await loadStreaks();
-      setStreaks(
-        rawStreaks.map(r => ({
-          type: r.type as StreakType,
-          current: r.currentCount,
-          lastCompletedKey: r.lastCompletedKey,
-        })),
-      );
+      setStreaks(rawStreaks);
 
       if (isPremium) {
         const results: Record<StreakType, ArchiveEntry[]> = {
@@ -63,131 +58,137 @@ export function StreaksScreen({
       }
     }
     load();
-  }, [isPremium]);
+  }, [isPremium, streaksModalVisible]);
 
   return (
-    <View style={styles.container}>
-      <Header
-        left={
-          <CircleButton onPress={() => navigation.goBack()}>
-            <ChevronLeft size={26} color={theme.text} />
-          </CircleButton>
-        }
-        center={<Text style={styles.headerTitle}>Streaks</Text>}
-      />
-
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: 48 + insets.top, paddingBottom: insets.bottom + 24 },
-        ]}
-      >
-        <View style={styles.streakGrid}>
-          {STREAK_TYPES.map(type => {
-            const found = streaks.find(s => s.type === type);
-            const count = found ? getActiveStreak(found, type) : 0;
-            return (
-              <View key={type} style={styles.streakTile}>
-                <Text style={styles.streakCount}>{count}</Text>
-                <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
-              </View>
-            );
-          })}
-        </View>
-
-        <Text style={styles.sectionTitle}>Past Puzzles</Text>
-
-        {isPremium ? (
-          <>
-            <View style={styles.tabRow}>
-              {STREAK_TYPES.map(type => (
-                <Pressable
-                  key={type}
-                  style={[styles.tab, activeTab === type && styles.tabActive]}
-                  onPress={() => setActiveTab(type)}
-                >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      activeTab === type && styles.tabTextActive,
-                    ]}
-                  >
-                    {STREAK_LABELS[type]}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            {archiveByType[activeTab].length === 0 ? (
-              <Text style={styles.emptyText}>No past puzzles yet.</Text>
-            ) : (
-              archiveByType[activeTab].map(entry => (
-                <Pressable
-                  key={entry.dateKey}
-                  style={styles.archiveRow}
-                  onPress={() =>
-                    navigation.navigate('Puzzle', {
-                      streakType: activeTab,
-                      isArchive: true,
-                      archiveKey: entry.dateKey,
-                    })
-                  }
-                >
-                  <Text style={styles.archiveDate}>{entry.dateKey}</Text>
-                  <ChevronLeft
-                    size={18}
-                    color={theme.textSecondary}
-                    style={styles.archiveChevron}
-                  />
-                </Pressable>
-              ))
-            )}
-          </>
-        ) : (
-          <View style={styles.premiumTeaser}>
-            <Lock size={28} color={theme.textSecondary} />
-            <Text style={styles.teaserTitle}>Premium Feature</Text>
-            <Text style={styles.teaserBody}>
-              Unlock access to every past daily, weekly, and monthly puzzle.
-            </Text>
-            <Pressable
-              style={styles.upgradeButton}
-              onPress={() => useSettingsStore.getState().openSettings()}
-            >
-              <Text style={styles.upgradeButtonText}>
-                Unlock with Premium · $5.99
-              </Text>
+    <Modal
+      visible={streaksModalVisible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={closeStreaks}
+    >
+      <View style={styles.container}>
+        <Header
+          absolute={false}
+          center={<Text style={styles.headerTitle}>Streaks</Text>}
+          right={
+            <Pressable onPress={closeStreaks} hitSlop={8}>
+              <X size={24} color={theme.text} />
             </Pressable>
+          }
+        />
+
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.streakGrid}>
+            {STREAK_TYPES.map(type => {
+              const found = streaks.find(s => s.type === type);
+              const count = found ? getActiveStreak(found, type) : 0;
+              return (
+                <View key={type} style={styles.streakTile}>
+                  <Text style={styles.streakCount}>{count}</Text>
+                  <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                </View>
+              );
+            })}
           </View>
-        )}
-      </ScrollView>
-    </View>
+
+          <Text style={styles.sectionTitle}>Past Puzzles</Text>
+
+          {isPremium ? (
+            <>
+              <View style={styles.tabRow}>
+                {STREAK_TYPES.map(type => (
+                  <Pressable
+                    key={type}
+                    style={[styles.tab, activeTab === type && styles.tabActive]}
+                    onPress={() => setActiveTab(type)}
+                  >
+                    <Text
+                      style={[
+                        styles.tabText,
+                        activeTab === type && styles.tabTextActive,
+                      ]}
+                    >
+                      {STREAK_LABELS[type]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              {archiveByType[activeTab].length === 0 ? (
+                <Text style={styles.emptyText}>No past puzzles yet.</Text>
+              ) : (
+                archiveByType[activeTab].map(entry => (
+                  <Pressable
+                    key={entry.dateKey}
+                    style={styles.archiveRow}
+                    onPress={() => {
+                      closeStreaks();
+                      navigation.navigate('Puzzle', {
+                        streakType: activeTab,
+                        isArchive: true,
+                        archiveKey: entry.dateKey,
+                      });
+                    }}
+                  >
+                    <Text style={styles.archiveDate}>{entry.dateKey}</Text>
+                    <ChevronRight size={18} color={theme.textSecondary} />
+                  </Pressable>
+                ))
+              )}
+            </>
+          ) : (
+            <View style={styles.premiumTeaser}>
+              <Lock size={28} color={theme.textSecondary} />
+              <Text style={styles.teaserTitle}>Premium Feature</Text>
+              <Text style={styles.teaserBody}>
+                Unlock access to every past daily, weekly, and monthly puzzle.
+              </Text>
+              <Pressable
+                style={styles.upgradeButton}
+                onPress={() => useSettingsStore.getState().openSettings()}
+              >
+                <Text style={styles.upgradeButtonText}>
+                  Unlock with Premium · $5.99
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </Modal>
   );
 }
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.card },
+    container: {
+      flex: 1,
+      paddingTop: theme.spacingXl,
+      backgroundColor: theme.card,
+    },
     scrollContent: {
       paddingHorizontal: theme.spacingXl,
+      paddingBottom: theme.spacingXl,
     },
     headerTitle: {
-      fontSize: 16,
-      fontWeight: '600',
+      fontSize: theme.fontSizeBody,
+      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     streakGrid: {
       flexDirection: 'row',
       gap: theme.spacingMd,
       marginBottom: theme.spacingXl,
+      marginTop: theme.spacingLg,
     },
     streakTile: {
       flex: 1,
-      backgroundColor: theme.card,
+      backgroundColor: theme.bg,
       borderRadius: theme.radiusMd,
       padding: theme.spacingLg,
       alignItems: 'center',
-           shadowOffset: { width: 0, height: 4 },
+      shadowOffset: { width: 0, height: 4 },
       shadowColor: '#25292E',
       shadowOpacity: 0.10,
       shadowRadius: 24,
@@ -219,7 +220,7 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
-      backgroundColor: theme.card,
+      backgroundColor: theme.bg,
     },
     tabActive: {
       backgroundColor: theme.accent,
@@ -239,16 +240,14 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingLg,
       paddingHorizontal: theme.spacingXl,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.card,
+      backgroundColor: theme.bg,
       marginBottom: theme.spacingMd,
     },
     archiveDate: {
       fontSize: theme.fontSizeCallout,
       color: theme.text,
     },
-    archiveChevron: {
-      transform: [{ rotate: '180deg' }],
-    },
+
     emptyText: {
       fontSize: theme.fontSizeCallout,
       color: theme.textSecondary,
@@ -259,7 +258,7 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       padding: theme.spacingXl,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.card,
+      backgroundColor: theme.bg,
       gap: theme.spacingMd,
     },
     teaserTitle: {

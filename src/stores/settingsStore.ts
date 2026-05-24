@@ -1,20 +1,24 @@
 import { create } from 'zustand';
 import { DEFAULT_SETTINGS, getSettings, saveSettings } from '../storage';
-import type { UserSettings } from '../types/state';
+import type { UserSettings } from '../types.ts';
 import { usePuzzleStore } from '../store';
 
 type SettingsState = {
   settings: UserSettings;
   settingsModalVisible: boolean;
+  streaksModalVisible: boolean;
   initialize: () => void;
   updateSettings: (update: Partial<UserSettings>) => void;
   openSettings: () => void;
   closeSettings: () => void;
+  openStreaks: () => void;
+  closeStreaks: () => void;
 };
 
 export const useSettingsStore = create<SettingsState>(set => ({
   settings: DEFAULT_SETTINGS,
   settingsModalVisible: false,
+  streaksModalVisible: false,
 
   initialize: () => {
     set({ settings: getSettings() });
@@ -22,6 +26,8 @@ export const useSettingsStore = create<SettingsState>(set => ({
 
   openSettings: () => set({ settingsModalVisible: true }),
   closeSettings: () => set({ settingsModalVisible: false }),
+  openStreaks: () => set({ streaksModalVisible: true }),
+  closeStreaks: () => set({ streaksModalVisible: false }),
 
   updateSettings: update => {
     saveSettings(update);
