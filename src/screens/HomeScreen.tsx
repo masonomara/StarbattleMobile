@@ -196,7 +196,7 @@ export function HomeScreen({
         </View>
 
         <View style={styles.packSection}>
-          <Text style={styles.sectionLabel}>Packs</Text>
+          <Text style={styles.sectionLabel}>Puzzle Library</Text>
           {freePacks.map(pack => {
             const completed = completedPerPack[pack.id] ?? 0;
             return (
@@ -234,13 +234,11 @@ export function HomeScreen({
                 <View style={styles.packInfo}>
                   <Text style={styles.packName}>{pack.name}</Text>
                   <Text style={styles.packMeta}>
-                    {pack.gridSize}×{pack.gridSize}
+                    {completed}/{pack.puzzleCount}
                   </Text>
                 </View>
                 {hasAccess ? (
-                  <Text style={styles.packProgress}>
-                    {completed}/{pack.puzzleCount}
-                  </Text>
+                  <Text style={styles.packProgress}> </Text>
                 ) : (
                   <Text style={styles.packPrice}>
                     ${pack.priceUsd?.toFixed(2) ?? '—'}
@@ -287,7 +285,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       backgroundColor: theme.bg,
     },
     packSection: {
-      paddingTop: 34,
+      paddingTop: 16,
       backgroundColor: theme.bg,
 
       paddingHorizontal: 16,
@@ -297,7 +295,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       gap: theme.spacingMd,
       zIndex: 100,
       overflow: 'visible',
-      marginBottom: 34,
+      marginBottom: 16,
     },
     streakCard: {
       borderRadius: 16,
@@ -336,11 +334,14 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       marginTop: theme.spacingMd,
     },
     sectionLabel: {
-      fontSize: 22,
-      lineHeight: 28,
-      fontWeight: theme.fontWeightSemibold,
+      lineHeight: 30,
+
+      marginBottom: 16,
+      fontSize: 24,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
       color: theme.text,
-      marginBottom: theme.spacingMd,
+      letterSpacing: -0.33,
     },
     packCard: {
       flexDirection: 'row',
@@ -348,7 +349,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       alignItems: 'center',
       padding: 17,
       borderRadius: 4,
-      marginBottom: theme.spacingMd,
+      marginBottom: 12,
       backgroundColor: theme.card,
       borderWidth: 1,
       borderColor: theme.textSecondary + '33',
@@ -362,9 +363,12 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       letterSpacing: -0.56,
     },
     packMeta: {
-      fontSize: theme.fontSizeSubhead,
-      marginTop: 4,
+      fontSize: 17,
+      lineHeight: 22,
+      fontWeight: 500,
       color: theme.textSecondary,
+      letterSpacing: -0.56,
+      marginTop: 2,
     },
     packProgress: {
       fontSize: theme.fontSizeCallout,
