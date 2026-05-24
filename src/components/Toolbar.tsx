@@ -14,9 +14,7 @@ import { usePuzzleStore } from '../store';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { Haptics } from 'react-native-nitro-haptics';
-import type { TapMode } from '../types/state';
-import type { Theme } from '../types/theme';
-import type { ToolbarProps } from '../types/components';
+import type { TapMode, Theme, ToolbarProps } from '../types';
 
 const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   cycle: Pencil,

@@ -1,7 +1,7 @@
 import { useColorScheme } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { PALETTES } from '../themes/palettes';
-import type { Theme } from '../types/theme';
+import type { Theme } from '../types.ts';
 
 export function useTheme(): Theme {
   const systemScheme = useColorScheme();

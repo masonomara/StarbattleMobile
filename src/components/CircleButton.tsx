@@ -1,8 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
-import type { Theme } from '../types/theme';
-import type { CircleButtonProps } from '../types/components';
+import type { Theme, CircleButtonProps } from '../types';
 
 export function CircleButton({
   onPress,

@@ -11,8 +11,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, purchasePack } from '../utils/payments';
-import type { Theme } from '../types/theme';
-import type { PaywallModalProps } from '../types/components';
+import type { Theme, PaywallModalProps } from '../types';
 
 export function PaywallModal({
   context,

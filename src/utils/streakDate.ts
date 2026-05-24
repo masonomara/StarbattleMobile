@@ -1,5 +1,5 @@
 import { db } from '../powersync/AppSchema';
-import type { Streak, StreakType } from '../types/state';
+import type { Streak, StreakType } from '../types.ts';
 
 export const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 

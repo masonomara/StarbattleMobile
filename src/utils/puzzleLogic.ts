@@ -1,5 +1,4 @@
-import type { CellValue, CellChange, UserSettings } from '../types/state';
-import type { Puzzle } from '../types/puzzle';
+import type { CellValue, CellChange, UserSettings, Puzzle } from '../types.ts';
 
 function collectZoneMarks(
   cells: CellValue[],

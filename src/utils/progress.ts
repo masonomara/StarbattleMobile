@@ -1,7 +1,7 @@
 import { db } from '../powersync/AppSchema';
 import { useAuthStore } from '../stores/authStore';
 import { getCurrentKey, getPreviousKey } from './streakDate';
-import type { CellValue, StreakType, Streak } from '../types/state';
+import type { CellValue, StreakType, Streak } from '../types.ts';
 
 export async function saveProgress(
   puzzleId: string,

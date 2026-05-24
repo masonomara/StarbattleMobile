@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import type { PuzzleThumbnailProps } from '../types/components';
+import type { PuzzleThumbnailProps } from '../types';
 
 export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   puzzle,

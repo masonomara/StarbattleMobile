@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { db } from '../powersync/AppSchema';
-import type { Entitlements, PackCatalogItem } from '../types/user';
+import type { Entitlements, PackCatalogItem } from '../types.ts';
 
 type PackRow = {
   id: string;

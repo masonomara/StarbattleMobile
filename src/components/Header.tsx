@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { HeaderProps } from '../types/components';
+import type { HeaderProps } from '../types';
 
 export function Header({ left, center, right, absolute = true }: HeaderProps) {
   const insets = useSafeAreaInsets();

@@ -21,8 +21,7 @@ import { useEntitlements } from '../hooks/useEntitlements';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, restorePurchases } from '../utils/payments';
 import { PALETTES, PALETTE_META, PALETTE_NAMES } from '../themes/palettes';
-import type { Theme } from '../types/theme';
-import type { UserSettings } from '../types/state';
+import type { Theme, UserSettings } from '../types';
 
 type EmailMode = 'signup' | 'signin' | null;
 

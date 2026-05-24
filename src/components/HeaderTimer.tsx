@@ -3,7 +3,7 @@ import { Text, StyleSheet } from 'react-native';
 import { usePuzzleStore } from '../store';
 import { useTheme } from '../hooks/useTheme';
 
-import type { Theme } from '../types/theme';
+import type { Theme } from '../types';
 
 export function HeaderTimer() {
   const timeMs = usePuzzleStore(s => s.timeMs);

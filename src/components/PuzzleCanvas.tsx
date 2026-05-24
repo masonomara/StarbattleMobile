@@ -2,10 +2,7 @@ import React, { useImperativeHandle, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import type { Puzzle } from '../types/puzzle';
-import type { CellValue, DrawLayerHandle } from '../types/state';
-import type { Theme } from '../types/theme';
-import type { PuzzleCanvasProps } from '../types/components';
+import type { Puzzle, CellValue, DrawLayerHandle, Theme, PuzzleCanvasProps } from '../types';
 
 
 type BackgroundCanvasProps = {
