@@ -1,10 +1,10 @@
 import {
   View,
-  Text,
   Pressable,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { Text } from './Text';
 import { X } from 'lucide-react-native';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';

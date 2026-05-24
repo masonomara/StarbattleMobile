@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { Modal, View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { Text } from '../components/Text';
 import { X, Lock, ChevronRight } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';

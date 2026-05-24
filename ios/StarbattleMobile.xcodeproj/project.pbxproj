@@ -12,7 +12,8 @@
 		8179B8D3979465D293FBEEC0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		C10ABB28B40D19C36B43D964 /* libPods-StarbattleMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */; };
-		4DCECDFC02AF46B1A0854E1A /* Bitter-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A4CDCCB5C0A64037AF11013A /* Bitter-Variable.ttf */; };
+		48CC074B91584BABA82B22BD /* BricolageGrotesque-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */; };
+		A8CAB1CE2D6F4F5A88215494 /* Karla-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EA7850AD4E604866A21311CB /* Karla-Variable.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +28,8 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = StarbattleMobile/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-StarbattleMobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		A4CDCCB5C0A64037AF11013A /* Bitter-Variable.ttf */ = {isa = PBXFileReference; name = "Bitter-Variable.ttf"; path = "../assets/fonts/Bitter-Variable.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */ = {isa = PBXFileReference; name = "BricolageGrotesque-Variable.ttf"; path = "../assets/fonts/BricolageGrotesque-Variable.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		EA7850AD4E604866A21311CB /* Karla-Variable.ttf */ = {isa = PBXFileReference; name = "Karla-Variable.ttf"; path = "../assets/fonts/Karla-Variable.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,7 +108,8 @@
 		B1A9BBC04A1B4DF4BF7403D5 /* Resources */ = {
 			isa = "PBXGroup";
 			children = (
-				A4CDCCB5C0A64037AF11013A /* Bitter-Variable.ttf */,
+				3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */,
+				EA7850AD4E604866A21311CB /* Karla-Variable.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -176,7 +179,8 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				8179B8D3979465D293FBEEC0 /* PrivacyInfo.xcprivacy in Resources */,
-				4DCECDFC02AF46B1A0854E1A /* Bitter-Variable.ttf in Resources */,
+				48CC074B91584BABA82B22BD /* BricolageGrotesque-Variable.ttf in Resources */,
+				A8CAB1CE2D6F4F5A88215494 /* Karla-Variable.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

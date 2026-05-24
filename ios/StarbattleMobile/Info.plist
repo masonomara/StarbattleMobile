@@ -67,7 +67,8 @@
 	</array>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Bitter-Variable.ttf</string>
+		<string>BricolageGrotesque-Variable.ttf</string>
+		<string>Karla-Variable.ttf</string>
 	</array>
 </dict>
 </plist>

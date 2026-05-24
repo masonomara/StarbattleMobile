@@ -2,8 +2,12 @@
   "migIndex": 1,
   "data": [
     {
-      "path": "assets/fonts/Bitter-Variable.ttf",
-      "sha1": "a23428ed4f98be52433e2d658d0fde4b8a69266c"
+      "path": "assets/fonts/BricolageGrotesque-Variable.ttf",
+      "sha1": "eb41484bba537d10397bc6fa741c534b4c0ae67b"
+    },
+    {
+      "path": "assets/fonts/Karla-Variable.ttf",
+      "sha1": "d96122d6b46f29eb39527703e20a429af1b57e66"
     }
   ]
 }

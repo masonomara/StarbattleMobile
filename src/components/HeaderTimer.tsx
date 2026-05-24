@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Text } from './Text';
 import { usePuzzleStore } from '../store';
 import { useTheme } from '../hooks/useTheme';
 

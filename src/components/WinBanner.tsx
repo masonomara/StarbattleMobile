@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Text, Pressable, StyleSheet } from 'react-native';
+import { Animated, Pressable, StyleSheet } from 'react-native';
+import { Text } from './Text';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -129,7 +130,7 @@ const createStyles = (theme: Theme) =>
       color: theme.text,
       lineHeight: 34,
       fontSize: 28,
-      fontFamily: 'Bitter',
+      fontFamily: 'Bricolage Grotesque',
       fontWeight: 700,
       marginTop: 8,
     },

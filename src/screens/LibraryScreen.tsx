@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, Pressable, FlatList, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Pressable, FlatList, StyleSheet, useWindowDimensions } from 'react-native';
+import { Text } from '../components/Text';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';

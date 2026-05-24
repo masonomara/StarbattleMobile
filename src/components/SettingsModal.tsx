@@ -3,7 +3,6 @@ import {
   Modal,
   Platform,
   View,
-  Text,
   ScrollView,
   Pressable,
   TextInput,
@@ -11,6 +10,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { Text } from './Text';
 import { X } from 'lucide-react-native';
 import Svg, { Rect, Line, Path } from 'react-native-svg';
 import { Header } from './Header';

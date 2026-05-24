@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
 import { Flame, User } from 'lucide-react-native';
@@ -116,7 +117,7 @@ export function HomeScreen({
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top }]}>
-        <Text style={styles.appTitle}>Star Battle</Text>
+        <Text style={styles.appTitle}>Star Battle Free</Text>
         <View style={styles.headerRight}>
           <CircleButton onPress={() => useSettingsStore.getState().openStreaks()}>
             <Flame size={24} color={theme.text} />
@@ -269,10 +270,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       backgroundColor: theme.bg,
     },
     appTitle: {
-      fontSize: 28,
-      fontFamily: 'Bitter',
-      fontWeight: '600',
+      fontSize: 22,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
       color: theme.text,
+      letterSpacing: -0.33,
     },
     headerRight: {
       flexDirection: 'row',
@@ -308,11 +310,12 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     streakLabel: {
       color: theme.text,
-      lineHeight: 28,
-      fontSize: 22,
-      fontFamily: 'Bitter',
-      fontWeight: '600',
+      lineHeight: 34,
+      fontSize: 28,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
       marginTop: 9,
+      letterSpacing: -0.42,
     },
     streakMeta: {
       color: theme.textSecondary,
