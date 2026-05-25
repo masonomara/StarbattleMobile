@@ -154,7 +154,7 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       maxWidth: 412,
       borderRadius: 100,
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
+      backgroundColor: rgba(theme.isDark ? theme.gray : theme.white, 1),
       shadowOffset: { width: 0, height: 4 },
       shadowColor: '#25292E',
       shadowOpacity: 0.1,
@@ -170,10 +170,10 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       borderRadius: 100,
       zIndex: 100,
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
+      backgroundColor: rgba(theme.isDark ? theme.gray : theme.white, 1),
     },
     buttonAccent: {
-      backgroundColor: rgba(theme.darkGray, 1),
+      backgroundColor: rgba(theme.gray, 1),
     },
     buttonDisabled: {
       opacity: 0.4,

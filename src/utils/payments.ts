@@ -52,6 +52,7 @@ export async function purchasePack(
   const result = await adapty.makePurchase(product);
   if (result.type !== 'success') throw new Error('Purchase did not complete. Please try again.');
   await downloadPack(packId, storagePath);
+  useEntitlementsStore.getState().addOwnedPack(packId);
 }
 
 // Returns true if premium access was found and activated, false otherwise.

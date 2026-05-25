@@ -415,7 +415,7 @@ const createStyles = (
       justifyContent: 'flex-start',
 
       borderWidth: 2,
-      borderColor: rgba(theme.isDark ? theme.darkGray : theme.lightGray, 1),
+      borderColor: rgba(theme.isDark ? theme.gray : theme.lightGray, 1),
     },
     streakCardCompleted: {
       opacity: 0.6,
@@ -449,12 +449,12 @@ const createStyles = (
     },
     streakThumbnailWrap: {
       overflow: 'hidden',
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
     },
     streakCount: {
       fontSize: 16,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.darkBlue, 1),
+      color: rgba(theme.blue, 1),
       marginTop: 4,
     },
     streakPlayButton: {
@@ -464,7 +464,7 @@ const createStyles = (
       borderWidth: 2,
       justifyContent: 'center',
       borderColor: rgba(theme.isDark ? theme.white : theme.black, 1),
-      backgroundColor: rgba(theme.isDark ? theme.black : theme.darkBlue, 1),
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.blue, 1),
     },
     streakPlayButtonText: {
       fontSize: 19,
@@ -490,7 +490,7 @@ const createStyles = (
       marginBottom: 12,
       backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
       borderWidth: 1,
-      borderColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 0.2),
+      borderColor: rgba(theme.isDark ? theme.gray : theme.gray, 0.2),
     },
     packThumb: {
       marginRight: 14,
@@ -507,19 +507,19 @@ const createStyles = (
       fontSize: 17,
       lineHeight: 22,
       fontWeight: 500,
-      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
       letterSpacing: -0.56,
       marginTop: 2,
     },
     packProgress: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.darkBlue, 1),
+      color: rgba(theme.blue, 1),
     },
     packPrice: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
     },
   });
 };

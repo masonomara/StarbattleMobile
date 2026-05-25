@@ -125,7 +125,7 @@ const createStyles = (theme: Theme) =>
       shadowOpacity: 0.24,
       shadowRadius: 24,
       elevation: 8,
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
+      backgroundColor: rgba(theme.isDark ? theme.gray : theme.white, 1),
     },
     winText: {
       color: rgba(theme.isDark ? theme.white : theme.black, 1),
@@ -140,7 +140,7 @@ const createStyles = (theme: Theme) =>
       lineHeight: 20,
       fontWeight: 600,
 
-      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
     },
     winTime: {
       fontSize: 15,

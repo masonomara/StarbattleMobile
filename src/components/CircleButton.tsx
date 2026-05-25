@@ -26,7 +26,7 @@ const createStyles = (theme: Theme) =>
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.white, 1),
+      backgroundColor: rgba(theme.isDark ? theme.gray : theme.white, 1),
       shadowOffset: { width: 0, height: 4 },
       shadowColor: '#000000',
       shadowOpacity: 0.1,

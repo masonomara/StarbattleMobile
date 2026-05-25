@@ -74,8 +74,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (session) await adapty.identify(session.user.id);
         return;
       }
-      if (event === 'USER_UPDATED' && get().isPasswordRecovery) {
-        set({ isPasswordRecovery: false });
+      if (event === 'USER_UPDATED') {
+        // Do NOT derive isAnonymous here. Supabase fires USER_UPDATED after
+        // updateUser() during the pending-email-confirmation window, at which
+        // point is_anonymous may already read false even though the email has
+        // not been confirmed. isAnonymous is only updated on SIGNED_IN (which
+        // fires when the confirmation link is clicked and setSession() runs).
+        if (get().isPasswordRecovery) set({ isPasswordRecovery: false });
+        set({ session, user: session?.user ?? null });
+        return;
       }
       const isAnonymous = session?.user?.is_anonymous ?? true;
       set({ session, user: session?.user ?? null, isAnonymous });
@@ -94,7 +101,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   handleDeepLink: async (url: string) => {
-    if (!url.includes('type=recovery')) return;
+    if (!url.includes('type=recovery') && !url.includes('type=signup') && !url.includes('type=email_change')) return;
     const hashIdx = url.indexOf('#');
     if (hashIdx < 0) return;
     const params = parseUrlFragment(url.slice(hashIdx + 1));
@@ -129,7 +136,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // A failed cleanup is acceptable (orphan); a pre-sign-in delete on a failed
     // sign-in would permanently destroy the anonymous user's progress.
     if (anonId) {
-      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch (_) {}
+      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch {}
     }
   },
 
@@ -145,13 +152,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
     if (anonId) {
-      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch (_) {}
+      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch {}
     }
   },
 
   signInWithApple: async () => {
     const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
     const { appleAuth } = await import('@invertase/react-native-apple-authentication');
+    // FULL_NAME is intentionally omitted — Apple only sends it on the very first
+    // authorization and never again. Requesting it without storing it immediately
+    // is a GDPR data-minimization violation. If a display name is ever needed,
+    // prompt the user to enter one after sign-in rather than relying on Apple.
     const credential = await appleAuth.performRequest({
       requestedOperation: appleAuth.Operation.LOGIN,
       requestedScopes: [appleAuth.Scope.EMAIL],
@@ -163,7 +174,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
     if (anonId) {
-      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch (_) {}
+      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch {}
     }
   },
 
@@ -175,6 +186,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   setNewPassword: async (password: string) => {
+    if (password.length < 6) throw new Error('Password must be at least 6 characters');
     const { error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
     set({ isPasswordRecovery: false });
@@ -184,7 +196,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await supabase.auth.signOut();
     await adapty.logout();
     set({ session: null, user: null, isAnonymous: true });
-    try { await get().signInAnonymously(); } catch (_) {}
+    try { await get().signInAnonymously(); } catch {}
   },
 
   // Permanently deletes the account and all associated server-side data.
@@ -213,8 +225,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   deleteAccount: async () => {
     const { error } = await supabase.rpc('delete_user');
     if (error) throw new Error('Account deletion failed. Please try again or contact support.');
-    try { await adapty.logout(); } catch (_) {}
+    try { await adapty.logout(); } catch {}
     set({ session: null, user: null, isAnonymous: true });
-    try { await get().signInAnonymously(); } catch (_) {}
+    try { await get().signInAnonymously(); } catch {}
   },
 }));

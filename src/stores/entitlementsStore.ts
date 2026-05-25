@@ -37,6 +37,7 @@ type EntitlementsState = {
   loadPackCatalog: () => Promise<void>;
   loadEntitlements: (userId: string) => Promise<void>;
   setIsPremium: (val: boolean) => void;
+  addOwnedPack: (packId: string) => void;
   hasPackAccess: (packId: string) => boolean;
   canPlayPuzzle: (packId: string, puzzleIndex: number, completedCount: number) => boolean;
 };
@@ -59,13 +60,25 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
     set(state => ({ entitlements: { ...state.entitlements, isPremium: val } }));
   },
 
+  addOwnedPack: (packId: string) => {
+    set(state => {
+      if (state.entitlements.ownedPackIds.includes(packId)) return state;
+      return {
+        entitlements: {
+          ...state.entitlements,
+          ownedPackIds: [...state.entitlements.ownedPackIds, packId],
+        },
+      };
+    });
+  },
+
   loadEntitlements: async (userId: string) => {
     const [entRow, catalogRows] = await Promise.all([
       db.getOptional<{
         is_premium: number;
         premium_purchased_at: string | null;
         owned_pack_ids: string;
-      }>('SELECT * FROM user_entitlements WHERE id = ?', [userId]),
+      }>('SELECT * FROM user_entitlements WHERE user_id = ?', [userId]),
       db.getAll<PackRow>(PACK_QUERY),
     ]);
 

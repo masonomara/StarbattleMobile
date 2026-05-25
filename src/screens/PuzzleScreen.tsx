@@ -243,7 +243,7 @@ export function PuzzleScreen({
   if (!isReady || !puzzle) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={rgba(theme.darkBlue, 1)} />
+        <ActivityIndicator color={rgba(theme.blue, 1)} />
       </View>
     );
   }

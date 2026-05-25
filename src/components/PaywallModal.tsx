@@ -143,7 +143,7 @@ export function PaywallModal({
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       <View style={styles.sheet}>
         <Pressable style={styles.closeButton} onPress={onClose} hitSlop={8}>
-          <X size={20} color={rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1)} />
+          <X size={20} color={rgba(theme.isDark ? theme.gray : theme.gray, 1)} />
         </Pressable>
         {renderContent()}
         {error && <Text style={styles.error}>{error}</Text>}
@@ -175,7 +175,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: rgba(theme.isDark ? theme.white : theme.black, 0.4),
     },
     sheet: {
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
       paddingHorizontal: theme.spacingXl,
@@ -195,7 +195,7 @@ const createStyles = (theme: Theme) =>
     },
     body: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
       lineHeight: 22,
       marginBottom: theme.spacingMd,
     },
@@ -204,7 +204,7 @@ const createStyles = (theme: Theme) =>
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.darkBlue, 1),
+      backgroundColor: rgba(theme.blue, 1),
     },
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
@@ -216,7 +216,7 @@ const createStyles = (theme: Theme) =>
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
     },
     secondaryButtonText: {
       fontSize: theme.fontSizeCallout,
@@ -226,7 +226,7 @@ const createStyles = (theme: Theme) =>
     disabled: { opacity: 0.6 },
     error: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.darkRed, 1),
+      color: rgba(theme.red, 1),
       textAlign: 'center',
     },
     disclosureContainer: {
@@ -240,11 +240,11 @@ const createStyles = (theme: Theme) =>
     },
     disclosureLink: {
       fontSize: 11,
-      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
       textDecorationLine: 'underline',
     },
     disclosureSep: {
       fontSize: 11,
-      color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
     },
   });

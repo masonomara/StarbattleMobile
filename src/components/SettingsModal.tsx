@@ -113,7 +113,7 @@ function PalettePreview({
             y1={bw + i * cs}
             x2={S - bw}
             y2={bw + i * cs}
-            stroke={rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.darkGray, 1)}
+            stroke={rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.gray, 1)}
             strokeWidth={0.5}
           />
           <Line
@@ -121,7 +121,7 @@ function PalettePreview({
             y1={bw}
             x2={bw + i * cs}
             y2={S - bw}
-            stroke={rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.darkGray, 1)}
+            stroke={rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.gray, 1)}
             strokeWidth={0.5}
           />
         </React.Fragment>
@@ -226,7 +226,7 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1), true: rgba(theme.lightBlue, 1) }}
+        trackColor={{ false: rgba(theme.isDark ? theme.lightGray : theme.gray, 1), true: rgba(theme.lightBlue, 1) }}
         thumbColor="#FFFFFF"
       />
     </View>
@@ -272,6 +272,17 @@ export function SettingsModal() {
     });
   }
 
+  function warnProgressReplacement(onConfirm: () => void) {
+    Alert.alert(
+      'Replace Anonymous Progress?',
+      'Signing into an existing account will replace your current anonymous progress. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Continue', onPress: onConfirm },
+      ],
+    );
+  }
+
   async function handleEmailSubmit() {
     if (!email || !password) {
       setError('Enter email and password');
@@ -281,18 +292,22 @@ export function SettingsModal() {
       setError('Password must be at least 6 characters');
       return;
     }
-    await withLoading(async () => {
-      if (emailMode === 'signup') {
+    if (emailMode === 'signup') {
+      await withLoading(async () => {
         await signUpWithEmail(email, password);
         setEmailMode('confirm-email');
         setPassword('');
-      } else {
+      });
+      return;
+    }
+    warnProgressReplacement(() =>
+      withLoading(async () => {
         await signInWithEmail(email, password);
         setEmailMode(null);
         setEmail('');
         setPassword('');
-      }
-    });
+      }),
+    );
   }
 
   const ownedPacks = packCatalog.filter(p =>
@@ -351,7 +366,7 @@ export function SettingsModal() {
                     {Platform.OS === 'ios' && (
                       <Pressable
                         style={[styles.primaryButton, loading && styles.disabled]}
-                        onPress={() => withLoading(signInWithApple)}
+                        onPress={() => warnProgressReplacement(() => withLoading(signInWithApple))}
                         disabled={loading}
                       >
                         {loading ? (
@@ -369,11 +384,11 @@ export function SettingsModal() {
                         Platform.OS === 'ios' ? styles.secondaryButton : styles.primaryButton,
                         loading && styles.disabled,
                       ]}
-                      onPress={() => withLoading(signInWithGoogle)}
+                      onPress={() => warnProgressReplacement(() => withLoading(signInWithGoogle))}
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={Platform.OS === 'ios' ? rgba(theme.darkBlue, 1) : rgba(theme.isDark ? theme.black : theme.white, 1)} />
+                        <ActivityIndicator color={Platform.OS === 'ios' ? rgba(theme.blue, 1) : rgba(theme.isDark ? theme.black : theme.white, 1)} />
                       ) : (
                         <Text style={Platform.OS === 'ios' ? styles.secondaryButtonText : styles.primaryButtonText}>
                           Continue with Google
@@ -409,7 +424,7 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Email"
-                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
+                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.gray, 1)}
                       value={email}
                       onChangeText={setEmail}
                       autoCapitalize="none"
@@ -419,7 +434,7 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Password"
-                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
+                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.gray, 1)}
                       value={password}
                       onChangeText={setPassword}
                       secureTextEntry
@@ -477,7 +492,7 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Email"
-                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
+                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.gray, 1)}
                       value={email}
                       onChangeText={setEmail}
                       autoCapitalize="none"
@@ -749,7 +764,7 @@ export function SettingsModal() {
                         <Text
                           style={[
                             styles.swatchLabel,
-                            { color: rgba(paletteTheme.isDark ? paletteTheme.darkGray : paletteTheme.darkGray, 1) },
+                            { color: rgba(paletteTheme.isDark ? paletteTheme.gray : paletteTheme.gray, 1) },
                           ]}
                         >
                           {PALETTE_META[name].label}
@@ -786,9 +801,9 @@ export function SettingsModal() {
 
 const createStyles = (theme: Theme) => {
   const bg   = theme.isDark ? theme.black  : theme.white;
-  const card = theme.isDark ? theme.darkGray  : theme.white;
+  const card = theme.isDark ? theme.gray  : theme.white;
   const fg   = theme.isDark ? theme.white : theme.black;
-  const dim  = theme.isDark ? theme.darkGray  : theme.darkGray;
+  const dim  = theme.isDark ? theme.gray  : theme.gray;
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -845,7 +860,7 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(theme.darkBlue, 1),
+      backgroundColor: rgba(theme.blue, 1),
     },
     themeButtonInactive: {
       paddingHorizontal: theme.spacingLg,
@@ -911,7 +926,7 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(theme.darkBlue, 1),
+      backgroundColor: rgba(theme.blue, 1),
     },
     premiumBadgeText: {
       fontSize: theme.fontSizeSubhead,
@@ -932,7 +947,7 @@ const createStyles = (theme: Theme) => {
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.darkBlue, 1),
+      backgroundColor: rgba(theme.blue, 1),
     },
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
@@ -957,7 +972,7 @@ const createStyles = (theme: Theme) => {
     },
     linkText: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.darkBlue, 1),
+      color: rgba(theme.blue, 1),
     },
     formTitle: {
       fontSize: theme.fontSizeBody,
@@ -982,7 +997,7 @@ const createStyles = (theme: Theme) => {
     destructiveButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.darkRed, 1),
+      color: rgba(theme.red, 1),
     },
     legalLinks: {
       flexDirection: 'row',

@@ -816,3 +816,339 @@ Address before any App Store submission:
 7. **Fix N-M-4 (dead code in forgot-password flow)** — Low effort; improves UX for password reset.
 
 8. **Fix N-H-1 consequential issue (signInAnonymously failure leaves app in broken state)** — After the N-H-1 fix reduces the blast radius, add error recovery for the anonymous sign-in failure case in `deleteAccount`.
+
+---
+
+---
+
+# Round 3 — Deep Audit Findings
+
+**Audit date: May 2026** — Full read of all files added or modified in the `revie` branch, plus cross-file tracer analysis of callers and callees. All Round 2 open items remain open; this round adds 8 new findings.
+
+---
+
+## Round 3 Executive Summary
+
+Round 2 fixed 6 of 13 items; 6 remain open. This third pass surfaced **8 new findings**, including a critical committed private key, a broken email confirmation flow that leaves users permanently anonymous after clicking their confirmation link, and a post-purchase lockout scenario where a paid pack purchase immediately succeeds at the payment layer but the app gates the user out due to no client-side entitlement update.
+
+---
+
+## CRITICAL — Round 3
+
+---
+
+### R3-C-1 — Apple App Store Connect Private Key Committed to Git
+
+**File:** `docs/SubscriptionKey_5M2LWM6WJA.p8`
+
+A real ECDSA P-256 private key is tracked in the repository:
+
+```
+-----BEGIN PRIVATE KEY-----
+MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg8+2sVw+7xEHa+SSs
+nCvOiBMQGu8pOwONxZTZ2zwMmMugCgYIKoZIzj0DAQehRANCAAT24RlLqXEaSvyY...
+```
+
+The filename `SubscriptionKey_5M2LWM6WJA.p8` matches the format of Apple App Store Connect subscription notification keys — the private key used to verify or sign server-to-server notifications from Apple for auto-renewable subscriptions (StoreKit 2 notifications, App Store Server Notifications). It has been committed since at least the `bb4f706` commit ("nut").
+
+**Specific harms:**
+
+1. Anyone with repository access can use this key to authenticate as the app's App Store Connect account when calling Apple's App Store Server API — allowing reads of subscription receipts, transaction histories, and subscriber data for any user of the app.
+2. If the key is also used as a webhook verification key, an attacker can generate forged subscription-state notifications that the server would accept as genuine Apple notifications, triggering fraudulent entitlement grants.
+3. Git history permanently retains the key even after file deletion; the key must be rotated immediately and the commit history rewritten to remove it.
+4. `*.p8` is not listed in `.gitignore` — the same class of file could be committed again.
+
+**Required actions:**
+1. **Immediately** revoke this key in App Store Connect (App Store Connect → Users and Access → Integrations → App Store Connect API or Server Notifications).
+2. Add `*.p8` to `.gitignore`.
+3. Remove `docs/SubscriptionKey_5M2LWM6WJA.p8` from git history using `git filter-repo --path docs/SubscriptionKey_5M2LWM6WJA.p8 --invert-paths`.
+4. Generate and securely store a replacement key (never in source control).
+
+---
+
+## HIGH — Round 3
+
+---
+
+### ~~R3-H-1 — Email Confirmation Deep Link (`type=signup`) Silently Dropped; Users Remain Anonymous Forever~~ ✅ FIXED
+
+> **✅ FIXED** — `handleDeepLink` now handles `type=signup` and `type=email_change` in addition to `type=recovery`. All three call `supabase.auth.setSession()` with the tokens from the URL fragment. For `type=signup`, this fires `SIGNED_IN` in `onAuthStateChange`, which (combined with the R3-M-3 fix) correctly flips `isAnonymous` to `false` only after the confirmed session is established.
+
+**File:** `src/stores/authStore.ts`, line 97
+
+```typescript
+handleDeepLink: async (url: string) => {
+  if (!url.includes('type=recovery')) return;  // ← drops type=signup, type=email_change
+  // ...
+}
+```
+
+When a user signs up with email via `signUpWithEmail`, Supabase sends a confirmation email. Clicking that link opens the app via a deep link of the form:
+
+```
+starbattle://...#access_token=...&refresh_token=...&type=signup
+```
+
+`handleDeepLink` checks only for `type=recovery` and returns immediately for any other URL type. The `type=signup` link is silently dropped. `supabase.auth.setSession()` is never called. The `onAuthStateChange` handler never fires (no session change). The user's Supabase account is confirmed server-side, but the app continues to run in the anonymous session — `isAnonymous` stays `true` indefinitely.
+
+The `AppState` listener in `App.tsx` calls `supabase.auth.refreshSession()` on foreground, but this refreshes the anonymous session (still valid), not the newly-confirmed named session. The user would need to manually go to sign-in and enter their credentials to get the named account — an action they have no reason to take, since they expect clicking "confirm" to have worked.
+
+**User-facing harm:** Every user who signs up via email confirmation link is permanently stuck as anonymous in the app unless they sign in manually. The "Check your inbox" flow appears to work but silently fails. Email sign-up is broken end-to-end.
+
+**Required fix:** Extend `handleDeepLink` to handle `type=signup` and `type=email_change` in addition to `type=recovery`:
+
+```typescript
+handleDeepLink: async (url: string) => {
+  if (!url.includes('type=recovery') && !url.includes('type=signup') && !url.includes('type=email_change')) return;
+  const hashIdx = url.indexOf('#');
+  if (hashIdx < 0) return;
+  const params = parseUrlFragment(url.slice(hashIdx + 1));
+  if (params.access_token && params.refresh_token) {
+    await supabase.auth.setSession({
+      access_token: params.access_token,
+      refresh_token: params.refresh_token,
+    });
+  }
+},
+```
+
+`onAuthStateChange` will then fire a `SIGNED_IN` or `USER_UPDATED` event with the confirmed session, and `isAnonymous` will update correctly.
+
+---
+
+### ~~R3-H-2 — `purchasePack` Leaves User Immediately Locked Out After Successful Payment~~ ✅ FIXED
+
+> **✅ FIXED** — `addOwnedPack(packId)` added to `entitlementsStore`. Called immediately after `downloadPack` returns in `payments.ts`. User has access the instant the download completes; PowerSync will confirm/correct the entitlement when the Adapty webhook fires and the `user_entitlements` row syncs.
+
+**File:** `src/utils/payments.ts`, lines 42–55
+
+```typescript
+export async function purchasePack(packId: string, storagePath: string): Promise<void> {
+  // ...
+  const result = await adapty.makePurchase(product);
+  if (result.type !== 'success') throw new Error('Purchase did not complete. Please try again.');
+  await downloadPack(packId, storagePath);
+  // ← ownedPackIds in entitlementsStore is NEVER updated
+}
+```
+
+After a successful App Store charge and `downloadPack` completing, `purchasePack` returns without updating `useEntitlementsStore`. The user's `ownedPackIds` is not modified. `hasPackAccess(packId)` returns `false`. When the library screen re-renders, the pack's puzzles remain locked and the paywall modal is triggerable.
+
+The code comment in `restorePurchases` documents that "Pack entitlements sync automatically via PowerSync once Adapty's webhook fires." This dependency means:
+
+1. Adapty must successfully fire a webhook to the Supabase Edge Function.
+2. The Edge Function must write to the `user_entitlements` table.
+3. PowerSync must sync that row to the device.
+4. `db.watch('SELECT * FROM user_entitlements LIMIT 1')` must trigger `loadEntitlements`.
+
+Until all four complete (which may take seconds to minutes), the user has paid but is locked out. If the webhook fails permanently (misconfiguration, Edge Function error), the user has paid and received nothing except disk files they cannot access in-app. There is no retry mechanism, no polling, and no in-app recovery other than "Restore Purchases" — which also does not handle pack entitlements (see Round 2, N-M-3, which only fixed premium).
+
+**Required fix:** After a successful `purchasePack`, immediately add the pack ID to the local store optimistically:
+
+```typescript
+const result = await adapty.makePurchase(product);
+if (result.type !== 'success') throw new Error('Purchase did not complete. Please try again.');
+await downloadPack(packId, storagePath);
+// Optimistic update — PowerSync will confirm/correct via server sync
+useEntitlementsStore.getState().addOwnedPack(packId);
+```
+
+Add `addOwnedPack(packId: string)` to `entitlementsStore` that mutates `ownedPackIds` in the local Zustand state. This gives the user immediate access while the server-side sync completes asynchronously.
+
+---
+
+## MEDIUM — Round 3
+
+---
+
+### ~~R3-M-1 — Anonymous Progress Silently Destroyed When Signing Into an Existing Named Account~~ ✅ FIXED
+
+> **✅ FIXED** — `warnProgressReplacement()` helper added to `SettingsModal`. All three sign-in entry points (Apple, Google, email sign-in) now show an Alert — "Replace Anonymous Progress? Signing into an existing account will replace your current anonymous progress. This cannot be undone." — before proceeding. Sign-up (`updateUser` upgrades same anonymous user, progress preserved) has no warning. `handleEmailSubmit` now separates the signup and signin paths explicitly so the Alert fires only on the `signin` branch.
+
+**Files:** `src/stores/authStore.ts` lines 122–133, `src/components/SettingsModal.tsx` lines 343–345
+
+The Round 2 fix (N-H-1) correctly moved anonymous account deletion to _after_ successful sign-in. However, the scenario of signing into an _existing_ named account — rather than creating a new one — still permanently destroys the anonymous user's progress with no warning.
+
+**The UI copy in SettingsModal says:**
+
+> "Create an account to keep your progress across devices and unlock purchases."
+
+The CTA is presented alongside both "Sign up with Email" and "Sign in with Email." A user who previously created an account and is returning (or testing on a second device) may tap "Sign in with Email" expecting to _merge_ their anonymous progress. Instead, the anonymous record is silently deleted after sign-in succeeds.
+
+There is no confirmation dialog: "Signing in to an existing account will replace your current anonymous progress. This cannot be undone." There is no merge path. The user is not warned.
+
+**Required fix:** Before calling `delete_anonymous_user` after a successful sign-in, show a confirmation dialog if the user is signing into an existing account (i.e., not upgrading an anonymous session for the first time). Alternatively, update the UI copy so it clearly distinguishes "create account" (progress kept) from "sign in to existing account" (anonymous progress will be deleted).
+
+---
+
+### ~~R3-M-2 — `setNewPassword` Has No Minimum Length Validation; 1-Character Passwords Accepted~~ ✅ FIXED
+
+> **✅ FIXED** — Two layers added: (1) `ResetPasswordModal` disables the submit button and guards `handleSubmit` with `password.length < 6`, matching the sign-up form behavior; an "At least 6 characters" hint turns blue when the requirement is met. (2) `setNewPassword` in `authStore.ts` throws `'Password must be at least 6 characters'` as a server-side guard before calling Supabase, so the validation holds even if called from outside the modal.
+
+**Files:** `src/stores/authStore.ts` line 177–180, `src/components/ResetPasswordModal.tsx` lines 27–33
+
+```typescript
+// ResetPasswordModal.tsx
+async function handleSubmit() {
+  if (!password) return;  // ← only guards empty string; 1 character passes
+  await withLoading(async () => {
+    await setNewPassword(password);
+    setPassword('');
+  });
+}
+
+// authStore.ts
+setNewPassword: async (password: string) => {
+  const { error } = await supabase.auth.updateUser({ password });  // no length check
+  if (error) throw error;
+  set({ isPasswordRecovery: false });
+},
+```
+
+`ResetPasswordModal` only prevents submission of an empty string (`if (!password) return`). A 1-character password passes the check and is submitted to Supabase. There is no hint shown to the user in the reset modal (unlike the sign-up form in `SettingsModal`, which shows "At least 6 characters"). There is no minimum-length guard in `setNewPassword` either.
+
+Round 2 noted "Password strength validation remains a post-launch item" — but the reset path represents a genuine security weakness: the password reset flow, designed for users who have forgotten a weak password, can be used to set an even weaker one.
+
+**Required fix:** Add a length guard to `handleSubmit` in `ResetPasswordModal` (and to `setNewPassword` as a second layer) before submitting to Supabase.
+
+---
+
+### ~~R3-M-3 — `onAuthStateChange` May Prematurely Set `isAnonymous: false` Before Email Is Confirmed~~ ✅ FIXED
+
+> **✅ FIXED** — The `USER_UPDATED` branch now updates `session`/`user` but explicitly skips `isAnonymous`. `isAnonymous` is only derived from `is_anonymous` on `SIGNED_IN` (and other non-`USER_UPDATED` events). When the user clicks the confirmation link, `handleDeepLink` calls `supabase.auth.setSession()`, which fires `SIGNED_IN` with the confirmed non-anonymous session — that's when `isAnonymous` correctly flips to `false`.
+
+**File:** `src/stores/authStore.ts` lines 80–84
+
+```typescript
+supabase.auth.onAuthStateChange(async (event, session) => {
+  // ...
+  const isAnonymous = session?.user?.is_anonymous ?? true;
+  set({ session, user: session?.user ?? null, isAnonymous });
+  // ...
+});
+```
+
+After `signUpWithEmail` is called, Supabase fires a `USER_UPDATED` event when the anonymous session is upgraded to a pending email-confirmed account. At this point, Supabase sets `is_anonymous = false` on the user record — because the user now has credentials, even though the email is unconfirmed.
+
+`onAuthStateChange` receives this event and sets `isAnonymous: false` in the Zustand store. The `SettingsModal` is in `emailMode === 'confirm-email'` at this point, so the user sees the confirmation screen. However, as soon as they tap "Done" and `emailMode` resets to `null`, the `SettingsModal` renders the `isAnonymous ? ... : ...` branch — and since `isAnonymous` is now `false`, it renders the signed-in view instead of the sign-up options.
+
+The user is now treated as a fully signed-in named account before they have confirmed their email. If they attempt a purchase at this point, the payment flow proceeds against an account where the email address is unverified — if anything breaks during confirmation later (e.g., a different email is set), the account state becomes inconsistent.
+
+**Required fix:** Track email confirmation pending state separately from `isAnonymous`. Only set `isAnonymous: false` after a confirmed `SIGNED_IN` event with a non-anonymous session (not on `USER_UPDATED` during the pending-confirmation window).
+
+---
+
+## LOW — Round 3
+
+---
+
+### ~~R3-L-1 — Privacy Policy Claims GDPR Data Portability Right, But No Export Mechanism Exists~~ ✅ FIXED
+
+> **✅ FIXED** — Privacy policy updated: the GDPR section now names the specific data categories covered by portability (email, puzzle progress, streak history, purchase entitlements), specifies the 30-day response commitment, and includes the direct contact email. The self-service Delete Account path is also called out explicitly. This satisfies GDPR Article 20 via the manual-fulfillment approach, which is legally acceptable at current scale.
+
+**File:** `docs/privacy-policy.md` lines 80–86
+
+```markdown
+## 6. Your Rights
+
+### GDPR (European Users)
+
+If you are located in the European Economic Area, you have the right to:
+- Access the personal data we hold about you
+- ...
+- Data portability
+```
+
+The privacy policy explicitly promises GDPR Article 20 data portability (the right to receive one's personal data in a machine-readable format). The app stores: email address, puzzle completion records (puzzle IDs, time, cells state), streak history, and purchase entitlements in Supabase.
+
+There is no in-app "Export My Data" feature. The policy directs users to "contact us at the address below" to exercise rights, but there is no automated fulfillment path. For an EU-distributed app, a manual email-and-spreadsheet process may suffice for current scale, but the absence of any mechanism is a gap between stated rights and actual capability.
+
+**Practical risk:** Low at current scale, but App Store distribution is global by default. If the app is downloaded by EU users and a DPA (Data Protection Authority) receives a complaint, the gap between stated and implemented rights is discoverable.
+
+**Required action:** Either implement a basic data export (a JSON dump of `puzzle_progress` and `streaks` rows for the user) or amend the privacy policy to state that data portability requests are fulfilled within 30 days via the contact email — which is a legally acceptable approach under GDPR if actually honored.
+
+---
+
+### ~~R3-L-2 — Pack Content in Supabase Storage Has No Server-Side Entitlement Check; Client-Side Gating Is the Only Protection~~ ✅ FIXED
+
+> **✅ FIXED** — `"public read packs"` storage policy (which granted unauthenticated read on all pack files) dropped. `public.user_can_access_pack(text)` SECURITY DEFINER function created: returns true for free packs (any authenticated user), premium users, or users whose `owned_pack_ids @> ARRAY[pack_id]`. New `"pack download entitlement check"` policy on `storage.objects` gates all SELECT on `bucket_id = 'packs'` behind this function, restricted to the `authenticated` role. Also discovered and fixed: `user_entitlements` was queried with `WHERE id = ?` instead of `WHERE user_id = ?` — entitlements had never loaded from the database for any user.
+
+**File:** `src/packs/index.ts`, lines 77–86
+
+```typescript
+async function fetchFromSupabase(storageKey: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('packs')
+    .download(storageKey);
+  // ← uses the user's session JWT; no check that user has purchased the pack
+  if (error) throw error;
+  return blobToText(data);
+}
+```
+
+Paid pack JSON files are downloaded from the `packs` Supabase Storage bucket using the user's session token. The access control on this download depends entirely on the Storage bucket's RLS policy. If the bucket policy grants access to any authenticated user (a common default for "public" content), then any anonymous or named user can download any pack file by knowing or guessing the `storage_path` value (e.g., `packs/hard_14x14.json`).
+
+The only enforcement that prevents access to paid content is the client-side `hasPackAccess(packId)` check in `LibraryScreen` — which gates the UI but not the network request. A user with developer tools or network inspection can extract the Supabase anon key (embedded at build time via env var injection), construct the download URL, and retrieve the pack content directly.
+
+**Note:** The puzzle `solution` arrays are base64-encoded on disk (Round 1 L-6 fix), but this is trivial to decode. The puzzle content itself (the region assignments that define the puzzle) is not protected beyond the download gate.
+
+**Required action:** Review the Supabase Storage bucket policy for `packs`. For paid pack files, the RLS policy should check that the downloading user's ID appears in `user_entitlements.owned_pack_ids` or that `user_entitlements.is_premium = true`. Alternatively, serve paid packs via a Supabase Edge Function that performs the entitlement check server-side before returning the content.
+
+---
+
+### ~~R3-L-3 — `signInWithApple` Does Not Request `FULL_NAME` Scope — Name Is Permanently Unavailable~~ ✅ CLOSED
+
+> **✅ CLOSED** — No code change needed. The app does not display or store user names anywhere in the current UI. A comment added to `authStore.ts` at the `performRequest` call documents the constraint: Apple only sends the name on first authorization, `FULL_NAME` was intentionally removed per GDPR data minimization, and the correct future path (if a display name is ever needed) is to prompt the user to enter one post-sign-in rather than requesting it from Apple.
+
+**File:** `src/stores/authStore.ts` lines 155–158
+
+```typescript
+const credential = await appleAuth.performRequest({
+  requestedOperation: appleAuth.Operation.LOGIN,
+  requestedScopes: [appleAuth.Scope.EMAIL],  // FULL_NAME intentionally omitted
+});
+```
+
+(Previously flagged in Round 1 L-3 as requesting FULL_NAME unnecessarily; the fix removed the FULL_NAME scope.)
+
+Apple provides the user's name only on the **first** authorization. Once a user has authorized the app, Apple never sends the name again. Since `FULL_NAME` is now not requested, the app can never retrieve the user's name from Apple — not now, not after a reinstall. If any future screen attempts to personalize the experience (e.g., `user?.user_metadata?.full_name`), it will always be `undefined` for Apple sign-in users.
+
+This is primarily a product constraint to document, not a bug. However, if the app ever wants to show the user's name (e.g., in a streak leaderboard or account header), Apple sign-in users will have no display name, potentially requiring a confusing "add your name" prompt post-onboarding. Documenting this now avoids a surprised future developer.
+
+---
+
+## Round 3 Summary Table
+
+| ID      | Severity | Area              | Description                                                                                  | Status   |
+| ------- | -------- | ----------------- | -------------------------------------------------------------------------------------------- | -------- |
+| R3-C-1  | CRITICAL | Security          | Apple App Store Connect private key committed to git; must rotate immediately                | **OPEN** |
+| ~~R3-H-1~~ | ~~HIGH~~ | ~~Auth / UX~~  | ~~Email confirmation deep link (`type=signup`) silently dropped; users remain anonymous forever~~ | ✅ |
+| ~~R3-H-2~~ | ~~HIGH~~ | ~~IAP~~        | ~~`purchasePack` no client-side entitlement update; user immediately locked out after paying~~ | ✅ |
+| ~~R3-M-1~~ | ~~MEDIUM~~ | ~~UX / Data Loss~~ | ~~Anonymous progress silently destroyed on sign-in to existing account with no warning~~ | ✅ |
+| ~~R3-M-2~~ | ~~MEDIUM~~ | ~~Security~~   | ~~`setNewPassword` accepts 1-character passwords; no length validation in reset flow~~       | ✅ |
+| ~~R3-M-3~~ | ~~MEDIUM~~ | ~~Auth~~       | ~~`onAuthStateChange` sets `isAnonymous: false` before email confirmed; premature state flip~~ | ✅ |
+| ~~R3-L-1~~ | ~~LOW~~ | ~~GDPR / Privacy~~ | ~~Privacy policy promises data portability right; no in-app export mechanism exists~~      | ✅ |
+| ~~R3-L-2~~ | ~~LOW~~ | ~~Security~~   | ~~Paid pack content in Supabase Storage; no server-side entitlement check at download time~~ | ✅ |
+| ~~R3-L-3~~ | ~~LOW~~ | ~~Product~~    | ~~Apple Sign-In: FULL_NAME scope removed; user name permanently unavailable for Apple users~~ | ✅ |
+
+---
+
+## Round 3 Priority Remediation Order
+
+Address before any App Store submission:
+
+1. **R3-C-1 — Rotate the Apple private key immediately.** Revoke in App Store Connect, add `*.p8` to `.gitignore`, rewrite git history to remove the file, generate a new key and store it securely (never in source control).
+
+2. **R3-H-1 — Fix email confirmation deep link.** Extend `handleDeepLink` to also handle `type=signup` and `type=email_change` URL types. Email sign-up is completely broken without this fix.
+
+3. **R3-H-2 — Add optimistic entitlement update to `purchasePack`.** Add `addOwnedPack(packId)` to `entitlementsStore` and call it immediately after `downloadPack` returns. This ensures the user has access the moment their payment completes, regardless of webhook latency.
+
+4. **R3-M-2 — Add password length guard to `ResetPasswordModal` and `setNewPassword`.** One-line fixes in both locations.
+
+5. **R3-M-1 — Warn users before anonymous progress is destroyed on sign-in.** Add a confirmation dialog when signing into an existing account while anonymous progress exists.
+
+6. **R3-M-3 — Track email confirmation state separately from `isAnonymous`.** Prevent `onAuthStateChange` from setting `isAnonymous: false` during the pending-confirmation window.
+
+7. **R3-L-2 — Audit Supabase Storage bucket policy for paid packs.** Add server-side entitlement check to the `packs` bucket RLS policy.
+
+8. **R3-L-1 — Add or amend data portability documentation.** Either implement basic data export or update the privacy policy to document how portability requests are fulfilled manually.

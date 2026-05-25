@@ -165,20 +165,15 @@ export type Theme = {
   isDark: boolean;
   // 16 color slots — all stored as 'r, g, b' RGB tuples
   black: string;
-  darkRed: string;
-  darkGreen: string;
-  darkYellow: string;
-  darkBlue: string;
-  darkMagenta: string;
-  darkCyan: string;
+  red: string;
+  green: string;
+  yellow: string;
+  blue: string;
+  magenta: string;
+  cyan: string;
   lightGray: string;
-  darkGray: string;
-  lightRed: string;
-  lightGreen: string;
-  lightYellow: string;
-  lightBlue: string;
-  lightMagenta: string;
-  lightCyan: string;
+  gray: string;
+
   white: string;
   // Derived — 12 chromatic slots for region fills
   regionColors: string[];

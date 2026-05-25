@@ -25,7 +25,7 @@ export function ResetPasswordModal() {
   const { loading, error, run: withLoading } = useAsyncAction();
 
   async function handleSubmit() {
-    if (!password) return;
+    if (password.length < 6) return;
     await withLoading(async () => {
       await setNewPassword(password);
       setPassword('');
@@ -50,18 +50,21 @@ export function ResetPasswordModal() {
           <TextInput
             style={styles.input}
             placeholder="New password"
-            placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.darkGray, 1)}
+            placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.gray, 1)}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             autoComplete="new-password"
             autoFocus
           />
+          <Text style={[styles.hint, password.length >= 6 && styles.hintMet]}>
+            At least 6 characters
+          </Text>
           {error && <Text style={styles.error}>{error}</Text>}
           <Pressable
-            style={[styles.button, (!password || loading) && styles.disabled]}
+            style={[styles.button, (password.length < 6 || loading) && styles.disabled]}
             onPress={handleSubmit}
-            disabled={!password || loading}
+            disabled={password.length < 6 || loading}
           >
             {loading ? (
               <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
@@ -77,9 +80,9 @@ export function ResetPasswordModal() {
 
 const createStyles = (theme: Theme) => {
   const bg  = theme.isDark ? theme.black  : theme.white;
-  const card = theme.isDark ? theme.darkGray : theme.white;
+  const card = theme.isDark ? theme.gray : theme.white;
   const fg  = theme.isDark ? theme.white : theme.black;
-  const dim = theme.isDark ? theme.lightGray : theme.darkGray;
+  const dim = theme.isDark ? theme.lightGray : theme.gray;
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -122,6 +125,13 @@ const createStyles = (theme: Theme) => {
       color: rgba(bg, 1),
     },
     disabled: { opacity: 0.6 },
+    hint: {
+      fontSize: theme.fontSizeSubhead,
+      color: rgba(theme.isDark ? theme.lightGray : theme.gray, 1),
+    },
+    hintMet: {
+      color: rgba(theme.lightBlue, 1),
+    },
     error: {
       fontSize: theme.fontSizeSubhead,
       color: rgba(theme.lightRed, 1),

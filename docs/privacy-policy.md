@@ -78,11 +78,13 @@ You can permanently delete your account and all associated data at any time: ope
 ### GDPR (European Users)
 
 If you are located in the European Economic Area, you have the right to:
-- Access the personal data we hold about you
-- Request correction of inaccurate data
-- Request erasure of your data (use Delete Account, or contact us)
-- Object to or restrict processing
-- Data portability
+- **Access** the personal data we hold about you
+- **Correction** of inaccurate data
+- **Erasure** of your data — use Delete Account in the App for immediate self-service deletion, or contact us
+- **Object to or restrict** processing
+- **Data portability** — receive a copy of your personal data (email address, puzzle progress, streak history, and purchase entitlements) in a machine-readable format
+
+To exercise any of these rights, email us at mason@omaratechnologydesign.com. We will respond within **30 days**.
 
 Legal basis for processing: **Legitimate interests** (providing the game service and syncing your progress) and **contract performance** (fulfilling purchases you have made).
 

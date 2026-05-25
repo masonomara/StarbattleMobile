@@ -87,9 +87,9 @@ function PuzzleCell({
         {status !== 'active' && (
           <View style={styles.puzzleIcon}>
             {status === 'completed' ? (
-              <Check size={28} color={rgba(theme.darkBlue, 1)} />
+              <Check size={28} color={rgba(theme.blue, 1)} />
             ) : (
-              <Lock size={28} color={rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1)} />
+              <Lock size={28} color={rgba(theme.isDark ? theme.gray : theme.gray, 1)} />
             )}
           </View>
         )}
@@ -297,7 +297,7 @@ const createStyles = (theme: Theme, cellSize: number) => {
       width: cellSize,
       margin: 8,
 
-      backgroundColor: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1),
+      backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
     },
     puzzleCellOverlay: {
       position: 'absolute',
@@ -313,9 +313,9 @@ const createStyles = (theme: Theme, cellSize: number) => {
       opacity: 0.55,
     },
     puzzleNumber: { fontSize: 16, fontWeight: '700' },
-    puzzleNumberCompleted: { color: rgba(theme.darkBlue, 1) },
+    puzzleNumberCompleted: { color: rgba(theme.blue, 1) },
     puzzleNumberActive: { color: rgba(theme.isDark ? theme.white : theme.black, 1) },
-    puzzleNumberLocked: { color: rgba(theme.isDark ? theme.darkGray : theme.darkGray, 1) },
+    puzzleNumberLocked: { color: rgba(theme.isDark ? theme.gray : theme.gray, 1) },
     locked: { opacity: 0.45 },
     headerTitle: {
       fontSize: 16,
