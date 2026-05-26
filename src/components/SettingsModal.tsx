@@ -26,7 +26,7 @@ import { useEntitlements } from '../hooks/useEntitlements';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { purchasePremium, restorePurchases } from '../utils/payments';
 import { useProductPrice } from '../hooks/useProductPrice';
-import { PALETTES, PALETTE_META, PALETTE_NAMES } from '../themes/palettes';
+import { PALETTES, PALETTE_NAMES } from '../themes/palettes';
 import { buildTheme } from '../hooks/useTheme';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../config';
 import type { Theme, UserSettings } from '../types';
@@ -381,10 +381,7 @@ export function SettingsModal() {
     settings.theme === 'dark' ? true
     : settings.theme === 'light' ? false
     : systemScheme === 'dark';
-  const currentPalette = isCurrentlyDark ? settings.darkPalette : settings.lightPalette;
-  const visiblePalettes = PALETTE_NAMES.filter(
-    name => buildTheme(PALETTES[name]).isDark === isCurrentlyDark
-  );
+  const visiblePalettes = PALETTE_NAMES;
   const paletteRows: (typeof PALETTE_NAMES[number])[][] = [];
   for (let i = 0; i < visiblePalettes.length; i += 3) {
     paletteRows.push(visiblePalettes.slice(i, i + 3));
@@ -896,14 +893,13 @@ export function SettingsModal() {
                   {paletteRows.map((row, rowIdx) => (
                     <View key={rowIdx} style={styles.swatchRow}>
                       {row.map(name => {
-                        const active = currentPalette === name;
-                        const paletteTheme = buildTheme(PALETTES[name]);
+                        const active = settings.palette === name;
+                        const variant = isCurrentlyDark ? PALETTES[name].dark : PALETTES[name].light;
+                        const paletteTheme = buildTheme(variant);
                         return (
                           <Pressable
                             key={name}
-                            onPress={() => updateSettings(
-                              isCurrentlyDark ? { darkPalette: name } : { lightPalette: name }
-                            )}
+                            onPress={() => updateSettings({ palette: name })}
                             style={[
                               styles.swatchCard,
                               {
@@ -941,7 +937,7 @@ export function SettingsModal() {
                                 },
                               ]}
                             >
-                              {PALETTE_META[name].label}
+                              {PALETTES[name].label}
                             </Text>
                           </Pressable>
                         );

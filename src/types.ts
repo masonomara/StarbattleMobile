@@ -102,8 +102,7 @@ export type UserSettings = {
   alwaysShowTimer: boolean;
   alwaysShowToolbar: boolean;
   theme: 'system' | 'light' | 'dark';
-  darkPalette: ThemeName;
-  lightPalette: ThemeName;
+  palette: ThemeName;
   haptics: boolean;
 };
 
@@ -197,46 +196,32 @@ export type ThemeColors = {
 };
 
 export type ThemeName =
-  | 'ayuDark'
-  | 'ayuLight'
-  | 'catppuccinLatte'
-  | 'catppuccinMocha'
-  | 'everforestDark'
-  | 'everforestLight'
-  | 'githubDark'
-  | 'githubLight'
-  | 'gruvboxDark'
-  | 'gruvboxLight'
-  | 'icebergDark'
-  | 'icebergLight'
-  | 'nightOwlDark'
-  | 'nightOwlLight'
-  | 'nightfoxDayfox'
-  | 'nightfoxDefault'
-  | 'oneDark'
-  | 'oneHalfDark'
-  | 'oneHalfLight'
-  | 'oneLight'
-  | 'rosePineDawn'
-  | 'rosePineDefault'
-  | 'seoul256Dark'
-  | 'seoul256Light'
-  | 'solarizedDark'
-  | 'solarizedLight'
-  | 'tokyoNightDay'
-  | 'tokyoNightDefault'
-  | 'zenbonesForestbonesDark'
-  | 'zenbonesForestbonesLight'
-  | 'zenbonesNeobonesDark'
-  | 'zenbonesNeobonesLight'
-  | 'zenbonesRosebonesDark'
-  | 'zenbonesRosebonesLight'
-  | 'zenbonesSeoulbonesDark'
-  | 'zenbonesSeoulbonesLight'
-  | 'zenbonesTokyobonesDark'
-  | 'zenbonesTokyobonesLight'
-  | 'zenbonesZenwrittenDark'
-  | 'zenbonesZenwrittenLight';
+  | 'ayu'
+  | 'catppuccin'
+  | 'everforest'
+  | 'github'
+  | 'gruvbox'
+  | 'iceberg'
+  | 'nightOwl'
+  | 'nightfox'
+  | 'one'
+  | 'oneHalf'
+  | 'rosePine'
+  | 'seoul256'
+  | 'solarized'
+  | 'tokyoNight'
+  | 'zenbonesForestbones'
+  | 'zenbonesNeobones'
+  | 'zenbonesRosebones'
+  | 'zenbonesSeoulbones'
+  | 'zenbonesTokyobones'
+  | 'zenbonesZenwritten';
+
+export type PaletteVariants = {
+  label: string;
+  dark: ThemeColors;
+  light: ThemeColors;
+};
 
 export type Theme = {
   isDark: boolean;

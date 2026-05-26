@@ -1,4 +1,4 @@
-import type { ThemeName, ThemeColors } from '../types';
+import type { ThemeName, ThemeColors, PaletteVariants } from '../types';
 
 export const tokens = {
   spacingMd: 12,
@@ -12,7 +12,7 @@ export const tokens = {
   cellSize: 36,
 };
 
-// ─── AYU DARK ────────────────────────────────────────────────────────────────────
+// ─── AYU ─────────────────────────────────────────────────────────────────────────
 
 const ayuDark: ThemeColors = {
   roles: {
@@ -44,8 +44,6 @@ const ayuDark: ThemeColors = {
   },
 };
 
-// ─── AYU LIGHT ───────────────────────────────────────────────────────────────────
-
 const ayuLight: ThemeColors = {
   roles: {
     text: '#5c6166',
@@ -76,39 +74,7 @@ const ayuLight: ThemeColors = {
   },
 };
 
-// ─── CATPPUCCIN LATTE ────────────────────────────────────────────────────────────
-
-const catppuccinLatte: ThemeColors = {
-  roles: {
-    text: '#4c4f69',
-    textSecondary: '#4c4f6999',
-    background: '#eff1f5',
-    surface: '#4c4f690d',
-    border: '#4c4f6938',
-    puzzleBorder: '#4c4f69',
-    puzzleInnerBorder: '#4c4f6938',
-    blue: '#1e66f5',
-    red: '#d20f39',
-    green: '#40a02b',
-    yellow: '#df8e1d',
-  },
-  regions: {
-    red: '#d20f39',
-    green: '#40a02b',
-    yellow: '#df8e1d',
-    blue: '#1e66f5',
-    magenta: '#ea76cb',
-    cyan: '#179299',
-    redBright: '#de293e',
-    greenBright: '#49af3d',
-    yellowBright: '#eea02d',
-    blueBright: '#456eff',
-    magentaBright: '#fe85d8',
-    cyanBright: '#2d9fa8',
-  },
-};
-
-// ─── CATPPUCCIN MOCHA ────────────────────────────────────────────────────────────
+// ─── CATPPUCCIN ──────────────────────────────────────────────────────────────────
 
 const catppuccinMocha: ThemeColors = {
   roles: {
@@ -140,7 +106,37 @@ const catppuccinMocha: ThemeColors = {
   },
 };
 
-// ─── EVERFOREST DARK ─────────────────────────────────────────────────────────────
+const catppuccinLatte: ThemeColors = {
+  roles: {
+    text: '#4c4f69',
+    textSecondary: '#4c4f6999',
+    background: '#eff1f5',
+    surface: '#4c4f690d',
+    border: '#4c4f6938',
+    puzzleBorder: '#4c4f69',
+    puzzleInnerBorder: '#4c4f6938',
+    blue: '#1e66f5',
+    red: '#d20f39',
+    green: '#40a02b',
+    yellow: '#df8e1d',
+  },
+  regions: {
+    red: '#d20f39',
+    green: '#40a02b',
+    yellow: '#df8e1d',
+    blue: '#1e66f5',
+    magenta: '#ea76cb',
+    cyan: '#179299',
+    redBright: '#de293e',
+    greenBright: '#49af3d',
+    yellowBright: '#eea02d',
+    blueBright: '#456eff',
+    magentaBright: '#fe85d8',
+    cyanBright: '#2d9fa8',
+  },
+};
+
+// ─── EVERFOREST ──────────────────────────────────────────────────────────────────
 
 const everforestDark: ThemeColors = {
   roles: {
@@ -172,8 +168,6 @@ const everforestDark: ThemeColors = {
   },
 };
 
-// ─── EVERFOREST LIGHT ────────────────────────────────────────────────────────────
-
 const everforestLight: ThemeColors = {
   roles: {
     text: '#5c6a72',
@@ -204,7 +198,7 @@ const everforestLight: ThemeColors = {
   },
 };
 
-// ─── GITHUB DARK ─────────────────────────────────────────────────────────────────
+// ─── GITHUB ──────────────────────────────────────────────────────────────────────
 
 const githubDark: ThemeColors = {
   roles: {
@@ -236,8 +230,6 @@ const githubDark: ThemeColors = {
   },
 };
 
-// ─── GITHUB LIGHT ────────────────────────────────────────────────────────────────
-
 const githubLight: ThemeColors = {
   roles: {
     text: '#1f2328',
@@ -268,7 +260,7 @@ const githubLight: ThemeColors = {
   },
 };
 
-// ─── GRUVBOX DARK ────────────────────────────────────────────────────────────────
+// ─── GRUVBOX ─────────────────────────────────────────────────────────────────────
 
 const gruvboxDark: ThemeColors = {
   roles: {
@@ -300,8 +292,6 @@ const gruvboxDark: ThemeColors = {
   },
 };
 
-// ─── GRUVBOX LIGHT ───────────────────────────────────────────────────────────────
-
 const gruvboxLight: ThemeColors = {
   roles: {
     text: '#3c3836',
@@ -332,7 +322,7 @@ const gruvboxLight: ThemeColors = {
   },
 };
 
-// ─── ICEBERG DARK ────────────────────────────────────────────────────────────────
+// ─── ICEBERG ─────────────────────────────────────────────────────────────────────
 
 const icebergDark: ThemeColors = {
   roles: {
@@ -364,8 +354,6 @@ const icebergDark: ThemeColors = {
   },
 };
 
-// ─── ICEBERG LIGHT ───────────────────────────────────────────────────────────────
-
 const icebergLight: ThemeColors = {
   roles: {
     text: '#33374c',
@@ -396,7 +384,7 @@ const icebergLight: ThemeColors = {
   },
 };
 
-// ─── NIGHT OWL DARK ──────────────────────────────────────────────────────────────
+// ─── NIGHT OWL ───────────────────────────────────────────────────────────────────
 
 const nightOwlDark: ThemeColors = {
   roles: {
@@ -428,8 +416,6 @@ const nightOwlDark: ThemeColors = {
   },
 };
 
-// ─── NIGHT OWL LIGHT ─────────────────────────────────────────────────────────────
-
 const nightOwlLight: ThemeColors = {
   roles: {
     text: '#403f53',
@@ -460,39 +446,7 @@ const nightOwlLight: ThemeColors = {
   },
 };
 
-// ─── NIGHTFOX DAYFOX ─────────────────────────────────────────────────────────────
-
-const nightfoxDayfox: ThemeColors = {
-  roles: {
-    text: '#3d2b5a',
-    textSecondary: '#3d2b5a99',
-    background: '#f6f2ee',
-    surface: '#3d2b5a0d',
-    border: '#3d2b5a38',
-    puzzleBorder: '#3d2b5a',
-    puzzleInnerBorder: '#3d2b5a38',
-    blue: '#2848a9',
-    red: '#a5222f',
-    green: '#396847',
-    yellow: '#ac5402',
-  },
-  regions: {
-    red: '#a5222f',
-    green: '#396847',
-    yellow: '#ac5402',
-    blue: '#2848a9',
-    magenta: '#6e33ce',
-    cyan: '#287980',
-    redBright: '#b3434e',
-    greenBright: '#577f63',
-    yellowBright: '#b86e28',
-    blueBright: '#4863b6',
-    magentaBright: '#8452d5',
-    cyanBright: '#488d93',
-  },
-};
-
-// ─── NIGHTFOX DEFAULT ────────────────────────────────────────────────────────────
+// ─── NIGHTFOX ────────────────────────────────────────────────────────────────────
 
 const nightfoxDefault: ThemeColors = {
   roles: {
@@ -524,7 +478,37 @@ const nightfoxDefault: ThemeColors = {
   },
 };
 
-// ─── ONE DARK ────────────────────────────────────────────────────────────────────
+const nightfoxDayfox: ThemeColors = {
+  roles: {
+    text: '#3d2b5a',
+    textSecondary: '#3d2b5a99',
+    background: '#f6f2ee',
+    surface: '#3d2b5a0d',
+    border: '#3d2b5a38',
+    puzzleBorder: '#3d2b5a',
+    puzzleInnerBorder: '#3d2b5a38',
+    blue: '#2848a9',
+    red: '#a5222f',
+    green: '#396847',
+    yellow: '#ac5402',
+  },
+  regions: {
+    red: '#a5222f',
+    green: '#396847',
+    yellow: '#ac5402',
+    blue: '#2848a9',
+    magenta: '#6e33ce',
+    cyan: '#287980',
+    redBright: '#b3434e',
+    greenBright: '#577f63',
+    yellowBright: '#b86e28',
+    blueBright: '#4863b6',
+    magentaBright: '#8452d5',
+    cyanBright: '#488d93',
+  },
+};
+
+// ─── ONE ─────────────────────────────────────────────────────────────────────────
 
 const oneDark: ThemeColors = {
   roles: {
@@ -556,7 +540,37 @@ const oneDark: ThemeColors = {
   },
 };
 
-// ─── ONE HALF DARK ───────────────────────────────────────────────────────────────
+const oneLight: ThemeColors = {
+  roles: {
+    text: '#2a2b33',
+    textSecondary: '#2a2b33b3',
+    background: '#f8f8f8',
+    surface: '#f8f8f8',
+    border: '#2a2b332e',
+    puzzleBorder: '#2a2b33',
+    puzzleInnerBorder: '#2a2b33b3',
+    blue: '#2f5af3',
+    red: '#de3d35',
+    green: '#3e953a',
+    yellow: '#d2b67b',
+  },
+  regions: {
+    red: '#de3d35',
+    green: '#3e953a',
+    yellow: '#d2b67b',
+    blue: '#2f5af3',
+    magenta: '#a00095',
+    cyan: '#3e953a',
+    redBright: '#de3d35',
+    greenBright: '#3e953a',
+    yellowBright: '#d2b67b',
+    blueBright: '#2f5af3',
+    magentaBright: '#a00095',
+    cyanBright: '#3e953a',
+  },
+};
+
+// ─── ONE HALF ────────────────────────────────────────────────────────────────────
 
 const oneHalfDark: ThemeColors = {
   roles: {
@@ -588,8 +602,6 @@ const oneHalfDark: ThemeColors = {
   },
 };
 
-// ─── ONE HALF LIGHT ──────────────────────────────────────────────────────────────
-
 const oneHalfLight: ThemeColors = {
   roles: {
     text: '#383a42',
@@ -620,71 +632,7 @@ const oneHalfLight: ThemeColors = {
   },
 };
 
-// ─── ONE LIGHT ───────────────────────────────────────────────────────────────────
-
-const oneLight: ThemeColors = {
-  roles: {
-    text: '#2a2b33',
-    textSecondary: '#2a2b33b3',
-    background: '#f8f8f8',
-    surface: '#f8f8f8',
-    border: '#2a2b332e',
-    puzzleBorder: '#2a2b33',
-    puzzleInnerBorder: '#2a2b33b3',
-    blue: '#2f5af3',
-    red: '#de3d35',
-    green: '#3e953a',
-    yellow: '#d2b67b',
-  },
-  regions: {
-    red: '#de3d35',
-    green: '#3e953a',
-    yellow: '#d2b67b',
-    blue: '#2f5af3',
-    magenta: '#a00095',
-    cyan: '#3e953a',
-    redBright: '#de3d35',
-    greenBright: '#3e953a',
-    yellowBright: '#d2b67b',
-    blueBright: '#2f5af3',
-    magentaBright: '#a00095',
-    cyanBright: '#3e953a',
-  },
-};
-
-// ─── ROSE PINE DAWN ──────────────────────────────────────────────────────────────
-
-const rosePineDawn: ThemeColors = {
-  roles: {
-    text: '#575279',
-    textSecondary: '#57527999',
-    background: '#fffaf3',
-    surface: '#5752790d',
-    border: '#57527938',
-    puzzleBorder: '#575279',
-    puzzleInnerBorder: '#57527938',
-    blue: '#56949f',
-    red: '#b4637a',
-    green: '#286983',
-    yellow: '#ea9d34',
-  },
-  regions: {
-    red: '#b4637a',
-    green: '#286983',
-    yellow: '#ea9d34',
-    blue: '#56949f',
-    magenta: '#907aa9',
-    cyan: '#d7827e',
-    redBright: '#b4637a',
-    greenBright: '#286983',
-    yellowBright: '#ea9d34',
-    blueBright: '#56949f',
-    magentaBright: '#907aa9',
-    cyanBright: '#d7827e',
-  },
-};
-
-// ─── ROSE PINE DEFAULT ───────────────────────────────────────────────────────────
+// ─── ROSE PINE ───────────────────────────────────────────────────────────────────
 
 const rosePineDefault: ThemeColors = {
   roles: {
@@ -716,7 +664,37 @@ const rosePineDefault: ThemeColors = {
   },
 };
 
-// ─── SEOUL256 DARK ───────────────────────────────────────────────────────────────
+const rosePineDawn: ThemeColors = {
+  roles: {
+    text: '#575279',
+    textSecondary: '#57527999',
+    background: '#fffaf3',
+    surface: '#5752790d',
+    border: '#57527938',
+    puzzleBorder: '#575279',
+    puzzleInnerBorder: '#57527938',
+    blue: '#56949f',
+    red: '#b4637a',
+    green: '#286983',
+    yellow: '#ea9d34',
+  },
+  regions: {
+    red: '#b4637a',
+    green: '#286983',
+    yellow: '#ea9d34',
+    blue: '#56949f',
+    magenta: '#907aa9',
+    cyan: '#d7827e',
+    redBright: '#b4637a',
+    greenBright: '#286983',
+    yellowBright: '#ea9d34',
+    blueBright: '#56949f',
+    magentaBright: '#907aa9',
+    cyanBright: '#d7827e',
+  },
+};
+
+// ─── SEOUL256 ────────────────────────────────────────────────────────────────────
 
 const seoul256Dark: ThemeColors = {
   roles: {
@@ -748,8 +726,6 @@ const seoul256Dark: ThemeColors = {
   },
 };
 
-// ─── SEOUL256 LIGHT ──────────────────────────────────────────────────────────────
-
 const seoul256Light: ThemeColors = {
   roles: {
     text: '#4e4e4e',
@@ -780,7 +756,7 @@ const seoul256Light: ThemeColors = {
   },
 };
 
-// ─── SOLARIZED DARK ──────────────────────────────────────────────────────────────
+// ─── SOLARIZED ───────────────────────────────────────────────────────────────────
 
 const solarizedDark: ThemeColors = {
   roles: {
@@ -812,8 +788,6 @@ const solarizedDark: ThemeColors = {
   },
 };
 
-// ─── SOLARIZED LIGHT ─────────────────────────────────────────────────────────────
-
 const solarizedLight: ThemeColors = {
   roles: {
     text: '#657b83',
@@ -844,39 +818,7 @@ const solarizedLight: ThemeColors = {
   },
 };
 
-// ─── TOKYO NIGHT DAY ─────────────────────────────────────────────────────────────
-
-const tokyoNightDay: ThemeColors = {
-  roles: {
-    text: '#3760bf',
-    textSecondary: '#3760bf99',
-    background: '#e1e2e7',
-    surface: '#3760bf0d',
-    border: '#3760bf38',
-    puzzleBorder: '#3760bf',
-    puzzleInnerBorder: '#3760bf38',
-    blue: '#2e7de9',
-    red: '#f52a65',
-    green: '#587539',
-    yellow: '#8c6c3e',
-  },
-  regions: {
-    red: '#f52a65',
-    green: '#587539',
-    yellow: '#8c6c3e',
-    blue: '#2e7de9',
-    magenta: '#9854f1',
-    cyan: '#007197',
-    redBright: '#f52a65',
-    greenBright: '#587539',
-    yellowBright: '#8c6c3e',
-    blueBright: '#2e7de9',
-    magentaBright: '#9854f1',
-    cyanBright: '#007197',
-  },
-};
-
-// ─── TOKYO NIGHT DEFAULT ─────────────────────────────────────────────────────────
+// ─── TOKYO NIGHT ─────────────────────────────────────────────────────────────────
 
 const tokyoNightDefault: ThemeColors = {
   roles: {
@@ -908,7 +850,37 @@ const tokyoNightDefault: ThemeColors = {
   },
 };
 
-// ─── ZENBONES FORESTBONES DARK ───────────────────────────────────────────────────
+const tokyoNightDay: ThemeColors = {
+  roles: {
+    text: '#3760bf',
+    textSecondary: '#3760bf99',
+    background: '#e1e2e7',
+    surface: '#3760bf0d',
+    border: '#3760bf38',
+    puzzleBorder: '#3760bf',
+    puzzleInnerBorder: '#3760bf38',
+    blue: '#2e7de9',
+    red: '#f52a65',
+    green: '#587539',
+    yellow: '#8c6c3e',
+  },
+  regions: {
+    red: '#f52a65',
+    green: '#587539',
+    yellow: '#8c6c3e',
+    blue: '#2e7de9',
+    magenta: '#9854f1',
+    cyan: '#007197',
+    redBright: '#f52a65',
+    greenBright: '#587539',
+    yellowBright: '#8c6c3e',
+    blueBright: '#2e7de9',
+    magentaBright: '#9854f1',
+    cyanBright: '#007197',
+  },
+};
+
+// ─── ZENBONES FORESTBONES ────────────────────────────────────────────────────────
 
 const zenbonesForestbonesDark: ThemeColors = {
   roles: {
@@ -940,8 +912,6 @@ const zenbonesForestbonesDark: ThemeColors = {
   },
 };
 
-// ─── ZENBONES FORESTBONES LIGHT ──────────────────────────────────────────────────
-
 const zenbonesForestbonesLight: ThemeColors = {
   roles: {
     text: '#4f5b62',
@@ -972,7 +942,7 @@ const zenbonesForestbonesLight: ThemeColors = {
   },
 };
 
-// ─── ZENBONES NEOBONES DARK ──────────────────────────────────────────────────────
+// ─── ZENBONES NEOBONES ───────────────────────────────────────────────────────────
 
 const zenbonesNeobonesDark: ThemeColors = {
   roles: {
@@ -1004,8 +974,6 @@ const zenbonesNeobonesDark: ThemeColors = {
   },
 };
 
-// ─── ZENBONES NEOBONES LIGHT ─────────────────────────────────────────────────────
-
 const zenbonesNeobonesLight: ThemeColors = {
   roles: {
     text: '#202e18',
@@ -1036,7 +1004,7 @@ const zenbonesNeobonesLight: ThemeColors = {
   },
 };
 
-// ─── ZENBONES ROSEBONES DARK ─────────────────────────────────────────────────────
+// ─── ZENBONES ROSEBONES ──────────────────────────────────────────────────────────
 
 const zenbonesRosebonesDark: ThemeColors = {
   roles: {
@@ -1068,8 +1036,6 @@ const zenbonesRosebonesDark: ThemeColors = {
   },
 };
 
-// ─── ZENBONES ROSEBONES LIGHT ────────────────────────────────────────────────────
-
 const zenbonesRosebonesLight: ThemeColors = {
   roles: {
     text: '#724341',
@@ -1100,7 +1066,7 @@ const zenbonesRosebonesLight: ThemeColors = {
   },
 };
 
-// ─── ZENBONES SEOULBONES DARK ────────────────────────────────────────────────────
+// ─── ZENBONES SEOULBONES ─────────────────────────────────────────────────────────
 
 const zenbonesSeoulbonesDark: ThemeColors = {
   roles: {
@@ -1132,8 +1098,6 @@ const zenbonesSeoulbonesDark: ThemeColors = {
   },
 };
 
-// ─── ZENBONES SEOULBONES LIGHT ───────────────────────────────────────────────────
-
 const zenbonesSeoulbonesLight: ThemeColors = {
   roles: {
     text: '#555555',
@@ -1164,7 +1128,7 @@ const zenbonesSeoulbonesLight: ThemeColors = {
   },
 };
 
-// ─── ZENBONES TOKYOBONES DARK ────────────────────────────────────────────────────
+// ─── ZENBONES TOKYOBONES ─────────────────────────────────────────────────────────
 
 const zenbonesTokyobonesDark: ThemeColors = {
   roles: {
@@ -1196,8 +1160,6 @@ const zenbonesTokyobonesDark: ThemeColors = {
   },
 };
 
-// ─── ZENBONES TOKYOBONES LIGHT ───────────────────────────────────────────────────
-
 const zenbonesTokyobonesLight: ThemeColors = {
   roles: {
     text: '#333a57',
@@ -1228,7 +1190,7 @@ const zenbonesTokyobonesLight: ThemeColors = {
   },
 };
 
-// ─── ZENBONES ZENWRITTEN DARK ────────────────────────────────────────────────────
+// ─── ZENBONES ZENWRITTEN ─────────────────────────────────────────────────────────
 
 const zenbonesZenwrittenDark: ThemeColors = {
   roles: {
@@ -1259,8 +1221,6 @@ const zenbonesZenwrittenDark: ThemeColors = {
     cyanBright: '#65b8c1',
   },
 };
-
-// ─── ZENBONES ZENWRITTEN LIGHT ───────────────────────────────────────────────────
 
 const zenbonesZenwrittenLight: ThemeColors = {
   roles: {
@@ -1294,90 +1254,107 @@ const zenbonesZenwrittenLight: ThemeColors = {
 
 // ─── Exports ───────────────────────────────────────────────────────────────────
 
-export const PALETTES: Record<ThemeName, ThemeColors> = {
-  ayuDark,
-  ayuLight,
-  catppuccinLatte,
-  catppuccinMocha,
-  everforestDark,
-  everforestLight,
-  githubDark,
-  githubLight,
-  gruvboxDark,
-  gruvboxLight,
-  icebergDark,
-  icebergLight,
-  nightOwlDark,
-  nightOwlLight,
-  nightfoxDayfox,
-  nightfoxDefault,
-  oneDark,
-  oneHalfDark,
-  oneHalfLight,
-  oneLight,
-  rosePineDawn,
-  rosePineDefault,
-  seoul256Dark,
-  seoul256Light,
-  solarizedDark,
-  solarizedLight,
-  tokyoNightDay,
-  tokyoNightDefault,
-  zenbonesForestbonesDark,
-  zenbonesForestbonesLight,
-  zenbonesNeobonesDark,
-  zenbonesNeobonesLight,
-  zenbonesRosebonesDark,
-  zenbonesRosebonesLight,
-  zenbonesSeoulbonesDark,
-  zenbonesSeoulbonesLight,
-  zenbonesTokyobonesDark,
-  zenbonesTokyobonesLight,
-  zenbonesZenwrittenDark,
-  zenbonesZenwrittenLight,
-};
-
-export const PALETTE_META: Record<ThemeName, { label: string }> = {
-  ayuDark: { label: 'Ayu Dark' },
-  ayuLight: { label: 'Ayu Light' },
-  catppuccinLatte: { label: 'Catppuccin Latte' },
-  catppuccinMocha: { label: 'Catppuccin Mocha' },
-  everforestDark: { label: 'Everforest Dark' },
-  everforestLight: { label: 'Everforest Light' },
-  githubDark: { label: 'Github Dark' },
-  githubLight: { label: 'Github Light' },
-  gruvboxDark: { label: 'Gruvbox Dark' },
-  gruvboxLight: { label: 'Gruvbox Light' },
-  icebergDark: { label: 'Iceberg Dark' },
-  icebergLight: { label: 'Iceberg Light' },
-  nightOwlDark: { label: 'Night Owl Dark' },
-  nightOwlLight: { label: 'Night Owl Light' },
-  nightfoxDayfox: { label: 'Nightfox Dayfox' },
-  nightfoxDefault: { label: 'Nightfox Default' },
-  oneDark: { label: 'One Dark' },
-  oneHalfDark: { label: 'One Half Dark' },
-  oneHalfLight: { label: 'One Half Light' },
-  oneLight: { label: 'One Light' },
-  rosePineDawn: { label: 'Rose Pine Dawn' },
-  rosePineDefault: { label: 'Rose Pine Default' },
-  seoul256Dark: { label: 'Seoul256 Dark' },
-  seoul256Light: { label: 'Seoul256 Light' },
-  solarizedDark: { label: 'Solarized Dark' },
-  solarizedLight: { label: 'Solarized Light' },
-  tokyoNightDay: { label: 'Tokyo Night Day' },
-  tokyoNightDefault: { label: 'Tokyo Night Default' },
-  zenbonesForestbonesDark: { label: 'Zenbones Forestbones Dark' },
-  zenbonesForestbonesLight: { label: 'Zenbones Forestbones Light' },
-  zenbonesNeobonesDark: { label: 'Zenbones Neobones Dark' },
-  zenbonesNeobonesLight: { label: 'Zenbones Neobones Light' },
-  zenbonesRosebonesDark: { label: 'Zenbones Rosebones Dark' },
-  zenbonesRosebonesLight: { label: 'Zenbones Rosebones Light' },
-  zenbonesSeoulbonesDark: { label: 'Zenbones Seoulbones Dark' },
-  zenbonesSeoulbonesLight: { label: 'Zenbones Seoulbones Light' },
-  zenbonesTokyobonesDark: { label: 'Zenbones Tokyobones Dark' },
-  zenbonesTokyobonesLight: { label: 'Zenbones Tokyobones Light' },
-  zenbonesZenwrittenDark: { label: 'Zenbones Zenwritten Dark' },
-  zenbonesZenwrittenLight: { label: 'Zenbones Zenwritten Light' },
+export const PALETTES: Record<ThemeName, PaletteVariants> = {
+  ayu: {
+    label: 'Ayu',
+    dark: ayuDark,
+    light: ayuLight,
+  },
+  catppuccin: {
+    label: 'Catppuccin',
+    dark: catppuccinMocha,
+    light: catppuccinLatte,
+  },
+  everforest: {
+    label: 'Everforest',
+    dark: everforestDark,
+    light: everforestLight,
+  },
+  github: {
+    label: 'Github',
+    dark: githubDark,
+    light: githubLight,
+  },
+  gruvbox: {
+    label: 'Gruvbox',
+    dark: gruvboxDark,
+    light: gruvboxLight,
+  },
+  iceberg: {
+    label: 'Iceberg',
+    dark: icebergDark,
+    light: icebergLight,
+  },
+  nightOwl: {
+    label: 'Night Owl',
+    dark: nightOwlDark,
+    light: nightOwlLight,
+  },
+  nightfox: {
+    label: 'Nightfox',
+    dark: nightfoxDefault,
+    light: nightfoxDayfox,
+  },
+  one: {
+    label: 'One',
+    dark: oneDark,
+    light: oneLight,
+  },
+  oneHalf: {
+    label: 'One Half',
+    dark: oneHalfDark,
+    light: oneHalfLight,
+  },
+  rosePine: {
+    label: 'Rose Pine',
+    dark: rosePineDefault,
+    light: rosePineDawn,
+  },
+  seoul256: {
+    label: 'Seoul256',
+    dark: seoul256Dark,
+    light: seoul256Light,
+  },
+  solarized: {
+    label: 'Solarized',
+    dark: solarizedDark,
+    light: solarizedLight,
+  },
+  tokyoNight: {
+    label: 'Tokyo Night',
+    dark: tokyoNightDefault,
+    light: tokyoNightDay,
+  },
+  zenbonesForestbones: {
+    label: 'Zenbones Forestbones',
+    dark: zenbonesForestbonesDark,
+    light: zenbonesForestbonesLight,
+  },
+  zenbonesNeobones: {
+    label: 'Zenbones Neobones',
+    dark: zenbonesNeobonesDark,
+    light: zenbonesNeobonesLight,
+  },
+  zenbonesRosebones: {
+    label: 'Zenbones Rosebones',
+    dark: zenbonesRosebonesDark,
+    light: zenbonesRosebonesLight,
+  },
+  zenbonesSeoulbones: {
+    label: 'Zenbones Seoulbones',
+    dark: zenbonesSeoulbonesDark,
+    light: zenbonesSeoulbonesLight,
+  },
+  zenbonesTokyobones: {
+    label: 'Zenbones Tokyobones',
+    dark: zenbonesTokyobonesDark,
+    light: zenbonesTokyobonesLight,
+  },
+  zenbonesZenwritten: {
+    label: 'Zenbones Zenwritten',
+    dark: zenbonesZenwrittenDark,
+    light: zenbonesZenwrittenLight,
+  },
 };
 
 export const PALETTE_NAMES = Object.keys(PALETTES) as ThemeName[];

@@ -66,15 +66,13 @@ export function buildTheme(colors: ThemeColors): Theme {
 export function useTheme(): Theme {
   const systemScheme = useColorScheme();
   const themePref = useSettingsStore(s => s.settings.theme);
-  const darkPalette = useSettingsStore(s => s.settings.darkPalette);
-  const lightPalette = useSettingsStore(s => s.settings.lightPalette);
+  const palette = useSettingsStore(s => s.settings.palette);
 
   const isDark =
     themePref === 'dark' ? true
     : themePref === 'light' ? false
     : systemScheme === 'dark';
 
-  const paletteName = isDark ? darkPalette : lightPalette;
-  const colors = PALETTES[paletteName] ?? (isDark ? PALETTES.gruvboxDark : PALETTES.gruvboxLight);
-  return buildTheme(colors);
+  const group = PALETTES[palette] ?? PALETTES.gruvbox;
+  return buildTheme(isDark ? group.dark : group.light);
 }
