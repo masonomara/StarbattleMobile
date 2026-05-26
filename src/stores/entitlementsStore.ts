@@ -82,14 +82,11 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   },
 
   loadEntitlements: async (userId: string) => {
-    const [entRow, catalogRows] = await Promise.all([
-      db.getOptional<{
-        is_premium: number;
-        premium_purchased_at: string | null;
-        owned_pack_ids: string;
-      }>('SELECT * FROM user_entitlements WHERE user_id = ?', [userId]),
-      db.getAll<PackRow>(PACK_QUERY),
-    ]);
+    const entRow = await db.getOptional<{
+      is_premium: number;
+      premium_purchased_at: string | null;
+      owned_pack_ids: string;
+    }>('SELECT * FROM user_entitlements WHERE user_id = ?', [userId]);
 
     const entitlements: Entitlements = entRow
       ? {
@@ -99,7 +96,7 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
         }
       : DEFAULT_ENTITLEMENTS;
 
-    set({ entitlements, packCatalog: catalogRows.map(mapPackRow) });
+    set({ entitlements });
   },
 
   hasPackAccess: (packId: string) => {
