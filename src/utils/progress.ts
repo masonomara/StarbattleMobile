@@ -16,45 +16,29 @@ export async function saveProgress(
   const now = new Date().toISOString();
   const id = `${userId}:${puzzleId}`;
 
-  const existing = await db.getOptional<{ id: string; completed_at: string | null }>(
-    'SELECT id, completed_at FROM puzzle_progress WHERE user_id = ? AND puzzle_id = ?',
-    [userId, puzzleId],
+  await db.execute(
+    `INSERT INTO puzzle_progress
+       (id, user_id, puzzle_id, cells, auto_marks, time_ms, completed, completed_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       cells = excluded.cells,
+       auto_marks = excluded.auto_marks,
+       time_ms = excluded.time_ms,
+       completed = excluded.completed,
+       completed_at = COALESCE(puzzle_progress.completed_at, excluded.completed_at),
+       updated_at = excluded.updated_at`,
+    [
+      id,
+      userId,
+      puzzleId,
+      JSON.stringify(cells),
+      JSON.stringify([...autoMarks]),
+      timeMs,
+      completed ? 1 : 0,
+      completed ? now : null,
+      now,
+    ],
   );
-
-  if (existing) {
-    await db.execute(
-      `UPDATE puzzle_progress SET
-         cells = ?, auto_marks = ?, time_ms = ?, completed = ?,
-         completed_at = COALESCE(completed_at, ?), updated_at = ?
-       WHERE id = ?`,
-      [
-        JSON.stringify(cells),
-        JSON.stringify([...autoMarks]),
-        timeMs,
-        completed ? 1 : 0,
-        completed ? now : null,
-        now,
-        existing.id,
-      ],
-    );
-  } else {
-    await db.execute(
-      `INSERT INTO puzzle_progress
-         (id, user_id, puzzle_id, cells, auto_marks, time_ms, completed, completed_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        userId,
-        puzzleId,
-        JSON.stringify(cells),
-        JSON.stringify([...autoMarks]),
-        timeMs,
-        completed ? 1 : 0,
-        completed ? now : null,
-        now,
-      ],
-    );
-  }
 }
 
 export async function loadProgress(puzzleId: string): Promise<{
@@ -134,23 +118,15 @@ export async function saveStreak(
 
   const now = new Date().toISOString();
 
-  const existing = await db.getOptional<{ id: string }>(
-    'SELECT id FROM streaks WHERE user_id = ? AND type = ?',
-    [userId, type],
+  await db.execute(
+    `INSERT INTO streaks (id, user_id, type, current_count, last_completed_key, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       current_count = excluded.current_count,
+       last_completed_key = excluded.last_completed_key,
+       updated_at = excluded.updated_at`,
+    [`${userId}:${type}`, userId, type, currentCount, lastCompletedKey, now],
   );
-
-  if (existing) {
-    await db.execute(
-      'UPDATE streaks SET current_count = ?, last_completed_key = ?, updated_at = ? WHERE id = ?',
-      [currentCount, lastCompletedKey, now, existing.id],
-    );
-  } else {
-    await db.execute(
-      `INSERT INTO streaks (id, user_id, type, current_count, last_completed_key, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [`${userId}:${type}`, userId, type, currentCount, lastCompletedKey, now],
-    );
-  }
 }
 
 export async function loadStreaks(): Promise<Streak[]> {
