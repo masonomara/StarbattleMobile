@@ -48,6 +48,6 @@ export function useTheme(): Theme {
     : themePref === 'light' ? false
     : systemScheme === 'dark';
 
-  const group = PALETTES[palette] ?? PALETTES.gruvbox;
+  const group = PALETTES[palette] ?? PALETTES.original;
   return buildTheme(isDark ? group.dark : group.light);
 }
