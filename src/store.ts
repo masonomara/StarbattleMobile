@@ -60,7 +60,13 @@ type PuzzleState = {
   dismissHint: () => void;
 };
 
-export const usePuzzleStore = create<PuzzleState>((set, get) => ({
+export const usePuzzleStore = create<PuzzleState>((set, get) => {
+  function flushSave(puzzleId: string) {
+    const { cells, autoMarks, timeMs, completed } = get();
+    scheduleSave(puzzleId, cells, autoMarks, timeMs, completed);
+  }
+
+  return {
   puzzle: null,
   cells: [],
   autoMarks: new Set<number>(),
@@ -181,8 +187,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       set({ completed: true });
     }
 
-    const s = get();
-    scheduleSave(puzzle.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    flushSave(puzzle.id);
   },
 
   cycleTapMode: () => {
@@ -221,8 +226,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       ),
       redoStack: [],
     }));
-    const s = get();
-    scheduleSave(puzzle.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    flushSave(puzzle.id);
   },
 
   undo: () => {
@@ -260,8 +264,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       moveLog: moveLog.slice(0, -1),
       redoStack: [...state.redoStack, redoMove].slice(-MAX_HISTORY),
     }));
-    const s = get();
-    scheduleSave(puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    flushSave(puzzle!.id);
   },
 
   redo: () => {
@@ -306,8 +309,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       if (settings.haptics) Haptics.notification('success');
       set({ completed: true });
     }
-    const s = get();
-    scheduleSave(puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    flushSave(puzzle!.id);
   },
 
   // Commits the changes accumulated during a drag stroke (see useDrawGesture).
@@ -351,8 +353,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       };
     });
 
-    const s = get();
-    scheduleSave(puzzle.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    flushSave(puzzle.id);
   },
 
   clearBoard: () => {
@@ -383,8 +384,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
       ),
       redoStack: [],
     }));
-    const s = get();
-    scheduleSave(puzzle.id, s.cells, s.autoMarks, s.timeMs, s.completed);
+    flushSave(puzzle.id);
   },
 
   showHint: () => {
@@ -425,4 +425,5 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     if (get().completed) return;
     set(state => ({ timeMs: state.timeMs + ms }));
   },
-}));
+  };
+});

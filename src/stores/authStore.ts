@@ -42,6 +42,11 @@ function parseUrlFragment(fragment: string): Record<string, string> {
   return result;
 }
 
+async function deleteAnonymousUser(id: string | null): Promise<void> {
+  if (!id) return;
+  try { await supabase.rpc('delete_anonymous_user', { target_id: id }); } catch {}
+}
+
 // Held at module scope so `initialize()` can unsubscribe the previous listener
 // before attaching a new one. Without this guard, React Fast Refresh (dev) or
 // repeated `initialize()` calls would stack up duplicate listeners.
@@ -142,9 +147,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Clean up the now-orphaned anonymous record only after sign-in succeeds.
     // A failed cleanup is acceptable (orphan); a pre-sign-in delete on a failed
     // sign-in would permanently destroy the anonymous user's progress.
-    if (anonId) {
-      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch {}
-    }
+    await deleteAnonymousUser(anonId);
   },
 
   signInWithGoogle: async () => {
@@ -158,9 +161,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
-    if (anonId) {
-      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch {}
-    }
+    await deleteAnonymousUser(anonId);
   },
 
   signInWithApple: async () => {
@@ -181,9 +182,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
-    if (anonId) {
-      try { await supabase.rpc('delete_anonymous_user', { target_id: anonId }); } catch {}
-    }
+    await deleteAnonymousUser(anonId);
   },
 
   requestPasswordReset: async (email: string) => {
