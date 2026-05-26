@@ -45,7 +45,7 @@ export function getPuzzleIndex(
   packSize: number,
   now = new Date(),
 ): number {
-  const epoch = new Date('2025-01-01');
+  const epoch = new Date(2025, 0, 1);
   const msPerDay = 86400000;
   const daysSinceEpoch = Math.floor(
     (now.getTime() - epoch.getTime()) / msPerDay,
@@ -92,8 +92,10 @@ export async function getPastArchive(
 
 export function archiveKeyToDate(type: StreakType, key: string): Date {
   switch (type) {
-    case 'daily':
-      return new Date(key);
+    case 'daily': {
+      const [y, m, d] = key.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
     case 'weekly': {
       const [yearStr, weekStr] = key.split('-W');
       const year = Number(yearStr);
