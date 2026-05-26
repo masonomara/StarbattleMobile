@@ -62,7 +62,7 @@ export default function App() {
     // the anonymous → named-user sign-in transition the watch can't guarantee.
     const authUnsub = useAuthStore.subscribe((state, prevState) => {
       const userId = state.user?.id;
-      if (userId && !state.isAnonymous && userId !== prevState.user?.id) {
+      if (userId && userId !== prevState.user?.id) {
         useEntitlementsStore.getState().loadEntitlements(userId);
       }
     });
