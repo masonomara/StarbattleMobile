@@ -1,8 +1,7 @@
-import { createMMKV } from 'react-native-mmkv';
+import { settingsStorage as storage } from './mmkv';
 import type { UserSettings } from './types.ts';
 
 const SETTINGS_KEY = 'settings';
-const storage = createMMKV({ id: 'starbattle-settings' });
 
 export const DEFAULT_SETTINGS: UserSettings = {
   autoXNeighbors: true,
