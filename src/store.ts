@@ -230,11 +230,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const lastMove = moveLog[moveLog.length - 1];
 
     const redoMove: Move = {
-      changes: lastMove.changes.map(c => ({
-        index: c.index,
-        prev: cells[c.index],
-        next: c.prev,
-      })),
+      changes: lastMove.changes.map(c => ({ ...c })),
       autoMarks: [...autoMarks],
     };
 
@@ -274,17 +270,13 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     const entry = redoStack[redoStack.length - 1];
 
     const undoMove: Move = {
-      changes: entry.changes.map(c => ({
-        index: c.index,
-        prev: cells[c.index],
-        next: c.prev,
-      })),
+      changes: entry.changes.map(c => ({ ...c })),
       autoMarks: [...autoMarks],
     };
 
     const newCells = [...cells];
     for (const c of entry.changes) {
-      newCells[c.index] = c.prev;
+      newCells[c.index] = c.next;
     }
 
     const settings = useSettingsStore.getState().settings;
