@@ -28,19 +28,30 @@ export type PaletteColors = {
 // ─── ORIGINAL ────────────────────────────────────────────────────────────────
 
 const originalLight: PaletteColors = {
-  black: '31, 35, 30',
-  red: '207, 34, 46',
-  green: '31, 136, 61',
-  yellow: '188, 76, 0',
-  blue: '9, 105, 208',
+  black: '31, 35, 40',
+  red: '209, 36, 47',
+  green: '26, 127, 55',
+  yellow: '154, 103, 0',
+  blue: '9, 105, 218',
   magenta: '191, 57, 137',
-  cyan: '23, 155, 155',
+  cyan: '27, 124, 131',
   lightGray: '209, 217, 224',
   gray: '89, 99, 110',
   white: '255, 255, 255',
 };
 
-const originalDark: PaletteColors = { ...originalLight };
+const originalDark: PaletteColors = {
+  black: '13, 17, 23',
+  red: '248, 81, 73',
+  green: '63, 185, 80',
+  yellow: '210, 153, 34',
+  blue: '68, 147, 248',
+  magenta: '171, 125, 248',
+  cyan: '57, 197, 207',
+  lightGray: '145, 152, 161',
+  gray: '61, 68, 77',
+  white: '240, 246, 252',
+};
 
 // ─── CRIMSON ─────────────────────────────────────────────────────────────────
 
@@ -76,12 +87,12 @@ const gruvboxDark: PaletteColors = {
 
 const gruvboxLight: PaletteColors = {
   black: '60, 56, 54',
-  red: '157, 0, 6',
-  green: '121, 116, 14',
-  yellow: '181, 118, 20',
-  blue: '7, 102, 120',
-  magenta: '143, 63, 113',
-  cyan: '66, 123, 88',
+  red: '204, 36, 29',
+  green: '104, 157, 106',
+  yellow: '215, 153, 33',
+  blue: '69, 133, 136',
+  magenta: '177, 98, 134',
+  cyan: '104, 157, 106',
   gray: '124, 111, 100',
   lightGray: '146, 131, 116',
   white: '251, 241, 199',
