@@ -92,34 +92,12 @@ export async function loadProgress(puzzleId: string): Promise<{
   }
 }
 
-export async function getCompletedCountForPack(
-  packId: string,
-  puzzleCount: number,
-): Promise<number> {
-  const userId = useAuthStore.getState().user?.id;
-  if (!userId) return 0;
-
-  if (puzzleCount === 0) return 0;
-
-  const ids = Array.from({ length: puzzleCount }, (_, i) => `${packId}:${i}`);
-  const placeholders = ids.map(() => '?').join(',');
-
-  const rows = await db.getAll<{ count: number }>(
-    `SELECT COUNT(*) as count FROM puzzle_progress
-     WHERE user_id = ? AND puzzle_id IN (${placeholders}) AND completed = 1`,
-    [userId, ...ids],
-  );
-  return rows[0]?.count ?? 0;
-}
-
-export async function getCompletedPuzzleIdsForPack(
+async function fetchCompletedIdsForPack(
   packId: string,
   puzzleCount: number,
 ): Promise<Set<string>> {
   const userId = useAuthStore.getState().user?.id;
-  if (!userId) return new Set();
-
-  if (puzzleCount === 0) return new Set();
+  if (!userId || puzzleCount === 0) return new Set();
 
   const ids = Array.from({ length: puzzleCount }, (_, i) => `${packId}:${i}`);
   const placeholders = ids.map(() => '?').join(',');
@@ -130,6 +108,20 @@ export async function getCompletedPuzzleIdsForPack(
     [userId, ...ids],
   );
   return new Set(rows.map(r => r.puzzle_id));
+}
+
+export async function getCompletedCountForPack(
+  packId: string,
+  puzzleCount: number,
+): Promise<number> {
+  return (await fetchCompletedIdsForPack(packId, puzzleCount)).size;
+}
+
+export async function getCompletedPuzzleIdsForPack(
+  packId: string,
+  puzzleCount: number,
+): Promise<Set<string>> {
+  return fetchCompletedIdsForPack(packId, puzzleCount);
 }
 
 export async function saveStreak(
