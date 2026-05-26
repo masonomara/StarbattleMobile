@@ -30,7 +30,13 @@ import { buildTheme } from '../hooks/useTheme';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../config';
 import type { Theme, UserSettings } from '../types';
 
-type EmailMode = 'signup' | 'signin' | 'confirm-email' | 'forgot-password' | 'reset-sent' | null;
+type EmailMode =
+  | 'signup'
+  | 'signin'
+  | 'confirm-email'
+  | 'forgot-password'
+  | 'reset-sent'
+  | null;
 
 const PREVIEW_GRID = [
   [0, 0, 1, 1],
@@ -90,7 +96,16 @@ function PalettePreview({
 }) {
   return (
     <Svg width={S} height={S}>
-      <Rect x={0} y={0} width={S} height={S} fill={rgba(paletteTheme.isDark ? paletteTheme.black : paletteTheme.white, 1)} />
+      <Rect
+        x={0}
+        y={0}
+        width={S}
+        height={S}
+        fill={rgba(
+          paletteTheme.isDark ? paletteTheme.black : paletteTheme.white,
+          1,
+        )}
+      />
       {PREVIEW_GRID.map((row, r) =>
         row.map((regionIdx, c) => (
           <Rect
@@ -101,8 +116,16 @@ function PalettePreview({
             height={cs}
             fill={
               coloredRegions
-                ? rgba(paletteTheme.regionColors[regionIdx], paletteTheme.regionColorAlpha)
-                : rgba(paletteTheme.isDark ? paletteTheme.black : paletteTheme.white, 1)
+                ? rgba(
+                    paletteTheme.regionColors[regionIdx],
+                    paletteTheme.regionColorAlpha,
+                  )
+                : rgba(
+                    paletteTheme.isDark
+                      ? paletteTheme.black
+                      : paletteTheme.white,
+                    1,
+                  )
             }
           />
         )),
@@ -114,7 +137,10 @@ function PalettePreview({
             y1={bw + i * cs}
             x2={S - bw}
             y2={bw + i * cs}
-            stroke={rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.gray, 1)}
+            stroke={rgba(
+              paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.gray,
+              1,
+            )}
             strokeWidth={0.5}
           />
           <Line
@@ -122,7 +148,10 @@ function PalettePreview({
             y1={bw}
             x2={bw + i * cs}
             y2={S - bw}
-            stroke={rgba(paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.gray, 1)}
+            stroke={rgba(
+              paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.gray,
+              1,
+            )}
             strokeWidth={0.5}
           />
         </React.Fragment>
@@ -134,7 +163,10 @@ function PalettePreview({
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
-          stroke={rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1)}
+          stroke={rgba(
+            paletteTheme.isDark ? paletteTheme.white : paletteTheme.black,
+            1,
+          )}
           strokeWidth={1.5}
         />
       ))}
@@ -145,7 +177,10 @@ function PalettePreview({
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
-          stroke={rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1)}
+          stroke={rgba(
+            paletteTheme.isDark ? paletteTheme.white : paletteTheme.black,
+            1,
+          )}
           strokeWidth={1.5}
         />
       ))}
@@ -155,12 +190,18 @@ function PalettePreview({
         width={S - bw}
         height={S - bw}
         fill="none"
-        stroke={rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1)}
+        stroke={rgba(
+          paletteTheme.isDark ? paletteTheme.white : paletteTheme.black,
+          1,
+        )}
         strokeWidth={bw}
       />
       <Path
         d={starPath(STAR.cx, STAR.cy, cs * 0.33)}
-        fill={rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1)}
+        fill={rgba(
+          paletteTheme.isDark ? paletteTheme.white : paletteTheme.black,
+          1,
+        )}
       />
       <Line
         x1={MARK1.cx - MR}
@@ -227,7 +268,10 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: rgba(theme.isDark ? theme.lightGray : theme.gray, 1), true: rgba(theme.blue, 1) }}
+        trackColor={{
+          false: rgba(theme.isDark ? theme.lightGray : theme.gray, 1),
+          true: rgba(theme.blue, 1),
+        }}
         thumbColor="#FFFFFF"
       />
     </View>
@@ -344,7 +388,10 @@ export function SettingsModal() {
           center={<Text style={styles.title}>Star Battle</Text>}
           right={
             <Pressable onPress={closeSettings} hitSlop={8}>
-              <X size={24} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
+              <X
+                size={24}
+                color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+              />
             </Pressable>
           }
         />
@@ -367,12 +414,24 @@ export function SettingsModal() {
                   <>
                     {Platform.OS === 'ios' && (
                       <Pressable
-                        style={[styles.primaryButton, loading && styles.disabled]}
-                        onPress={() => warnProgressReplacement(() => withLoading(signInWithApple))}
+                        style={[
+                          styles.primaryButton,
+                          loading && styles.disabled,
+                        ]}
+                        onPress={() =>
+                          warnProgressReplacement(() =>
+                            withLoading(signInWithApple),
+                          )
+                        }
                         disabled={loading}
                       >
                         {loading ? (
-                          <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
+                          <ActivityIndicator
+                            color={rgba(
+                              theme.isDark ? theme.black : theme.white,
+                              1,
+                            )}
+                          />
                         ) : (
                           <Text style={styles.primaryButtonText}>
                             Continue with Apple
@@ -383,16 +442,37 @@ export function SettingsModal() {
 
                     <Pressable
                       style={[
-                        Platform.OS === 'ios' ? styles.secondaryButton : styles.primaryButton,
+                        Platform.OS === 'ios'
+                          ? styles.secondaryButton
+                          : styles.primaryButton,
                         loading && styles.disabled,
                       ]}
-                      onPress={() => warnProgressReplacement(() => withLoading(signInWithGoogle))}
+                      onPress={() =>
+                        warnProgressReplacement(() =>
+                          withLoading(signInWithGoogle),
+                        )
+                      }
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={Platform.OS === 'ios' ? rgba(theme.blue, 1) : rgba(theme.isDark ? theme.black : theme.white, 1)} />
+                        <ActivityIndicator
+                          color={
+                            Platform.OS === 'ios'
+                              ? rgba(theme.blue, 1)
+                              : rgba(
+                                  theme.isDark ? theme.black : theme.white,
+                                  1,
+                                )
+                          }
+                        />
                       ) : (
-                        <Text style={Platform.OS === 'ios' ? styles.secondaryButtonText : styles.primaryButtonText}>
+                        <Text
+                          style={
+                            Platform.OS === 'ios'
+                              ? styles.secondaryButtonText
+                              : styles.primaryButtonText
+                          }
+                        >
                           Continue with Google
                         </Text>
                       )}
@@ -411,9 +491,7 @@ export function SettingsModal() {
                       style={styles.linkButton}
                       onPress={() => setEmailMode('signin')}
                     >
-                      <Text style={styles.linkText}>
-                        Sign in with Email
-                      </Text>
+                      <Text style={styles.linkText}>Sign in with Email</Text>
                     </Pressable>
                   </>
                 )}
@@ -426,7 +504,10 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Email"
-                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.gray, 1)}
+                      placeholderTextColor={rgba(
+                        theme.isDark ? theme.lightGray : theme.gray,
+                        1,
+                      )}
                       value={email}
                       onChangeText={setEmail}
                       autoCapitalize="none"
@@ -436,7 +517,10 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Password"
-                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.gray, 1)}
+                      placeholderTextColor={rgba(
+                        theme.isDark ? theme.lightGray : theme.gray,
+                        1,
+                      )}
                       value={password}
                       onChangeText={setPassword}
                       secureTextEntry
@@ -445,10 +529,12 @@ export function SettingsModal() {
                       }
                     />
                     {emailMode === 'signup' && (
-                      <Text style={[
-                        styles.passwordHint,
-                        password.length >= 6 && styles.passwordHintMet,
-                      ]}>
+                      <Text
+                        style={[
+                          styles.passwordHint,
+                          password.length >= 6 && styles.passwordHintMet,
+                        ]}
+                      >
                         At least 6 characters
                       </Text>
                     )}
@@ -458,7 +544,12 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
+                        <ActivityIndicator
+                          color={rgba(
+                            theme.isDark ? theme.black : theme.white,
+                            1,
+                          )}
+                        />
                       ) : (
                         <Text style={styles.primaryButtonText}>
                           {emailMode === 'signup'
@@ -470,7 +561,10 @@ export function SettingsModal() {
                     {emailMode === 'signin' && (
                       <Pressable
                         style={styles.linkButton}
-                        onPress={() => { setEmailMode('forgot-password'); setError(null); }}
+                        onPress={() => {
+                          setEmailMode('forgot-password');
+                          setError(null);
+                        }}
                         disabled={loading}
                       >
                         <Text style={styles.linkText}>Forgot Password?</Text>
@@ -494,7 +588,10 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Email"
-                      placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.gray, 1)}
+                      placeholderTextColor={rgba(
+                        theme.isDark ? theme.lightGray : theme.gray,
+                        1,
+                      )}
                       value={email}
                       onChangeText={setEmail}
                       autoCapitalize="none"
@@ -507,14 +604,24 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
+                        <ActivityIndicator
+                          color={rgba(
+                            theme.isDark ? theme.black : theme.white,
+                            1,
+                          )}
+                        />
                       ) : (
-                        <Text style={styles.primaryButtonText}>Send Reset Link</Text>
+                        <Text style={styles.primaryButtonText}>
+                          Send Reset Link
+                        </Text>
                       )}
                     </Pressable>
                     <Pressable
                       style={styles.linkButton}
-                      onPress={() => { setEmailMode('signin'); setError(null); }}
+                      onPress={() => {
+                        setEmailMode('signin');
+                        setError(null);
+                      }}
                     >
                       <Text style={styles.linkText}>Back to Sign In</Text>
                     </Pressable>
@@ -523,7 +630,9 @@ export function SettingsModal() {
 
                 {emailMode === 'reset-sent' && (
                   <View style={styles.confirmEmailBox}>
-                    <Text style={styles.confirmEmailTitle}>Check your inbox</Text>
+                    <Text style={styles.confirmEmailTitle}>
+                      Check your inbox
+                    </Text>
                     <Text style={styles.confirmEmailBody}>
                       We sent a password reset link to{' '}
                       <Text style={styles.confirmEmailAddress}>{email}</Text>.
@@ -543,7 +652,9 @@ export function SettingsModal() {
 
                 {emailMode === 'confirm-email' && (
                   <View style={styles.confirmEmailBox}>
-                    <Text style={styles.confirmEmailTitle}>Check your inbox</Text>
+                    <Text style={styles.confirmEmailTitle}>
+                      Check your inbox
+                    </Text>
                     <Text style={styles.confirmEmailBody}>
                       We sent a confirmation link to{' '}
                       <Text style={styles.confirmEmailAddress}>{email}</Text>.
@@ -573,52 +684,21 @@ export function SettingsModal() {
                   </Text>
                 </View>
 
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Subscription</Text>
-                  {entitlements.isPremium ? (
-                    <View style={styles.premiumBadge}>
-                      <Text style={styles.premiumBadgeText}>Premium</Text>
-                    </View>
-                  ) : (
-                    <Pressable
-                      style={[styles.primaryButton, loading && styles.disabled]}
-                      onPress={() => withLoading(purchasePremium)}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
-                      ) : (
-                        <Text style={styles.primaryButtonText}>
-                          {premiumPrice ? `Buy Premium · ${premiumPrice}` : 'Buy Premium'}
-                        </Text>
-                      )}
-                    </Pressable>
-                  )}
-
-                  {ownedPacks.length > 0 && (
-                    <>
-                      <Text style={styles.subLabel}>Owned Packs</Text>
-                      {ownedPacks.map(p => (
-                        <Text key={p.id} style={styles.ownedPackName}>
-                          {p.name}
-                        </Text>
-                      ))}
-                    </>
-                  )}
-                </View>
-
                 <Pressable
                   style={[styles.secondaryButton, loading && styles.disabled]}
                   onPress={() => {
                     let wasPremium = false;
                     withLoading(
-                      async () => { wasPremium = await restorePurchases(); },
-                      () => Alert.alert(
-                        'Purchases Restored',
-                        wasPremium
-                          ? 'Your premium access has been restored.'
-                          : 'No previous purchases were found on this account.',
-                      ),
+                      async () => {
+                        wasPremium = await restorePurchases();
+                      },
+                      () =>
+                        Alert.alert(
+                          'Purchases Restored',
+                          wasPremium
+                            ? 'Your premium access has been restored.'
+                            : 'No previous purchases were found on this account.',
+                        ),
                     );
                   }}
                   disabled={loading}
@@ -639,13 +719,56 @@ export function SettingsModal() {
                   onPress={confirmDeleteAccount}
                   disabled={loading}
                 >
-                  <Text style={styles.destructiveButtonText}>Delete Account</Text>
+                  <Text style={styles.destructiveButtonText}>
+                    Delete Account
+                  </Text>
                 </Pressable>
 
                 {error && <Text style={styles.error}>{error}</Text>}
               </>
             )}
           </View>
+
+          {/* Subscription */}
+          {!isAnonymous && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Subscription</Text>
+              {entitlements.isPremium ? (
+                <View style={styles.premiumBadge}>
+                  <Text style={styles.premiumBadgeText}>Premium</Text>
+                </View>
+              ) : (
+                <Pressable
+                  style={[styles.primaryButton, loading && styles.disabled]}
+                  onPress={() => withLoading(purchasePremium)}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator
+                      color={rgba(theme.isDark ? theme.black : theme.white, 1)}
+                    />
+                  ) : (
+                    <Text style={styles.primaryButtonText}>
+                      {premiumPrice
+                        ? `Buy Premium · ${premiumPrice}`
+                        : 'Buy Premium'}
+                    </Text>
+                  )}
+                </Pressable>
+              )}
+
+              {ownedPacks.length > 0 && (
+                <>
+                  <Text style={styles.subLabel}>Owned Packs</Text>
+                  {ownedPacks.map(p => (
+                    <Text key={p.id} style={styles.ownedPackName}>
+                      {p.name}
+                    </Text>
+                  ))}
+                </>
+              )}
+            </View>
+          )}
 
           {/* Gameplay */}
           <View style={styles.section}>
@@ -654,21 +777,30 @@ export function SettingsModal() {
               <ToggleRow
                 label="Auto-X Neighbors"
                 value={settings.autoXNeighbors}
-                onToggle={v => { updateSettings({ autoXNeighbors: v }); recomputeAutoMarks(); }}
+                onToggle={v => {
+                  updateSettings({ autoXNeighbors: v });
+                  recomputeAutoMarks();
+                }}
                 styles={styles}
                 theme={theme}
               />
               <ToggleRow
                 label="Auto-X Rows & Columns"
                 value={settings.autoXRowsCols}
-                onToggle={v => { updateSettings({ autoXRowsCols: v }); recomputeAutoMarks(); }}
+                onToggle={v => {
+                  updateSettings({ autoXRowsCols: v });
+                  recomputeAutoMarks();
+                }}
                 styles={styles}
                 theme={theme}
               />
               <ToggleRow
                 label="Auto-X Regions"
                 value={settings.autoXRegions}
-                onToggle={v => { updateSettings({ autoXRegions: v }); recomputeAutoMarks(); }}
+                onToggle={v => {
+                  updateSettings({ autoXRegions: v });
+                  recomputeAutoMarks();
+                }}
                 styles={styles}
                 theme={theme}
               />
@@ -748,15 +880,32 @@ export function SettingsModal() {
                 <View style={styles.swatchGrid}>
                   {PALETTE_NAMES.map(name => {
                     const active = settings.palette === name;
-                    const paletteTheme = buildTheme(PALETTES[name][theme.isDark ? 'dark' : 'light'], theme.isDark);
+                    const paletteTheme = buildTheme(
+                      PALETTES[name][theme.isDark ? 'dark' : 'light'],
+                      theme.isDark,
+                    );
                     return (
                       <Pressable
                         key={name}
                         onPress={() => updateSettings({ palette: name })}
                         style={[
                           styles.swatchCard,
-                          { backgroundColor: rgba(paletteTheme.isDark ? paletteTheme.black : paletteTheme.white, 1) },
-                          active && { borderColor: rgba(paletteTheme.isDark ? paletteTheme.white : paletteTheme.black, 1) },
+                          {
+                            backgroundColor: rgba(
+                              paletteTheme.isDark
+                                ? paletteTheme.black
+                                : paletteTheme.white,
+                              1,
+                            ),
+                          },
+                          active && {
+                            borderColor: rgba(
+                              paletteTheme.isDark
+                                ? paletteTheme.white
+                                : paletteTheme.black,
+                              1,
+                            ),
+                          },
                         ]}
                       >
                         <PalettePreview
@@ -766,7 +915,14 @@ export function SettingsModal() {
                         <Text
                           style={[
                             styles.swatchLabel,
-                            { color: rgba(paletteTheme.isDark ? paletteTheme.gray : paletteTheme.gray, 1) },
+                            {
+                              color: rgba(
+                                paletteTheme.isDark
+                                  ? paletteTheme.gray
+                                  : paletteTheme.gray,
+                                1,
+                              ),
+                            },
                           ]}
                         >
                           {PALETTE_META[name].label}
@@ -789,7 +945,9 @@ export function SettingsModal() {
             </Pressable>
             <Text style={styles.legalSep}>·</Text>
             <Pressable
-              onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})}
+              onPress={() =>
+                Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})
+              }
               hitSlop={8}
             >
               <Text style={styles.privacyLinkText}>Privacy Policy</Text>
@@ -802,14 +960,13 @@ export function SettingsModal() {
 }
 
 const createStyles = (theme: Theme) => {
-  const bg   = theme.isDark ? theme.black  : theme.white;
-  const card = theme.isDark ? theme.gray  : theme.white;
-  const fg   = theme.isDark ? theme.white : theme.black;
-  const dim  = theme.isDark ? theme.gray  : theme.gray;
+  const bg = theme.isDark ? theme.black : theme.white;
+  const card = theme.isDark ? theme.gray : theme.white;
+  const fg = theme.isDark ? theme.white : theme.black;
+  const dim = theme.isDark ? theme.gray : theme.gray;
   return StyleSheet.create({
     container: {
       flex: 1,
-      paddingTop: theme.spacingXl,
       backgroundColor: rgba(card, 1),
     },
     title: {
@@ -818,7 +975,7 @@ const createStyles = (theme: Theme) => {
       color: rgba(fg, 1),
     },
     scrollContent: {
-      paddingHorizontal: theme.spacingXl,
+      paddingHorizontal: 16,
       paddingBottom: theme.spacingXl,
       gap: theme.spacingXl,
     },
