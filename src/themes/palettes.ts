@@ -1337,16 +1337,17 @@ export const PALETTES: Record<ThemeName, PaletteVariants> = {
   //   dark: everforestDark,
   //   light: everforestLight,
   // },
+  seoul256: {
+    label: 'Seoul256',
+    dark: seoul256Dark,
+    light: seoul256Light,
+  },
   github: {
     label: 'Github',
     dark: githubDark,
     light: githubLight,
   },
-  gruvbox: {
-    label: 'Gruvbox',
-    dark: gruvboxDark,
-    light: gruvboxLight,
-  },
+
   // iceberg: {
   //   label: 'Iceberg',
   //   dark: icebergDark,
@@ -1377,10 +1378,10 @@ export const PALETTES: Record<ThemeName, PaletteVariants> = {
     dark: rosePineDefault,
     light: rosePineDawn,
   },
-  seoul256: {
-    label: 'Seoul256',
-    dark: seoul256Dark,
-    light: seoul256Light,
+  gruvbox: {
+    label: 'Gruvbox',
+    dark: gruvboxDark,
+    light: gruvboxLight,
   },
   // solarized: {
   //   label: 'Solarized',
@@ -1392,6 +1393,7 @@ export const PALETTES: Record<ThemeName, PaletteVariants> = {
     dark: tokyoNightDefault,
     light: tokyoNightDay,
   },
+
   // zenbonesForestbones: {
   //   label: 'Zenbones Forestbones',
   //   dark: zenbonesForestbonesDark,
