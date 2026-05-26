@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header } from '../components/Header';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
 import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
@@ -22,15 +23,15 @@ import type { Theme, StreakType, Streak, RootStackParamList } from '../types';
 
 type ArchiveEntry = { dateKey: string; puzzleId: string };
 
-export function StreaksScreen() {
+export function StreaksModal() {
   const theme = useTheme();
   const styles = createStyles(theme);
   const { entitlements } = useEntitlements();
   const isPremium = entitlements.isPremium;
   const premiumPrice = useProductPrice('sb_premium_599');
 
-  const streaksModalVisible = useSettingsStore(s => s.streaksModalVisible);
-  const closeStreaks = useSettingsStore(s => s.closeStreaks);
+  const streaksModalVisible = useStreaksStore(s => s.streaksModalVisible);
+  const closeStreaks = useStreaksStore(s => s.closeStreaks);
 
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();

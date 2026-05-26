@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getStreakPack, getPuzzlesForPack } from '../packs';
 import { CircleButton } from '../components/CircleButton';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
 import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
@@ -184,7 +185,7 @@ export function HomeScreen({
         <Text style={styles.appTitle}>Star Battle Free</Text>
         <View style={styles.headerRight}>
           <CircleButton
-            onPress={() => useSettingsStore.getState().openStreaks()}
+            onPress={() => useStreaksStore.getState().openStreaks()}
           >
             <Flame
               size={24}

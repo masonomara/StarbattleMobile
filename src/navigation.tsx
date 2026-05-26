@@ -5,7 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeScreen } from './screens/HomeScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
-import { StreaksScreen } from './screens/StreaksScreen';
+import { StreaksModal } from './screens/StreaksModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -73,7 +73,7 @@ export function Navigation() {
       </Stack.Navigator>
       <SettingsModal />
       <ResetPasswordModal />
-      <StreaksScreen />
+      <StreaksModal />
     </NavigationContainer>
   );
 }
