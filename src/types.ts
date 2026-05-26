@@ -127,10 +127,10 @@ export type DrawLayerHandle = {
 export type Coord = [number, number];
 
 export type HintStep = {
-  rule: string;     // human-readable description of the logical deduction
-  level: number;    // difficulty level of this deduction step (higher = harder)
+  rule: string; // human-readable description of the logical deduction
+  level: number; // difficulty level of this deduction step (higher = harder)
   placements: Coord[]; // cells where a star should be placed
-  marks: Coord[];      // cells that can be ruled out (should be marked)
+  marks: Coord[]; // cells that can be ruled out (should be marked)
 };
 
 export type RawPuzzle = {
@@ -196,26 +196,27 @@ export type ThemeColors = {
 };
 
 export type ThemeName =
-  | 'ayu'
-  | 'catppuccin'
-  | 'everforest'
+  | 'primer'
+  // | 'ayu'
+  // | 'catppuccin'
+  // | 'everforest'
   | 'github'
   | 'gruvbox'
-  | 'iceberg'
-  | 'nightOwl'
-  | 'nightfox'
-  | 'one'
-  | 'oneHalf'
+  // | 'iceberg'
+  // | 'nightOwl'
+  // | 'nightfox'
+  // | 'one'
+  // | 'oneHalf'
   | 'rosePine'
   | 'seoul256'
-  | 'solarized'
-  | 'tokyoNight'
-  | 'zenbonesForestbones'
-  | 'zenbonesNeobones'
-  | 'zenbonesRosebones'
-  | 'zenbonesSeoulbones'
-  | 'zenbonesTokyobones'
-  | 'zenbonesZenwritten';
+  // | 'solarized'
+  | 'tokyoNight';
+// | 'zenbonesForestbones'
+// | 'zenbonesNeobones'
+// | 'zenbonesRosebones'
+// | 'zenbonesSeoulbones'
+// | 'zenbonesTokyobones'
+// | 'zenbonesZenwritten';
 
 export type PaletteVariants = {
   label: string;
@@ -225,19 +226,17 @@ export type PaletteVariants = {
 
 export type Theme = {
   isDark: boolean;
-  // 16 color slots — all stored as 'r, g, b' RGB tuples
-  black: string;
+  background: string;
+  text: string;
+  textSecondary: string;
+  surface: string;
+  border: string;
+  puzzleBorder: string;
+  puzzleInnerBorder: string;
+  blue: string;
   red: string;
   green: string;
   yellow: string;
-  blue: string;
-  magenta: string;
-  cyan: string;
-  lightGray: string;
-  gray: string;
-
-  white: string;
-  // Derived — 12 chromatic slots for region fills
   regionColors: string[];
   regionColorAlpha: number;
   spacingMd: number;

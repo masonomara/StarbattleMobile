@@ -11,7 +11,6 @@ import { Text } from './Text';
 import { Header } from './Header';
 import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../hooks/useTheme';
-import { rgba } from '../themes/ansi';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import type { Theme } from '../types';
 
@@ -50,7 +49,7 @@ export function ResetPasswordModal() {
           <TextInput
             style={styles.input}
             placeholder="New password"
-            placeholderTextColor={rgba(theme.isDark ? theme.lightGray : theme.gray, 1)}
+            placeholderTextColor={theme.textSecondary}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -67,7 +66,7 @@ export function ResetPasswordModal() {
             disabled={password.length < 6 || loading}
           >
             {loading ? (
-              <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
+              <ActivityIndicator color={theme.background} />
             ) : (
               <Text style={styles.buttonText}>Set Password</Text>
             )}
@@ -79,20 +78,16 @@ export function ResetPasswordModal() {
 }
 
 const createStyles = (theme: Theme) => {
-  const bg  = theme.isDark ? theme.black  : theme.white;
-  const card = theme.isDark ? theme.gray : theme.white;
-  const fg  = theme.isDark ? theme.white : theme.black;
-  const dim = theme.isDark ? theme.lightGray : theme.gray;
   return StyleSheet.create({
     container: {
       flex: 1,
       paddingTop: theme.spacingXl,
-      backgroundColor: rgba(card, 1),
+      backgroundColor: theme.surface,
     },
     title: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(fg, 1),
+      color: theme.text,
     },
     body: {
       paddingHorizontal: theme.spacingXl,
@@ -101,15 +96,15 @@ const createStyles = (theme: Theme) => {
     },
     description: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(dim, 1),
+      color: theme.textSecondary,
       lineHeight: 22,
     },
     input: {
       height: 52,
       borderRadius: theme.radiusMd,
       paddingHorizontal: theme.spacingLg,
-      backgroundColor: rgba(bg, 1),
-      color: rgba(fg, 1),
+      backgroundColor: theme.background,
+      color: theme.text,
       fontSize: theme.fontSizeCallout,
     },
     button: {
@@ -117,24 +112,24 @@ const createStyles = (theme: Theme) => {
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.blue, 1),
+      backgroundColor: theme.blue,
     },
     buttonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(bg, 1),
+      color: theme.background,
     },
     disabled: { opacity: 0.6 },
     hint: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.isDark ? theme.lightGray : theme.gray, 1),
+      color: theme.textSecondary,
     },
     hintMet: {
-      color: rgba(theme.blue, 1),
+      color: theme.blue,
     },
     error: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.red, 1),
+      color: theme.red,
       textAlign: 'center',
     },
   });

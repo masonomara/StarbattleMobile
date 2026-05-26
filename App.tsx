@@ -4,7 +4,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Navigation } from './src/navigation';
 import { useTheme } from './src/hooks/useTheme';
-import { rgba } from './src/themes/ansi';
 import { useAuthStore } from './src/stores/authStore';
 import { useSettingsStore } from './src/stores/settingsStore';
 import { useEntitlementsStore } from './src/stores/entitlementsStore';
@@ -96,7 +95,7 @@ export default function App() {
     <GestureHandlerRootView
       style={{
         flex: 1,
-        backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+        backgroundColor: theme.background,
       }}
     >
       <SafeAreaProvider>

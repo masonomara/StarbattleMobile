@@ -8,7 +8,6 @@ import { Header } from '../components/Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
-import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { loadStreaks, getPastArchive } from '../utils/progress';
@@ -77,7 +76,7 @@ export function StreaksModal() {
           center={<Text style={styles.headerTitle}>Streaks</Text>}
           right={
             <Pressable onPress={closeStreaks} hitSlop={8}>
-              <X size={24} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
+              <X size={24} color={theme.text} />
             </Pressable>
           }
         />
@@ -135,14 +134,14 @@ export function StreaksModal() {
                     }}
                   >
                     <Text style={styles.archiveDate}>{entry.dateKey}</Text>
-                    <ChevronRight size={18} color={rgba(theme.isDark ? theme.gray : theme.gray, 1)} />
+                    <ChevronRight size={18} color={theme.textSecondary} />
                   </Pressable>
                 ))
               )}
             </>
           ) : (
             <View style={styles.premiumTeaser}>
-              <Lock size={28} color={rgba(theme.isDark ? theme.gray : theme.gray, 1)} />
+              <Lock size={28} color={theme.textSecondary} />
               <Text style={styles.teaserTitle}>Premium Feature</Text>
               <Text style={styles.teaserBody}>
                 Unlock access to every past daily, weekly, and monthly puzzle.
@@ -170,7 +169,7 @@ const createStyles = (theme: Theme) => {
     container: {
       flex: 1,
       paddingTop: theme.spacingXl,
-      backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      backgroundColor: theme.textSecondary,
     },
     scrollContent: {
       paddingHorizontal: theme.spacingXl,
@@ -179,7 +178,7 @@ const createStyles = (theme: Theme) => {
     headerTitle: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
     },
     streakGrid: {
       flexDirection: 'row',
@@ -201,17 +200,17 @@ const createStyles = (theme: Theme) => {
     streakCount: {
       fontSize: 32,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.blue, 1),
+      color: theme.blue,
     },
     streakLabel: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: theme.textSecondary,
       marginTop: 4,
     },
     sectionTitle: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
       marginBottom: theme.spacingLg,
     },
     tabRow: {
@@ -224,18 +223,18 @@ const createStyles = (theme: Theme) => {
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
-      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+      backgroundColor: theme.background,
     },
     tabActive: {
-      backgroundColor: rgba(theme.blue, 1),
+      backgroundColor: theme.blue,
     },
     tabText: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: theme.textSecondary,
     },
     tabTextActive: {
-      color: rgba(theme.isDark ? theme.black : theme.white, 1),
+      color: theme.background,
     },
     archiveRow: {
       flexDirection: 'row',
@@ -244,17 +243,17 @@ const createStyles = (theme: Theme) => {
       paddingVertical: theme.spacingLg,
       paddingHorizontal: theme.spacingXl,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+      backgroundColor: theme.background,
       marginBottom: theme.spacingMd,
     },
     archiveDate: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
     },
 
     emptyText: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: theme.textSecondary,
       textAlign: 'center',
       marginTop: theme.spacingXl,
     },
@@ -262,17 +261,17 @@ const createStyles = (theme: Theme) => {
       alignItems: 'center',
       padding: theme.spacingXl,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+      backgroundColor: theme.background,
       gap: theme.spacingMd,
     },
     teaserTitle: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
     },
     teaserBody: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: theme.textSecondary,
       textAlign: 'center',
       lineHeight: 22,
     },
@@ -282,13 +281,13 @@ const createStyles = (theme: Theme) => {
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.blue, 1),
+      backgroundColor: theme.blue,
       marginTop: theme.spacingMd,
     },
     upgradeButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.black : theme.white, 1),
+      color: theme.background,
     },
   });
 };

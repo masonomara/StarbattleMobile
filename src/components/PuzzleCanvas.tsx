@@ -101,18 +101,18 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
         <Path
           key={`region-${colorIdx}`}
           path={path}
-          color={coloredRegions ? rgba(regionColors[colorIdx], theme.regionColorAlpha) : rgba(theme.isDark ? theme.black : theme.white, 1)}
+          color={coloredRegions ? rgba(regionColors[colorIdx], theme.regionColorAlpha) : theme.background}
         />
       ))}
       <Path
         path={innerGridPath}
-        color={rgba(theme.isDark ? theme.gray : theme.gray, 1)}
+        color={theme.textSecondary}
         style="stroke"
         strokeWidth={1.125}
       />
       <Path
         path={regionBorderPath}
-        color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+        color={theme.text}
         style="stroke"
         strokeWidth={3.375}
         strokeCap="square"
@@ -235,12 +235,12 @@ export const PuzzleCanvas = React.forwardRef<
           height: canvasSize,
         }}
       >
-        <Path path={dynamicPaths.starNormal} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
-        <Path path={dynamicPaths.starError} color={rgba(theme.red, 1)} />
-        <Path path={dynamicPaths.starGhost} color={rgba(theme.isDark ? theme.white : theme.black, 0.33)} />
+        <Path path={dynamicPaths.starNormal} color={theme.text} />
+        <Path path={dynamicPaths.starError} color={theme.red} />
+        <Path path={dynamicPaths.starGhost} color={rgba(theme.text, 0.33)} />
         <Path
           path={dynamicPaths.marks}
-          color={rgba(theme.red, 1)}
+          color={theme.red}
           style="stroke"
           strokeWidth={2.25}
           strokeCap="square"

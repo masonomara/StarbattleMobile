@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
 import { Text } from './Text';
-import { rgba } from '../themes/ansi';
 import type { ErrorBoundaryProps } from '../types';
 
 interface State {
@@ -45,7 +44,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
               paddingVertical: 12,
               paddingHorizontal: 24,
               borderRadius: 8,
-              backgroundColor: rgba(theme.blue, 1),
+              backgroundColor: theme.blue,
             }}
             onPress={this.handleReset}
           >
@@ -53,7 +52,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
               style={{
                 fontSize: 16,
                 fontWeight: '600',
-                color: rgba(theme.white, 1),
+                color: theme.text,
               }}
             >
               Try Again

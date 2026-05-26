@@ -9,7 +9,6 @@ import { loadStreaks, recordStreak } from '../utils/progress';
 import { getActiveStreak, STREAK_LABELS } from '../utils/streakDate';
 
 import { useTheme } from '../hooks/useTheme';
-import { rgba } from '../themes/ansi';
 import type { Theme, RootStackParamList, WinBannerProps } from '../types';
 
 export function WinBanner({
@@ -127,10 +126,10 @@ const createStyles = (theme: Theme) =>
       shadowOpacity: 0.24,
       shadowRadius: 24,
       elevation: 8,
-      backgroundColor: rgba(theme.isDark ? theme.gray : theme.white, 1),
+      backgroundColor: theme.surface,
     },
     winText: {
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
       lineHeight: 34,
       fontSize: 28,
       fontFamily: 'Bricolage Grotesque',
@@ -142,14 +141,14 @@ const createStyles = (theme: Theme) =>
       lineHeight: 20,
       fontWeight: 600,
 
-      color: rgba(theme.gray, 1),
+      color: theme.textSecondary,
     },
     winTime: {
       fontSize: 15,
       lineHeight: 20,
       fontWeight: 600,
       marginTop: 0,
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
     },
     winButton: {
       height: 56,
@@ -159,12 +158,12 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       marginTop: theme.spacingXl,
 
-      backgroundColor: rgba(theme.isDark ? theme.white : theme.black, 1),
+      backgroundColor: theme.text,
     },
     winButtonText: {
       fontSize: 19,
       fontWeight: 700,
-      color: rgba(theme.isDark ? theme.black : theme.white, 1),
+      color: theme.background,
     },
   });
 

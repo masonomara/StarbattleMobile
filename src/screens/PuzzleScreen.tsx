@@ -16,7 +16,6 @@ import { usePuzzleStore } from '../store';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
-import { rgba } from '../themes/ansi';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { getStreakPack, getPuzzlesForPack } from '../packs';
@@ -57,67 +56,55 @@ export function PuzzleScreen({
   const isArchive = archiveOptions?.isArchive;
   const archiveKey = archiveOptions?.archiveKey;
 
-  // Two separate loading effects because streak and pack puzzles have different
-  // source paths: streak puzzles come from a local bundle (getStreakPack), while
-  // pack puzzles are fetched from Supabase Storage (getPuzzlesForPack). Their
-  // puzzle IDs and "is last puzzle" semantics also differ, so keeping them
-  // separate avoids a branchy merged effect. packData below unifies them.
-  const [streakPackData, setStreakPackData] = useState<PackData | null>(null);
+  const [packData, setPackData] = useState<PackData | null>(null);
 
   useEffect(() => {
-    if (!streakType) return;
-    setStreakPackData(null);
-    getStreakPack(streakType)
-      .then(pack => {
-        if (!pack) return;
-        const key =
-          isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
-        const date =
-          isArchive && archiveKey
-            ? archiveKeyToDate(streakType, archiveKey)
-            : new Date();
-        const idx = getPuzzleIndex(streakType, pack.puzzles.length, date);
-        setStreakPackData({
-          rawPuzzle: pack.puzzles[idx],
-          puzzleId: isArchive
-            ? `${streakType}:archive:${key}`
-            : `${streakType}:${key}`,
-          gridSize: pack.gridSize,
-          packName: pack.name,
-          isLastPuzzle: !isArchive,
-        });
-      })
-      .catch(() => navigation.goBack());
-  }, [streakType, isArchive, archiveKey, navigation]);
+    setPackData(null);
+    if (streakType) {
+      getStreakPack(streakType)
+        .then(pack => {
+          if (!pack) return;
+          const key =
+            isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
+          const date =
+            isArchive && archiveKey
+              ? archiveKeyToDate(streakType, archiveKey)
+              : new Date();
+          const idx = getPuzzleIndex(streakType, pack.puzzles.length, date);
+          setPackData({
+            rawPuzzle: pack.puzzles[idx],
+            puzzleId: isArchive
+              ? `${streakType}:archive:${key}`
+              : `${streakType}:${key}`,
+            gridSize: pack.gridSize,
+            packName: pack.name,
+            isLastPuzzle: !isArchive,
+          });
+        })
+        .catch(() => navigation.goBack());
+    } else if (packId) {
+      const idx = puzzleIndex ?? 0;
+      const catalog = useEntitlementsStore.getState().packCatalog;
+      const meta = catalog.find(p => p.id === packId);
+      getPuzzlesForPack(packId)
+        .then(puzzles => {
+          const raw = puzzles?.[idx];
+          if (!raw) {
+            navigation.goBack();
+            return;
+          }
+          setPackData({
+            rawPuzzle: raw,
+            puzzleId: `${packId}:${idx}`,
+            gridSize: meta?.gridSize ?? parseInt(raw.sbn.split('x')[0], 10),
+            packName: meta?.name ?? packId,
+            isLastPuzzle: idx >= (meta?.puzzleCount ?? puzzles!.length) - 1,
+          });
+        })
+        .catch(() => navigation.goBack());
+    }
+  }, [streakType, isArchive, archiveKey, packId, puzzleIndex, navigation]);
 
-  // Regular packs load from Supabase Storage (downloaded → bundled fallback)
-  const [regularPackData, setRegularPackData] = useState<PackData | null>(null);
-
-  useEffect(() => {
-    if (streakType || !packId) return;
-    setRegularPackData(null);
-    const idx = puzzleIndex ?? 0;
-    const catalog = useEntitlementsStore.getState().packCatalog;
-    const meta = catalog.find(p => p.id === packId);
-    getPuzzlesForPack(packId)
-      .then(puzzles => {
-        const raw = puzzles?.[idx];
-        if (!raw) {
-          navigation.goBack();
-          return;
-        }
-        setRegularPackData({
-          rawPuzzle: raw,
-          puzzleId: `${packId}:${idx}`,
-          gridSize: meta?.gridSize ?? parseInt(raw.sbn.split('x')[0], 10),
-          packName: meta?.name ?? packId,
-          isLastPuzzle: idx >= (meta?.puzzleCount ?? puzzles!.length) - 1,
-        });
-      })
-      .catch(() => navigation.goBack());
-  }, [packId, puzzleIndex, streakType, navigation]);
-
-  const packData = streakPackData ?? regularPackData;
   const {
     rawPuzzle,
     puzzleId = '',
@@ -256,7 +243,7 @@ export function PuzzleScreen({
   if (!isReady || !puzzle) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={rgba(theme.blue, 1)} />
+        <ActivityIndicator color={theme.blue} />
       </View>
     );
   }
@@ -270,7 +257,7 @@ export function PuzzleScreen({
             pointerEvents={headerVisible ? 'auto' : 'none'}
           >
             <CircleButton onPress={() => navigation.goBack()}>
-              <ChevronLeft size={26} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
+              <ChevronLeft size={26} color={theme.text} />
             </CircleButton>
           </Animated.View>
         }
@@ -287,7 +274,7 @@ export function PuzzleScreen({
             pointerEvents={headerVisible ? 'auto' : 'none'}
           >
             <CircleButton onPress={openSettings}>
-              <Ellipsis size={20} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
+              <Ellipsis size={20} color={theme.text} />
             </CircleButton>
           </Animated.View>
         }
@@ -332,12 +319,12 @@ export function PuzzleScreen({
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1) },
+    container: { flex: 1, backgroundColor: theme.background },
     loading: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+      backgroundColor: theme.background,
     },
     boardArea: {
       flex: 1,

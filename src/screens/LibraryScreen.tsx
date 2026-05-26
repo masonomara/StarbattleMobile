@@ -18,7 +18,6 @@ import { Header } from '../components/Header';
 import { PaywallModal } from '../components/PaywallModal';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useTheme } from '../hooks/useTheme';
-import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useSettingsStore } from '../stores/settingsStore';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
@@ -91,11 +90,11 @@ function PuzzleCell({
         {status !== 'active' && (
           <View style={styles.puzzleIcon}>
             {status === 'completed' ? (
-              <Check size={28} color={rgba(theme.blue, 1)} />
+              <Check size={28} color={theme.blue} />
             ) : (
               <Lock
                 size={28}
-                color={rgba(theme.isDark ? theme.gray : theme.gray, 1)}
+                color={theme.textSecondary}
               />
             )}
           </View>
@@ -263,7 +262,7 @@ export function LibraryScreen({
           <CircleButton onPress={() => navigation.goBack()}>
             <ChevronLeft
               size={26}
-              color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+              color={theme.text}
             />
           </CircleButton>
         }
@@ -295,7 +294,7 @@ const createStyles = (theme: Theme, cellSize: number) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+      backgroundColor: theme.background,
     },
     scroll: { flex: 1 },
     gridContent: {
@@ -310,7 +309,7 @@ const createStyles = (theme: Theme, cellSize: number) => {
       width: cellSize,
       margin: 8,
 
-      backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      backgroundColor: theme.textSecondary,
     },
     puzzleCellOverlay: {
       position: 'absolute',
@@ -326,19 +325,19 @@ const createStyles = (theme: Theme, cellSize: number) => {
       opacity: 0.55,
     },
     puzzleNumber: { fontSize: 16, fontWeight: '700' },
-    puzzleNumberCompleted: { color: rgba(theme.blue, 1) },
+    puzzleNumberCompleted: { color: theme.blue },
     puzzleNumberActive: {
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
     },
     puzzleNumberLocked: {
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: theme.textSecondary,
     },
     locked: { opacity: 0.45 },
     headerTitle: {
       fontSize: 16,
       fontVariant: ['tabular-nums'],
       fontWeight: '600',
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
     },
   });
 };

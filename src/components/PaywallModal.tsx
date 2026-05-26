@@ -53,7 +53,7 @@ export function PaywallModal({
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
+              <ActivityIndicator color={theme.background} />
             ) : (
               <Text style={styles.primaryButtonText}>
                 {premiumPrice
@@ -99,7 +99,7 @@ export function PaywallModal({
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={rgba(theme.isDark ? theme.black : theme.white, 1)} />
+              <ActivityIndicator color={theme.background} />
             ) : (
               <Text style={styles.primaryButtonText}>
                 {packPrice ? `Buy Pack · ${packPrice}` : 'Buy Pack'}
@@ -144,7 +144,7 @@ export function PaywallModal({
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       <View style={styles.sheet}>
         <Pressable style={styles.closeButton} onPress={onClose} hitSlop={8}>
-          <X size={20} color={rgba(theme.isDark ? theme.gray : theme.gray, 1)} />
+          <X size={20} color={theme.textSecondary} />
         </Pressable>
         {renderContent()}
         {error && <Text style={styles.error}>{error}</Text>}
@@ -173,10 +173,10 @@ const createStyles = (theme: Theme) =>
       right: 0,
       bottom: 0,
       justifyContent: 'flex-end',
-      backgroundColor: rgba(theme.isDark ? theme.white : theme.black, 0.4),
+      backgroundColor: rgba(theme.text, 0.4),
     },
     sheet: {
-      backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      backgroundColor: theme.textSecondary,
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
       paddingHorizontal: theme.spacingXl,
@@ -191,12 +191,12 @@ const createStyles = (theme: Theme) =>
     title: {
       fontSize: 20,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
       marginBottom: 4,
     },
     body: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: theme.textSecondary,
       lineHeight: 22,
       marginBottom: theme.spacingMd,
     },
@@ -205,29 +205,29 @@ const createStyles = (theme: Theme) =>
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.blue, 1),
+      backgroundColor: theme.blue,
     },
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.black : theme.white, 1),
+      color: theme.background,
     },
     secondaryButton: {
       height: 52,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      backgroundColor: theme.textSecondary,
     },
     secondaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
     },
     disabled: { opacity: 0.6 },
     error: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.red, 1),
+      color: theme.red,
       textAlign: 'center',
     },
     disclosureContainer: {
@@ -241,11 +241,11 @@ const createStyles = (theme: Theme) =>
     },
     disclosureLink: {
       fontSize: 11,
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: theme.textSecondary,
       textDecorationLine: 'underline',
     },
     disclosureSep: {
       fontSize: 11,
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: theme.textSecondary,
     },
   });

@@ -83,7 +83,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   return (
     // pointerEvents="none" prevents the canvas from intercepting taps on its parent list item.
     <Canvas style={{ width: size, height: size }} pointerEvents="none">
-      <Path path={outerBorderPath} color={rgba(theme.isDark ? theme.black : theme.white, 1)} style="fill" />
+      <Path path={outerBorderPath} color={theme.background} style="fill" />
       {coloredRegions &&
         regionFillPaths?.map(({ colorIdx, path }) => (
           <Path
@@ -95,7 +95,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
         ))}
       <Path
         path={innerGridPath}
-        color={rgba(theme.isDark ? theme.gray : theme.gray, 1)}
+        color={theme.textSecondary}
         style="stroke"
         strokeWidth={gridW}
         strokeCap="square"
@@ -103,7 +103,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
       />
       <Path
         path={regionBorderPath}
-        color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+        color={theme.text}
         style="stroke"
         strokeWidth={borderW}
         strokeCap="square"
@@ -111,7 +111,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
       />
       <Path
         path={outerBorderPath}
-        color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+        color={theme.text}
         style="stroke"
         strokeWidth={borderW}
         strokeCap="square"

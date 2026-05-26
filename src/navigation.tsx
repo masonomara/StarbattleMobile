@@ -14,7 +14,6 @@ import { SettingsModal } from './components/SettingsModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
-import { rgba } from './themes/ansi';
 import type { RootStackParamList } from './types';
 // type-only: pulls in global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.
@@ -57,7 +56,7 @@ function WrappedPuzzle(
 
 export function Navigation() {
   const theme = useTheme();
-  const bgColor = rgba(theme.isDark ? theme.black : theme.white, 1);
+  const bgColor = theme.background;
   const navTheme = {
     ...(theme.isDark ? DarkTheme : DefaultTheme),
     colors: {

@@ -97,16 +97,7 @@ function PalettePreview({
 }) {
   return (
     <Svg width={S} height={S}>
-      <Rect
-        x={0}
-        y={0}
-        width={S}
-        height={S}
-        fill={rgba(
-          paletteTheme.isDark ? paletteTheme.black : paletteTheme.white,
-          1,
-        )}
-      />
+      <Rect x={0} y={0} width={S} height={S} fill={paletteTheme.background} />
       {PREVIEW_GRID.map((row, r) =>
         row.map((regionIdx, c) => (
           <Rect
@@ -121,12 +112,7 @@ function PalettePreview({
                     paletteTheme.regionColors[regionIdx],
                     paletteTheme.regionColorAlpha,
                   )
-                : rgba(
-                    paletteTheme.isDark
-                      ? paletteTheme.black
-                      : paletteTheme.white,
-                    1,
-                  )
+                : paletteTheme.background
             }
           />
         )),
@@ -138,10 +124,7 @@ function PalettePreview({
             y1={bw + i * cs}
             x2={S - bw}
             y2={bw + i * cs}
-            stroke={rgba(
-              paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.gray,
-              1,
-            )}
+            stroke={paletteTheme.textSecondary}
             strokeWidth={0.5}
           />
           <Line
@@ -149,10 +132,7 @@ function PalettePreview({
             y1={bw}
             x2={bw + i * cs}
             y2={S - bw}
-            stroke={rgba(
-              paletteTheme.isDark ? paletteTheme.lightGray : paletteTheme.gray,
-              1,
-            )}
+            stroke={paletteTheme.textSecondary}
             strokeWidth={0.5}
           />
         </React.Fragment>
@@ -164,10 +144,7 @@ function PalettePreview({
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
-          stroke={rgba(
-            paletteTheme.isDark ? paletteTheme.white : paletteTheme.black,
-            1,
-          )}
+          stroke={paletteTheme.text}
           strokeWidth={1.5}
         />
       ))}
@@ -178,10 +155,7 @@ function PalettePreview({
           y1={l.y1}
           x2={l.x2}
           y2={l.y2}
-          stroke={rgba(
-            paletteTheme.isDark ? paletteTheme.white : paletteTheme.black,
-            1,
-          )}
+          stroke={paletteTheme.text}
           strokeWidth={1.5}
         />
       ))}
@@ -191,25 +165,19 @@ function PalettePreview({
         width={S - bw}
         height={S - bw}
         fill="none"
-        stroke={rgba(
-          paletteTheme.isDark ? paletteTheme.white : paletteTheme.black,
-          1,
-        )}
+        stroke={paletteTheme.text}
         strokeWidth={bw}
       />
       <Path
         d={starPath(STAR.cx, STAR.cy, cs * 0.33)}
-        fill={rgba(
-          paletteTheme.isDark ? paletteTheme.white : paletteTheme.black,
-          1,
-        )}
+        fill={paletteTheme.text}
       />
       <Line
         x1={MARK1.cx - MR}
         y1={MARK1.cy - MR}
         x2={MARK1.cx + MR}
         y2={MARK1.cy + MR}
-        stroke={rgba(paletteTheme.red, 1)}
+        stroke={paletteTheme.red}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -218,7 +186,7 @@ function PalettePreview({
         y1={MARK1.cy - MR}
         x2={MARK1.cx - MR}
         y2={MARK1.cy + MR}
-        stroke={rgba(paletteTheme.red, 1)}
+        stroke={paletteTheme.red}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -227,7 +195,7 @@ function PalettePreview({
         y1={MARK2.cy - MR}
         x2={MARK2.cx + MR}
         y2={MARK2.cy + MR}
-        stroke={rgba(paletteTheme.red, 1)}
+        stroke={paletteTheme.red}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -236,7 +204,7 @@ function PalettePreview({
         y1={MARK2.cy - MR}
         x2={MARK2.cx - MR}
         y2={MARK2.cy + MR}
-        stroke={rgba(paletteTheme.red, 1)}
+        stroke={paletteTheme.red}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -270,10 +238,8 @@ function ToggleRow({
         value={value}
         onValueChange={onToggle}
         trackColor={{
-          false: rgba(theme.isDark ? theme.lightGray : theme.gray, 1),
-          true: rgba(theme.blue, 1),
+          true: theme.blue,
         }}
-        thumbColor="#FFFFFF"
       />
     </View>
   );
@@ -378,11 +344,13 @@ export function SettingsModal() {
   }
 
   const isCurrentlyDark =
-    settings.theme === 'dark' ? true
-    : settings.theme === 'light' ? false
-    : systemScheme === 'dark';
+    settings.theme === 'dark'
+      ? true
+      : settings.theme === 'light'
+      ? false
+      : systemScheme === 'dark';
   const visiblePalettes = PALETTE_NAMES;
-  const paletteRows: (typeof PALETTE_NAMES[number])[][] = [];
+  const paletteRows: (typeof PALETTE_NAMES)[number][][] = [];
   for (let i = 0; i < visiblePalettes.length; i += 3) {
     paletteRows.push(visiblePalettes.slice(i, i + 3));
   }
@@ -397,13 +365,10 @@ export function SettingsModal() {
       <View style={styles.container}>
         <Header
           absolute={false}
-          center={<Text style={styles.title}>Star Battle</Text>}
+          center={<Text style={styles.title}>Settings</Text>}
           right={
             <Pressable onPress={closeSettings} hitSlop={8}>
-              <X
-                size={24}
-                color={rgba(theme.isDark ? theme.white : theme.black, 1)}
-              />
+              <X size={24} color={theme.text} />
             </Pressable>
           }
         />
@@ -438,12 +403,7 @@ export function SettingsModal() {
                         disabled={loading}
                       >
                         {loading ? (
-                          <ActivityIndicator
-                            color={rgba(
-                              theme.isDark ? theme.black : theme.white,
-                              1,
-                            )}
-                          />
+                          <ActivityIndicator color={theme.background} />
                         ) : (
                           <Text style={styles.primaryButtonText}>
                             Continue with Apple
@@ -470,11 +430,8 @@ export function SettingsModal() {
                         <ActivityIndicator
                           color={
                             Platform.OS === 'ios'
-                              ? rgba(theme.blue, 1)
-                              : rgba(
-                                  theme.isDark ? theme.black : theme.white,
-                                  1,
-                                )
+                              ? theme.blue
+                              : theme.background
                           }
                         />
                       ) : (
@@ -516,10 +473,7 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Email"
-                      placeholderTextColor={rgba(
-                        theme.isDark ? theme.lightGray : theme.gray,
-                        1,
-                      )}
+                      placeholderTextColor={theme.textSecondary}
                       value={email}
                       onChangeText={setEmail}
                       autoCapitalize="none"
@@ -529,10 +483,7 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Password"
-                      placeholderTextColor={rgba(
-                        theme.isDark ? theme.lightGray : theme.gray,
-                        1,
-                      )}
+                      placeholderTextColor={theme.textSecondary}
                       value={password}
                       onChangeText={setPassword}
                       secureTextEntry
@@ -556,12 +507,7 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator
-                          color={rgba(
-                            theme.isDark ? theme.black : theme.white,
-                            1,
-                          )}
-                        />
+                        <ActivityIndicator color={theme.background} />
                       ) : (
                         <Text style={styles.primaryButtonText}>
                           {emailMode === 'signup'
@@ -600,10 +546,7 @@ export function SettingsModal() {
                     <TextInput
                       style={styles.input}
                       placeholder="Email"
-                      placeholderTextColor={rgba(
-                        theme.isDark ? theme.lightGray : theme.gray,
-                        1,
-                      )}
+                      placeholderTextColor={theme.textSecondary}
                       value={email}
                       onChangeText={setEmail}
                       autoCapitalize="none"
@@ -616,12 +559,7 @@ export function SettingsModal() {
                       disabled={loading}
                     >
                       {loading ? (
-                        <ActivityIndicator
-                          color={rgba(
-                            theme.isDark ? theme.black : theme.white,
-                            1,
-                          )}
-                        />
+                        <ActivityIndicator color={theme.background} />
                       ) : (
                         <Text style={styles.primaryButtonText}>
                           Send Reset Link
@@ -756,9 +694,7 @@ export function SettingsModal() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <ActivityIndicator
-                      color={rgba(theme.isDark ? theme.black : theme.white, 1)}
-                    />
+                    <ActivityIndicator color={theme.background} />
                   ) : (
                     <Text style={styles.primaryButtonText}>
                       {premiumPrice
@@ -785,116 +721,116 @@ export function SettingsModal() {
           {/* Gameplay */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Gameplay</Text>
-            <View style={styles.menuWrapper}>
-              <ToggleRow
-                label="Auto-X Neighbors"
-                value={settings.autoXNeighbors}
-                onToggle={v => {
-                  updateSettings({ autoXNeighbors: v });
-                  recomputeAutoMarks();
-                }}
-                styles={styles}
-                theme={theme}
-              />
-              <ToggleRow
-                label="Auto-X Rows & Columns"
-                value={settings.autoXRowsCols}
-                onToggle={v => {
-                  updateSettings({ autoXRowsCols: v });
-                  recomputeAutoMarks();
-                }}
-                styles={styles}
-                theme={theme}
-              />
-              <ToggleRow
-                label="Auto-X Regions"
-                value={settings.autoXRegions}
-                onToggle={v => {
-                  updateSettings({ autoXRegions: v });
-                  recomputeAutoMarks();
-                }}
-                styles={styles}
-                theme={theme}
-              />
-              <ToggleRow
-                label="Highlight Errors"
-                value={settings.highlightErrors}
-                onToggle={v => updateSettings({ highlightErrors: v })}
-                styles={styles}
-                theme={theme}
-              />
-              <ToggleRow
-                label="Colored Regions"
-                value={settings.coloredRegions}
-                onToggle={v => updateSettings({ coloredRegions: v })}
-                styles={styles}
-                theme={theme}
-              />
-            </View>
+            <ToggleRow
+              label="Auto-X Neighbors"
+              value={settings.autoXNeighbors}
+              onToggle={v => {
+                updateSettings({ autoXNeighbors: v });
+                recomputeAutoMarks();
+              }}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Auto-X Rows & Columns"
+              value={settings.autoXRowsCols}
+              onToggle={v => {
+                updateSettings({ autoXRowsCols: v });
+                recomputeAutoMarks();
+              }}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Auto-X Regions"
+              value={settings.autoXRegions}
+              onToggle={v => {
+                updateSettings({ autoXRegions: v });
+                recomputeAutoMarks();
+              }}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Highlight Errors"
+              value={settings.highlightErrors}
+              onToggle={v => updateSettings({ highlightErrors: v })}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Colored Regions"
+              value={settings.coloredRegions}
+              onToggle={v => updateSettings({ coloredRegions: v })}
+              styles={styles}
+              theme={theme}
+            />
           </View>
 
           {/* General */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>General</Text>
-            <View style={styles.menuWrapper}>
-              <ToggleRow
-                label="Always show timer"
-                value={settings.alwaysShowTimer}
-                onToggle={v => updateSettings({ alwaysShowTimer: v })}
-                styles={styles}
-                theme={theme}
-              />
-              <ToggleRow
-                label="Always show toolbar"
-                value={settings.alwaysShowToolbar}
-                onToggle={v => updateSettings({ alwaysShowToolbar: v })}
-                styles={styles}
-                theme={theme}
-              />
-              <ToggleRow
-                label="Haptics"
-                value={settings.haptics}
-                onToggle={v => updateSettings({ haptics: v })}
-                styles={styles}
-                theme={theme}
-              />
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>Theme</Text>
-                <View style={styles.themeButtons}>
-                  {THEME_OPTIONS.map(opt => {
-                    const active = settings.theme === opt.value;
-                    return (
-                      <Pressable
-                        key={opt.value}
-                        onPress={() => updateSettings({ theme: opt.value })}
+            <ToggleRow
+              label="Always show timer"
+              value={settings.alwaysShowTimer}
+              onToggle={v => updateSettings({ alwaysShowTimer: v })}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Always show toolbar"
+              value={settings.alwaysShowToolbar}
+              onToggle={v => updateSettings({ alwaysShowToolbar: v })}
+              styles={styles}
+              theme={theme}
+            />
+            <ToggleRow
+              label="Haptics"
+              value={settings.haptics}
+              onToggle={v => updateSettings({ haptics: v })}
+              styles={styles}
+              theme={theme}
+            />
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Theme</Text>
+              <View style={styles.themeButtons}>
+                {THEME_OPTIONS.map(opt => {
+                  const active = settings.theme === opt.value;
+                  return (
+                    <Pressable
+                      key={opt.value}
+                      onPress={() => updateSettings({ theme: opt.value })}
+                      style={
+                        active
+                          ? styles.themeButtonActive
+                          : styles.themeButtonInactive
+                      }
+                    >
+                      <Text
                         style={
                           active
-                            ? styles.themeButtonActive
-                            : styles.themeButtonInactive
+                            ? styles.themeButtonTextActive
+                            : styles.themeButtonTextInactive
                         }
                       >
-                        <Text
-                          style={
-                            active
-                              ? styles.themeButtonTextActive
-                              : styles.themeButtonTextInactive
-                          }
-                        >
-                          {opt.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Color Theme</Text>
               <View style={styles.paletteRow}>
-                <Text style={styles.rowLabel}>Palette</Text>
                 <View style={styles.swatchGrid}>
                   {paletteRows.map((row, rowIdx) => (
                     <View key={rowIdx} style={styles.swatchRow}>
                       {row.map(name => {
                         const active = settings.palette === name;
-                        const variant = isCurrentlyDark ? PALETTES[name].dark : PALETTES[name].light;
+                        const variant = isCurrentlyDark
+                          ? PALETTES[name].dark
+                          : PALETTES[name].light;
                         const paletteTheme = buildTheme(variant);
                         return (
                           <Pressable
@@ -903,20 +839,10 @@ export function SettingsModal() {
                             style={[
                               styles.swatchCard,
                               {
-                                backgroundColor: rgba(
-                                  paletteTheme.isDark
-                                    ? paletteTheme.black
-                                    : paletteTheme.white,
-                                  1,
-                                ),
+                                backgroundColor: paletteTheme.background,
                               },
                               active && {
-                                borderColor: rgba(
-                                  paletteTheme.isDark
-                                    ? paletteTheme.white
-                                    : paletteTheme.black,
-                                  1,
-                                ),
+                                borderColor: paletteTheme.text,
                               },
                             ]}
                           >
@@ -930,8 +856,8 @@ export function SettingsModal() {
                                 {
                                   color: rgba(
                                     paletteTheme.isDark
-                                      ? paletteTheme.gray
-                                      : paletteTheme.gray,
+                                      ? paletteTheme.text
+                                      : paletteTheme.text,
                                     1,
                                   ),
                                 },
@@ -978,100 +904,97 @@ export function SettingsModal() {
 }
 
 const createStyles = (theme: Theme) => {
-  const bg = theme.isDark ? theme.black : theme.white;
-  const card = theme.isDark ? theme.gray : theme.white;
-  const fg = theme.isDark ? theme.white : theme.black;
-  const dim = theme.isDark ? theme.gray : theme.gray;
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: rgba(card, 1),
+      backgroundColor: theme.background,
     },
     title: {
-      fontSize: theme.fontSizeBody,
-      fontWeight: theme.fontWeightSemibold,
-      color: rgba(fg, 1),
+      color: theme.text,
+      fontSize: 25,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
     },
     scrollContent: {
       paddingHorizontal: 16,
       paddingBottom: theme.spacingXl,
       gap: theme.spacingXl,
     },
-    section: {
-      gap: theme.spacingMd,
-    },
+    section: {},
     sectionTitle: {
-      fontSize: 13,
-      fontWeight: theme.fontWeightSemibold,
-      color: rgba(dim, 1),
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      fontSize: 20,
+      color: theme.text,
+      lineHeight: 22,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
+      marginBottom: 14,
     },
     sectionBody: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(dim, 1),
-      lineHeight: 22,
-    },
-    menuWrapper: {
-      backgroundColor: rgba(card, 1),
-      borderRadius: theme.radiusMd,
+      color: theme.textSecondary,
     },
     row: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      minHeight: 60,
-      paddingVertical: 12,
-      paddingHorizontal: 12,
+      display: 'flex',
+      minHeight: 56,
+      borderTopWidth: 1,
+      borderColor: theme.border,
     },
     rowLabel: {
-      fontSize: theme.fontSizeSubhead,
-      fontWeight: theme.fontWeightSemibold,
-      color: rgba(fg, 1),
+      fontSize: 17,
+      fontWeight: 600,
+      color: theme.text,
     },
     themeButtons: {
       flexDirection: 'row',
-      gap: theme.spacingMd,
+      gap: 0,
+      backgroundColor: theme.surface,
+      borderRadius: 4,
     },
     themeButtonActive: {
-      paddingHorizontal: theme.spacingLg,
-      paddingVertical: theme.spacingMd,
-      borderRadius: theme.radiusMd,
-      backgroundColor: rgba(theme.blue, 1),
+      borderWidth: 2,
+      borderColor: theme.border,
+      borderRadius: 4,
+      backgroundColor: theme.background,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     themeButtonInactive: {
-      paddingHorizontal: theme.spacingLg,
-      paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(dim, 1),
+      borderWidth: 2,
+      borderColor: 'transparent',
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     themeButtonTextActive: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(bg, 1),
+      color: theme.text,
     },
     themeButtonTextInactive: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(fg, 1),
+      color: theme.text,
     },
     paletteRow: {
-      paddingVertical: 12,
-      paddingHorizontal: 12,
       gap: theme.spacingMd,
     },
     swatchGrid: {
-      gap: 8,
+      gap: 12,
     },
     swatchRow: {
       flexDirection: 'row',
-      gap: 8,
+      gap: 12,
     },
     swatchCard: {
       flex: 1,
-      borderRadius: theme.radiusMd,
-      borderWidth: 2,
-      borderColor: 'transparent',
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: theme.border,
       overflow: 'hidden',
       alignItems: 'center',
       padding: 8,
@@ -1087,15 +1010,15 @@ const createStyles = (theme: Theme) => {
       paddingVertical: theme.spacingMd,
       paddingHorizontal: theme.spacingLg,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(card, 1),
+      backgroundColor: theme.surface,
     },
     infoLabel: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(dim, 1),
+      color: theme.textSecondary,
     },
     infoValue: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(fg, 1),
+      color: theme.text,
       fontWeight: theme.fontWeightSemibold,
       maxWidth: '60%',
       textAlign: 'right',
@@ -1105,45 +1028,45 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: theme.spacingLg,
       paddingVertical: theme.spacingMd,
       borderRadius: theme.radiusMd,
-      backgroundColor: rgba(theme.blue, 1),
+      backgroundColor: theme.blue,
     },
     premiumBadgeText: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(bg, 1),
+      color: theme.background,
     },
     subLabel: {
       fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(dim, 1),
+      color: theme.textSecondary,
     },
     ownedPackName: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(fg, 1),
+      color: theme.text,
     },
     primaryButton: {
       height: 52,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.blue, 1),
+      backgroundColor: theme.blue,
     },
     primaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(bg, 1),
+      color: theme.background,
     },
     secondaryButton: {
       height: 52,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(card, 1),
+      backgroundColor: theme.surface,
     },
     secondaryButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(fg, 1),
+      color: theme.text,
     },
     linkButton: {
       alignItems: 'center',
@@ -1151,19 +1074,19 @@ const createStyles = (theme: Theme) => {
     },
     linkText: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.blue, 1),
+      color: theme.blue,
     },
     formTitle: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(fg, 1),
+      color: theme.text,
     },
     input: {
       height: 52,
       borderRadius: theme.radiusMd,
       paddingHorizontal: theme.spacingLg,
-      backgroundColor: rgba(card, 1),
-      color: rgba(fg, 1),
+      backgroundColor: theme.surface,
+      color: theme.text,
       fontSize: theme.fontSizeCallout,
     },
     destructiveButton: {
@@ -1171,12 +1094,12 @@ const createStyles = (theme: Theme) => {
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(card, 1),
+      backgroundColor: theme.surface,
     },
     destructiveButtonText: {
       fontSize: theme.fontSizeCallout,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.red, 1),
+      color: theme.red,
     },
     legalLinks: {
       flexDirection: 'row',
@@ -1187,12 +1110,12 @@ const createStyles = (theme: Theme) => {
     },
     privacyLinkText: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(dim, 1),
+      color: theme.textSecondary,
       textDecorationLine: 'underline',
     },
     legalSep: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(dim, 1),
+      color: theme.textSecondary,
     },
     confirmEmailBox: {
       gap: theme.spacingMd,
@@ -1200,28 +1123,28 @@ const createStyles = (theme: Theme) => {
     confirmEmailTitle: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(fg, 1),
+      color: theme.text,
     },
     confirmEmailBody: {
       fontSize: theme.fontSizeCallout,
-      color: rgba(dim, 1),
+      color: theme.textSecondary,
       lineHeight: 22,
     },
     confirmEmailAddress: {
       fontWeight: theme.fontWeightSemibold,
-      color: rgba(fg, 1),
+      color: theme.text,
     },
     passwordHint: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(dim, 1),
+      color: theme.textSecondary,
     },
     passwordHintMet: {
-      color: rgba(theme.blue, 1),
+      color: theme.blue,
     },
     disabled: { opacity: 0.6 },
     error: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.red, 1),
+      color: theme.red,
       textAlign: 'center',
     },
   });

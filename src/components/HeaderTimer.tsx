@@ -3,7 +3,6 @@ import { AppState, StyleSheet } from 'react-native';
 import { Text } from './Text';
 import { usePuzzleStore } from '../store';
 import { useTheme } from '../hooks/useTheme';
-import { rgba } from '../themes/ansi';
 import type { Theme } from '../types';
 
 export function HeaderTimer() {
@@ -51,7 +50,7 @@ const createStyles = (theme: Theme) =>
       fontVariant: ['tabular-nums'],
       fontWeight: '600',
       fontSize: 17,
-      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+      color: theme.text,
      
     },
   });
