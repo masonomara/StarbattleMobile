@@ -42,6 +42,8 @@ function parseUrlFragment(fragment: string): Record<string, string> {
   return result;
 }
 
+let authSubscription: { unsubscribe: () => void } | null = null;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
@@ -68,7 +70,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await get().signInAnonymously();
     }
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    authSubscription?.unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         set({ session, user: session?.user ?? null, isAnonymous: false, isPasswordRecovery: true });
         if (session) await adapty.identify(session.user.id);
@@ -93,6 +96,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await adapty.logout();
       }
     });
+    authSubscription = subscription;
 
     // Handle deep links that launched the app cold (e.g. password recovery email).
     Linking.getInitialURL()
