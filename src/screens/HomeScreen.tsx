@@ -19,11 +19,8 @@ import {
   STREAK_TYPES,
   STREAK_LABELS,
 } from '../utils/streakDate';
-import {
-  loadStreaks,
-  getCompletedCountForPack,
-  loadProgress,
-} from '../utils/progress';
+import { loadStreaks, loadAllCompletionData } from '../utils/progress';
+import { useEntitlementsStore } from '../stores/entitlementsStore';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useProductPrice } from '../hooks/useProductPrice';
@@ -150,30 +147,31 @@ export function HomeScreen({
   const paidPacks = packCatalog.filter(p => !p.isFree);
 
   const load = useCallback(async () => {
-    setStreaks(await loadStreaks());
+    const catalog = useEntitlementsStore.getState().packCatalog;
+    const [fetchedStreaks, allCompleted] = await Promise.all([
+      loadStreaks(),
+      loadAllCompletionData(),
+    ]);
 
-    const completedEntries = await Promise.all(
-      STREAK_TYPES.map(async type => {
-        const puzzleId = `${type}:${getCurrentKey(type)}`;
-        const prog = await loadProgress(puzzleId);
-        return prog?.completed ? puzzleId : null;
-      }),
-    );
-    setCompletedPuzzleIds(
-      new Set(completedEntries.filter((id): id is string => id !== null)),
-    );
+    setStreaks(fetchedStreaks);
+
+    const completedIds = new Set<string>();
+    for (const type of STREAK_TYPES) {
+      const puzzleId = `${type}:${getCurrentKey(type)}`;
+      if (allCompleted.has(puzzleId)) completedIds.add(puzzleId);
+    }
+    setCompletedPuzzleIds(completedIds);
 
     const counts: Record<string, number> = {};
-    await Promise.all(
-      packCatalog.map(async pack => {
-        counts[pack.id] = await getCompletedCountForPack(
-          pack.id,
-          pack.puzzleCount,
-        );
-      }),
-    );
+    for (const pack of catalog) {
+      let count = 0;
+      for (let i = 0; i < pack.puzzleCount; i++) {
+        if (allCompleted.has(`${pack.id}:${i}`)) count++;
+      }
+      counts[pack.id] = count;
+    }
     setCompletedPerPack(counts);
-  }, [packCatalog]);
+  }, []);
 
   useEffect(() => {
     if (isFocused) load();
@@ -243,30 +241,25 @@ export function HomeScreen({
                     isCompleted && styles.streakCardCompleted,
                   ]}
                 >
-                  <View style={styles.streakTopRow}>
-                    <View style={styles.streakThumbnailWrap}>
-                      <PuzzleThumbnail
-                        puzzle={preview}
-                        size={240}
-                        theme={theme}
-                        coloredRegions={coloredRegions}
-                      />
-                    </View>
-                    <View style={styles.streakCardHeader}>
-                      <Text style={styles.streakLabel}>
-                        {STREAK_LABELS[type]} Special
-                      </Text>
-                      <View style={styles.streakMetaRow}>
-                        {isCompleted && (
-                          <Check size={16} color="#22c55e" strokeWidth={2.5} />
-                        )}
-                        <Text style={styles.streakMeta}>
-                          {streakCount > 0
-                            ? `${streakCount} day streak`
-                            : `Play ${STREAK_LABELS[type]} puzzle`}
-                        </Text>
-                      </View>
-                    </View>
+                  <PuzzleThumbnail
+                    puzzle={preview}
+                    size={240}
+                    theme={theme}
+                    coloredRegions={coloredRegions}
+                  />
+
+                  <Text style={styles.streakLabel}>
+                    {STREAK_LABELS[type]} Special
+                  </Text>
+                  <View style={styles.streakMetaRow}>
+                    {isCompleted && (
+                      <Check size={16} color="#22c55e" strokeWidth={2.5} />
+                    )}
+                    <Text style={styles.streakMeta}>
+                      {streakCount > 0
+                        ? `${streakCount} day streak`
+                        : `Play ${STREAK_LABELS[type]} puzzle`}
+                    </Text>
                   </View>
                 </Pressable>
               );
@@ -397,7 +390,7 @@ const createStyles = (
       gap: theme.spacingMd,
     },
     streakSection: {
-      paddingTop: 32,
+      paddingTop: 24,
       backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
     },
     packSection: {
@@ -425,16 +418,7 @@ const createStyles = (
     streakCardCompleted: {
       opacity: 0.6,
     },
-    streakTopRow: {
-      flexDirection: 'column',
-      gap: 16,
-      alignItems: 'flex-start',
-      width: '100%',
-    },
-    streakCardHeader: {
-      flex: 1,
-      justifyContent: 'flex-start',
-    },
+
     streakLabel: {
       color: rgba(theme.isDark ? theme.white : theme.black, 1),
       lineHeight: 37,
@@ -443,19 +427,19 @@ const createStyles = (
       fontWeight: '900',
       letterSpacing: -0.42,
       textTransform: 'capitalize',
+      marginTop: 12,
     },
     streakMetaRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      marginTop: 4,
-      marginBottom: 4,
     },
     streakMeta: {
       color: rgba(theme.isDark ? theme.white : theme.black, 1),
       fontSize: 17,
       lineHeight: 22,
-      fontWeight: 500,
+      fontWeight: 700,
+      marginTop: 7,
     },
     streakThumbnailWrap: {
       overflow: 'hidden',

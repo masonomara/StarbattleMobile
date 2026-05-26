@@ -117,6 +117,16 @@ export async function getCompletedPuzzleIdsForPack(
   return fetchCompletedIdsForPack(packId, puzzleCount);
 }
 
+export async function loadAllCompletionData(): Promise<Set<string>> {
+  const userId = useAuthStore.getState().user?.id;
+  if (!userId) return new Set();
+  const rows = await db.getAll<{ puzzle_id: string }>(
+    'SELECT puzzle_id FROM puzzle_progress WHERE user_id = ? AND completed = 1',
+    [userId],
+  );
+  return new Set(rows.map(r => r.puzzle_id));
+}
+
 export async function saveStreak(
   type: string,
   currentCount: number,
