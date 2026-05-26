@@ -164,8 +164,8 @@ export const PuzzleCanvas = React.forwardRef<
 
   // Rebuilt on stroke end or preview update — O(n) over all cells, 4 paths total.
   const dynamicPaths = useMemo(() => {
-    const outerR = cs * 0.34;
-    const innerR = outerR * 0.46;
+    const outerR = cs * 0.33;
+    const innerR = outerR * 0.44;
     const half = cs * 0.12;
 
     const starNormal = Skia.PathBuilder.Make();
