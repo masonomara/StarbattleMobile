@@ -1,3 +1,4 @@
+import { useColorScheme } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { PALETTES, tokens } from '../themes/palettes';
 import type { Theme, ThemeColors } from '../types';
@@ -63,6 +64,17 @@ export function buildTheme(colors: ThemeColors): Theme {
 }
 
 export function useTheme(): Theme {
-  const palette = useSettingsStore(s => s.settings.palette);
-  return buildTheme(PALETTES[palette] ?? PALETTES.gruvboxDark);
+  const systemScheme = useColorScheme();
+  const themePref = useSettingsStore(s => s.settings.theme);
+  const darkPalette = useSettingsStore(s => s.settings.darkPalette);
+  const lightPalette = useSettingsStore(s => s.settings.lightPalette);
+
+  const isDark =
+    themePref === 'dark' ? true
+    : themePref === 'light' ? false
+    : systemScheme === 'dark';
+
+  const paletteName = isDark ? darkPalette : lightPalette;
+  const colors = PALETTES[paletteName] ?? (isDark ? PALETTES.gruvboxDark : PALETTES.gruvboxLight);
+  return buildTheme(colors);
 }

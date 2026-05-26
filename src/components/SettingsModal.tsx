@@ -282,6 +282,7 @@ function ToggleRow({
 // Visibility is driven by Zustand so any screen can open this modal without prop drilling.
 export function SettingsModal() {
   const theme = useTheme();
+  const systemScheme = useColorScheme();
   const styles = createStyles(theme);
   const settingsModalVisible = useSettingsStore(s => s.settingsModalVisible);
   const closeSettings = useSettingsStore(s => s.closeSettings);
@@ -376,11 +377,11 @@ export function SettingsModal() {
     );
   }
 
-  const systemScheme = useColorScheme();
   const isCurrentlyDark =
     settings.theme === 'dark' ? true
     : settings.theme === 'light' ? false
     : systemScheme === 'dark';
+  const currentPalette = isCurrentlyDark ? settings.darkPalette : settings.lightPalette;
   const visiblePalettes = PALETTE_NAMES.filter(
     name => buildTheme(PALETTES[name]).isDark === isCurrentlyDark
   );
@@ -895,12 +896,14 @@ export function SettingsModal() {
                   {paletteRows.map((row, rowIdx) => (
                     <View key={rowIdx} style={styles.swatchRow}>
                       {row.map(name => {
-                        const active = settings.palette === name;
+                        const active = currentPalette === name;
                         const paletteTheme = buildTheme(PALETTES[name]);
                         return (
                           <Pressable
                             key={name}
-                            onPress={() => updateSettings({ palette: name })}
+                            onPress={() => updateSettings(
+                              isCurrentlyDark ? { darkPalette: name } : { lightPalette: name }
+                            )}
                             style={[
                               styles.swatchCard,
                               {

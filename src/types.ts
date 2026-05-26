@@ -102,7 +102,8 @@ export type UserSettings = {
   alwaysShowTimer: boolean;
   alwaysShowToolbar: boolean;
   theme: 'system' | 'light' | 'dark';
-  palette: ThemeName;
+  darkPalette: ThemeName;
+  lightPalette: ThemeName;
   haptics: boolean;
 };
 
