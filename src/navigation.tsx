@@ -12,7 +12,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
 import { rgba } from './themes/ansi';
 import type { RootStackParamList } from './types';
-// Side-effect import: loads the global ReactNavigation.RootParamList augmentation so
+// type-only: pulls in global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.
 import './types';
 
