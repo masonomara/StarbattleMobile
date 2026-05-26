@@ -53,11 +53,10 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
   }
 
   function handleClear() {
-    if (hapticsEnabled) Haptics.impact('medium');
-    Alert.alert('Clear Board', 'Are you sure you want to clear the board?', [
+    press(() => Alert.alert('Clear Board', 'Are you sure you want to clear the board?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Clear', style: 'destructive', onPress: clearBoard },
-    ]);
+    ]));
   }
 
   return (
