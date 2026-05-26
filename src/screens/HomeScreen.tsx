@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
-import { Flame, User } from 'lucide-react-native';
+import { Check, Flame, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getStreakPack, getPuzzlesForPack } from '../packs';
 import { CircleButton } from '../components/CircleButton';
@@ -255,12 +255,16 @@ export function HomeScreen({
                       <Text style={styles.streakLabel}>
                         {STREAK_LABELS[type]} Special
                       </Text>
-                      <Text style={styles.streakMeta}>
-                        {pack.gridSize}×{pack.gridSize}
-                      </Text>
-                      {isCompleted && streakCount > 0 && (
-                        <Text style={styles.streakCount}>{streakCount}</Text>
-                      )}
+                      <View style={styles.streakMetaRow}>
+                        {isCompleted && (
+                          <Check size={16} color="#22c55e" strokeWidth={2.5} />
+                        )}
+                        <Text style={styles.streakMeta}>
+                          {streakCount > 0
+                            ? `${streakCount} day streak`
+                            : `Play ${STREAK_LABELS[type]} puzzle`}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </Pressable>
@@ -438,24 +442,24 @@ const createStyles = (
       fontWeight: '900',
       letterSpacing: -0.42,
     },
+    streakMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 4,
+      marginBottom: 4,
+    },
     streakMeta: {
       color: rgba(theme.isDark ? theme.white : theme.black, 1),
       fontSize: 17,
       lineHeight: 22,
-      marginTop: 4,
-      marginBottom: 4,
       fontWeight: 500,
     },
     streakThumbnailWrap: {
       overflow: 'hidden',
       backgroundColor: rgba(theme.isDark ? theme.gray : theme.gray, 1),
     },
-    streakCount: {
-      fontSize: 16,
-      fontWeight: theme.fontWeightSemibold,
-      color: rgba(theme.blue, 1),
-      marginTop: 4,
-    },
+
     streakPlayButton: {
       borderRadius: 8,
       alignItems: 'center',

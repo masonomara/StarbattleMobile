@@ -4,9 +4,9 @@ import type { Streak, StreakType } from '../types.ts';
 export const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 
 export const STREAK_LABELS: Record<StreakType, string> = {
-  daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
 };
 
 export function getCurrentKey(type: StreakType, now = new Date()): string {
