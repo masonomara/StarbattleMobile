@@ -46,12 +46,13 @@ export function PuzzleScreen({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
-  const { packId, puzzleIndex, streakType } = route.params;
-  // Route params is a union — cast to access optional archive fields without narrowing each branch.
-  const { isArchive, archiveKey } = route.params as {
-    isArchive?: boolean;
-    archiveKey?: string;
-  };
+  const params = route.params;
+  const streakType = 'streakType' in params ? params.streakType : undefined;
+  const packId = 'packId' in params ? params.packId : undefined;
+  const puzzleIndex = 'packId' in params ? params.puzzleIndex : undefined;
+  const archiveOptions = 'streakType' in params ? params.archiveOptions : undefined;
+  const isArchive = archiveOptions?.isArchive;
+  const archiveKey = archiveOptions?.archiveKey;
 
   const [streakPackData, setStreakPackData] = useState<PackData | null>(null);
 

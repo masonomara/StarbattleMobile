@@ -6,14 +6,8 @@ export type RootStackParamList = {
   Home: undefined;
   Library: { packId: string };
   Puzzle:
-    | { packId: string; puzzleIndex: number; streakType?: never }
-    | {
-        streakType: StreakType;
-        isArchive?: boolean;
-        archiveKey?: string;
-        packId?: never;
-        puzzleIndex?: never;
-      };
+    | { packId: string; puzzleIndex: number }
+    | { streakType: StreakType; archiveOptions?: { isArchive: boolean; archiveKey: string } };
 };
 
 declare global {

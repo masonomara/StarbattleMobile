@@ -130,8 +130,7 @@ export function StreaksModal() {
                       closeStreaks();
                       navigation.navigate('Puzzle', {
                         streakType: activeTab,
-                        isArchive: true,
-                        archiveKey: entry.dateKey,
+                        archiveOptions: { isArchive: true, archiveKey: entry.dateKey },
                       });
                     }}
                   >
