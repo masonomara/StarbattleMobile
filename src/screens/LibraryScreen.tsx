@@ -25,7 +25,6 @@ import { parsePuzzle } from '../utils/parsePuzzle';
 import type {
   Theme,
   RawPuzzle,
-  Puzzle,
   RootStackParamList,
   PaywallContext,
 } from '../types.ts';
@@ -35,7 +34,7 @@ const NUM_COLS = 3;
 type PuzzleCellProps = {
   packId: string;
   index: number;
-  puzzle: Puzzle | null;
+  rawPuzzle: RawPuzzle | null;
   onPress: (index: number) => void;
   onLockedPress: (index: number) => void;
   styles: ReturnType<typeof createStyles>;
@@ -49,7 +48,7 @@ type PuzzleCellProps = {
 function PuzzleCell({
   packId,
   index,
-  puzzle,
+  rawPuzzle,
   onPress,
   onLockedPress,
   styles,
@@ -61,6 +60,10 @@ function PuzzleCell({
 }: PuzzleCellProps) {
   const puzzleId = `${packId}:${index}`;
   const isCompleted = completedSet.has(puzzleId);
+  const puzzle = useMemo(
+    () => (rawPuzzle ? parsePuzzle(rawPuzzle, puzzleId) : null),
+    [rawPuzzle, puzzleId],
+  );
 
   const status: 'completed' | 'active' | 'locked' = isCompleted
     ? 'completed'
@@ -144,11 +147,6 @@ export function LibraryScreen({
       .catch(() => {});
   }, [packId]);
 
-  const parsedPuzzles = useMemo<Puzzle[]>(() => {
-    if (!rawPuzzles) return [];
-    return rawPuzzles.map((raw, i) => parsePuzzle(raw, `${packId}:${i}`));
-  }, [packId, rawPuzzles]);
-
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
   const completedCount = completedSet.size;
   const [paywallContext, setPaywallContext] = useState<PaywallContext | null>(
@@ -218,7 +216,7 @@ export function LibraryScreen({
             key={index}
             packId={packId}
             index={index}
-            puzzle={parsedPuzzles[index] ?? null}
+            rawPuzzle={rawPuzzles?.[index] ?? null}
             onPress={i =>
               navigation.navigate('Puzzle', { packId, puzzleIndex: i })
             }
@@ -235,7 +233,7 @@ export function LibraryScreen({
     ),
     [
       packId,
-      parsedPuzzles,
+      rawPuzzles,
       handleLockedPress,
       styles,
       theme,

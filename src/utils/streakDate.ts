@@ -1,4 +1,3 @@
-import { db } from '../powersync/AppSchema';
 import type { Streak, StreakType } from '../types.ts';
 
 export const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
@@ -77,17 +76,6 @@ function getISOWeek(date: Date): number {
         7,
     )
   );
-}
-
-export async function getPastArchive(
-  type: StreakType,
-  todayKey: string,
-): Promise<Array<{ dateKey: string; puzzleId: string }>> {
-  const rows = await db.getAll<{ date_key: string; puzzle_id: string }>(
-    'SELECT date_key, puzzle_id FROM streak_archive WHERE type = ? AND date_key <= ? ORDER BY date_key DESC',
-    [type, todayKey],
-  );
-  return rows.map(r => ({ dateKey: r.date_key, puzzleId: r.puzzle_id }));
 }
 
 export function archiveKeyToDate(type: StreakType, key: string): Date {

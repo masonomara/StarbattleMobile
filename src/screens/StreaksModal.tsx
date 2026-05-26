@@ -11,11 +11,10 @@ import { useTheme } from '../hooks/useTheme';
 import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useProductPrice } from '../hooks/useProductPrice';
-import { loadStreaks } from '../utils/progress';
+import { loadStreaks, getPastArchive } from '../utils/progress';
 import {
   getCurrentKey,
   getActiveStreak,
-  getPastArchive,
   STREAK_TYPES,
   STREAK_LABELS,
 } from '../utils/streakDate';
