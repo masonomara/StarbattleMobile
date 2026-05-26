@@ -58,13 +58,12 @@ export default function App() {
       { signal: watchController.signal },
     );
 
-    // Guard against the watch firing before initialize() resolves: subscribe
-    // once and load entitlements the moment a user ID first appears in the store.
+    // Guard against the watch firing before initialize() resolves, and cover
+    // the anonymous → named-user sign-in transition the watch can't guarantee.
     const authUnsub = useAuthStore.subscribe((state, prevState) => {
       const userId = state.user?.id;
-      if (userId && !prevState.user?.id) {
+      if (userId && !state.isAnonymous && userId !== prevState.user?.id) {
         useEntitlementsStore.getState().loadEntitlements(userId);
-        authUnsub();
       }
     });
 
