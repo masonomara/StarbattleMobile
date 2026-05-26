@@ -74,6 +74,12 @@ function decodeFromDisk(text: string): string {
   }
 }
 
+function assertSafeKey(key: string): void {
+  if (/[/\\]/.test(key) || key.includes('..')) {
+    throw new Error(`Unsafe pack key: ${key}`);
+  }
+}
+
 async function fetchFromSupabase(storageKey: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from('packs')
@@ -84,6 +90,7 @@ async function fetchFromSupabase(storageKey: string): Promise<string> {
 }
 
 async function fetchPack(storageKey: string): Promise<string> {
+  assertSafeKey(storageKey);
   const rnfs = getRNFS();
   if (rnfs) {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${storageKey}`;
@@ -142,6 +149,7 @@ export async function downloadPack(
   packId: string,
   storagePath: string,
 ): Promise<void> {
+  assertSafeKey(packId);
   const rnfs = getRNFS();
   if (!rnfs) throw new Error('File system unavailable — run pod install');
   const packDir = `${rnfs.DocumentDirectoryPath}/packs`;

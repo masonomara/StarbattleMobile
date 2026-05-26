@@ -60,6 +60,7 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
       await transaction.complete();
     } catch (ex) {
       if (ex !== null && typeof ex === 'object' && isFatal(ex as { code?: string })) {
+        console.error('[PowerSync] Fatal upload error — transaction discarded silently:', ex);
         await transaction.complete();
       } else {
         throw ex;

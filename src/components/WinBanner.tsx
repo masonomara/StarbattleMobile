@@ -67,7 +67,7 @@ export function WinBanner({
     : `${packName} #${puzzleIndex + 1}`;
 
   const headline = streakType
-    ? `Solved in ${formatTime(timeMs)}`
+    ? `${STREAK_LABELS[streakType]} Challenge Complete`
     : `Solved in ${formatTime(timeMs)}`;
 
   const buttonLabel = streakType
@@ -140,7 +140,7 @@ const createStyles = (theme: Theme) =>
       lineHeight: 20,
       fontWeight: 600,
 
-      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+      color: rgba(theme.gray, 1),
     },
     winTime: {
       fontSize: 15,

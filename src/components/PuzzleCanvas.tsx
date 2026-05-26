@@ -48,6 +48,10 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
       colorIdx,
       path: b.detach(),
     }));
+    // regionColors.length is intentionally omitted: buildTheme always constructs
+    // regionColors from exactly 6 fixed color slots, so its length is invariant
+    // across palettes and theme switches. Paths encode geometry only; colors are
+    // applied in JSX below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzle.id, canvasSize, bw]);
 

@@ -325,10 +325,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
 
     set(state => {
       const newCells = [...state.cells] as CellValue[];
-      const newAutoMarks = new Set(state.autoMarks);
+      let newAutoMarks = new Set(state.autoMarks);
+      const erasedStar = changes.some(c => c.prev === 1 && c.next === 0);
       for (const c of changes) {
         newCells[c.index] = c.next;
         if (c.next !== 2) newAutoMarks.delete(c.index);
+      }
+      if (erasedStar) {
+        newAutoMarks = rebuildAutoMarks(newCells, changes, newAutoMarks, size, puzzle, settings);
       }
 
       const currentErrors = settings.highlightErrors

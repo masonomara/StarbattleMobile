@@ -78,9 +78,12 @@ export async function loadProgress(puzzleId: string): Promise<{
 
   if (!row) return null;
   try {
+    const rawCells = JSON.parse(row.cells);
+    const rawMarks = JSON.parse(row.auto_marks ?? '[]');
+    if (!Array.isArray(rawCells) || !Array.isArray(rawMarks)) return null;
     return {
-      cells: JSON.parse(row.cells),
-      autoMarks: JSON.parse(row.auto_marks ?? '[]'),
+      cells: rawCells.map(v => Math.max(0, Math.min(2, Number(v) | 0)) as CellValue),
+      autoMarks: rawMarks.filter((v): v is number => typeof v === 'number'),
       timeMs: row.time_ms,
       completed: row.completed === 1,
     };
@@ -95,6 +98,8 @@ export async function getCompletedCountForPack(
 ): Promise<number> {
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return 0;
+
+  if (puzzleCount === 0) return 0;
 
   const ids = Array.from({ length: puzzleCount }, (_, i) => `${packId}:${i}`);
   const placeholders = ids.map(() => '?').join(',');
@@ -113,6 +118,8 @@ export async function getCompletedPuzzleIdsForPack(
 ): Promise<Set<string>> {
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return new Set();
+
+  if (puzzleCount === 0) return new Set();
 
   const ids = Array.from({ length: puzzleCount }, (_, i) => `${packId}:${i}`);
   const placeholders = ids.map(() => '?').join(',');

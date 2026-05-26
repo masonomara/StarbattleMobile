@@ -219,7 +219,7 @@ export function HomeScreen({
               gap: 12,
             }}
           >
-            {STREAK_TYPES.map((type, i) => {
+            {STREAK_TYPES.map(type => {
               const pack = loadedStreakPacks[type];
               const preview = streakPreviews[type];
               if (!pack || !preview) return null;
@@ -256,7 +256,7 @@ export function HomeScreen({
                         {STREAK_LABELS[type]} Special
                       </Text>
                       <Text style={styles.streakMeta}>
-                        {/* {pack.gridSize}×{pack.gridSize} */}7 Day Streak
+                        {pack.gridSize}×{pack.gridSize}
                       </Text>
                       {isCompleted && streakCount > 0 && (
                         <Text style={styles.streakCount}>{streakCount}</Text>
@@ -406,15 +406,15 @@ const createStyles = (
       gap: theme.spacingMd,
       zIndex: 100,
       overflow: 'visible',
-      marginBottom: 16,
+      marginBottom: 24,
     },
     streakCard: {
-      borderRadius: 12,
+      borderRadius: 4,
       padding: 16,
       gap: 0,
       justifyContent: 'flex-start',
 
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: rgba(theme.isDark ? theme.gray : theme.lightGray, 1),
     },
     streakCardCompleted: {
@@ -443,9 +443,8 @@ const createStyles = (
       fontSize: 17,
       lineHeight: 22,
       marginTop: 4,
-      textAlign: 'left',
       marginBottom: 4,
-      fontWeight: 600,
+      fontWeight: 500,
     },
     streakThumbnailWrap: {
       overflow: 'hidden',
@@ -485,12 +484,12 @@ const createStyles = (
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: 17,
+      padding: 16,
       borderRadius: 4,
       marginBottom: 12,
       backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
       borderWidth: 1,
-      borderColor: rgba(theme.isDark ? theme.gray : theme.gray, 0.2),
+      borderColor: rgba(theme.isDark ? theme.gray : theme.lightGray, 1),
     },
     packThumb: {
       marginRight: 14,

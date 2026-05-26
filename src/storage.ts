@@ -1,5 +1,5 @@
 import { createMMKV } from 'react-native-mmkv';
-import { UserSettings } from './types';
+import type { UserSettings } from './types.ts';
 
 const SETTINGS_KEY = 'settings';
 const storage = createMMKV({ id: 'starbattle-settings' });

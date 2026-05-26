@@ -167,9 +167,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       requestedOperation: appleAuth.Operation.LOGIN,
       requestedScopes: [appleAuth.Scope.EMAIL],
     });
+    if (!credential.identityToken) throw new Error('Apple sign-in: missing identity token');
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'apple',
-      token: credential.identityToken!,
+      token: credential.identityToken,
     });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);

@@ -17,6 +17,15 @@ type PackRow = {
 const PACK_QUERY =
   'SELECT * FROM packs WHERE published = 1 ORDER BY sort_order ASC NULLS LAST';
 
+function parseJsonArray(value: string | null | undefined): string[] {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function mapPackRow(r: PackRow): PackCatalogItem {
   return {
     id: r.id,
@@ -86,7 +95,7 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
       ? {
           isPremium: entRow.is_premium === 1,
           premiumPurchasedAt: entRow.premium_purchased_at ?? undefined,
-          ownedPackIds: (() => { try { return JSON.parse(entRow.owned_pack_ids || '[]'); } catch { return []; } })(),
+          ownedPackIds: parseJsonArray(entRow.owned_pack_ids),
         }
       : DEFAULT_ENTITLEMENTS;
 
