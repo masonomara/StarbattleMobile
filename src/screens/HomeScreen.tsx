@@ -236,7 +236,7 @@ export function HomeScreen({
                 >
                   <PuzzleThumbnail
                     puzzle={preview}
-                    size={240}
+                    size={260}
                     theme={theme}
                     coloredRegions={coloredRegions}
                   />
@@ -246,12 +246,16 @@ export function HomeScreen({
                   </Text>
                   <View style={styles.streakMetaRow}>
                     {isCompleted && (
-                      <Check size={16} color="#22c55e" strokeWidth={2.5} />
+                      <View style={styles.streakCheckCircle}>
+                        <Check size={17} color={theme.green} strokeWidth={3} />
+                      </View>
                     )}
                     <Text style={styles.streakMeta}>
-                      {streakCount > 0
+                      {isCompleted
                         ? `${streakCount} day streak`
-                        : `Play ${STREAK_LABELS[type]} puzzle`}
+                        : streakCount > 0
+                          ? `Continue your ${streakCount} day streak`
+                          : `Start your ${STREAK_LABELS[type]} streak`}
                     </Text>
                   </View>
                 </Pressable>
@@ -390,7 +394,6 @@ const createStyles = (
     packSection: {
       paddingTop: 16,
       backgroundColor: theme.background,
-
       paddingHorizontal: 16,
     },
     streakRow: {
@@ -398,7 +401,7 @@ const createStyles = (
       gap: theme.spacingMd,
       zIndex: 100,
       overflow: 'visible',
-      marginBottom: 24,
+      marginBottom: 32,
     },
     streakCard: {
       borderRadius: 4,
@@ -409,9 +412,7 @@ const createStyles = (
       borderWidth: 1,
       borderColor: theme.border,
     },
-    streakCardCompleted: {
-      opacity: 0.6,
-    },
+    streakCardCompleted: {},
 
     streakLabel: {
       color: theme.text,
@@ -421,18 +422,27 @@ const createStyles = (
       fontWeight: '900',
       letterSpacing: -0.42,
       textTransform: 'capitalize',
-      marginTop: 12,
+      marginTop: 16,
     },
     streakMetaRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: 7,
     },
     streakMeta: {
-      color: theme.textSecondary,
+      color: theme.text,
       fontSize: 17,
       lineHeight: 22,
-      fontWeight: 700,
+      fontWeight: 600,
+      marginTop: 7,
+    },
+    streakCheckCircle: {
+      width: 22,
+      height: 22,
+      borderRadius: 100,
+      // backgroundColor: theme.green + "2E",
+      alignItems: 'center',
+      justifyContent: 'center',
       marginTop: 7,
     },
     streakThumbnailWrap: {

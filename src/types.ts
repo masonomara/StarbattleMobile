@@ -196,11 +196,11 @@ export type ThemeColors = {
 };
 
 export type ThemeName =
-  | 'primer'
+  | 'original'
   // | 'ayu'
   // | 'catppuccin'
   // | 'everforest'
-  | 'github'
+  | 'primer'
   | 'gruvbox'
   // | 'iceberg'
   // | 'nightOwl'

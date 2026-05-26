@@ -14,7 +14,7 @@ export const tokens = {
 
 // ─── AYU ─────────────────────────────────────────────────────────────────────────
 
-const primerDark: ThemeColors = {
+const originalDark: ThemeColors = {
   roles: {
     text: '#F0F6FC',
     textSecondary: '#9198A1',
@@ -44,7 +44,7 @@ const primerDark: ThemeColors = {
   },
 };
 
-const primerLight: ThemeColors = {
+const originalLight: ThemeColors = {
   roles: {
     text: '#1F2328',
     textSecondary: '#59636E',
@@ -262,7 +262,7 @@ const primerLight: ThemeColors = {
 
 // ─── GITHUB ──────────────────────────────────────────────────────────────────────
 
-const githubDark: ThemeColors = {
+const primerDark: ThemeColors = {
   roles: {
     text: '#e6edf3',
     textSecondary: '#e6edf399',
@@ -292,7 +292,7 @@ const githubDark: ThemeColors = {
   },
 };
 
-const githubLight: ThemeColors = {
+const primerLight: ThemeColors = {
   roles: {
     text: '#1f2328',
     textSecondary: '#1f2328b3',
@@ -1317,10 +1317,10 @@ const tokyoNightDay: ThemeColors = {
 // ─── Exports ───────────────────────────────────────────────────────────────────
 
 export const PALETTES: Record<ThemeName, PaletteVariants> = {
-  primer: {
-    label: 'Primer',
-    dark: primerDark,
-    light: primerLight,
+  original: {
+    label: 'Original',
+    dark: originalDark,
+    light: originalLight,
   },
   // ayu: {
   //   label: 'Ayu',
@@ -1342,10 +1342,10 @@ export const PALETTES: Record<ThemeName, PaletteVariants> = {
     dark: seoul256Dark,
     light: seoul256Light,
   },
-  github: {
-    label: 'Github',
-    dark: githubDark,
-    light: githubLight,
+  primer: {
+    label: 'Primer',
+    dark: primerDark,
+    light: primerLight,
   },
 
   // iceberg: {
@@ -1374,7 +1374,7 @@ export const PALETTES: Record<ThemeName, PaletteVariants> = {
   //   light: oneHalfLight,
   // },
   rosePine: {
-    label: 'Rose Pine',
+    label: 'Rosé Pine',
     dark: rosePineDefault,
     light: rosePineDawn,
   },

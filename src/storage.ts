@@ -12,7 +12,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   alwaysShowTimer: false,
   alwaysShowToolbar: false,
   theme: 'system',
-  palette: 'gruvbox',
+  palette: 'original',
   haptics: true,
 };
 

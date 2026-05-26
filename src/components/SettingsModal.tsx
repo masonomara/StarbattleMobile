@@ -12,9 +12,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   useColorScheme,
+  Text as RNText,
 } from 'react-native';
 import { Text } from './Text';
-import { X } from 'lucide-react-native';
+import { X, ChevronLeft } from 'lucide-react-native';
+import { WebView } from 'react-native-webview';
 import Svg, { Rect, Line, Path } from 'react-native-svg';
 import { Header } from './Header';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -270,6 +272,7 @@ export function SettingsModal() {
 
   const { entitlements, packCatalog } = useEntitlements();
 
+  const [view, setView] = useState<'main' | 'acknowledgements' | 'terms' | 'privacy'>('main');
   const [emailMode, setEmailMode] = useState<EmailMode>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -361,21 +364,153 @@ export function SettingsModal() {
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={closeSettings}
+      onDismiss={() => setView('main')}
     >
       <View style={styles.container}>
         <Header
           absolute={false}
-          center={<Text style={styles.title}>Settings</Text>}
+          center={
+            <Text style={styles.title}>
+              {view === 'acknowledgements'
+                ? 'Acknowledgements'
+                : view === 'terms'
+                ? 'Terms of Use'
+                : view === 'privacy'
+                ? 'Privacy Policy'
+                : 'Settings'}
+            </Text>
+          }
+          left={
+            view !== 'main' ? (
+              <Pressable onPress={() => setView('main')} hitSlop={8}>
+                <ChevronLeft size={24} color={theme.text} />
+              </Pressable>
+            ) : undefined
+          }
           right={
-            <Pressable onPress={closeSettings} hitSlop={8}>
-              <X size={24} color={theme.text} />
-            </Pressable>
+            view === 'main' ? (
+              <Pressable onPress={closeSettings} hitSlop={8}>
+                <X size={24} color={theme.text} />
+              </Pressable>
+            ) : undefined
           }
         />
+
+        {view === 'acknowledgements' && (
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Themes</Text>
+              <Text style={[styles.sectionBody, { marginBottom: 16 }]}>
+                The color themes in this app are inspired by and closely emulate
+                the following open-source projects. Each is used with
+                attribution under its respective license.
+              </Text>
+              {([
+                {
+                  name: 'Original',
+                  desc: 'Inspired by ',
+                  link: 'GitHub Primer',
+                  url: 'https://primer.style',
+                  suffix: ", GitHub's open-source design system.",
+                },
+                {
+                  name: 'Seoul256',
+                  desc: 'Based on ',
+                  link: 'seoul256.vim',
+                  url: 'https://github.com/junegunn/seoul256.vim',
+                  suffix: ' by junegunn. Licensed under MIT.',
+                },
+                {
+                  name: 'Primer',
+                  desc: 'Inspired by ',
+                  link: 'GitHub Primer',
+                  url: 'https://primer.style',
+                  suffix: ", GitHub's design system. Licensed under MIT.",
+                },
+                {
+                  name: 'Rosé Pine',
+                  desc: 'Based on ',
+                  link: 'Rosé Pine',
+                  url: 'https://rosepinetheme.com',
+                  suffix: ' by the Rosé Pine team. Licensed under MIT.',
+                  extra: {
+                    text: 'See their branding guidelines.',
+                    url: 'https://github.com/rose-pine/rose-pine-theme',
+                  },
+                },
+                {
+                  name: 'Gruvbox',
+                  desc: 'Based on ',
+                  link: 'gruvbox',
+                  url: 'https://github.com/morhetz/gruvbox',
+                  suffix: ' by morhetz. Licensed under MIT.',
+                },
+                {
+                  name: 'Tokyo Night',
+                  desc: 'Based on ',
+                  link: 'Tokyo Night',
+                  url: 'https://github.com/enkia/tokyo-night-vscode-theme',
+                  suffix: ' by enkia. Licensed under MIT.',
+                },
+              ] as const).map(item => (
+                <View key={item.name} style={styles.attributionRow}>
+                  <Text style={styles.attributionName}>{item.name}</Text>
+                  <Text style={styles.attributionBody}>
+                    {item.desc}
+                    <Text
+                      style={styles.attributionLink}
+                      onPress={() =>
+                        Linking.openURL(item.url).catch(() => {})
+                      }
+                    >
+                      {item.link}
+                    </Text>
+                    {item.suffix}
+                    {'extra' in item && item.extra ? (
+                      <>
+                        {' '}
+                        <Text
+                          style={styles.attributionLink}
+                          onPress={() =>
+                            Linking.openURL(item.extra!.url).catch(() => {})
+                          }
+                        >
+                          {item.extra.text}
+                        </Text>
+                      </>
+                    ) : null}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>MIT License</Text>
+              <Text style={[styles.sectionBody, { marginBottom: 16 }]}>
+                The following projects are distributed under the MIT License:
+                seoul256.vim, GitHub Primer, Rosé Pine, gruvbox, and Tokyo
+                Night.
+              </Text>
+              <View style={styles.licenseBox}>
+                <RNText style={styles.licenseText}>
+                  {`MIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`}
+                </RNText>
+              </View>
+            </View>
+          </ScrollView>
+        )}
+
+        {(view === 'terms' || view === 'privacy') && (
+          <WebView
+            source={{ uri: view === 'terms' ? TERMS_URL : PRIVACY_POLICY_URL }}
+            style={{ flex: 1, backgroundColor: theme.background }}
+          />
+        )}
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          style={view !== 'main' ? { display: 'none' } : undefined}
         >
           {/* Account */}
           <View style={styles.section}>
@@ -881,20 +1016,16 @@ export function SettingsModal() {
 
           {/* Legal */}
           <View style={styles.legalLinks}>
-            <Pressable
-              onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
-              hitSlop={8}
-            >
+            <Pressable onPress={() => setView('terms')} hitSlop={8}>
               <Text style={styles.privacyLinkText}>Terms of Use</Text>
             </Pressable>
             <Text style={styles.legalSep}>·</Text>
-            <Pressable
-              onPress={() =>
-                Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})
-              }
-              hitSlop={8}
-            >
+            <Pressable onPress={() => setView('privacy')} hitSlop={8}>
               <Text style={styles.privacyLinkText}>Privacy Policy</Text>
+            </Pressable>
+            <Text style={styles.legalSep}>·</Text>
+            <Pressable onPress={() => setView('acknowledgements')} hitSlop={8}>
+              <Text style={styles.privacyLinkText}>Acknowledgements</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -1146,6 +1277,37 @@ const createStyles = (theme: Theme) => {
       fontSize: theme.fontSizeSubhead,
       color: theme.red,
       textAlign: 'center',
+    },
+    attributionRow: {
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderColor: theme.border,
+      gap: 4,
+    },
+    attributionName: {
+      fontSize: theme.fontSizeCallout,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.text,
+    },
+    attributionBody: {
+      fontSize: theme.fontSizeBody,
+      color: theme.textSecondary,
+      lineHeight: 22,
+    },
+    attributionLink: {
+      color: theme.blue,
+      textDecorationLine: 'underline',
+    },
+    licenseBox: {
+      backgroundColor: theme.surface,
+      borderRadius: theme.radiusMd,
+      padding: theme.spacingLg,
+    },
+    licenseText: {
+      fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
+      fontSize: 12,
+      lineHeight: 18,
+      color: theme.textSecondary,
     },
   });
 };

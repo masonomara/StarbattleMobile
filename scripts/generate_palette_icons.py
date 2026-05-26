@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 """
-Generate palette-matched alternate app icons (flat PNGs) for each active palette × mode.
+Generate palette-matched alternate app icons for each active palette.
+
+Produces two sets:
+  1. Layered .icon packages (iOS 26+) — one per palette, OS handles dark/tinted/clear
+  2. Flat PNG appiconsets (iOS <26 fallback) — one per palette × mode
 
 Usage:
     python3 scripts/generate_palette_icons.py
-
-Outputs:
-    ios/StarbattleMobile/Images.xcassets/AppIcon-<name>-<mode>.appiconset/
-        AppIcon.png      (1024×1024)
-        Contents.json
 """
 
-import os, json
+import json, shutil
 import cairosvg
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 XCASSETS = ROOT / 'ios/StarbattleMobile/Images.xcassets'
+IOS_DIR = ROOT / 'ios'
+PRIMARY_ASSETS = ROOT / 'ios/AppIcon.icon/Assets'
 
 # ─── Palette colors: (background, text, red, gridColor) ────────────────────────
-# gridColor is a muted/secondary tone for the grid lines
 PALETTES = {
-    'primer': {
+    'original': {
         'dark':  ('#0D1117', '#F0F6FC', '#F85149', '#3D444D'),
         'light': ('#ffffff', '#1F2328', '#D1242F', '#8C959F'),
     },
-    'github': {
+    'primer': {
         'dark':  ('#010409', '#e6edf3', '#ff7b72', '#3d444d'),
         'light': ('#f6f8fa', '#1f2328', '#cf222e', '#8c959f'),
     },
@@ -47,7 +47,7 @@ PALETTES = {
     },
 }
 
-# ─── SVG layer content (embedded from AppIcon.icon/Assets/) ────────────────────
+# ─── SVG layer templates ────────────────────────────────────────────────────────
 
 GRID_SVG = """<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="1040" height="20" transform="translate(-8 822)" fill="{grid}"/>
@@ -88,7 +88,20 @@ STARS_SVG = """<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="non
 <path d="M992 732.605L1063.07 775.5L1044.21 694.655L1107 640.26L1024.31 633.245L992 557L959.685 633.245L877 640.26L939.79 694.655L920.93 775.5L992 732.605Z" fill="{text}"/>
 </svg>"""
 
-CONTENTS_JSON = {
+# ─── Flat PNG sizes ─────────────────────────────────────────────────────────────
+
+FLAT_SIZES = [
+    ("AppIcon@40.png",   40),
+    ("AppIcon@60.png",   60),
+    ("AppIcon@58.png",   58),
+    ("AppIcon@87.png",   87),
+    ("AppIcon@80.png",   80),
+    ("AppIcon@120.png",  120),
+    ("AppIcon@180.png",  180),
+    ("AppIcon@1024.png", 1024),
+]
+
+FLAT_CONTENTS_JSON = {
     "images": [
         {"idiom": "iphone", "scale": "2x", "size": "20x20",   "filename": "AppIcon@40.png"},
         {"idiom": "iphone", "scale": "3x", "size": "20x20",   "filename": "AppIcon@60.png"},
@@ -103,92 +116,138 @@ CONTENTS_JSON = {
     "info": {"author": "xcode", "version": 1},
 }
 
-# (pt size × scale) → filename, pixel size
-SIZES = [
-    ("AppIcon@40.png",   40),
-    ("AppIcon@60.png",   60),
-    ("AppIcon@58.png",   58),
-    ("AppIcon@87.png",   87),
-    ("AppIcon@80.png",   80),
-    ("AppIcon@120.png",  120),
-    ("AppIcon@180.png",  180),
-    ("AppIcon@1024.png", 1024),
-]
+# ─── Helpers ────────────────────────────────────────────────────────────────────
 
+def hex_to_srgb(hex_color: str) -> str:
+    h = hex_color.lstrip('#')[:6]
+    r = int(h[0:2], 16) / 255
+    g = int(h[2:4], 16) / 255
+    b = int(h[4:6], 16) / 255
+    return f"srgb:{r:.5f},{g:.5f},{b:.5f},1.00000"
+
+def srgb_solid(hex_color: str) -> dict:
+    return {"solid": hex_to_srgb(hex_color)}
+
+def make_layer(image_name: str, name: str,
+               default_hex: str, dark_hex: str, tinted_srgb: str,
+               extra: dict | None = None) -> dict:
+    layer: dict = {
+        "fill-specializations": [
+            {"value": srgb_solid(default_hex)},
+            {"appearance": "dark",   "value": srgb_solid(dark_hex)},
+            {"appearance": "tinted", "value": {"solid": tinted_srgb}},
+        ],
+        "glass": True,
+        "image-name": image_name,
+        "name": name,
+    }
+    if extra:
+        layer.update(extra)
+    return layer
+
+def build_icon_json(light: tuple, dark: tuple) -> dict:
+    bg_l, text_l, red_l, grid_l = light
+    bg_d, text_d, red_d, grid_d = dark
+    return {
+        "fill-specializations": [
+            {"value": {"solid": hex_to_srgb(bg_l)}},
+            {"appearance": "dark", "value": {"solid": hex_to_srgb(bg_d)}},
+        ],
+        "groups": [{
+            "layers": [
+                make_layer("stars.svg", "stars", text_l, text_d,
+                           "srgb:1.00000,1.00000,1.00000,1.00000"),
+                make_layer("regions.svg", "regions", text_l, text_d,
+                           "srgb:1.00000,1.00000,1.00000,1.00000",
+                           extra={"blend-mode": "normal"}),
+                make_layer("marks.svg", "marks", red_l, red_d,
+                           "srgb:0.58039,0.58039,0.58039,1.00000",
+                           extra={"opacity": 1}),
+                make_layer("grid.svg", "grid", grid_l, grid_d,
+                           "srgb:0.52941,0.52941,0.52941,1.00000",
+                           extra={"hidden": False, "opacity": 1}),
+            ],
+            "shadow":       {"kind": "neutral", "opacity": 0.5},
+            "specular":     True,
+            "translucency": {"enabled": True, "value": 0.5},
+        }],
+        "supported-platforms": {"circles": ["watchOS"], "squares": "shared"},
+    }
 
 def build_composite_svg(bg: str, text: str, red: str, grid: str) -> str:
+    def strip_svg(s: str) -> str:
+        return (s
+            .replace('<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">', '<g>')
+            .replace('</svg>', '</g>'))
     return f"""<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- background -->
   <rect width="1024" height="1024" fill="{bg}"/>
-  <!-- grid -->
-  {GRID_SVG.format(grid=grid).replace('<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">', '<g>').replace('</svg>', '</g>')}
-  <!-- regions -->
-  {REGIONS_SVG.format(text=text).replace('<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">', '<g>').replace('</svg>', '</g>')}
-  <!-- marks -->
-  {MARKS_SVG.format(red=red).replace('<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">', '<g>').replace('</svg>', '</g>')}
-  <!-- stars -->
-  {STARS_SVG.format(text=text).replace('<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">', '<g>').replace('</svg>', '</g>')}
+  {strip_svg(GRID_SVG.format(grid=grid))}
+  {strip_svg(REGIONS_SVG.format(text=text))}
+  {strip_svg(MARKS_SVG.format(red=red))}
+  {strip_svg(STARS_SVG.format(text=text))}
 </svg>"""
 
+# ─── Generators ────────────────────────────────────────────────────────────────
 
-def render_png(svg_str: str, size: int) -> bytes:
-    return cairosvg.svg2png(
-        bytestring=svg_str.encode(),
-        output_width=size,
-        output_height=size,
-    )
+def generate_layered_icon(palette_name: str, colors: dict):
+    """Generate a .icon package for iOS 26 layered alternate icons."""
+    icon_dir = IOS_DIR / f"AppIcon-{palette_name}.icon"
+    assets_dir = icon_dir / "Assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+
+    for svg in ["grid.svg", "marks.svg", "regions.svg", "stars.svg"]:
+        shutil.copy2(PRIMARY_ASSETS / svg, assets_dir / svg)
+
+    icon_json = build_icon_json(colors['light'], colors['dark'])
+    (icon_dir / "icon.json").write_text(json.dumps(icon_json, indent=2) + "\n")
+    print(f"  ✓ AppIcon-{palette_name}.icon  (layered)")
 
 
-def generate_icon(palette_name: str, mode: str, colors: tuple):
+def generate_flat_icon(palette_name: str, mode: str, colors: tuple):
+    """Generate a flat PNG appiconset for iOS <26 fallback."""
     bg, text, red, grid = colors
     icon_name = f"AppIcon-{palette_name}-{mode}"
     out_dir = XCASSETS / f"{icon_name}.appiconset"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     svg = build_composite_svg(bg, text, red, grid)
+    for filename, size in FLAT_SIZES:
+        (out_dir / filename).write_bytes(
+            cairosvg.svg2png(bytestring=svg.encode(), output_width=size, output_height=size)
+        )
+    (out_dir / "Contents.json").write_text(json.dumps(FLAT_CONTENTS_JSON, indent=2) + "\n")
+    print(f"  ✓ AppIcon-{palette_name}-{mode}.appiconset  (flat PNG fallback)")
 
-    for filename, size in SIZES:
-        png_bytes = render_png(svg, size)
-        (out_dir / filename).write_bytes(png_bytes)
 
-    # Write Contents.json
-    (out_dir / "Contents.json").write_text(
-        json.dumps(CONTENTS_JSON, indent=2) + "\n"
-    )
-
-    print(f"  ✓ {icon_name}")
+def print_info_plist_additions():
+    print("\n─── NEW entries to add inside CFBundleAlternateIcons in Info.plist ───")
+    for name in PALETTES:
+        print(f'\t\t<key>AppIcon-{name}</key>')
+        print('\t\t<dict>')
+        print('\t\t\t<key>CFBundleIconName</key>')
+        print(f'\t\t\t<string>AppIcon-{name}</string>')
+        print('\t\t\t<key>UIPrerenderedIcon</key>')
+        print('\t\t\t<true/>')
+        print('\t\t</dict>')
 
 
 def main():
-    print("Generating palette icons...")
-    for palette_name, modes in PALETTES.items():
-        for mode, colors in modes.items():
-            generate_icon(palette_name, mode, colors)
-    print(f"\nDone — {len(PALETTES) * 2} icons written to {XCASSETS}")
+    if not PRIMARY_ASSETS.exists():
+        print("ERROR: ios/AppIcon.icon/Assets not found.")
+        print("Run: git checkout origin/icon -- ios/AppIcon.icon")
+        return
 
-    # Print the Info.plist fragment
-    print("\n─── Add to Info.plist inside <dict> ───────────────────────────────")
-    print("<key>CFBundleIcons</key>")
-    print("<dict>")
-    print("\t<key>CFBundlePrimaryIcon</key>")
-    print("\t<dict>")
-    print("\t\t<key>CFBundleIconName</key>")
-    print("\t\t<string>AppIcon</string>")
-    print("\t</dict>")
-    print("\t<key>CFBundleAlternateIcons</key>")
-    print("\t<dict>")
-    for palette_name in PALETTES:
-        for mode in ('dark', 'light'):
-            icon_name = f"AppIcon-{palette_name}-{mode}"
-            print(f"\t\t<key>{icon_name}</key>")
-            print("\t\t<dict>")
-            print(f"\t\t\t<key>CFBundleIconName</key>")
-            print(f"\t\t\t<string>{icon_name}</string>")
-            print("\t\t\t<key>UIPrerenderedIcon</key>")
-            print("\t\t\t<true/>")
-            print("\t\t</dict>")
-    print("\t</dict>")
-    print("</dict>")
+    print("Generating layered .icon packages (iOS 26+)...")
+    for name, modes in PALETTES.items():
+        generate_layered_icon(name, modes)
+
+    print("\nGenerating flat PNG appiconsets (iOS <26 fallback)...")
+    for name, modes in PALETTES.items():
+        for mode, colors in modes.items():
+            generate_flat_icon(name, mode, colors)
+
+    print(f"\nDone — {len(PALETTES)} layered icons, {len(PALETTES) * 2} flat icons")
+    print_info_plist_additions()
 
 
 if __name__ == "__main__":

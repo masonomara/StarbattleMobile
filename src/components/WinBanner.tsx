@@ -62,12 +62,8 @@ export function WinBanner({
   if (!completed) return null;
 
   const info = streakType
-    ? `${STREAK_LABELS[streakType]} Challenge`
+    ? `${STREAK_LABELS[streakType]} Special`
     : `${packName} #${puzzleIndex + 1}`;
-
-  const headline = streakType
-    ? `${STREAK_LABELS[streakType]} Challenge Complete`
-    : `Solved in ${formatTime(timeMs)}`;
 
   const buttonLabel = streakType
     ? 'Back to Home'
@@ -93,13 +89,13 @@ export function WinBanner({
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      <Text style={styles.winInfo}>{info}</Text>
-      <Text style={styles.winText}>{headline}</Text>
-      {streakType && (
-        <Text style={styles.winTime}>
-          {streakCount > 0 ? `${streakCount} day streak` : `Solved in ${formatTime(timeMs)}`}
+      <Text style={styles.winInfo}>{info} {streakType && (
+        <Text style={styles.winInfo}>
+          {streakCount > 0 ? ` •  ${streakCount} day streak` : ``}
         </Text>
-      )}
+      )}</Text>
+      <Text style={styles.winText}>{`Solved in ${formatTime(timeMs)}`}</Text>
+
       <Pressable onPress={handlePress} style={styles.winButton}>
         <Text style={styles.winButtonText}>{buttonLabel}</Text>
       </Pressable>
@@ -130,18 +126,19 @@ const createStyles = (theme: Theme) =>
     },
     winText: {
       color: theme.text,
-      lineHeight: 34,
-      fontSize: 28,
+      lineHeight: 36,
+      fontSize: 33,
       fontFamily: 'Bricolage Grotesque',
-      fontWeight: 700,
-      marginTop: 8,
+      fontWeight: 900,
+
+      letterSpacing: -0.33,
     },
     winInfo: {
-      fontSize: 15,
-      lineHeight: 20,
+      color: theme.text,
+      fontSize: 17,
+      lineHeight: 22,
       fontWeight: 600,
-
-      color: theme.textSecondary,
+      marginBottom: 7,
     },
     winTime: {
       fontSize: 15,

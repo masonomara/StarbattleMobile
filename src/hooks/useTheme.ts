@@ -33,7 +33,7 @@ export function buildTheme(colors: ThemeColors): Theme {
       regions.redBright, regions.greenBright, regions.yellowBright,
       regions.blueBright, regions.magentaBright, regions.cyanBright,
     ],
-    regionColorAlpha: isDark ? 0.15 : 0.15,
+    regionColorAlpha: isDark ? 0.25 : 0.15,
     ...tokens,
   };
 }

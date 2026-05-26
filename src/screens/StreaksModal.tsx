@@ -87,7 +87,13 @@ export function StreaksModal() {
               const found = streaks.find(s => s.type === type);
               const count = found ? getActiveStreak(found, type) : 0;
               return (
-                <View key={type} style={[styles.streakTile, { backgroundColor: STREAK_TILE_COLORS[i] }]}>
+                <View
+                  key={type}
+                  style={[
+                    styles.streakTile,
+                    { backgroundColor: STREAK_TILE_COLORS[i] },
+                  ]}
+                >
                   <Text style={styles.streakCount}>{count}</Text>
                   <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
                 </View>
@@ -129,7 +135,10 @@ export function StreaksModal() {
                       closeStreaks();
                       navigation.navigate('Puzzle', {
                         streakType: activeTab,
-                        archiveOptions: { isArchive: true, archiveKey: entry.dateKey },
+                        archiveOptions: {
+                          isArchive: true,
+                          archiveKey: entry.dateKey,
+                        },
                       });
                     }}
                   >
@@ -151,7 +160,9 @@ export function StreaksModal() {
                 onPress={() => useSettingsStore.getState().openSettings()}
               >
                 <Text style={styles.upgradeButtonText}>
-                  {premiumPrice ? `Unlock with Premium · ${premiumPrice}` : 'Unlock with Premium'}
+                  {premiumPrice
+                    ? `Unlock with Premium · ${premiumPrice}`
+                    : 'Unlock with Premium'}
                 </Text>
               </Pressable>
             </View>
@@ -193,13 +204,14 @@ const createStyles = (theme: Theme) => {
       alignItems: 'center',
       shadowOffset: { width: 0, height: 4 },
       shadowColor: '#25292E',
-      shadowOpacity: 0.10,
+      shadowOpacity: 0.1,
       shadowRadius: 24,
       elevation: 8,
     },
     streakCount: {
-      fontSize: 32,
-      fontWeight: theme.fontWeightSemibold,
+      lineHeight: 36,
+      fontSize: 33,
+      fontWeight: 900,
       color: theme.blue,
     },
     streakLabel: {
