@@ -108,13 +108,13 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
         path={innerGridPath}
         color={rgba(theme.isDark ? theme.gray : theme.gray, 1)}
         style="stroke"
-        strokeWidth={1}
+        strokeWidth={1.125}
       />
       <Path
         path={regionBorderPath}
         color={rgba(theme.isDark ? theme.white : theme.black, 1)}
         style="stroke"
-        strokeWidth={3}
+        strokeWidth={3.375}
         strokeCap="square"
         strokeJoin="miter"
       />
@@ -122,7 +122,7 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
   );
 });
 
-const BORDER = 3;
+const BORDER = 3.375;
 
 // forwardRef exposes DrawLayerHandle so the gesture responder can write preview
 // strokes in real time without committing them to the Zustand store mid-drag.
@@ -231,8 +231,8 @@ export const PuzzleCanvas = React.forwardRef<
           path={dynamicPaths.marks}
           color={rgba(theme.red, 1)}
           style="stroke"
-          strokeWidth={2}
-          strokeCap="round"
+          strokeWidth={2.25}
+          strokeCap="square"
         />
       </Canvas>
     </View>

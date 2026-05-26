@@ -18,6 +18,7 @@ import Svg, { Rect, Line, Path } from 'react-native-svg';
 import { Header } from './Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAuthStore } from '../stores/authStore';
+import { usePuzzleStore } from '../store';
 import { useTheme } from '../hooks/useTheme';
 import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
@@ -166,7 +167,7 @@ function PalettePreview({
         y1={MARK1.cy - MR}
         x2={MARK1.cx + MR}
         y2={MARK1.cy + MR}
-        stroke={rgba(paletteTheme.lightRed, 1)}
+        stroke={rgba(paletteTheme.red, 1)}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -175,7 +176,7 @@ function PalettePreview({
         y1={MARK1.cy - MR}
         x2={MARK1.cx - MR}
         y2={MARK1.cy + MR}
-        stroke={rgba(paletteTheme.lightRed, 1)}
+        stroke={rgba(paletteTheme.red, 1)}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -184,7 +185,7 @@ function PalettePreview({
         y1={MARK2.cy - MR}
         x2={MARK2.cx + MR}
         y2={MARK2.cy + MR}
-        stroke={rgba(paletteTheme.lightRed, 1)}
+        stroke={rgba(paletteTheme.red, 1)}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -193,7 +194,7 @@ function PalettePreview({
         y1={MARK2.cy - MR}
         x2={MARK2.cx - MR}
         y2={MARK2.cy + MR}
-        stroke={rgba(paletteTheme.lightRed, 1)}
+        stroke={rgba(paletteTheme.red, 1)}
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -226,7 +227,7 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: rgba(theme.isDark ? theme.lightGray : theme.gray, 1), true: rgba(theme.lightBlue, 1) }}
+        trackColor={{ false: rgba(theme.isDark ? theme.lightGray : theme.gray, 1), true: rgba(theme.blue, 1) }}
         thumbColor="#FFFFFF"
       />
     </View>
@@ -241,6 +242,7 @@ export function SettingsModal() {
   const closeSettings = useSettingsStore(s => s.closeSettings);
   const settings = useSettingsStore(s => s.settings);
   const updateSettings = useSettingsStore(s => s.updateSettings);
+  const recomputeAutoMarks = usePuzzleStore(s => s.recomputeAutoMarks);
 
   const isAnonymous = useAuthStore(s => s.isAnonymous);
   const user = useAuthStore(s => s.user);
@@ -652,21 +654,21 @@ export function SettingsModal() {
               <ToggleRow
                 label="Auto-X Neighbors"
                 value={settings.autoXNeighbors}
-                onToggle={v => updateSettings({ autoXNeighbors: v })}
+                onToggle={v => { updateSettings({ autoXNeighbors: v }); recomputeAutoMarks(); }}
                 styles={styles}
                 theme={theme}
               />
               <ToggleRow
                 label="Auto-X Rows & Columns"
                 value={settings.autoXRowsCols}
-                onToggle={v => updateSettings({ autoXRowsCols: v })}
+                onToggle={v => { updateSettings({ autoXRowsCols: v }); recomputeAutoMarks(); }}
                 styles={styles}
                 theme={theme}
               />
               <ToggleRow
                 label="Auto-X Regions"
                 value={settings.autoXRegions}
-                onToggle={v => updateSettings({ autoXRegions: v })}
+                onToggle={v => { updateSettings({ autoXRegions: v }); recomputeAutoMarks(); }}
                 styles={styles}
                 theme={theme}
               />
@@ -1037,12 +1039,12 @@ const createStyles = (theme: Theme) => {
       color: rgba(dim, 1),
     },
     passwordHintMet: {
-      color: rgba(theme.lightBlue, 1),
+      color: rgba(theme.blue, 1),
     },
     disabled: { opacity: 0.6 },
     error: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.lightRed, 1),
+      color: rgba(theme.red, 1),
       textAlign: 'center',
     },
   });
