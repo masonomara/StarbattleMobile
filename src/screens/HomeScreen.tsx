@@ -442,6 +442,7 @@ const createStyles = (
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       letterSpacing: -0.42,
+      textTransform: 'capitalize',
     },
     streakMetaRow: {
       flexDirection: 'row',
