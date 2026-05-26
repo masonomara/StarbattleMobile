@@ -18,7 +18,12 @@ export function useDrawGesture(
   onOffCanvasTap?: () => void,
 ) {
   const strokeChanges = useRef<CellChange[]>([]);
+  // Deduplicates cells visited within a single drag stroke so a slow drag that
+  // re-enters a cell doesn't toggle it a second time.
   const visitedCells = useRef(new Set<number>());
+  // True once onEnd has run and committed the stroke to the store. Checked in
+  // onFinalize so we don't double-reset the draw layer when the gesture ends
+  // normally (onEnd fires before onFinalize in a clean gesture lifecycle).
   const committed = useRef(false);
 
   const viewToCell = useCallback(
@@ -48,6 +53,10 @@ export function useDrawGesture(
     [puzzleSize, savedScale, savedTranslateX, savedTranslateY, boardLayout, cellSize],
   );
 
+  // Records a single cell hit during a drag stroke. Only writes a preview to the
+  // draw layer (the canvas overlay); the actual store mutation happens in onEnd
+  // via applyDrawStroke. Draw mode always writes value 2 (mark), never 1 (star)
+  // — stars can only be placed by tapping (tapCell in store.ts).
   const markCell = useCallback((row: number, col: number) => {
     const state = usePuzzleStore.getState();
     const idx = row * state.puzzle!.size + col;
@@ -83,7 +92,8 @@ export function useDrawGesture(
 
       if (usePuzzleStore.getState().completed || e.numberOfPointers > 1) return;
 
-      // Suppress draw if a pan/pinch just ended to prevent ghost marks during zoom/pan
+      // If the user just finished a pinch/pan, their finger is still leaving the
+      // screen. Without this guard, the lift-off registers as a draw stroke.
       if (Date.now() - lastGestureEndRef.current < 300) return;
 
       const cell = viewToCell(e.x, e.y);

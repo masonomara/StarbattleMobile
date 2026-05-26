@@ -1,5 +1,8 @@
 import type { CellValue, CellChange, UserSettings, Puzzle } from '../types';
 
+// Returns the empty cells in a zone only when that zone already has exactly
+// `requiredStars` stars — meaning every remaining empty cell can be auto-marked
+// as excluded. Returns [] when the zone isn't yet full (nothing to auto-mark).
 function collectZoneMarks(
   cells: CellValue[],
   zoneIndices: number[],
@@ -127,6 +130,8 @@ export function computeErrors(
   puzzle: Puzzle,
 ): Set<number> {
   const errors = new Set<number>();
+  // Collect star positions once so adjacency and zone checks both iterate only
+  // over starred cells — O(stars²) for adjacency, O(stars) for zone counting.
   const starIndices: number[] = [];
   for (let i = 0; i < cells.length; i++) {
     if (cells[i] === 1) starIndices.push(i);

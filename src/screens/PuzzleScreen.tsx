@@ -46,6 +46,9 @@ export function PuzzleScreen({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
+  // params is a discriminated union (see RootStackParamList in types.ts).
+  // TypeScript narrows each arm via the `in` operator — re-checking on each
+  // line is required because a derived boolean variable wouldn't narrow the type.
   const params = route.params;
   const streakType = 'streakType' in params ? params.streakType : undefined;
   const packId = 'packId' in params ? params.packId : undefined;
@@ -54,6 +57,11 @@ export function PuzzleScreen({
   const isArchive = archiveOptions?.isArchive;
   const archiveKey = archiveOptions?.archiveKey;
 
+  // Two separate loading effects because streak and pack puzzles have different
+  // source paths: streak puzzles come from a local bundle (getStreakPack), while
+  // pack puzzles are fetched from Supabase Storage (getPuzzlesForPack). Their
+  // puzzle IDs and "is last puzzle" semantics also differ, so keeping them
+  // separate avoids a branchy merged effect. packData below unifies them.
   const [streakPackData, setStreakPackData] = useState<PackData | null>(null);
 
   useEffect(() => {
@@ -166,8 +174,12 @@ export function PuzzleScreen({
   const boardLayout = useRef({ width: 0, height: 0, centerY: 0 });
   const handleBoardLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
-    const paddingTop = insets.top + 48;
-    const paddingBottom = insets.bottom + 80;
+    const paddingTop = insets.top + 48;    // safe-area + header height
+    const paddingBottom = insets.bottom + 80; // safe-area + toolbar height
+    // Visual center of the play area, accounting for asymmetric chrome above/below.
+    // Derivation: centerY = paddingTop + (height - paddingTop - paddingBottom) / 2
+    //                     = (height + paddingTop - paddingBottom) / 2
+    // Used by useDrawGesture to map pointer coordinates to grid cells.
     boardLayout.current = {
       width,
       height,

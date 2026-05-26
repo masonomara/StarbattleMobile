@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 export type RootStackParamList = {
   Home: undefined;
   Library: { packId: string };
+  // Puzzle accepts two mutually exclusive route shapes — a discriminated union.
+  // PuzzleScreen narrows between them with `'streakType' in params`.
   Puzzle:
     | { packId: string; puzzleIndex: number }
     | {
@@ -85,8 +87,10 @@ export type Streak = {
   lastCompletedKey: string;
 };
 
-export type CellValue = 0 | 1 | 2; // 0=empty, 1=star, 2=marked
+export type CellValue = 0 | 1 | 2; // 0=empty, 1=star, 2=marked (dot/X)
 
+// 'cycle' advances each cell through empty→marked→star→empty on tap.
+// 'erase' clears whatever value is present (noop on empty).
 export type TapMode = 'cycle' | 'erase';
 
 export type UserSettings = {
@@ -123,10 +127,10 @@ export type DrawLayerHandle = {
 export type Coord = [number, number];
 
 export type HintStep = {
-  rule: string;
-  level: number;
-  placements: Coord[];
-  marks: Coord[];
+  rule: string;     // human-readable description of the logical deduction
+  level: number;    // difficulty level of this deduction step (higher = harder)
+  placements: Coord[]; // cells where a star should be placed
+  marks: Coord[];      // cells that can be ruled out (should be marked)
 };
 
 export type RawPuzzle = {

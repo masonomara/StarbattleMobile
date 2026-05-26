@@ -7,10 +7,16 @@ import { UpdateType } from '@powersync/react-native';
 import { supabase } from '../supabase';
 import { POWERSYNC_URL } from '../config';
 
+// Postgres error class codes that indicate the row is fundamentally malformed or
+// forbidden — retrying will never succeed, so we discard the transaction rather
+// than blocking the upload queue indefinitely.
+//   22xxx – Data Exception: type mismatch, out-of-range value, bad format, etc.
+//   23xxx – Integrity Constraint Violation: NOT NULL, FK, UNIQUE violations
+//   42501 – Insufficient Privilege: RLS policy rejected the write
 const FATAL_POSTGRES_CODES = [
-  /^22...$/, // Data Exception (type mismatch etc.)
-  /^23...$/, // Integrity Constraint Violation (NOT NULL, FK, UNIQUE)
-  /^42501$/, // Insufficient Privilege (RLS rejection)
+  /^22...$/,
+  /^23...$/,
+  /^42501$/,
 ];
 
 function isFatal(error: { code?: string }): boolean {

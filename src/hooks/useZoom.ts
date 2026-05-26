@@ -10,10 +10,14 @@ import {
 import { Gesture } from 'react-native-gesture-handler';
 
 const DEFAULT_ZOOM = 1;
-const MIN_ZOOM = 0.67;
+const MIN_ZOOM = 0.67; // ~2/3 — lets small boards breathe on large screens
 const MAX_ZOOM = 3;
+// Extra pixels the board can be panned beyond its visible edge, giving the user
+// comfortable overscroll before the spring snaps it back.
 const PAN_PADDING = 120;
 
+// High-stiffness spring for snappy snap-back; no explicit damping so Reanimated
+// uses its default (critically damped), avoiding oscillation.
 const SPRING_CONFIG = { stiffness: 750 } as const;
 
 export function useZoom(puzzleSize: number, cellSize: number) {
@@ -44,6 +48,9 @@ export function useZoom(puzzleSize: number, cellSize: number) {
     ],
   }));
 
+  // Gesture handlers run on the UI worklet thread (the 'worklet' directive).
+  // runOnJS bridges back to the JS thread only for the state setters that
+  // React needs to know about (isZoomed) or side-effects (recordGestureEnd).
   const pinchGesture = Gesture.Pinch()
     .onUpdate(e => {
       'worklet';

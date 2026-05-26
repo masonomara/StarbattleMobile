@@ -42,6 +42,9 @@ function parseUrlFragment(fragment: string): Record<string, string> {
   return result;
 }
 
+// Held at module scope so `initialize()` can unsubscribe the previous listener
+// before attaching a new one. Without this guard, React Fast Refresh (dev) or
+// repeated `initialize()` calls would stack up duplicate listeners.
 let authSubscription: { unsubscribe: () => void } | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({

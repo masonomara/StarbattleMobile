@@ -1,5 +1,11 @@
 import type { RawPuzzle, Puzzle, HintStep } from '../types';
 
+// SBN (Star Battle Notation) encodes a puzzle as "<size>x<stars>.<layout>".
+// - size:   grid dimension (e.g. 8 for an 8×8 grid)
+// - stars:  how many stars each row, column, and region must contain
+// - layout: a flat, row-major string of capital letters (one per cell) where each
+//           letter identifies which region that cell belongs to.
+//   Example: "5x1.AABBBACCCBBACDDDEAEEE" → 5×5 grid, 1 star per region, 5 regions A–E.
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {

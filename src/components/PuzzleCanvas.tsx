@@ -122,10 +122,17 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
   );
 });
 
+// Border width shared between BackgroundCanvas (which pads its canvas by BORDER)
+// and the draw-layer Canvas (which is inset by BORDER via absolute positioning).
+// Both must agree on this value so stars and grid lines align exactly.
 const BORDER = 3.375;
 
-// forwardRef exposes DrawLayerHandle so the gesture responder can write preview
-// strokes in real time without committing them to the Zustand store mid-drag.
+// DrawLayerHandle is an imperative ref API (see types.ts) that lets the gesture
+// handler push cell preview updates straight to React state inside PuzzleCanvas,
+// bypassing the Zustand store. This keeps mid-stroke previews off the global
+// state and ensures the canvas re-renders synchronously with each pointer event.
+// When the gesture ends, applyDrawStroke() commits the final changes to Zustand,
+// and the store update triggers a normal re-render via the `cells` prop.
 export const PuzzleCanvas = React.forwardRef<
   DrawLayerHandle,
   PuzzleCanvasProps
@@ -138,6 +145,10 @@ export const PuzzleCanvas = React.forwardRef<
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const totalSize = canvasSize + BORDER * 2;
 
+  // Transient in-flight preview cells accumulated during a drag stroke.
+  // Merged with `cells` in dynamicPaths so the stroke is visible immediately.
+  // Cleared on stroke commit (DrawLayerHandle.reset) to hand control back to
+  // the store-driven `cells` prop.
   const [previewMap, setPreviewMap] = useState<Map<number, CellValue>>(
     new Map(),
   );

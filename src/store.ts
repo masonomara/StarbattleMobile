@@ -11,8 +11,11 @@ import {
 import { loadProgress, saveProgress } from './utils/progress';
 import type { CellChange, CellValue, Move, Puzzle, TapMode } from './types';
 
+// Keeps memory usage bounded — older moves beyond this limit are dropped.
 const MAX_HISTORY = 50;
 
+// Debounces progress writes so rapid cell changes (fast tapping, drag strokes)
+// produce a single DB write 400 ms after the last change rather than one per event.
 let _saveTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleSave(
   puzzleId: string,
@@ -34,6 +37,9 @@ type PuzzleState = {
   autoMarks: Set<number>;
   errorCells: Set<number>;
   completed: boolean;
+  // True when the saved progress already had completed=true at load time.
+  // Consumers (e.g. WinBanner) use this to suppress the victory animation
+  // when revisiting a puzzle that was solved in a previous session.
   loadedAsCompleted: boolean;
   timeMs: number;
   moveLog: Move[];
@@ -304,6 +310,9 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => ({
     scheduleSave(puzzle!.id, s.cells, s.autoMarks, s.timeMs, s.completed);
   },
 
+  // Commits the changes accumulated during a drag stroke (see useDrawGesture).
+  // No checkWin call here because drag strokes only ever write value 2 (marks);
+  // stars (value 1) can only be placed by tapCell, which does check for a win.
   applyDrawStroke: (changes: CellChange[]) => {
     const { completed, puzzle, hintGhosts } = get();
     if (completed || !puzzle || changes.length === 0) return;
