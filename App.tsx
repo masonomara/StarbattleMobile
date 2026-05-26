@@ -33,17 +33,39 @@ export default function App() {
     // Open local SQLite immediately — fetchCredentials() retries once auth resolves
     db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
 
-    db.watch('SELECT id FROM packs WHERE published = 1 LIMIT 1', [], {
-      onResult: () => {
-        useEntitlementsStore.getState().loadPackCatalog();
-      },
-    });
+    const watchController = new AbortController();
 
-    db.watch('SELECT * FROM user_entitlements LIMIT 1', [], {
-      onResult: () => {
-        const userId = useAuthStore.getState().user?.id;
-        if (userId) useEntitlementsStore.getState().loadEntitlements(userId);
+    db.watch(
+      'SELECT id FROM packs WHERE published = 1 LIMIT 1',
+      [],
+      {
+        onResult: () => {
+          useEntitlementsStore.getState().loadPackCatalog();
+        },
       },
+      { signal: watchController.signal },
+    );
+
+    db.watch(
+      'SELECT * FROM user_entitlements LIMIT 1',
+      [],
+      {
+        onResult: () => {
+          const userId = useAuthStore.getState().user?.id;
+          if (userId) useEntitlementsStore.getState().loadEntitlements(userId);
+        },
+      },
+      { signal: watchController.signal },
+    );
+
+    // Guard against the watch firing before initialize() resolves: subscribe
+    // once and load entitlements the moment a user ID first appears in the store.
+    const authUnsub = useAuthStore.subscribe((state, prevState) => {
+      const userId = state.user?.id;
+      if (userId && !prevState.user?.id) {
+        useEntitlementsStore.getState().loadEntitlements(userId);
+        authUnsub();
+      }
     });
 
     useAuthStore.getState().initialize();
@@ -64,13 +86,20 @@ export default function App() {
     });
 
     return () => {
+      authUnsub();
+      watchController.abort();
       appStateSub.remove();
       linkingSub.remove();
     };
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1) }}>
+    <GestureHandlerRootView
+      style={{
+        flex: 1,
+        backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+      }}
+    >
       <SafeAreaProvider>
         <Navigation />
       </SafeAreaProvider>
