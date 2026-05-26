@@ -7,7 +7,10 @@ export type RootStackParamList = {
   Library: { packId: string };
   Puzzle:
     | { packId: string; puzzleIndex: number }
-    | { streakType: StreakType; archiveOptions?: { isArchive: boolean; archiveKey: string } };
+    | {
+        streakType: StreakType;
+        archiveOptions?: { isArchive: boolean; archiveKey: string };
+      };
 };
 
 declare global {
@@ -34,6 +37,7 @@ export type HeaderProps = {
 export type ErrorBoundaryProps = {
   children: ReactNode;
   onReset?: () => void;
+  theme: Theme;
 };
 
 export type PaywallModalProps = {

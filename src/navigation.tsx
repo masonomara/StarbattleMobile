@@ -1,5 +1,9 @@
 import React from 'react';
-import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  DarkTheme,
+  DefaultTheme,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeScreen } from './screens/HomeScreen';
@@ -21,8 +25,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function WrappedHome(
   props: NativeStackScreenProps<RootStackParamList, 'Home'>,
 ) {
+  const theme = useTheme();
   return (
-    <ErrorBoundary>
+    <ErrorBoundary theme={theme}>
       <HomeScreen {...props} />
     </ErrorBoundary>
   );
@@ -31,8 +36,9 @@ function WrappedHome(
 function WrappedLibrary(
   props: NativeStackScreenProps<RootStackParamList, 'Library'>,
 ) {
+  const theme = useTheme();
   return (
-    <ErrorBoundary onReset={() => props.navigation.goBack()}>
+    <ErrorBoundary theme={theme} onReset={() => props.navigation.goBack()}>
       <LibraryScreen {...props} />
     </ErrorBoundary>
   );
@@ -41,8 +47,9 @@ function WrappedLibrary(
 function WrappedPuzzle(
   props: NativeStackScreenProps<RootStackParamList, 'Puzzle'>,
 ) {
+  const theme = useTheme();
   return (
-    <ErrorBoundary onReset={() => props.navigation.goBack()}>
+    <ErrorBoundary theme={theme} onReset={() => props.navigation.goBack()}>
       <PuzzleScreen {...props} />
     </ErrorBoundary>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { Text } from './Text';
+import { rgba } from '../themes/ansi';
 import type { ErrorBoundaryProps } from '../types';
 
 interface State {
@@ -25,12 +26,38 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
   };
 
   render() {
+    const { theme } = this.props;
     if (this.state.hasError) {
       return (
-        <View style={styles.container}>
-          <Text style={styles.message}>Something went wrong.</Text>
-          <Pressable style={styles.button} onPress={this.handleReset}>
-            <Text style={styles.buttonText}>Try Again</Text>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+          }}
+        >
+          <Text style={{ fontSize: 16, marginBottom: 16, textAlign: 'center' }}>
+            Something went wrong.
+          </Text>
+          <Pressable
+            style={{
+              paddingVertical: 12,
+              paddingHorizontal: 24,
+              borderRadius: 8,
+              backgroundColor: rgba(theme.blue, 1),
+            }}
+            onPress={this.handleReset}
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: rgba(theme.white, 1),
+              }}
+            >
+              Try Again
+            </Text>
           </Pressable>
         </View>
       );
@@ -38,28 +65,3 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
     return this.props.children;
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  message: {
-    fontSize: 16,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    backgroundColor: '#5865F2',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-});

@@ -4,6 +4,7 @@ import {
   Pressable,
   FlatList,
   StyleSheet,
+  ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
 import { Text } from '../components/Text';
@@ -92,7 +93,10 @@ function PuzzleCell({
             {status === 'completed' ? (
               <Check size={28} color={rgba(theme.blue, 1)} />
             ) : (
-              <Lock size={28} color={rgba(theme.isDark ? theme.gray : theme.gray, 1)} />
+              <Lock
+                size={28}
+                color={rgba(theme.isDark ? theme.gray : theme.gray, 1)}
+              />
             )}
           </View>
         )}
@@ -245,14 +249,22 @@ export function LibraryScreen({
     ],
   );
 
-  if (!puzzleCount) return null;
+  if (!puzzleCount)
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator style={StyleSheet.absoluteFill} />
+      </View>
+    );
 
   return (
     <View style={styles.container}>
       <Header
         left={
           <CircleButton onPress={() => navigation.goBack()}>
-            <ChevronLeft size={26} color={rgba(theme.isDark ? theme.white : theme.black, 1)} />
+            <ChevronLeft
+              size={26}
+              color={rgba(theme.isDark ? theme.white : theme.black, 1)}
+            />
           </CircleButton>
         }
         center={<Text style={styles.headerTitle}>{packName}</Text>}
@@ -281,7 +293,10 @@ export function LibraryScreen({
 
 const createStyles = (theme: Theme, cellSize: number) => {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1) },
+    container: {
+      flex: 1,
+      backgroundColor: rgba(theme.isDark ? theme.black : theme.white, 1),
+    },
     scroll: { flex: 1 },
     gridContent: {
       padding: 16,
@@ -312,8 +327,12 @@ const createStyles = (theme: Theme, cellSize: number) => {
     },
     puzzleNumber: { fontSize: 16, fontWeight: '700' },
     puzzleNumberCompleted: { color: rgba(theme.blue, 1) },
-    puzzleNumberActive: { color: rgba(theme.isDark ? theme.white : theme.black, 1) },
-    puzzleNumberLocked: { color: rgba(theme.isDark ? theme.gray : theme.gray, 1) },
+    puzzleNumberActive: {
+      color: rgba(theme.isDark ? theme.white : theme.black, 1),
+    },
+    puzzleNumberLocked: {
+      color: rgba(theme.isDark ? theme.gray : theme.gray, 1),
+    },
     locked: { opacity: 0.45 },
     headerTitle: {
       fontSize: 16,

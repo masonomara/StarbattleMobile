@@ -1,4 +1,5 @@
 import { NativeModules } from 'react-native';
+import { Buffer } from 'buffer';
 import { supabase } from '../supabase';
 import type { RawPuzzle, Pack, StreakType } from '../types.ts';
 
@@ -7,7 +8,6 @@ import type * as RNFSType from 'react-native-fs';
 function getRNFS(): typeof RNFSType | null {
   if (!NativeModules.RNFSManager) return null;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('react-native-fs') as typeof RNFSType;
   } catch {
     return null;
@@ -47,7 +47,7 @@ function encodeForDisk(text: string): string {
       ...data,
       puzzles: data.puzzles.map(p => {
         const { solution, ...rest } = p;
-        return { ...rest, _s: btoa(JSON.stringify(solution)) };
+        return { ...rest, _s: Buffer.from(JSON.stringify(solution)).toString('base64') };
       }),
     });
   } catch {
@@ -58,7 +58,9 @@ function encodeForDisk(text: string): string {
 // Reverse encodeForDisk when loading cached pack data back from disk.
 function decodeFromDisk(text: string): string {
   try {
-    const data = JSON.parse(text) as { puzzles?: Array<Record<string, unknown>> };
+    const data = JSON.parse(text) as {
+      puzzles?: Array<Record<string, unknown>>;
+    };
     if (!Array.isArray(data?.puzzles)) return text;
     if (!data.puzzles.some(p => '_s' in p)) return text;
     return JSON.stringify({
@@ -66,7 +68,7 @@ function decodeFromDisk(text: string): string {
       puzzles: data.puzzles.map(p => {
         if (!('_s' in p)) return p;
         const { _s, ...rest } = p;
-        return { ...rest, solution: JSON.parse(atob(_s as string)) };
+        return { ...rest, solution: JSON.parse(Buffer.from(_s as string, 'base64').toString()) };
       }),
     });
   } catch {
@@ -102,7 +104,9 @@ async function fetchPack(storageKey: string): Promise<string> {
     const text = await fetchFromSupabase(storageKey);
     validatePackText(text);
     await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
-    await rnfs.writeFile(localPath, encodeForDisk(text), 'utf8').catch(() => {});
+    await rnfs
+      .writeFile(localPath, encodeForDisk(text), 'utf8')
+      .catch(() => {});
     return text;
   }
   return fetchFromSupabase(storageKey);
@@ -151,7 +155,10 @@ export async function downloadPack(
 ): Promise<void> {
   assertSafeKey(packId);
   const rnfs = getRNFS();
-  if (!rnfs) throw new Error('File system unavailable — run pod install');
+  if (!rnfs)
+    throw new Error(
+      'File system unavailable. Please restart the app or reinstall.',
+    );
   const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
   await rnfs.mkdir(packDir).catch(() => {});
   const { data, error } = await supabase.storage
@@ -160,7 +167,11 @@ export async function downloadPack(
   if (error) throw error;
   const text = await blobToText(data);
   validatePackText(text);
-  await rnfs.writeFile(`${packDir}/${packId}.json`, encodeForDisk(text), 'utf8');
+  await rnfs.writeFile(
+    `${packDir}/${packId}.json`,
+    encodeForDisk(text),
+    'utf8',
+  );
   // Warm the cache with the original (decoded) content.
   packCache.set(`${packId}.json`, Promise.resolve(text));
 }

@@ -117,7 +117,7 @@ const createStyles = (theme: Theme) => {
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: rgba(theme.lightBlue, 1),
+      backgroundColor: rgba(theme.blue, 1),
     },
     buttonText: {
       fontSize: theme.fontSizeCallout,
@@ -130,11 +130,11 @@ const createStyles = (theme: Theme) => {
       color: rgba(theme.isDark ? theme.lightGray : theme.gray, 1),
     },
     hintMet: {
-      color: rgba(theme.lightBlue, 1),
+      color: rgba(theme.blue, 1),
     },
     error: {
       fontSize: theme.fontSizeSubhead,
-      color: rgba(theme.lightRed, 1),
+      color: rgba(theme.red, 1),
       textAlign: 'center',
     },
   });
