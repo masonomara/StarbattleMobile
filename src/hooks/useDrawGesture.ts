@@ -4,7 +4,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import { usePuzzleStore } from '../store';
 import { useSettingsStore } from '../stores/settingsStore';
 import { Haptics } from 'react-native-nitro-haptics';
-import type { CellChange, DrawLayerHandle } from '../types.ts';
+import type { CellChange, DrawLayerHandle } from '../types';
 
 export function useDrawGesture(
   puzzleSize: number,

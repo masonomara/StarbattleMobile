@@ -1,4 +1,4 @@
-import type { ThemeName } from '../types.ts';
+import type { ThemeName } from '../types';
 
 export const tokens = {
   spacingMd: 12,

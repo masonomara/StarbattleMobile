@@ -1,7 +1,7 @@
 import { NativeModules } from 'react-native';
 import { Buffer } from 'buffer';
 import { supabase } from '../supabase';
-import type { RawPuzzle, Pack, StreakType } from '../types.ts';
+import type { RawPuzzle, Pack, StreakType } from '../types';
 
 import type * as RNFSType from 'react-native-fs';
 

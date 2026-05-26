@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { DEFAULT_SETTINGS, getSettings, saveSettings } from '../storage';
-import type { UserSettings } from '../types.ts';
+import type { UserSettings } from '../types';
 
 type SettingsState = {
   settings: UserSettings;

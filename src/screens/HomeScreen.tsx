@@ -35,7 +35,7 @@ import type {
   Puzzle,
   PackCatalogItem,
   RootStackParamList,
-} from '../types.ts';
+} from '../types';
 
 function PaidPackRow({
   pack,

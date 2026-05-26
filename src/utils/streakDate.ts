@@ -1,4 +1,4 @@
-import type { Streak, StreakType } from '../types.ts';
+import type { Streak, StreakType } from '../types';
 
 export const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 

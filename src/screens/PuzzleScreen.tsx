@@ -32,7 +32,7 @@ import type {
   RawPuzzle,
   RootStackParamList,
   DrawLayerHandle,
-} from '../types.ts';
+} from '../types';
 
 type PackData = {
   rawPuzzle: RawPuzzle;

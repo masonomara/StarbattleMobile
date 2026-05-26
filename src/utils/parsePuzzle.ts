@@ -1,4 +1,4 @@
-import type { RawPuzzle, Puzzle, HintStep } from '../types.ts';
+import type { RawPuzzle, Puzzle, HintStep } from '../types';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 

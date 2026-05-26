@@ -2,7 +2,7 @@ import { useColorScheme } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { PALETTES, tokens } from '../themes/palettes';
 import type { PaletteColors } from '../themes/palettes';
-import type { Theme } from '../types.ts';
+import type { Theme } from '../types';
 
 export function buildTheme(colors: PaletteColors, isDark: boolean): Theme {
   return {

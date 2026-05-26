@@ -1,5 +1,5 @@
 import { settingsStorage as storage } from './mmkv';
-import type { UserSettings } from './types.ts';
+import type { UserSettings } from './types';
 
 const SETTINGS_KEY = 'settings';
 

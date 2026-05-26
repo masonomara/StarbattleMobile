@@ -9,7 +9,7 @@ import {
   checkWin,
 } from './utils/puzzleLogic';
 import { loadProgress, saveProgress } from './utils/progress';
-import { CellChange, CellValue, Move, Puzzle, TapMode } from './types';
+import type { CellChange, CellValue, Move, Puzzle, TapMode } from './types';
 
 const MAX_HISTORY = 50;
 

@@ -28,7 +28,7 @@ import type {
   RawPuzzle,
   RootStackParamList,
   PaywallContext,
-} from '../types.ts';
+} from '../types';
 
 const NUM_COLS = 3;
 

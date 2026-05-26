@@ -27,7 +27,7 @@ export function WinBanner({
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const [_streakCount, setStreakCount] = useState(0);
+  const [streakCount, setStreakCount] = useState(0);
   const [bannerHeight, setBannerHeight] = useState(0);
   const bannerTranslateY = useRef(new Animated.Value(0)).current;
 
@@ -97,7 +97,9 @@ export function WinBanner({
       <Text style={styles.winInfo}>{info}</Text>
       <Text style={styles.winText}>{headline}</Text>
       {streakType && (
-        <Text style={styles.winTime}>Solved in {formatTime(timeMs)}</Text>
+        <Text style={styles.winTime}>
+          {streakCount > 0 ? `${streakCount} day streak` : `Solved in ${formatTime(timeMs)}`}
+        </Text>
       )}
       <Pressable onPress={handlePress} style={styles.winButton}>
         <Text style={styles.winButtonText}>{buttonLabel}</Text>

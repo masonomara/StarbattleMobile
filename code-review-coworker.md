@@ -38,7 +38,7 @@ There's no `.env` file, no environment variable injection, no way to separate de
 
 ### 3. CLAUDE.md Rule Violated by the Codebase Itself
 
-`CLAUDE.md` states: *"All types live in `src/types/` folder."*
+`CLAUDE.md` states: _"All types live in `src/types/` folder."_
 
 The actual codebase has a single flat file at `src/types.ts`. There is no `src/types/` directory. This rule will confuse any new contributor and will mislead Claude itself in future sessions. Either update the rule to match reality (`src/types.ts`) or refactor types into a `src/types/` folder.
 
@@ -96,7 +96,7 @@ If the watch fires immediately (before `initialize()` resolves and sets `user`),
 ```ts
 // redo() in store.ts:286
 for (const c of entry.changes) {
-  newCells[c.index] = c.prev;  // applies the redo entry's .prev field
+  newCells[c.index] = c.prev; // applies the redo entry's .prev field
 }
 ```
 
@@ -112,12 +112,12 @@ About half the codebase uses the `.ts` extension explicitly, the other half omit
 
 ```ts
 // With extension (non-standard):
-import type { UserSettings } from '../types.ts';   // settingsStore.ts
-import type { Theme } from '../types.ts';            // useTheme.ts
+import type { UserSettings } from '../types.ts'; // settingsStore.ts
+import type { Theme } from '../types.ts'; // useTheme.ts
 
 // Without extension (standard TypeScript):
-import type { Theme, CircleButtonProps } from '../types';  // CircleButton.tsx
-import type { RootStackParamList } from './types';          // navigation.tsx
+import type { Theme, CircleButtonProps } from '../types'; // CircleButton.tsx
+import type { RootStackParamList } from './types'; // navigation.tsx
 ```
 
 TypeScript convention is to omit the `.ts` extension. The `.ts` form works with Metro but is non-standard and will cause problems with certain tools and linters. All imports should be normalized.
@@ -146,8 +146,8 @@ Every other component in the codebase starts with `import React from 'react'` or
 
 ```ts
 const headline = streakType
-  ? `Solved in ${formatTime(timeMs)}`   // streak path
-  : `Solved in ${formatTime(timeMs)}`;  // non-streak path — IDENTICAL
+  ? `Solved in ${formatTime(timeMs)}` // streak path
+  : `Solved in ${formatTime(timeMs)}`; // non-streak path — IDENTICAL
 ```
 
 The ternary accomplishes nothing. This looks like a copy-paste where both branches were meant to differ.
@@ -165,10 +165,12 @@ The underscore prefix signals "unused" and the value is never rendered. This is 
 **Bug C — Time displayed twice for streak puzzles:**
 
 ```tsx
-<Text style={styles.winText}>{headline}</Text>       // "Solved in 1:23"
-{streakType && (
-  <Text style={styles.winTime}>Solved in {formatTime(timeMs)}</Text>  // "Solved in 1:23" again
-)}
+<Text style={styles.winText}>{headline}</Text>; // "Solved in 1:23"
+{
+  streakType && (
+    <Text style={styles.winTime}>Solved in {formatTime(timeMs)}</Text> // "Solved in 1:23" again
+  );
+}
 ```
 
 When a streak puzzle completes, both texts render with identical content. One of these should show something different (e.g., the streak count).
@@ -302,7 +304,9 @@ TypeScript global augmentations (`declare global { ... }`) are type-level only �
 The Subscription section is rendered as a nested `section` inside the Account section:
 
 ```tsx
-{/* Account section */}
+{
+  /* Account section */
+}
 <View style={styles.section}>
   ...
   {/* Subscription — a child of Account, styled as its own section */}
@@ -311,7 +315,7 @@ The Subscription section is rendered as a nested `section` inside the Account se
     ...
   </View>
   ...
-</View>
+</View>;
 ```
 
 This creates double-gap spacing between subscription content and adjacent account content, and makes the logical structure ambiguous. The Subscription section should be a sibling of Account, not a child.
