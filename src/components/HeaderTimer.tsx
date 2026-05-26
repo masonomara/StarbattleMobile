@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 import { Text } from './Text';
 import { usePuzzleStore } from '../store';
 import { useTheme } from '../hooks/useTheme';
@@ -17,12 +17,25 @@ export function HeaderTimer() {
     // `let last` corrects for interval drift by measuring real elapsed time each tick.
     // Imperative getState() avoids a stale closure over the tick function reference.
     let last = Date.now();
+    let active = true;
     const id = setInterval(() => {
+      if (!active) return;
       const now = Date.now();
       usePuzzleStore.getState().tick(now - last);
       last = now;
     }, 1000);
-    return () => clearInterval(id);
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        last = Date.now();
+        active = true;
+      } else {
+        active = false;
+      }
+    });
+    return () => {
+      clearInterval(id);
+      sub.remove();
+    };
   }, [completed]);
 
   const min = Math.floor(timeMs / 60000);
