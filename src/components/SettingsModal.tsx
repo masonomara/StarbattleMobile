@@ -11,6 +11,7 @@ import {
   Switch,
   StyleSheet,
   ActivityIndicator,
+  useColorScheme,
 } from 'react-native';
 import { Text } from './Text';
 import { X } from 'lucide-react-native';
@@ -373,6 +374,19 @@ export function SettingsModal() {
         },
       ],
     );
+  }
+
+  const systemScheme = useColorScheme();
+  const isCurrentlyDark =
+    settings.theme === 'dark' ? true
+    : settings.theme === 'light' ? false
+    : systemScheme === 'dark';
+  const visiblePalettes = PALETTE_NAMES.filter(
+    name => buildTheme(PALETTES[name]).isDark === isCurrentlyDark
+  );
+  const paletteRows: (typeof PALETTE_NAMES[number])[][] = [];
+  for (let i = 0; i < visiblePalettes.length; i += 3) {
+    paletteRows.push(visiblePalettes.slice(i, i + 3));
   }
 
   return (
@@ -878,58 +892,63 @@ export function SettingsModal() {
               <View style={styles.paletteRow}>
                 <Text style={styles.rowLabel}>Palette</Text>
                 <View style={styles.swatchGrid}>
-                  {PALETTE_NAMES.map(name => {
-                    const active = settings.palette === name;
-                    const paletteTheme = buildTheme(
-                      PALETTES[name][theme.isDark ? 'dark' : 'light'],
-                      theme.isDark,
-                    );
-                    return (
-                      <Pressable
-                        key={name}
-                        onPress={() => updateSettings({ palette: name })}
-                        style={[
-                          styles.swatchCard,
-                          {
-                            backgroundColor: rgba(
-                              paletteTheme.isDark
-                                ? paletteTheme.black
-                                : paletteTheme.white,
-                              1,
-                            ),
-                          },
-                          active && {
-                            borderColor: rgba(
-                              paletteTheme.isDark
-                                ? paletteTheme.white
-                                : paletteTheme.black,
-                              1,
-                            ),
-                          },
-                        ]}
-                      >
-                        <PalettePreview
-                          paletteTheme={paletteTheme}
-                          coloredRegions={settings.coloredRegions}
-                        />
-                        <Text
-                          style={[
-                            styles.swatchLabel,
-                            {
-                              color: rgba(
-                                paletteTheme.isDark
-                                  ? paletteTheme.gray
-                                  : paletteTheme.gray,
-                                1,
-                              ),
-                            },
-                          ]}
-                        >
-                          {PALETTE_META[name].label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
+                  {paletteRows.map((row, rowIdx) => (
+                    <View key={rowIdx} style={styles.swatchRow}>
+                      {row.map(name => {
+                        const active = settings.palette === name;
+                        const paletteTheme = buildTheme(PALETTES[name]);
+                        return (
+                          <Pressable
+                            key={name}
+                            onPress={() => updateSettings({ palette: name })}
+                            style={[
+                              styles.swatchCard,
+                              {
+                                backgroundColor: rgba(
+                                  paletteTheme.isDark
+                                    ? paletteTheme.black
+                                    : paletteTheme.white,
+                                  1,
+                                ),
+                              },
+                              active && {
+                                borderColor: rgba(
+                                  paletteTheme.isDark
+                                    ? paletteTheme.white
+                                    : paletteTheme.black,
+                                  1,
+                                ),
+                              },
+                            ]}
+                          >
+                            <PalettePreview
+                              paletteTheme={paletteTheme}
+                              coloredRegions={settings.coloredRegions}
+                            />
+                            <Text
+                              style={[
+                                styles.swatchLabel,
+                                {
+                                  color: rgba(
+                                    paletteTheme.isDark
+                                      ? paletteTheme.gray
+                                      : paletteTheme.gray,
+                                    1,
+                                  ),
+                                },
+                              ]}
+                            >
+                              {PALETTE_META[name].label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                      {row.length < 3 &&
+                        Array.from({ length: 3 - row.length }).map((_, j) => (
+                          <View key={j} style={styles.swatchCard} />
+                        ))}
+                    </View>
+                  ))}
                 </View>
               </View>
             </View>
@@ -1043,8 +1062,10 @@ const createStyles = (theme: Theme) => {
       gap: theme.spacingMd,
     },
     swatchGrid: {
+      gap: 8,
+    },
+    swatchRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       gap: 8,
     },
     swatchCard: {

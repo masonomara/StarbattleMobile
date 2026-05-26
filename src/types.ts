@@ -161,7 +161,81 @@ export type Pack = {
 
 // THEME
 
-export type ThemeName = 'original' | 'crimson' | 'gruvbox';
+export type RoleColors = {
+  text: string;
+  textSecondary: string;
+  background: string;
+  surface: string;
+  border: string;
+  puzzleBorder: string;
+  puzzleInnerBorder: string;
+  blue: string;
+  red: string;
+  green: string;
+  yellow: string;
+};
+
+export type RegionColors = {
+  red: string;
+  green: string;
+  yellow: string;
+  blue: string;
+  magenta: string;
+  cyan: string;
+  redBright: string;
+  greenBright: string;
+  yellowBright: string;
+  blueBright: string;
+  magentaBright: string;
+  cyanBright: string;
+};
+
+export type ThemeColors = {
+  roles: RoleColors;
+  regions: RegionColors;
+};
+
+export type ThemeName =
+  | 'ayuDark'
+  | 'ayuLight'
+  | 'catppuccinLatte'
+  | 'catppuccinMocha'
+  | 'everforestDark'
+  | 'everforestLight'
+  | 'githubDark'
+  | 'githubLight'
+  | 'gruvboxDark'
+  | 'gruvboxLight'
+  | 'icebergDark'
+  | 'icebergLight'
+  | 'nightOwlDark'
+  | 'nightOwlLight'
+  | 'nightfoxDayfox'
+  | 'nightfoxDefault'
+  | 'oneDark'
+  | 'oneHalfDark'
+  | 'oneHalfLight'
+  | 'oneLight'
+  | 'rosePineDawn'
+  | 'rosePineDefault'
+  | 'seoul256Dark'
+  | 'seoul256Light'
+  | 'solarizedDark'
+  | 'solarizedLight'
+  | 'tokyoNightDay'
+  | 'tokyoNightDefault'
+  | 'zenbonesForestbonesDark'
+  | 'zenbonesForestbonesLight'
+  | 'zenbonesNeobonesDark'
+  | 'zenbonesNeobonesLight'
+  | 'zenbonesRosebonesDark'
+  | 'zenbonesRosebonesLight'
+  | 'zenbonesSeoulbonesDark'
+  | 'zenbonesSeoulbonesLight'
+  | 'zenbonesTokyobonesDark'
+  | 'zenbonesTokyobonesLight'
+  | 'zenbonesZenwrittenDark'
+  | 'zenbonesZenwrittenLight';
 
 export type Theme = {
   isDark: boolean;
