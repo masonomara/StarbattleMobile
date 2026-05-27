@@ -3,7 +3,9 @@ import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
-import { Check, Flame, User } from 'lucide-react-native';
+import Check from 'lucide-react-native/dist/cjs/icons/check';
+import Flame from 'lucide-react-native/dist/cjs/icons/flame';
+import User from 'lucide-react-native/dist/cjs/icons/user';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getStreakPack, getPuzzlesForPack } from '../packs';
 import { CircleButton } from '../components/CircleButton';
@@ -21,6 +23,7 @@ import {
 import { loadStreaks, loadAllCompletionData } from '../utils/progress';
 import { useAuthStore } from '../stores/authStore';
 import { parsePuzzle } from '../utils/parsePuzzle';
+import { startupTimer } from '../utils/startupTimer';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useProductPrice } from '../hooks/useProductPrice';
 import type {
@@ -94,6 +97,10 @@ export function HomeScreen({
   const [streakPreviews, setStreakPreviews] = useState<
     Partial<Record<StreakType, Puzzle>>
   >({});
+
+  useEffect(() => {
+    startupTimer.log('HomeScreen first mount');
+  }, []);
 
   useEffect(() => {
     async function loadPreviews() {

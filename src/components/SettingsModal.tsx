@@ -15,7 +15,8 @@ import {
   Text as RNText,
 } from 'react-native';
 import { Text } from './Text';
-import { X, ChevronLeft } from 'lucide-react-native';
+import X from 'lucide-react-native/dist/cjs/icons/x';
+import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import { WebView } from 'react-native-webview';
 import Svg, { Rect, Line, Path } from 'react-native-svg';
 import { Header } from './Header';

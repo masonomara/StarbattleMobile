@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Text } from '../components/Text';
-import { X, Lock, ChevronRight } from 'lucide-react-native';
+import X from 'lucide-react-native/dist/cjs/icons/x';
+import Lock from 'lucide-react-native/dist/cjs/icons/lock';
+import ChevronRight from 'lucide-react-native/dist/cjs/icons/chevron-right';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header } from '../components/Header';

@@ -7,7 +7,7 @@ import {
   Linking,
 } from 'react-native';
 import { Text } from './Text';
-import { X } from 'lucide-react-native';
+import X from 'lucide-react-native/dist/cjs/icons/x';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';

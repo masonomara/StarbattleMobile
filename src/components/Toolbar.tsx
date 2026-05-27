@@ -1,14 +1,12 @@
 import React from 'react';
 import { Alert, View, Pressable, StyleSheet } from 'react-native';
-import {
-  Undo2,
-  Redo2,
-  Minimize2,
-  Trash2,
-  Lightbulb,
-  Pencil,
-  Eraser,
-} from 'lucide-react-native';
+import Undo2 from 'lucide-react-native/dist/cjs/icons/undo-2';
+import Redo2 from 'lucide-react-native/dist/cjs/icons/redo-2';
+import Minimize2 from 'lucide-react-native/dist/cjs/icons/minimize-2';
+import Trash2 from 'lucide-react-native/dist/cjs/icons/trash-2';
+import Lightbulb from 'lucide-react-native/dist/cjs/icons/lightbulb';
+import Pencil from 'lucide-react-native/dist/cjs/icons/pencil';
+import Eraser from 'lucide-react-native/dist/cjs/icons/eraser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePuzzleStore } from '../store';
 import { useSettingsStore } from '../stores/settingsStore';

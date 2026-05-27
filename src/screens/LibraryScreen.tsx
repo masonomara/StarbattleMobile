@@ -10,7 +10,9 @@ import {
 import { Text } from '../components/Text';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Check, ChevronLeft, Lock } from 'lucide-react-native';
+import Check from 'lucide-react-native/dist/cjs/icons/check';
+import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
+import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { CircleButton } from '../components/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../packs';
