@@ -57,24 +57,20 @@ function encodeForDisk(text: string): string {
 }
 
 // Reverse encodeForDisk when loading cached pack data back from disk.
-function decodeFromDisk(text: string): string {
-  try {
-    const data = JSON.parse(text) as {
-      puzzles?: Array<Record<string, unknown>>;
-    };
-    if (!Array.isArray(data?.puzzles)) return text;
-    if (!data.puzzles.some(p => '_s' in p)) return text;
-    return JSON.stringify({
-      ...data,
-      puzzles: data.puzzles.map(p => {
-        if (!('_s' in p)) return p;
-        const { _s, ...rest } = p;
-        return { ...rest, solution: JSON.parse(Buffer.from(_s as string, 'base64').toString()) };
-      }),
-    });
-  } catch {
-    return text;
+// Returns the parsed Pack directly — no re-stringify round-trip.
+function decodeFromDisk(text: string): Pack {
+  const data = JSON.parse(text) as Pack & { puzzles?: Array<Record<string, unknown>> };
+  if (!Array.isArray(data.puzzles) || !data.puzzles.some(p => '_s' in p)) {
+    return data;
   }
+  return {
+    ...data,
+    puzzles: data.puzzles.map((p): RawPuzzle => {
+      if (!('_s' in p)) return p as unknown as RawPuzzle;
+      const { _s, ...rest } = p;
+      return { ...rest, solution: JSON.parse(Buffer.from(_s as string, 'base64').toString()) } as RawPuzzle;
+    }),
+  };
 }
 
 function assertSafeKey(key: string): void {
@@ -102,14 +98,17 @@ async function fetchFromSupabase(storageKey: string): Promise<string> {
 
 // localKey = disk filename (e.g. "pack-id.json")
 // remoteKey = Supabase storage path; defaults to localKey when omitted
-async function fetchPack(localKey: string, remoteKey?: string): Promise<string> {
+async function fetchPack(localKey: string, remoteKey?: string): Promise<Pack> {
   assertSafeKey(localKey);
   const effectiveRemoteKey = remoteKey ?? localKey;
   const rnfs = getRNFS();
   if (rnfs) {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${localKey}`;
     try {
-      return decodeFromDisk(await rnfs.readFile(localPath, 'utf8'));
+      const raw = await rnfs.readFile(localPath, 'utf8');
+      const pack = decodeFromDisk(raw);
+      console.log(`[PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${pack.puzzles?.length ?? '?'} puzzles`);
+      return pack;
     } catch {
       // not on disk yet — fall through to network
     }
@@ -119,16 +118,16 @@ async function fetchPack(localKey: string, remoteKey?: string): Promise<string> 
     await rnfs
       .writeFile(localPath, encodeForDisk(text), 'utf8')
       .catch(() => {});
-    return text;
+    return JSON.parse(text) as Pack;
   }
-  return fetchFromSupabase(effectiveRemoteKey);
+  return fetchFromSupabase(effectiveRemoteKey).then(text => JSON.parse(text) as Pack);
 }
 
 // In-memory cache keyed by local filename. Stores the in-flight or resolved
 // Promise so concurrent callers for the same key share one fetch.
-const packCache = new Map<string, Promise<string>>();
+const packCache = new Map<string, Promise<Pack>>();
 
-function loadPack(localKey: string, remoteKey?: string): Promise<string> {
+function loadPack(localKey: string, remoteKey?: string): Promise<Pack> {
   const cached = packCache.get(localKey);
   if (cached) return cached;
 
@@ -149,14 +148,14 @@ export async function getPuzzlesForPack(
   const previewKey = `${packId}_preview.json`;
   const remoteKey = storagePath ?? localKey;
   try {
-    const text = await loadPack(localKey, remoteKey);
-    return (JSON.parse(text) as { puzzles: RawPuzzle[] }).puzzles;
+    const pack = await loadPack(localKey, remoteKey);
+    return pack.puzzles;
   } catch {
     // Full pack unavailable — try preview
   }
   try {
-    const previewText = await loadPack(previewKey);
-    return (JSON.parse(previewText) as { puzzles: RawPuzzle[] }).puzzles;
+    const preview = await loadPack(previewKey);
+    return preview.puzzles;
   } catch (e) {
     console.error('[packs] getPuzzlesForPack failed:', packId, e);
     return null;
@@ -165,8 +164,7 @@ export async function getPuzzlesForPack(
 
 export async function getStreakPack(type: StreakType): Promise<Pack | null> {
   try {
-    const text = await loadPack(`${type}.json`);
-    return JSON.parse(text) as Pack;
+    return await loadPack(`${type}.json`);
   } catch (e) {
     console.error('[packs] getStreakPack failed:', type, e);
     return null;
@@ -223,8 +221,8 @@ export async function downloadPack(
     encodeForDisk(text),
     'utf8',
   );
-  // Warm the cache with the original (decoded) content.
-  packCache.set(`${packId}.json`, Promise.resolve(text));
+  // Warm the cache with the parsed (decoded) content.
+  packCache.set(`${packId}.json`, Promise.resolve(JSON.parse(text) as Pack));
 }
 
 // ETag-aware download for a regular pack. Uses storagePath for the Supabase
@@ -276,7 +274,7 @@ export async function prefetchPackFile(
       .catch(() => {});
   }
 
-  packCache.set(`${packId}.json`, Promise.resolve(text));
+  packCache.set(`${packId}.json`, Promise.resolve(JSON.parse(text) as Pack));
   if (remoteEtag) setCachedEtag(storagePath, remoteEtag);
 }
 
@@ -343,6 +341,6 @@ export async function cachePackPreview(
       .catch(() => {});
   }
 
-  packCache.set(`${packId}_preview.json`, Promise.resolve(previewText));
+  packCache.set(`${packId}_preview.json`, Promise.resolve(JSON.parse(previewText) as Pack));
   if (remoteEtag) setCachedEtag(previewEtagKey, remoteEtag);
 }

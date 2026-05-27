@@ -60,13 +60,15 @@ export default function App() {
       getStreakPack('weekly'),
       getStreakPack('monthly'),
     ]);
+    streakReady.then(() => startupTimer.log('streak packs resolved'));
+    let packsWon = false;
     Promise.race([
-      streakReady,
+      streakReady.then(() => { packsWon = true; }),
       new Promise<void>(resolve => setTimeout(resolve, 3000)),
     ])
       .catch(() => {})
       .then(() => {
-        startupTimer.log('splash hiding — streak packs ready or 3s timeout');
+        startupTimer.log(`splash hiding — ${packsWon ? 'packs ready' : '3s timeout fired'}`);
         BootSplash.hide({ fade: true }).catch(() => {});
       });
 

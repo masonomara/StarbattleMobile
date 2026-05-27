@@ -5,6 +5,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from '../supabase';
 import { adapty } from 'react-native-adapty';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../config';
+import { startupTimer } from '../utils/startupTimer';
 
 type AuthState = {
   session: Session | null;
@@ -77,6 +78,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } else {
       await get().signInAnonymously();
     }
+    startupTimer.log(`auth check complete — ${initialSession ? 'existing session' : 'new anonymous sign-in'}`);
 
     authSubscription?.unsubscribe();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {

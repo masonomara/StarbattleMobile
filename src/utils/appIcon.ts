@@ -28,6 +28,8 @@ export async function syncAppIcon(
     const after = await getIcon();
     if (after !== iconName) {
       console.warn('[appIcon] icon did not change after call — current:', after, 'wanted:', iconName);
+    } else {
+      console.log('[appIcon] icon set:', iconName);
     }
   } catch (e) {
     console.warn('[appIcon] syncAppIcon failed:', iconName, e);
