@@ -24,10 +24,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     window = UIWindow(frame: UIScreen.main.bounds)
 
-    factory.rootViewFactory.customizeRootView = { rootView in
-      RNBootSplash.initWithStoryboard("BootSplash", rootView: rootView)
-    }
-
     factory.startReactNative(
       withModuleName: "StarbattleMobile",
       in: window,
@@ -39,6 +35,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
+  func customizeRootView(_ rootView: RCTRootView) {
+    RNBootSplash.initWithStoryboard("BootSplash", rootView: rootView)
+  }
+
   override func sourceURL(for bridge: RCTBridge) -> URL? {
     self.bundleURL()
   }
