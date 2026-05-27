@@ -8,6 +8,7 @@ import { useAuthStore } from './src/stores/authStore';
 import { useSettingsStore } from './src/stores/settingsStore';
 import { useEntitlementsStore } from './src/stores/entitlementsStore';
 import { syncAppIcon } from './src/utils/appIcon';
+import { startupTimer } from './src/utils/startupTimer';
 import { db } from './src/powersync/AppSchema';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
@@ -26,6 +27,10 @@ function runTieredPrefetch(
 }
 
 export default function App() {
+  useEffect(() => {
+    startupTimer.log('App mounted — first render complete');
+  }, []);
+
   const theme = useTheme();
   const systemScheme = useColorScheme();
   const palette = useSettingsStore(s => s.settings.palette);
@@ -40,9 +45,12 @@ export default function App() {
   }, [palette, themePref, systemScheme]);
 
   useEffect(() => {
+    startupTimer.log('setup effect start');
+
     adapty.activate(ADAPTY_SDK_KEY).catch(() => {
       // Swallow "already activated" error on Fast Refresh in dev
     });
+    startupTimer.log('adapty.activate called');
 
     // Warm streak + pack caches before HomeScreen mounts.
     // Gate the splash on streak packs (3s max) so HomeScreen renders
@@ -57,7 +65,10 @@ export default function App() {
       new Promise<void>(resolve => setTimeout(resolve, 3000)),
     ])
       .catch(() => {})
-      .then(() => BootSplash.hide({ fade: true }).catch(() => {}));
+      .then(() => {
+        startupTimer.log('splash hiding — streak packs ready or 3s timeout');
+        BootSplash.hide({ fade: true }).catch(() => {});
+      });
 
     // After streak packs are warmed, kick off tiered background downloads
     // and purge stale files. At this point the catalog may not be populated
@@ -69,9 +80,11 @@ export default function App() {
     });
 
     useSettingsStore.getState().initialize();
+    startupTimer.log('settings store initialized');
 
     // Open local SQLite immediately — fetchCredentials() retries once auth resolves
     db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
+    startupTimer.log('powersync db.connect called');
 
     const watchController = new AbortController();
 
@@ -143,6 +156,7 @@ export default function App() {
       useAuthStore.getState().handleDeepLink(url);
     });
 
+    startupTimer.log('auth initialize called');
     useAuthStore.getState().initialize();
 
     return () => {
