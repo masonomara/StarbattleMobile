@@ -12,7 +12,8 @@ import { db } from './src/powersync/AppSchema';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
-import { getStreakPack, getPuzzlesForPack } from './src/packs';
+import { getStreakPack, getPuzzlesForPack, purgeStalePacks } from './src/packs';
+import { schedulePrefetch } from './src/packs/prefetch';
 import { supabase } from './src/supabase';
 import BootSplash from 'react-native-bootsplash';
 
@@ -50,11 +51,19 @@ export default function App() {
       .catch(() => {})
       .then(() => BootSplash.hide({ fade: true }).catch(() => {}));
 
+    // After streak packs are warmed, check ETags and refresh any stale content
+    // in the background. Also purge pack files not accessed in 90+ days.
+    streakReady.catch(() => {}).then(() => {
+      schedulePrefetch();
+      purgeStalePacks().catch(() => {});
+    });
+
     // As soon as the pack catalog is known, pre-warm every pack's JSON file
     // so HomeScreen thumbnail reads hit the in-memory cache instead of disk.
     const unsubPacks = useEntitlementsStore.subscribe(
-      s => s.packCatalog,
-      catalog => {
+      (state, prevState) => {
+        if (state.packCatalog === prevState.packCatalog) return;
+        const { packCatalog: catalog } = state;
         if (catalog.length === 0) return;
         for (const pack of catalog) getPuzzlesForPack(pack.id);
         unsubPacks();
@@ -108,6 +117,7 @@ export default function App() {
     const appStateSub = AppState.addEventListener('change', async nextState => {
       if (nextState === 'active') {
         await supabase.auth.refreshSession();
+        schedulePrefetch();
       }
     });
 

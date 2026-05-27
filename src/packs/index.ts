@@ -1,6 +1,7 @@
 import { NativeModules } from 'react-native';
 import { Buffer } from 'buffer';
 import { supabase } from '../supabase';
+import { packMetaStorage } from '../mmkv';
 import type { RawPuzzle, Pack, StreakType } from '../types';
 
 import type * as RNFSType from 'react-native-fs';
@@ -82,6 +83,14 @@ function assertSafeKey(key: string): void {
   }
 }
 
+function getCachedEtag(storageKey: string): string | undefined {
+  return packMetaStorage.getString(`etag:${storageKey}`) ?? undefined;
+}
+
+function setCachedEtag(storageKey: string, etag: string): void {
+  packMetaStorage.set(`etag:${storageKey}`, etag);
+}
+
 async function fetchFromSupabase(storageKey: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from('packs')
@@ -146,6 +155,60 @@ export async function getStreakPack(type: StreakType): Promise<Pack | null> {
   } catch (e) {
     console.error('[packs] getStreakPack failed:', type, e);
     return null;
+  }
+}
+
+// Downloads a fresh copy of a streak file from Supabase, writes it to disk,
+// updates the in-memory cache, and stores the current ETag. Called by the
+// prefetch engine when a remote ETag change is detected.
+export async function refreshStreakFile(storageKey: string): Promise<void> {
+  const rnfs = getRNFS();
+  const text = await fetchFromSupabase(storageKey);
+  validatePackText(text);
+
+  if (rnfs) {
+    const localPath = `${rnfs.DocumentDirectoryPath}/packs/${storageKey}`;
+    await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
+    await rnfs.writeFile(localPath, encodeForDisk(text), 'utf8').catch(() => {});
+  }
+
+  // Replace the in-memory promise so the next getStreakPack() call gets the
+  // refreshed content without a disk read.
+  packCache.set(storageKey, Promise.resolve(text));
+
+  // Fetch and persist the ETag so the next prefetch can skip this file.
+  try {
+    const { data } = await supabase.storage.from('packs').info(storageKey);
+    if (data?.etag) setCachedEtag(storageKey, data.etag);
+  } catch {
+    // Best-effort — missing ETag just means we re-check next foreground.
+  }
+}
+
+// Removes pack files from the local disk cache that haven't been accessed in
+// more than 90 days. Streak files are never purged — they're small and always
+// needed. Safe to call fire-and-forget on app startup.
+export async function purgeStalePacks(): Promise<void> {
+  const rnfs = getRNFS();
+  if (!rnfs) return;
+
+  const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+  const files = await rnfs.readdir(packDir).catch(() => [] as string[]);
+  const cutoffMs = Date.now() - 90 * 24 * 60 * 60 * 1000;
+  const STREAK_FILES = new Set(['daily.json', 'weekly.json', 'monthly.json']);
+
+  for (const file of files) {
+    if (STREAK_FILES.has(file)) continue;
+    const path = `${packDir}/${file}`;
+    try {
+      const stat = await rnfs.stat(path);
+      if (new Date(stat.mtime).getTime() < cutoffMs) {
+        await rnfs.unlink(path);
+        packMetaStorage.remove(`etag:${file}`);
+      }
+    } catch {
+      // Skip files we can't stat or delete.
+    }
   }
 }
 

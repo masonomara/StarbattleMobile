@@ -63,7 +63,7 @@ export function PuzzleScreen({
     if (streakType) {
       getStreakPack(streakType)
         .then(pack => {
-          if (!pack) return;
+          if (!pack) { navigation.goBack(); return; }
           const key =
             isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
           const date =
