@@ -151,7 +151,8 @@ def build_icon_json(light: tuple, dark: tuple) -> dict:
     return {
         "fill-specializations": [
             {"value": {"solid": hex_to_srgb(bg_l)}},
-            {"appearance": "dark", "value": {"solid": hex_to_srgb(bg_d)}},
+            {"appearance": "dark",   "value": {"solid": hex_to_srgb(bg_d)}},
+            {"appearance": "tinted", "value": {"solid": "srgb:0.10000,0.10000,0.10000,1.00000"}},
         ],
         "groups": [{
             "layers": [
