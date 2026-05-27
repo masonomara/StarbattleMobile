@@ -124,7 +124,7 @@ export function HomeScreen({
       const results: Record<string, Puzzle> = {};
       await Promise.all(
         packCatalog.map(async pack => {
-          const rawPuzzles = await getPuzzlesForPack(pack.id);
+          const rawPuzzles = await getPuzzlesForPack(pack.id, pack.storagePath);
           if (!rawPuzzles?.length) return;
           results[pack.id] = parsePuzzle(rawPuzzles[0], `${pack.id}:0`);
         }),

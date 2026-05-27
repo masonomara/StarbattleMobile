@@ -12,10 +12,18 @@ import { db } from './src/powersync/AppSchema';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
-import { getStreakPack, getPuzzlesForPack, purgeStalePacks } from './src/packs';
-import { schedulePrefetch } from './src/packs/prefetch';
+import { getStreakPack, purgeStalePacks } from './src/packs';
+import { schedulePrefetch, prefetchAllCatalog } from './src/packs/prefetch';
 import { supabase } from './src/supabase';
 import BootSplash from 'react-native-bootsplash';
+import type { PackCatalogItem, Entitlements } from './src/types';
+
+function runTieredPrefetch(
+  catalog: PackCatalogItem[],
+  entitlements: Entitlements,
+): void {
+  prefetchAllCatalog(catalog, entitlements).catch(() => {});
+}
 
 export default function App() {
   const theme = useTheme();
@@ -37,8 +45,8 @@ export default function App() {
     });
 
     // Warm streak + pack caches before HomeScreen mounts.
-    // Also use these promises to gate the splash — hide once streak packs are
-    // ready (or 3s max) so HomeScreen renders fully populated on reveal.
+    // Gate the splash on streak packs (3s max) so HomeScreen renders
+    // fully populated on reveal.
     const streakReady = Promise.all([
       getStreakPack('daily'),
       getStreakPack('weekly'),
@@ -51,24 +59,14 @@ export default function App() {
       .catch(() => {})
       .then(() => BootSplash.hide({ fade: true }).catch(() => {}));
 
-    // After streak packs are warmed, check ETags and refresh any stale content
-    // in the background. Also purge pack files not accessed in 90+ days.
+    // After streak packs are warmed, kick off tiered background downloads
+    // and purge stale files. At this point the catalog may not be populated
+    // yet — schedulePrefetch will run streaks + whatever catalog exists.
     streakReady.catch(() => {}).then(() => {
-      schedulePrefetch();
       purgeStalePacks().catch(() => {});
+      const { packCatalog, entitlements } = useEntitlementsStore.getState();
+      schedulePrefetch(packCatalog, entitlements);
     });
-
-    // As soon as the pack catalog is known, pre-warm every pack's JSON file
-    // so HomeScreen thumbnail reads hit the in-memory cache instead of disk.
-    const unsubPacks = useEntitlementsStore.subscribe(
-      (state, prevState) => {
-        if (state.packCatalog === prevState.packCatalog) return;
-        const { packCatalog: catalog } = state;
-        if (catalog.length === 0) return;
-        for (const pack of catalog) getPuzzlesForPack(pack.id);
-        unsubPacks();
-      },
-    );
 
     useSettingsStore.getState().initialize();
 
@@ -81,8 +79,10 @@ export default function App() {
       'SELECT id FROM packs WHERE published = 1 LIMIT 1',
       [],
       {
-        onResult: () => {
-          useEntitlementsStore.getState().loadPackCatalog();
+        onResult: async () => {
+          await useEntitlementsStore.getState().loadPackCatalog();
+          const { packCatalog, entitlements } = useEntitlementsStore.getState();
+          runTieredPrefetch(packCatalog, entitlements);
         },
       },
       { signal: watchController.signal },
@@ -109,7 +109,22 @@ export default function App() {
       }
     });
 
-    useAuthStore.getState().initialize();
+    // When entitlements change (purchase), trigger tiered downloads for
+    // newly accessible packs without waiting for a foreground event.
+    const entitlementsUnsub = useEntitlementsStore.subscribe(
+      (state, prevState) => {
+        const { packCatalog } = state;
+        if (packCatalog.length === 0) return;
+        const becamePremium =
+          !prevState.entitlements.isPremium && state.entitlements.isPremium;
+        const newOwnedPacks = state.entitlements.ownedPackIds.filter(
+          id => !prevState.entitlements.ownedPackIds.includes(id),
+        );
+        if (becamePremium || newOwnedPacks.length > 0) {
+          runTieredPrefetch(packCatalog, state.entitlements);
+        }
+      },
+    );
 
     // When the app returns to the foreground, refresh the session so that a
     // confirmed email is picked up immediately (onAuthStateChange fires if
@@ -117,7 +132,8 @@ export default function App() {
     const appStateSub = AppState.addEventListener('change', async nextState => {
       if (nextState === 'active') {
         await supabase.auth.refreshSession();
-        schedulePrefetch();
+        const { packCatalog, entitlements } = useEntitlementsStore.getState();
+        schedulePrefetch(packCatalog, entitlements);
       }
     });
 
@@ -127,9 +143,11 @@ export default function App() {
       useAuthStore.getState().handleDeepLink(url);
     });
 
+    useAuthStore.getState().initialize();
+
     return () => {
       authUnsub();
-      unsubPacks();
+      entitlementsUnsub();
       watchController.abort();
       appStateSub.remove();
       linkingSub.remove();

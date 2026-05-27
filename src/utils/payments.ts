@@ -2,6 +2,7 @@ import { adapty } from 'react-native-adapty';
 import type { AdaptyPaywallProduct } from 'react-native-adapty';
 import { downloadPack } from '../packs';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
+import { prefetchOwnedPacks } from '../packs/prefetch';
 
 let _productsPromise: Promise<AdaptyPaywallProduct[]> | null = null;
 
@@ -34,6 +35,8 @@ export async function purchasePremium(): Promise<boolean> {
       throw new Error('Purchase recorded but access not yet active. Please use Restore Purchases.');
     }
     useEntitlementsStore.getState().setIsPremium(true);
+    const { packCatalog } = useEntitlementsStore.getState();
+    prefetchOwnedPacks(packCatalog, { isPremium: true, ownedPackIds: [] }).catch(() => {});
     return true;
   }
   throw new Error('Purchase did not complete. Please try again.');

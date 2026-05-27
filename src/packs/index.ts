@@ -83,12 +83,12 @@ function assertSafeKey(key: string): void {
   }
 }
 
-function getCachedEtag(storageKey: string): string | undefined {
-  return packMetaStorage.getString(`etag:${storageKey}`) ?? undefined;
+function getCachedEtag(key: string): string | undefined {
+  return packMetaStorage.getString(`etag:${key}`) ?? undefined;
 }
 
-function setCachedEtag(storageKey: string, etag: string): void {
-  packMetaStorage.set(`etag:${storageKey}`, etag);
+function setCachedEtag(key: string, etag: string): void {
+  packMetaStorage.set(`etag:${key}`, etag);
 }
 
 async function fetchFromSupabase(storageKey: string): Promise<string> {
@@ -100,17 +100,20 @@ async function fetchFromSupabase(storageKey: string): Promise<string> {
   return blobToText(data);
 }
 
-async function fetchPack(storageKey: string): Promise<string> {
-  assertSafeKey(storageKey);
+// localKey = disk filename (e.g. "pack-id.json")
+// remoteKey = Supabase storage path; defaults to localKey when omitted
+async function fetchPack(localKey: string, remoteKey?: string): Promise<string> {
+  assertSafeKey(localKey);
+  const effectiveRemoteKey = remoteKey ?? localKey;
   const rnfs = getRNFS();
   if (rnfs) {
-    const localPath = `${rnfs.DocumentDirectoryPath}/packs/${storageKey}`;
+    const localPath = `${rnfs.DocumentDirectoryPath}/packs/${localKey}`;
     try {
       return decodeFromDisk(await rnfs.readFile(localPath, 'utf8'));
     } catch {
       // not on disk yet — fall through to network
     }
-    const text = await fetchFromSupabase(storageKey);
+    const text = await fetchFromSupabase(effectiveRemoteKey);
     validatePackText(text);
     await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
     await rnfs
@@ -118,30 +121,42 @@ async function fetchPack(storageKey: string): Promise<string> {
       .catch(() => {});
     return text;
   }
-  return fetchFromSupabase(storageKey);
+  return fetchFromSupabase(effectiveRemoteKey);
 }
 
-// In-memory cache keyed by storageKey. Stores the in-flight or resolved
+// In-memory cache keyed by local filename. Stores the in-flight or resolved
 // Promise so concurrent callers for the same key share one fetch.
 const packCache = new Map<string, Promise<string>>();
 
-function loadPack(storageKey: string): Promise<string> {
-  const cached = packCache.get(storageKey);
+function loadPack(localKey: string, remoteKey?: string): Promise<string> {
+  const cached = packCache.get(localKey);
   if (cached) return cached;
 
-  const promise = fetchPack(storageKey);
-  packCache.set(storageKey, promise);
+  const promise = fetchPack(localKey, remoteKey);
+  packCache.set(localKey, promise);
   // Evict on failure so the next call retries rather than re-throwing instantly.
-  promise.catch(() => packCache.delete(storageKey));
+  promise.catch(() => packCache.delete(localKey));
   return promise;
 }
 
+const PREVIEW_PUZZLE_COUNT = 1;
+
 export async function getPuzzlesForPack(
   packId: string,
+  storagePath?: string,
 ): Promise<RawPuzzle[] | null> {
+  const localKey = `${packId}.json`;
+  const previewKey = `${packId}_preview.json`;
+  const remoteKey = storagePath ?? localKey;
   try {
-    const text = await loadPack(`${packId}.json`);
+    const text = await loadPack(localKey, remoteKey);
     return (JSON.parse(text) as { puzzles: RawPuzzle[] }).puzzles;
+  } catch {
+    // Full pack unavailable — try preview
+  }
+  try {
+    const previewText = await loadPack(previewKey);
+    return (JSON.parse(previewText) as { puzzles: RawPuzzle[] }).puzzles;
   } catch (e) {
     console.error('[packs] getPuzzlesForPack failed:', packId, e);
     return null;
@@ -155,33 +170,6 @@ export async function getStreakPack(type: StreakType): Promise<Pack | null> {
   } catch (e) {
     console.error('[packs] getStreakPack failed:', type, e);
     return null;
-  }
-}
-
-// Downloads a fresh copy of a streak file from Supabase, writes it to disk,
-// updates the in-memory cache, and stores the current ETag. Called by the
-// prefetch engine when a remote ETag change is detected.
-export async function refreshStreakFile(storageKey: string): Promise<void> {
-  const rnfs = getRNFS();
-  const text = await fetchFromSupabase(storageKey);
-  validatePackText(text);
-
-  if (rnfs) {
-    const localPath = `${rnfs.DocumentDirectoryPath}/packs/${storageKey}`;
-    await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
-    await rnfs.writeFile(localPath, encodeForDisk(text), 'utf8').catch(() => {});
-  }
-
-  // Replace the in-memory promise so the next getStreakPack() call gets the
-  // refreshed content without a disk read.
-  packCache.set(storageKey, Promise.resolve(text));
-
-  // Fetch and persist the ETag so the next prefetch can skip this file.
-  try {
-    const { data } = await supabase.storage.from('packs').info(storageKey);
-    if (data?.etag) setCachedEtag(storageKey, data.etag);
-  } catch {
-    // Best-effort — missing ETag just means we re-check next foreground.
   }
 }
 
@@ -237,4 +225,124 @@ export async function downloadPack(
   );
   // Warm the cache with the original (decoded) content.
   packCache.set(`${packId}.json`, Promise.resolve(text));
+}
+
+// ETag-aware download for a regular pack. Uses storagePath for the Supabase
+// key; saves to {packId}.json locally. Skips when:
+//   - the file is already on disk AND the remote ETag matches the cached ETag
+// Always downloads when the file is missing from disk, regardless of ETag.
+export async function prefetchPackFile(
+  packId: string,
+  storagePath: string,
+): Promise<void> {
+  assertSafeKey(packId);
+  const rnfs = getRNFS();
+
+  let alreadyOnDisk = false;
+  if (rnfs) {
+    try {
+      await rnfs.stat(`${rnfs.DocumentDirectoryPath}/packs/${packId}.json`);
+      alreadyOnDisk = true;
+    } catch {
+      // not on disk
+    }
+  } else if (packCache.has(`${packId}.json`)) {
+    return; // in-memory only environment, already cached
+  }
+
+  let remoteEtag: string | undefined;
+  try {
+    const { data, error } = await supabase.storage.from('packs').info(storagePath);
+    if (error) return; // network unavailable
+    remoteEtag = data?.etag ?? undefined;
+    if (alreadyOnDisk && remoteEtag && remoteEtag === getCachedEtag(storagePath)) return;
+  } catch {
+    return;
+  }
+
+  let text: string;
+  try {
+    text = await fetchFromSupabase(storagePath);
+    validatePackText(text);
+  } catch {
+    return;
+  }
+
+  if (rnfs) {
+    const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+    await rnfs.mkdir(packDir).catch(() => {});
+    await rnfs
+      .writeFile(`${packDir}/${packId}.json`, encodeForDisk(text), 'utf8')
+      .catch(() => {});
+  }
+
+  packCache.set(`${packId}.json`, Promise.resolve(text));
+  if (remoteEtag) setCachedEtag(storagePath, remoteEtag);
+}
+
+// Downloads a pack's full JSON and persists only the first PREVIEW_PUZZLE_COUNT
+// puzzles to disk as {packId}_preview.json. Skips if the full pack already
+// exists on disk (no need for a partial copy).
+export async function cachePackPreview(
+  packId: string,
+  storagePath: string,
+): Promise<void> {
+  assertSafeKey(packId);
+  const rnfs = getRNFS();
+
+  if (rnfs) {
+    // Skip if full pack already on disk — getPuzzlesForPack will use it.
+    try {
+      await rnfs.stat(`${rnfs.DocumentDirectoryPath}/packs/${packId}.json`);
+      return;
+    } catch {
+      // full pack not on disk — continue
+    }
+  } else if (packCache.has(`${packId}.json`)) {
+    return;
+  }
+
+  const previewEtagKey = `preview:${storagePath}`;
+  let remoteEtag: string | undefined;
+  try {
+    const { data, error } = await supabase.storage.from('packs').info(storagePath);
+    if (error) return;
+    remoteEtag = data?.etag ?? undefined;
+    if (rnfs) {
+      try {
+        await rnfs.stat(`${rnfs.DocumentDirectoryPath}/packs/${packId}_preview.json`);
+        // Preview on disk — skip if ETag matches
+        if (remoteEtag && remoteEtag === getCachedEtag(previewEtagKey)) return;
+      } catch {
+        // preview not on disk
+      }
+    } else if (packCache.has(`${packId}_preview.json`)) {
+      if (remoteEtag && remoteEtag === getCachedEtag(previewEtagKey)) return;
+    }
+  } catch {
+    return;
+  }
+
+  let text: string;
+  try {
+    text = await fetchFromSupabase(storagePath);
+    validatePackText(text);
+  } catch {
+    return;
+  }
+
+  const parsed = JSON.parse(text) as { puzzles: RawPuzzle[] };
+  const previewData = { puzzles: parsed.puzzles.slice(0, PREVIEW_PUZZLE_COUNT) };
+  const previewText = JSON.stringify(previewData);
+
+  if (rnfs) {
+    const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+    await rnfs.mkdir(packDir).catch(() => {});
+    await rnfs
+      .writeFile(`${packDir}/${packId}_preview.json`, encodeForDisk(previewText), 'utf8')
+      .catch(() => {});
+  }
+
+  packCache.set(`${packId}_preview.json`, Promise.resolve(previewText));
+  if (remoteEtag) setCachedEtag(previewEtagKey, remoteEtag);
 }

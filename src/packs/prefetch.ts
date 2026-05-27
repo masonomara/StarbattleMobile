@@ -1,47 +1,49 @@
-import { supabase } from '../supabase';
-import { packMetaStorage } from '../mmkv';
-import { refreshStreakFile } from './index';
-import type { StreakType } from '../types';
+import { prefetchPackFile, cachePackPreview } from './index';
+import type { StreakType, PackCatalogItem, Entitlements } from '../types';
 
 const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 
-// Checks each streak file's remote ETag against the locally cached one.
-// Re-downloads only when the content has changed. Runs all three types in
-// parallel; a failure for one type does not abort the others.
-export async function prefetchStreaks(): Promise<void> {
+async function prefetchStreaks(): Promise<void> {
   await Promise.allSettled(
-    STREAK_TYPES.map(async type => {
-      const storageKey = `${type}.json`;
-      try {
-        const { data, error } = await supabase.storage
-          .from('packs')
-          .info(storageKey);
-
-        if (error) return; // network unavailable — disk/bundle handles load
-
-        const remoteEtag = data?.etag;
-        const cachedEtag = packMetaStorage.getString(`etag:${storageKey}`);
-
-        if (remoteEtag && remoteEtag === cachedEtag) return; // already fresh
-
-        // Stale or no ETag yet — refreshStreakFile downloads, writes disk,
-        // updates memory cache, and stores the new ETag.
-        await refreshStreakFile(storageKey);
-      } catch {
-        // Silently skip — disk cache or bundled fallback handles this type.
-      }
-    }),
+    STREAK_TYPES.map(type =>
+      prefetchPackFile(type, `${type}.json`).catch(() => {}),
+    ),
   );
 }
 
-// Debounced wrapper so rapid app-foreground events (notification banners,
-// multitasking gestures) collapse into a single prefetch run.
+// ETag-aware refresh of all catalog content and streak packs.
+// Each pack gets a full download if the user has access (free, premium, or
+// owned); unpurchased paid packs get only their first puzzle cached as a
+// preview. A failure for any individual item does not abort the others.
+export async function prefetchAllCatalog(
+  catalog: PackCatalogItem[],
+  entitlements: Entitlements,
+): Promise<void> {
+  const packWork = catalog
+    .filter(p => p.storagePath)
+    .map(p => {
+      const hasFullAccess =
+        p.isFree ||
+        entitlements.isPremium ||
+        entitlements.ownedPackIds.includes(p.id);
+      return hasFullAccess
+        ? prefetchPackFile(p.id, p.storagePath!).catch(() => {})
+        : cachePackPreview(p.id, p.storagePath!).catch(() => {});
+    });
+  await Promise.allSettled([prefetchStreaks(), ...packWork]);
+}
+
+// Debounced wrapper so rapid app-foreground events collapse into a single run.
+// Catalog and entitlements are captured at schedule time.
 let _prefetchTimer: ReturnType<typeof setTimeout> | null = null;
 
-export function schedulePrefetch(): void {
-  if (_prefetchTimer) return; // already scheduled — let it fire
+export function schedulePrefetch(
+  catalog: PackCatalogItem[],
+  entitlements: Entitlements,
+): void {
+  if (_prefetchTimer) return;
   _prefetchTimer = setTimeout(() => {
     _prefetchTimer = null;
-    prefetchStreaks().catch(() => {});
+    prefetchAllCatalog(catalog, entitlements).catch(() => {});
   }, 2000);
 }

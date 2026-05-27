@@ -145,10 +145,10 @@ export function LibraryScreen({
   const [rawPuzzles, setRawPuzzles] = useState<RawPuzzle[] | null>(null);
 
   useEffect(() => {
-    getPuzzlesForPack(packId)
+    getPuzzlesForPack(packId, storagePath)
       .then(setRawPuzzles)
       .catch(() => {});
-  }, [packId]);
+  }, [packId, storagePath]);
 
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
   const completedCount = completedSet.size;
