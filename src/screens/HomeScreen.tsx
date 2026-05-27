@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -19,7 +19,7 @@ import {
   STREAK_LABELS,
 } from '../utils/streakDate';
 import { loadStreaks, loadAllCompletionData } from '../utils/progress';
-import { useEntitlementsStore } from '../stores/entitlementsStore';
+import { useAuthStore } from '../stores/authStore';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useProductPrice } from '../hooks/useProductPrice';
@@ -84,6 +84,7 @@ export function HomeScreen({
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets);
   const isFocused = useIsFocused();
+  const userId = useAuthStore(s => s.user?.id);
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, hasPackAccess } = useEntitlements();
 
@@ -142,11 +143,10 @@ export function HomeScreen({
     Record<string, number>
   >({});
 
-  const freePacks = packCatalog.filter(p => p.isFree);
-  const paidPacks = packCatalog.filter(p => !p.isFree);
+  const freePacks = useMemo(() => packCatalog.filter(p => p.isFree), [packCatalog]);
+  const paidPacks = useMemo(() => packCatalog.filter(p => !p.isFree), [packCatalog]);
 
   const load = useCallback(async () => {
-    const catalog = useEntitlementsStore.getState().packCatalog;
     const [fetchedStreaks, allCompleted] = await Promise.all([
       loadStreaks(),
       loadAllCompletionData(),
@@ -162,7 +162,7 @@ export function HomeScreen({
     setCompletedPuzzleIds(completedIds);
 
     const counts: Record<string, number> = {};
-    for (const pack of catalog) {
+    for (const pack of packCatalog) {
       let count = 0;
       for (let i = 0; i < pack.puzzleCount; i++) {
         if (allCompleted.has(`${pack.id}:${i}`)) count++;
@@ -170,11 +170,11 @@ export function HomeScreen({
       counts[pack.id] = count;
     }
     setCompletedPerPack(counts);
-  }, []);
+  }, [packCatalog]);
 
   useEffect(() => {
-    if (isFocused) load();
-  }, [isFocused, load]);
+    if (isFocused && userId) load();
+  }, [isFocused, userId, load]);
 
   return (
     <View style={styles.container}>
