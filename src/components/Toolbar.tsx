@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, View, Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, View, Pressable, StyleSheet } from 'react-native';
 import Undo2 from 'lucide-react-native/dist/cjs/icons/undo-2';
 import Redo2 from 'lucide-react-native/dist/cjs/icons/redo-2';
 import Minimize2 from 'lucide-react-native/dist/cjs/icons/minimize-2';
@@ -33,6 +33,7 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
   const showHint = usePuzzleStore(s => s.showHint);
   const hasGhosts = usePuzzleStore(s => s.hintGhosts.size > 0);
   const hasHints = usePuzzleStore(s => (s.puzzle?.hints.length ?? 0) > 0);
+  const hintsLoading = usePuzzleStore(s => s.hintsLoading);
   const canUndo = usePuzzleStore(s => s.moveLog.length > 0);
   const canRedo = usePuzzleStore(s => s.redoStack.length > 0);
   const hasContent = usePuzzleStore(s => s.cells.some(c => c !== 0));
@@ -40,13 +41,21 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
   const undoDisabled = !canUndo || completed;
   const redoDisabled = !canRedo || completed;
   const clearDisabled = !hasContent || completed;
-  const hintDisabled = completed || !hasHints;
+  const hintDisabled = completed || hintsLoading;
 
   const TapModeIcon = TAP_MODE_ICONS[tapMode];
 
   function press(action: () => void) {
     if (hapticsEnabled) Haptics.impact('medium');
     action();
+  }
+
+  function handleHint() {
+    if (hasHints) {
+      press(showHint);
+    } else {
+      Alert.alert('Hints Unavailable', 'Hints could not be loaded. Check your connection and try again.');
+    }
   }
 
   function handleClear() {
@@ -72,18 +81,19 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
         </Pressable>
 
         <Pressable
-          onPress={() => press(showHint)}
+          onPress={handleHint}
           disabled={hintDisabled}
           style={[
             styles.button,
             hasGhosts && styles.buttonAccent,
-            hintDisabled && styles.buttonDisabled,
+            (hintDisabled || !hasHints) && styles.buttonDisabled,
           ]}
         >
-          <Lightbulb
-            size={26}
-            color={theme.text}
-          />
+          {hintsLoading ? (
+            <ActivityIndicator size="small" color={theme.text} />
+          ) : (
+            <Lightbulb size={26} color={theme.text} />
+          )}
         </Pressable>
 
         <Pressable

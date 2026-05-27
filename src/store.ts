@@ -9,7 +9,7 @@ import {
   checkWin,
 } from './utils/puzzleLogic';
 import { loadProgress, saveProgress } from './utils/progress';
-import type { CellChange, CellValue, Move, Puzzle, TapMode } from './types';
+import type { CellChange, CellValue, HintStep, Move, Puzzle, TapMode } from './types';
 
 // Keeps memory usage bounded — older moves beyond this limit are dropped.
 const MAX_HISTORY = 50;
@@ -47,7 +47,9 @@ type PuzzleState = {
   tapMode: TapMode;
   hintGhosts: Map<number, 'star' | 'mark'>;
   hintStepIndex: number;
+  hintsLoading: boolean;
   loadPuzzle: (puzzle: Puzzle) => Promise<void>;
+  setHints: (hints: HintStep[]) => void;
   tapCell: (row: number, col: number) => void;
   cycleTapMode: () => void;
   recomputeAutoMarks: () => void;
@@ -79,6 +81,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
   tapMode: 'cycle',
   hintGhosts: new Map<number, 'star' | 'mark'>(),
   hintStepIndex: -1,
+  hintsLoading: false,
 
   loadPuzzle: async (puzzle: Puzzle) => {
     const total = puzzle.size * puzzle.size;
@@ -94,6 +97,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
       redoStack: [],
       hintGhosts: new Map(),
       hintStepIndex: -1,
+      hintsLoading: puzzle.hints.length === 0,
     });
     try {
       const saved = await loadProgress(puzzle.id);
@@ -419,6 +423,13 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
 
   dismissHint: () => {
     set({ hintGhosts: new Map(), hintStepIndex: -1 });
+  },
+
+  setHints: (hints: HintStep[]) => {
+    set(s => ({
+      puzzle: s.puzzle ? { ...s.puzzle, hints } : null,
+      hintsLoading: false,
+    }));
   },
 
   tick: (ms = 1000) => {

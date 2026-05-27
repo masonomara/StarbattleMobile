@@ -1,8 +1,9 @@
 import { NativeModules } from 'react-native';
-import { Buffer } from 'buffer';
 import { supabase } from '../supabase';
 import { packMetaStorage } from '../mmkv';
-import type { RawPuzzle, Pack, StreakType } from '../types';
+import type { RawPuzzle, Pack, StreakType, HintStep } from '../types';
+
+const PACK_MIN_VERSION = 2;
 
 import type * as RNFSType from 'react-native-fs';
 
@@ -38,39 +39,12 @@ function validatePackText(text: string): void {
   }
 }
 
-// Replace each puzzle's solution array with a base64-encoded opaque string
-// before persisting to disk so solutions aren't stored as human-readable JSON.
 function encodeForDisk(text: string): string {
-  try {
-    const data = JSON.parse(text) as { puzzles?: RawPuzzle[] };
-    if (!Array.isArray(data?.puzzles)) return text;
-    return JSON.stringify({
-      ...data,
-      puzzles: data.puzzles.map(p => {
-        const { solution, ...rest } = p;
-        return { ...rest, _s: Buffer.from(JSON.stringify(solution)).toString('base64') };
-      }),
-    });
-  } catch {
-    return text;
-  }
+  return text;
 }
 
-// Reverse encodeForDisk when loading cached pack data back from disk.
-// Returns the parsed Pack directly — no re-stringify round-trip.
 function decodeFromDisk(text: string): Pack {
-  const data = JSON.parse(text) as Pack & { puzzles?: Array<Record<string, unknown>> };
-  if (!Array.isArray(data.puzzles) || !data.puzzles.some(p => '_s' in p)) {
-    return data;
-  }
-  return {
-    ...data,
-    puzzles: data.puzzles.map((p): RawPuzzle => {
-      if (!('_s' in p)) return p as unknown as RawPuzzle;
-      const { _s, ...rest } = p;
-      return { ...rest, solution: JSON.parse(Buffer.from(_s as string, 'base64').toString()) } as RawPuzzle;
-    }),
-  };
+  return JSON.parse(text) as Pack;
 }
 
 function assertSafeKey(key: string): void {
@@ -88,6 +62,7 @@ function setCachedEtag(key: string, etag: string): void {
 }
 
 async function fetchFromSupabase(storageKey: string): Promise<string> {
+  console.log(`[SB:PACK] supabase.storage.from('packs').download('${storageKey}')`);
   const { data, error } = await supabase.storage
     .from('packs')
     .download(storageKey);
@@ -107,7 +82,12 @@ async function fetchPack(localKey: string, remoteKey?: string): Promise<Pack> {
     try {
       const raw = await rnfs.readFile(localPath, 'utf8');
       const pack = decodeFromDisk(raw);
-      console.log(`[PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${pack.puzzles?.length ?? '?'} puzzles`);
+      console.log(`[SB:PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${pack.puzzles?.length ?? '?'} puzzles`);
+      if (pack.version < PACK_MIN_VERSION) {
+        await rnfs.unlink(localPath).catch(() => {});
+        packMetaStorage.remove(`etag:${localKey}`);
+        throw new Error(`stale pack evicted: ${localKey}`);
+      }
       return pack;
     } catch {
       // not on disk yet — fall through to network
@@ -118,7 +98,9 @@ async function fetchPack(localKey: string, remoteKey?: string): Promise<Pack> {
     await rnfs
       .writeFile(localPath, encodeForDisk(text), 'utf8')
       .catch(() => {});
-    return JSON.parse(text) as Pack;
+    const downloaded = JSON.parse(text) as Pack;
+    console.log(`[SB:PACK] ${localKey} downloaded — v${downloaded.version}, ${downloaded.puzzles?.length} puzzles, keys: ${Object.keys(downloaded.puzzles?.[0] ?? {}).join(',')}`);
+    return downloaded;
   }
   return fetchFromSupabase(effectiveRemoteKey).then(text => JSON.parse(text) as Pack);
 }
@@ -135,7 +117,53 @@ function loadPack(localKey: string, remoteKey?: string): Promise<Pack> {
   packCache.set(localKey, promise);
   // Evict on failure so the next call retries rather than re-throwing instantly.
   promise.catch(() => packCache.delete(localKey));
+  // Pre-warm the hints cache in parallel — preview packs have no hints file.
+  if (!localKey.includes('_preview')) {
+    const hintId = localKey.replace(/\.json$/, '');
+    console.log(`[SB:HINTS] loadPack side-effect: loadPackHints(${hintId})`);
+    loadPackHints(hintId).catch(e => console.error(`[SB:HINTS] side-effect failed for ${hintId}:`, e));
+  }
   return promise;
+}
+
+// In-memory cache for hint arrays, keyed by packId (not filename).
+// Separate from packCache so evicting a stale pack doesn't discard hints.
+const hintsCache = new Map<string, Promise<HintStep[][]>>();
+
+async function fetchPackHints(packId: string): Promise<HintStep[][]> {
+  const storageKey = `${packId}-hints.json`;
+  console.log(`[SB:HINTS] fetching ${storageKey}`);
+  try {
+    const text = await Promise.race([
+      fetchFromSupabase(storageKey),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('hints fetch timeout')), 10_000),
+      ),
+    ]);
+    const hints = (JSON.parse(text) as { hints: HintStep[][] }).hints;
+    console.log(`[SB:HINTS] ${packId}: ${(text.length / 1024).toFixed(1)} KB, ${hints.length} entries`);
+    return hints;
+  } catch (e) {
+    console.error(`[SB:HINTS] ${packId} fetch failed:`, e);
+    throw e;
+  }
+}
+
+export function loadPackHints(packId: string): Promise<HintStep[][]> {
+  const cached = hintsCache.get(packId);
+  if (cached) {
+    console.log(`[SB:HINTS] ${packId}: cache hit`);
+    return cached;
+  }
+  console.log(`[SB:HINTS] ${packId}: cache miss — starting fetch`);
+  const promise = fetchPackHints(packId);
+  hintsCache.set(packId, promise);
+  promise.catch(() => hintsCache.delete(packId));
+  return promise;
+}
+
+export function prefetchHintsFile(packId: string): Promise<void> {
+  return loadPackHints(packId).then(() => {}).catch(() => {});
 }
 
 const PREVIEW_PUZZLE_COUNT = 1;
@@ -157,7 +185,7 @@ export async function getPuzzlesForPack(
     const preview = await loadPack(previewKey);
     return preview.puzzles;
   } catch (e) {
-    console.error('[packs] getPuzzlesForPack failed:', packId, e);
+    console.error('[SB:PACK] getPuzzlesForPack failed:', packId, e);
     return null;
   }
 }
@@ -166,7 +194,7 @@ export async function getStreakPack(type: StreakType): Promise<Pack | null> {
   try {
     return await loadPack(`${type}.json`);
   } catch (e) {
-    console.error('[packs] getStreakPack failed:', type, e);
+    console.error('[SB:PACK] getStreakPack failed:', type, e);
     return null;
   }
 }

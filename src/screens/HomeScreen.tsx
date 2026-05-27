@@ -104,21 +104,28 @@ export function HomeScreen({
 
   useEffect(() => {
     async function loadPreviews() {
+      console.log('[SB:HOME] loadPreviews start');
       const packsResult: Partial<Record<StreakType, Pack>> = {};
       const previewsResult: Partial<Record<StreakType, Puzzle>> = {};
-      await Promise.all(
-        STREAK_TYPES.map(async type => {
-          const pack = await getStreakPack(type);
-          if (!pack) return;
-          packsResult[type] = pack;
-          const idx = getPuzzleIndex(type, pack.puzzles.length);
-          const key = getCurrentKey(type);
-          previewsResult[type] = parsePuzzle(
-            pack.puzzles[idx],
-            `${type}:${key}`,
-          );
-        }),
-      );
+      try {
+        await Promise.all(
+          STREAK_TYPES.map(async type => {
+            const pack = await getStreakPack(type);
+            console.log(`[SB:HOME] ${type}: pack=${pack ? `v${pack.version} ${pack.puzzles.length}pz gridSize=${pack.gridSize}` : 'NULL'}`);
+            if (!pack) return;
+            packsResult[type] = pack;
+            const idx = getPuzzleIndex(type, pack.puzzles.length);
+            const puzzleAtIdx = pack.puzzles[idx];
+            console.log(`[SB:HOME] ${type}: idx=${idx}, puzzle=${puzzleAtIdx ? Object.keys(puzzleAtIdx).join(',') : 'UNDEFINED'}`);
+            const key = getCurrentKey(type);
+            previewsResult[type] = parsePuzzle(puzzleAtIdx, `${type}:${key}`);
+            console.log(`[SB:HOME] ${type}: parsePuzzle OK`);
+          }),
+        );
+      } catch (e) {
+        console.error('[SB:HOME] loadPreviews threw:', e);
+      }
+      console.log(`[SB:HOME] setState — packs: [${Object.keys(packsResult).join(',')}], previews: [${Object.keys(previewsResult).join(',')}]`);
       setLoadedStreakPacks(packsResult);
       setStreakPreviews(previewsResult);
     }

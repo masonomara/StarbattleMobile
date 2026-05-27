@@ -1,4 +1,4 @@
-import { prefetchPackFile, cachePackPreview } from './index';
+import { prefetchPackFile, cachePackPreview, prefetchHintsFile } from './index';
 import type { StreakType, PackCatalogItem, Entitlements } from '../types';
 
 const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
@@ -8,6 +8,9 @@ async function prefetchStreaks(): Promise<void> {
     STREAK_TYPES.map(type =>
       prefetchPackFile(type, `${type}.json`).catch(() => {}),
     ),
+  );
+  STREAK_TYPES.forEach(type =>
+    prefetchHintsFile(type).catch(e => console.error(`[SB:HINTS] prefetchStreaks failed for ${type}:`, e)),
   );
 }
 
@@ -26,9 +29,11 @@ export async function prefetchAllCatalog(
         p.isFree ||
         entitlements.isPremium ||
         entitlements.ownedPackIds.includes(p.id);
-      return hasFullAccess
-        ? prefetchPackFile(p.id, p.storagePath!).catch(() => {})
-        : cachePackPreview(p.id, p.storagePath!).catch(() => {});
+      if (hasFullAccess) {
+        prefetchHintsFile(p.id).catch(e => console.error(`[SB:HINTS] prefetchAllCatalog failed for ${p.id}:`, e));
+        return prefetchPackFile(p.id, p.storagePath!).catch(() => {});
+      }
+      return cachePackPreview(p.id, p.storagePath!).catch(() => {});
     });
   await Promise.allSettled([prefetchStreaks(), ...packWork]);
 }

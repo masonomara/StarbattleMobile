@@ -9,6 +9,15 @@ import type { RawPuzzle, Puzzle, HintStep } from '../types';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export function parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
+  try {
+    return _parsePuzzle(raw, puzzleId);
+  } catch (e) {
+    console.error('[SB:PACK] threw for puzzle', puzzleId, '— raw keys:', Object.keys(raw ?? {}), 'sbn:', (raw as RawPuzzle | undefined)?.sbn?.slice(0, 40), 'error:', e);
+    throw e;
+  }
+}
+
+function _parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
   const [header, layout] = raw.sbn.split('.');
   const match = header.match(/^(\d+)x(\d+)$/);
   if (!match) throw new Error(`Bad SBN header: ${header}`);

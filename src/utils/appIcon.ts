@@ -27,11 +27,11 @@ export async function syncAppIcon(
     // The library resolves before iOS finishes — verify the change landed
     const after = await getIcon();
     if (after !== iconName) {
-      console.warn('[appIcon] icon did not change after call — current:', after, 'wanted:', iconName);
+      console.warn('[SB:ICON] icon did not change after call — current:', after, 'wanted:', iconName);
     } else {
-      console.log('[appIcon] icon set:', iconName);
+      console.log('[SB:ICON] icon set:', iconName);
     }
   } catch (e) {
-    console.warn('[appIcon] syncAppIcon failed:', iconName, e);
+    console.warn('[SB:ICON] syncAppIcon failed:', iconName, e);
   }
 }

@@ -52,14 +52,22 @@ export default function App() {
     });
     startupTimer.log('adapty.activate called');
 
+    // Auth must resolve (including the signInAnonymously() fallback) before any
+    // Supabase Storage download fires. The packs bucket policy requires the
+    // authenticated role; without a user JWT every download returns 404.
+    startupTimer.log('auth initialize called');
+    const authReady = useAuthStore.getState().initialize();
+
     // Warm streak + pack caches before HomeScreen mounts.
     // Gate the splash on streak packs (3s max) so HomeScreen renders
     // fully populated on reveal.
-    const streakReady = Promise.all([
-      getStreakPack('daily'),
-      getStreakPack('weekly'),
-      getStreakPack('monthly'),
-    ]);
+    const streakReady = authReady.then(() =>
+      Promise.all([
+        getStreakPack('daily'),
+        getStreakPack('weekly'),
+        getStreakPack('monthly'),
+      ])
+    );
     streakReady.then(() => startupTimer.log('streak packs resolved'));
     let packsWon = false;
     Promise.race([
@@ -157,9 +165,6 @@ export default function App() {
     const linkingSub = Linking.addEventListener('url', ({ url }) => {
       useAuthStore.getState().handleDeepLink(url);
     });
-
-    startupTimer.log('auth initialize called');
-    useAuthStore.getState().initialize();
 
     return () => {
       authUnsub();

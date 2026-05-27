@@ -19,7 +19,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
-import { getStreakPack, getPuzzlesForPack } from '../packs';
+import { getStreakPack, getPuzzlesForPack, loadPackHints } from '../packs';
 import {
   getCurrentKey,
   getPuzzleIndex,
@@ -40,6 +40,8 @@ type PackData = {
   gridSize: number;
   packName: string;
   isLastPuzzle: boolean;
+  effectivePackId: string;
+  puzzleIndexInPack: number;
 };
 
 export function PuzzleScreen({
@@ -80,6 +82,8 @@ export function PuzzleScreen({
             gridSize: pack.gridSize,
             packName: pack.name,
             isLastPuzzle: !isArchive,
+            effectivePackId: streakType,
+            puzzleIndexInPack: idx,
           });
         })
         .catch(() => navigation.goBack());
@@ -100,6 +104,8 @@ export function PuzzleScreen({
             gridSize: meta?.gridSize ?? parseInt(raw.sbn.split('x')[0], 10),
             packName: meta?.name ?? packId,
             isLastPuzzle: idx >= (meta?.puzzleCount ?? puzzles!.length) - 1,
+            effectivePackId: packId,
+            puzzleIndexInPack: idx,
           });
         })
         .catch(() => navigation.goBack());
@@ -119,6 +125,7 @@ export function PuzzleScreen({
   const styles = createStyles(theme);
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
+  const setHints = usePuzzleStore(s => s.setHints);
   const puzzle = usePuzzleStore(s => s.puzzle);
   const cells = usePuzzleStore(s => s.cells);
   const errorCells = usePuzzleStore(s => s.errorCells);
@@ -203,6 +210,14 @@ export function PuzzleScreen({
       navigation.goBack();
     }
   }, [packData, rawPuzzle, puzzleId, loadPuzzle, navigation]);
+
+  useEffect(() => {
+    if (!isReady || !packData) return;
+    const { effectivePackId, puzzleIndexInPack } = packData;
+    loadPackHints(effectivePackId)
+      .then(allHints => setHints(allHints[puzzleIndexInPack] ?? []))
+      .catch(() => setHints([]));
+  }, [isReady, packData, setHints]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', e => {
