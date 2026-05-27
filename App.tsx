@@ -14,6 +14,7 @@ import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
 import { getStreakPack, getPuzzlesForPack } from './src/packs';
 import { supabase } from './src/supabase';
+import BootSplash from 'react-native-bootsplash';
 
 export default function App() {
   const theme = useTheme();
@@ -35,9 +36,19 @@ export default function App() {
     });
 
     // Warm streak + pack caches before HomeScreen mounts.
-    getStreakPack('daily');
-    getStreakPack('weekly');
-    getStreakPack('monthly');
+    // Also use these promises to gate the splash — hide once streak packs are
+    // ready (or 3s max) so HomeScreen renders fully populated on reveal.
+    const streakReady = Promise.all([
+      getStreakPack('daily'),
+      getStreakPack('weekly'),
+      getStreakPack('monthly'),
+    ]);
+    Promise.race([
+      streakReady,
+      new Promise<void>(resolve => setTimeout(resolve, 3000)),
+    ])
+      .catch(() => {})
+      .then(() => BootSplash.hide({ fade: true }).catch(() => {}));
 
     // As soon as the pack catalog is known, pre-warm every pack's JSON file
     // so HomeScreen thumbnail reads hit the in-memory cache instead of disk.
