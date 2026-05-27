@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { changeIcon } from 'react-native-change-icon';
+import { changeIcon, getIcon } from 'react-native-change-icon';
 import type { ThemeName } from '../types';
 
 function iosMajorVersion(): number {
@@ -7,20 +7,29 @@ function iosMajorVersion(): number {
   return parseInt(String(Platform.Version).split('.')[0], 10);
 }
 
+function targetIconName(palette: ThemeName, isDark: boolean): string {
+  return iosMajorVersion() >= 26
+    ? `AppIcon-${palette}`
+    : `AppIcon-${palette}-${isDark ? 'dark' : 'light'}`;
+}
+
 export async function syncAppIcon(
   palette: ThemeName,
   isDark: boolean,
 ): Promise<void> {
   if (Platform.OS !== 'ios') return;
-  // iOS 26+: use layered .icon — OS handles dark/tinted/clear automatically.
-  // iOS <26: use flat PNG appiconset matched to current mode.
-  const iconName =
-    iosMajorVersion() >= 26
-      ? `AppIcon-${palette}`
-      : `AppIcon-${palette}-${isDark ? 'dark' : 'light'}`;
+  const iconName = targetIconName(palette, isDark);
   try {
+    const current = await getIcon();
+    // getIcon() returns "Default" when the primary icon is active
+    if (current === iconName) return;
     await changeIcon(iconName);
-  } catch {
-    // Non-critical — silently ignore (simulator, same icon already set, etc.)
+    // The library resolves before iOS finishes — verify the change landed
+    const after = await getIcon();
+    if (after !== iconName) {
+      console.warn('[appIcon] icon did not change after call — current:', after, 'wanted:', iconName);
+    }
+  } catch (e) {
+    console.warn('[appIcon] syncAppIcon failed:', iconName, e);
   }
 }

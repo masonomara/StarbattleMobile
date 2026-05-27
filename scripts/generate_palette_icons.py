@@ -22,28 +22,28 @@ PRIMARY_ASSETS = ROOT / 'ios/AppIcon.icon/Assets'
 # ─── Palette colors: (background, text, red, gridColor) ────────────────────────
 PALETTES = {
     'original': {
-        'dark':  ('#0D1117', '#F0F6FC', '#F85149', '#3D444D'),
-        'light': ('#ffffff', '#1F2328', '#D1242F', '#8C959F'),
+        'dark':  ('#0D1117', '#F0F6FC', '#F85149', '#9198A1'),
+        'light': ('#ffffff', '#1F2328', '#D1242F', '#59636E'),
     },
     'primer': {
-        'dark':  ('#010409', '#e6edf3', '#ff7b72', '#3d444d'),
-        'light': ('#f6f8fa', '#1f2328', '#cf222e', '#8c959f'),
+        'dark':  ('#010409', '#e6edf3', '#ff7b72', '#9499A1'),
+        'light': ('#f6f8fa', '#1f2328', '#cf222e', '#5F6267'),
     },
     'gruvbox': {
-        'dark':  ('#282828', '#ebdbb2', '#fb4934', '#504945'),
-        'light': ('#fbf1c7', '#3c3836', '#cc241d', '#7c6f64'),
+        'dark':  ('#282828', '#ebdbb2', '#cc241d', '#9D937B'),
+        'light': ('#fbf1c7', '#3c3836', '#cc241d', '#756F61'),
     },
     'rosePine': {
-        'dark':  ('#1f1d2e', '#e0def4', '#eb6f92', '#403d52'),
-        'light': ('#fffaf3', '#575279', '#b4637a', '#9893a5'),
+        'dark':  ('#1f1d2e', '#e0def4', '#eb6f92', '#9391A5'),
+        'light': ('#fffaf3', '#575279', '#b4637a', '#9A95AA'),
     },
     'seoul256': {
-        'dark':  ('#3a3a3a', '#d0d0d0', '#d68787', '#626262'),
-        'light': ('#dadada', '#4e4e4e', '#af5f5f', '#949494'),
+        'dark':  ('#3a3a3a', '#d0d0d0', '#d68787', '#949494'),
+        'light': ('#dadada', '#4e4e4e', '#af5f5f', '#787878'),
     },
     'tokyoNight': {
-        'dark':  ('#1a1b26', '#c0caf5', '#f7768e', '#414868'),
-        'light': ('#e1e2e7', '#3760bf', '#f52a65', '#6172b0'),
+        'dark':  ('#1a1b26', '#c0caf5', '#f7768e', '#7E84A2'),
+        'light': ('#e1e2e7', '#3760bf', '#f52a65', '#7B94CF'),
     },
 }
 

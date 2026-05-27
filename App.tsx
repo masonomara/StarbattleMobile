@@ -12,7 +12,7 @@ import { db } from './src/powersync/AppSchema';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
-import { getStreakPack } from './src/packs';
+import { getStreakPack, getPuzzlesForPack } from './src/packs';
 import { supabase } from './src/supabase';
 
 export default function App() {
@@ -34,10 +34,21 @@ export default function App() {
       // Swallow "already activated" error on Fast Refresh in dev
     });
 
-    // Warm the pack cache before HomeScreen mounts so streak cards are instant.
+    // Warm streak + pack caches before HomeScreen mounts.
     getStreakPack('daily');
     getStreakPack('weekly');
     getStreakPack('monthly');
+
+    // As soon as the pack catalog is known, pre-warm every pack's JSON file
+    // so HomeScreen thumbnail reads hit the in-memory cache instead of disk.
+    const unsubPacks = useEntitlementsStore.subscribe(
+      s => s.packCatalog,
+      catalog => {
+        if (catalog.length === 0) return;
+        for (const pack of catalog) getPuzzlesForPack(pack.id);
+        unsubPacks();
+      },
+    );
 
     useSettingsStore.getState().initialize();
 
@@ -97,6 +108,7 @@ export default function App() {
 
     return () => {
       authUnsub();
+      unsubPacks();
       watchController.abort();
       appStateSub.remove();
       linkingSub.remove();
