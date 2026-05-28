@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AppState, Linking, useColorScheme } from 'react-native';
+import { AppState, Linking } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Navigation } from './src/navigation';
@@ -7,7 +7,6 @@ import { useTheme } from './src/hooks/useTheme';
 import { useAuthStore } from './src/stores/authStore';
 import { useSettingsStore } from './src/stores/settingsStore';
 import { useEntitlementsStore } from './src/stores/entitlementsStore';
-import { syncAppIcon } from './src/utils/appIcon';
 import { startupTimer } from './src/utils/startupTimer';
 import { db } from './src/powersync/AppSchema';
 import { SupabaseConnector } from './src/powersync/Connector';
@@ -32,17 +31,6 @@ export default function App() {
   }, []);
 
   const theme = useTheme();
-  const systemScheme = useColorScheme();
-  const palette = useSettingsStore(s => s.settings.palette);
-  const themePref = useSettingsStore(s => s.settings.theme);
-
-  useEffect(() => {
-    const isDark =
-      themePref === 'dark' ? true
-      : themePref === 'light' ? false
-      : systemScheme === 'dark';
-    syncAppIcon(palette, isDark);
-  }, [palette, themePref, systemScheme]);
 
   useEffect(() => {
     startupTimer.log('setup effect start');

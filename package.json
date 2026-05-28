@@ -32,7 +32,6 @@
     "react-native": "0.84.0",
     "react-native-adapty": "^3.15.6",
     "react-native-bootsplash": "^7.3.1",
-    "react-native-change-icon": "^5.0.0",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^3.0.0-beta.4",
     "react-native-mmkv": "^4.1.2",
