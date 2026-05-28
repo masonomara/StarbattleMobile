@@ -94,10 +94,7 @@ function PuzzleCell({
             {status === 'completed' ? (
               <Check size={28} color={theme.blue} />
             ) : (
-              <Lock
-                size={28}
-                color={theme.textSecondary}
-              />
+              <Lock size={28} color={theme.textSecondary} />
             )}
           </View>
         )}
@@ -262,10 +259,7 @@ export function LibraryScreen({
       <Header
         left={
           <CircleButton onPress={() => navigation.goBack()}>
-            <ChevronLeft
-              size={26}
-              color={theme.text}
-            />
+            <ChevronLeft size={26} color={theme.text} />
           </CircleButton>
         }
         center={<Text style={styles.headerTitle}>{packName}</Text>}
@@ -300,7 +294,7 @@ const createStyles = (theme: Theme, cellSize: number) => {
     },
     scroll: { flex: 1 },
     gridContent: {
-      padding: 16,
+      padding: 32,
     },
     row: {
       flexDirection: 'row',
@@ -336,7 +330,7 @@ const createStyles = (theme: Theme, cellSize: number) => {
     },
     locked: { opacity: 0.45 },
     headerTitle: {
-      fontSize: 16,
+      fontSize: 17,
       fontVariant: ['tabular-nums'],
       fontWeight: '600',
       color: theme.text,

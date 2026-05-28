@@ -17,6 +17,7 @@ import {
   getCurrentKey,
   getActiveStreak,
   getPuzzleIndex,
+  STREAK_TYPES,
 } from '../utils/streakDate';
 import { loadStreaks, loadAllCompletionData } from '../utils/progress';
 import { useAuthStore } from '../stores/authStore';
@@ -126,7 +127,13 @@ export function HomeScreen({
     Record<string, number>
   >({});
 
-  const streakPacks = useMemo(() => packCatalog.filter(p => !!p.type), [packCatalog]);
+  const streakPacks = useMemo(
+    () =>
+      packCatalog
+        .filter(p => !!p.type)
+        .sort((a, b) => STREAK_TYPES.indexOf(a.type!) - STREAK_TYPES.indexOf(b.type!)),
+    [packCatalog],
+  );
   const freePacks = useMemo(() => packCatalog.filter(p => !p.type && p.isFree), [packCatalog]);
   const paidPacks = useMemo(() => packCatalog.filter(p => !p.type && !p.isFree), [packCatalog]);
 

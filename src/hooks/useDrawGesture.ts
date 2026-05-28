@@ -21,9 +21,10 @@ export function useDrawGesture(
   // Deduplicates cells visited within a single drag stroke so a slow drag that
   // re-enters a cell doesn't toggle it a second time.
   const visitedCells = useRef(new Set<number>());
-  // True once onEnd has run and committed the stroke to the store. Checked in
-  // onFinalize so we don't double-reset the draw layer when the gesture ends
-  // normally (onEnd fires before onFinalize in a clean gesture lifecycle).
+  // True once the stroke has been committed or aborted — set by onEnd on a clean
+  // finish, or by onUpdate when a second pointer arrives (multi-pointer abort).
+  // Checked in onUpdate to block stale events after either path. onFinalize
+  // resets previewMap unconditionally and then clears this flag.
   const committed = useRef(false);
 
   const viewToCell = useCallback(
@@ -82,7 +83,6 @@ export function useDrawGesture(
 
   const drawGesture = Gesture.Pan()
     .runOnJS(true)
-    .maxPointers(1)
     .activateAfterLongPress(150)
     .minDistance(0)
     .onStart(e => {
@@ -100,6 +100,7 @@ export function useDrawGesture(
       if (cell) markCell(cell.row, cell.col);
     })
     .onUpdate(e => {
+      if (committed.current) return;
       if (e.numberOfPointers > 1) {
         drawLayerRef.current?.reset();
         strokeChanges.current = [];
@@ -120,9 +121,7 @@ export function useDrawGesture(
       }
     })
     .onFinalize(() => {
-      if (!committed.current) {
-        drawLayerRef.current?.reset();
-      }
+      drawLayerRef.current?.reset();
       strokeChanges.current = [];
       visitedCells.current = new Set();
       committed.current = false;
