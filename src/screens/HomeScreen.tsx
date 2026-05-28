@@ -17,8 +17,6 @@ import {
   getCurrentKey,
   getActiveStreak,
   getPuzzleIndex,
-  STREAK_TYPES,
-  STREAK_LABELS,
 } from '../utils/streakDate';
 import { loadStreaks, loadAllCompletionData } from '../utils/progress';
 import { useAuthStore } from '../stores/authStore';
@@ -28,9 +26,7 @@ import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useProductPrice } from '../hooks/useProductPrice';
 import type {
   Theme,
-  StreakType,
   Streak,
-  Pack,
   Puzzle,
   PackCatalogItem,
   RootStackParamList,
@@ -91,57 +87,30 @@ export function HomeScreen({
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, hasPackAccess } = useEntitlements();
 
-  const [loadedStreakPacks, setLoadedStreakPacks] = useState<
-    Partial<Record<StreakType, Pack>>
-  >({});
-  const [streakPreviews, setStreakPreviews] = useState<
-    Partial<Record<StreakType, Puzzle>>
-  >({});
+  const [packPreviews, setPackPreviews] = useState<Record<string, Puzzle>>({});
 
   useEffect(() => {
     startupTimer.log('HomeScreen first mount');
   }, []);
 
   useEffect(() => {
-    async function loadPreviews() {
-      console.log('[SB:HOME] loadPreviews start');
-      const packsResult: Partial<Record<StreakType, Pack>> = {};
-      const previewsResult: Partial<Record<StreakType, Puzzle>> = {};
-      try {
-        await Promise.all(
-          STREAK_TYPES.map(async type => {
-            const pack = await getStreakPack(type);
-            console.log(`[SB:HOME] ${type}: pack=${pack ? `v${pack.version} ${pack.puzzles.length}pz gridSize=${pack.gridSize}` : 'NULL'}`);
-            if (!pack) return;
-            packsResult[type] = pack;
-            const idx = getPuzzleIndex(type, pack.puzzles.length);
-            const puzzleAtIdx = pack.puzzles[idx];
-            console.log(`[SB:HOME] ${type}: idx=${idx}, puzzle=${puzzleAtIdx ? Object.keys(puzzleAtIdx).join(',') : 'UNDEFINED'}`);
-            const key = getCurrentKey(type);
-            previewsResult[type] = parsePuzzle(puzzleAtIdx, `${type}:${key}`);
-            console.log(`[SB:HOME] ${type}: parsePuzzle OK`);
-          }),
-        );
-      } catch (e) {
-        console.error('[SB:HOME] loadPreviews threw:', e);
-      }
-      console.log(`[SB:HOME] setState — packs: [${Object.keys(packsResult).join(',')}], previews: [${Object.keys(previewsResult).join(',')}]`);
-      setLoadedStreakPacks(packsResult);
-      setStreakPreviews(previewsResult);
-    }
-    loadPreviews();
-  }, []);
-
-  const [packPreviews, setPackPreviews] = useState<Record<string, Puzzle>>({});
-
-  useEffect(() => {
     async function loadPackPreviews() {
       const results: Record<string, Puzzle> = {};
       await Promise.all(
         packCatalog.map(async pack => {
-          const rawPuzzles = await getPuzzlesForPack(pack.id, pack.storagePath);
-          if (!rawPuzzles?.length) return;
-          results[pack.id] = parsePuzzle(rawPuzzles[0], `${pack.id}:0`);
+          if (pack.type) {
+            const streakPack = await getStreakPack(pack.type);
+            if (!streakPack) return;
+            const idx = getPuzzleIndex(pack.type, streakPack.puzzles.length);
+            results[pack.id] = parsePuzzle(
+              streakPack.puzzles[idx],
+              `${pack.id}:${getCurrentKey(pack.type)}`,
+            );
+          } else {
+            const rawPuzzles = await getPuzzlesForPack(pack.id, pack.storagePath);
+            if (!rawPuzzles?.length) return;
+            results[pack.id] = parsePuzzle(rawPuzzles[0], `${pack.id}:0`);
+          }
         }),
       );
       setPackPreviews(results);
@@ -157,8 +126,9 @@ export function HomeScreen({
     Record<string, number>
   >({});
 
-  const freePacks = useMemo(() => packCatalog.filter(p => p.isFree), [packCatalog]);
-  const paidPacks = useMemo(() => packCatalog.filter(p => !p.isFree), [packCatalog]);
+  const streakPacks = useMemo(() => packCatalog.filter(p => !!p.type), [packCatalog]);
+  const freePacks = useMemo(() => packCatalog.filter(p => !p.type && p.isFree), [packCatalog]);
+  const paidPacks = useMemo(() => packCatalog.filter(p => !p.type && !p.isFree), [packCatalog]);
 
   const load = useCallback(async () => {
     const [fetchedStreaks, allCompleted] = await Promise.all([
@@ -169,14 +139,16 @@ export function HomeScreen({
     setStreaks(fetchedStreaks);
 
     const completedIds = new Set<string>();
-    for (const type of STREAK_TYPES) {
-      const puzzleId = `${type}:${getCurrentKey(type)}`;
+    for (const pack of packCatalog) {
+      if (!pack.type) continue;
+      const puzzleId = `${pack.id}:${getCurrentKey(pack.type)}`;
       if (allCompleted.has(puzzleId)) completedIds.add(puzzleId);
     }
     setCompletedPuzzleIds(completedIds);
 
     const counts: Record<string, number> = {};
     for (const pack of packCatalog) {
+      if (pack.type) continue;
       let count = 0;
       for (let i = 0; i < pack.puzzleCount; i++) {
         if (allCompleted.has(`${pack.id}:${i}`)) count++;
@@ -225,12 +197,12 @@ export function HomeScreen({
               gap: 12,
             }}
           >
-            {STREAK_TYPES.map(type => {
-              const pack = loadedStreakPacks[type];
-              const preview = streakPreviews[type];
-              if (!pack || !preview) return null;
+            {streakPacks.map(pack => {
+              const type = pack.type!;
+              const preview = packPreviews[pack.id];
+              if (!preview) return null;
               const key = getCurrentKey(type);
-              const puzzleId = `${type}:${key}`;
+              const puzzleId = `${pack.id}:${key}`;
               const isCompleted = completedPuzzleIds.has(puzzleId);
               const found = streaks.find(s => s.type === type);
               const streakCount = found ? getActiveStreak(found, type) : 0;
@@ -238,13 +210,11 @@ export function HomeScreen({
               return (
                 <Pressable
                   onPress={() =>
-                    navigation.navigate('Puzzle', { streakType: type })
+                    navigation.navigate('Puzzle', { packId: pack.id })
                   }
-                  key={type}
+                  key={pack.id}
                   style={[
                     styles.streakCard,
-
-                    // { backgroundColor: STREAK_TILE_COLORS[i] },
                     isCompleted && styles.streakCardCompleted,
                   ]}
                 >
@@ -255,9 +225,7 @@ export function HomeScreen({
                     coloredRegions={coloredRegions}
                   />
 
-                  <Text style={styles.streakLabel}>
-                    {STREAK_LABELS[type]} Special
-                  </Text>
+                  <Text style={styles.streakLabel}>{pack.name}</Text>
                   <View style={styles.streakMetaRow}>
                     {isCompleted && (
                       <View style={styles.streakCheckCircle}>
@@ -269,7 +237,7 @@ export function HomeScreen({
                         ? `${streakCount} day streak`
                         : streakCount > 0
                           ? `Continue your ${streakCount} day streak`
-                          : `Start your ${STREAK_LABELS[type]} streak`}
+                          : `Start your ${pack.name} streak`}
                     </Text>
                   </View>
                 </Pressable>

@@ -7,11 +7,12 @@ type PackRow = {
   name: string;
   grid_size: number;
   stars: number;
-  difficulty: string;
+  difficulty: string | null;
   is_free: number;
   price_usd: number | null;
   puzzle_count: number;
   storage_path: string | null;
+  type: string | null;
 };
 
 const PACK_QUERY =
@@ -32,11 +33,12 @@ function mapPackRow(r: PackRow): PackCatalogItem {
     name: r.name,
     gridSize: r.grid_size,
     stars: r.stars,
-    difficulty: r.difficulty as 'normal' | 'hard',
+    difficulty: (r.difficulty ?? undefined) as 'normal' | 'hard' | undefined,
     isFree: r.is_free === 1,
     priceUsd: r.price_usd ?? undefined,
     puzzleCount: r.puzzle_count,
     storagePath: r.storage_path ?? undefined,
+    type: (r.type ?? undefined) as 'daily' | 'weekly' | 'monthly' | undefined,
   };
 }
 

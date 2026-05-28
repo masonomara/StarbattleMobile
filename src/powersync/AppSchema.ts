@@ -12,6 +12,7 @@ const packs = new Table({
   storage_path: column.text,
   published: column.integer,
   sort_order: column.integer,
+  type: column.text,
 });
 
 const puzzle_progress = new Table(

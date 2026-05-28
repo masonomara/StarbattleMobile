@@ -42,6 +42,7 @@ type PackData = {
   isLastPuzzle: boolean;
   effectivePackId: string;
   puzzleIndexInPack: number;
+  streakType?: 'daily' | 'weekly' | 'monthly';
 };
 
 export function PuzzleScreen({
@@ -49,26 +50,26 @@ export function PuzzleScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
   // params is a discriminated union (see RootStackParamList in types.ts).
-  // TypeScript narrows each arm via the `in` operator — re-checking on each
-  // line is required because a derived boolean variable wouldn't narrow the type.
+  // Narrowed with `'puzzleIndex' in params`: first variant = regular pack, second = streak.
   const params = route.params;
-  const streakType = 'streakType' in params ? params.streakType : undefined;
-  const packId = 'packId' in params ? params.packId : undefined;
-  const puzzleIndex = 'packId' in params ? params.puzzleIndex : undefined;
-  const archiveOptions = 'streakType' in params ? params.archiveOptions : undefined;
-  const isArchive = archiveOptions?.isArchive;
-  const archiveKey = archiveOptions?.archiveKey;
+  const packId = params.packId;
+  const puzzleIndex = 'puzzleIndex' in params ? params.puzzleIndex : undefined;
+  const archiveKey = !('puzzleIndex' in params) ? params.archiveKey : undefined;
 
   const [packData, setPackData] = useState<PackData | null>(null);
 
   useEffect(() => {
     setPackData(null);
+    const catalog = useEntitlementsStore.getState().packCatalog;
+    const meta = catalog.find(p => p.id === packId);
+    const streakType = meta?.type;
+
     if (streakType) {
+      const isArchive = !!archiveKey;
       getStreakPack(streakType)
         .then(pack => {
           if (!pack) { navigation.goBack(); return; }
-          const key =
-            isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
+          const key = isArchive && archiveKey ? archiveKey : getCurrentKey(streakType);
           const date =
             isArchive && archiveKey
               ? archiveKeyToDate(streakType, archiveKey)
@@ -84,13 +85,12 @@ export function PuzzleScreen({
             isLastPuzzle: !isArchive,
             effectivePackId: streakType,
             puzzleIndexInPack: idx,
+            streakType,
           });
         })
         .catch(() => navigation.goBack());
-    } else if (packId) {
+    } else {
       const idx = puzzleIndex ?? 0;
-      const catalog = useEntitlementsStore.getState().packCatalog;
-      const meta = catalog.find(p => p.id === packId);
       getPuzzlesForPack(packId)
         .then(puzzles => {
           const raw = puzzles?.[idx];
@@ -110,7 +110,7 @@ export function PuzzleScreen({
         })
         .catch(() => navigation.goBack());
     }
-  }, [streakType, isArchive, archiveKey, packId, puzzleIndex, navigation]);
+  }, [packId, puzzleIndex, archiveKey, navigation]);
 
   const {
     rawPuzzle,
@@ -118,6 +118,8 @@ export function PuzzleScreen({
     gridSize = 0,
     packName = '',
     isLastPuzzle = true,
+    streakType: packStreakType,
+    puzzleIndexInPack = 0,
   } = packData ?? {};
 
   const theme = useTheme();
@@ -323,11 +325,11 @@ export function PuzzleScreen({
         <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
       </Animated.View>
       <WinBanner
-        packId={packId ?? ''}
-        puzzleIndex={puzzleIndex ?? 0}
+        packId={packId}
+        puzzleIndex={puzzleIndexInPack}
         packName={packName}
         isLastPuzzle={isLastPuzzle}
-        streakType={streakType}
+        streakType={packStreakType}
       />
     </View>
   );

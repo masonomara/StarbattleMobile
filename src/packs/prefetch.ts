@@ -1,18 +1,5 @@
 import { prefetchPackFile, cachePackPreview, prefetchHintsFile } from './index';
-import type { StreakType, PackCatalogItem, Entitlements } from '../types';
-
-const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
-
-async function prefetchStreaks(): Promise<void> {
-  await Promise.allSettled(
-    STREAK_TYPES.map(type =>
-      prefetchPackFile(type, `${type}.json`).catch(() => {}),
-    ),
-  );
-  STREAK_TYPES.forEach(type =>
-    prefetchHintsFile(type).catch(e => console.error(`[SB:HINTS] prefetchStreaks failed for ${type}:`, e)),
-  );
-}
+import type { PackCatalogItem, Entitlements } from '../types';
 
 // ETag-aware refresh of all catalog content and streak packs.
 // Each pack gets a full download if the user has access (free, premium, or
@@ -35,7 +22,7 @@ export async function prefetchAllCatalog(
       }
       return cachePackPreview(p.id, p.storagePath!).catch(() => {});
     });
-  await Promise.allSettled([prefetchStreaks(), ...packWork]);
+  await Promise.allSettled(packWork);
 }
 
 // Debounced wrapper so rapid app-foreground events collapse into a single run.

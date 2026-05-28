@@ -11,6 +11,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
+import { useEntitlementsStore } from '../stores/entitlementsStore';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { loadStreaks, getPastArchive } from '../utils/progress';
 import {
@@ -135,12 +136,10 @@ export function StreaksModal() {
                     style={styles.archiveRow}
                     onPress={() => {
                       closeStreaks();
+                      const packCatalog = useEntitlementsStore.getState().packCatalog;
                       navigation.navigate('Puzzle', {
-                        streakType: activeTab,
-                        archiveOptions: {
-                          isArchive: true,
-                          archiveKey: entry.dateKey,
-                        },
+                        packId: packCatalog.find(p => p.type === activeTab)?.id ?? activeTab,
+                        archiveKey: entry.dateKey,
                       });
                     }}
                   >

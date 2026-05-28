@@ -6,13 +6,10 @@ export type RootStackParamList = {
   Home: undefined;
   Library: { packId: string };
   // Puzzle accepts two mutually exclusive route shapes — a discriminated union.
-  // PuzzleScreen narrows between them with `'streakType' in params`.
+  // PuzzleScreen narrows between them with `'puzzleIndex' in params`.
   Puzzle:
     | { packId: string; puzzleIndex: number }
-    | {
-        streakType: StreakType;
-        archiveOptions?: { isArchive: boolean; archiveKey: string };
-      };
+    | { packId: string; archiveKey?: string };
 };
 
 declare global {
@@ -263,11 +260,12 @@ export type PackCatalogItem = {
   name: string;
   gridSize: number;
   stars: number;
-  difficulty: 'normal' | 'hard';
+  difficulty?: 'normal' | 'hard';
   isFree: boolean;
   priceUsd?: number;
   puzzleCount: number;
   storagePath?: string;
+  type?: 'daily' | 'weekly' | 'monthly';
 };
 
 export type PaywallContext =
