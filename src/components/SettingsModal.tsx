@@ -237,13 +237,16 @@ function ToggleRow({
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{
-          true: theme.blue,
-        }}
-      />
+      <View style={styles.switchContainer}>
+        <Switch
+          value={value}
+          onValueChange={onToggle}
+          trackColor={{
+            true: theme.blue,
+            false: theme.red,
+          }}
+        />
+      </View>
     </View>
   );
 }
@@ -273,7 +276,9 @@ export function SettingsModal() {
 
   const { entitlements, packCatalog } = useEntitlements();
 
-  const [view, setView] = useState<'main' | 'acknowledgements' | 'terms' | 'privacy'>('main');
+  const [view, setView] = useState<
+    'main' | 'acknowledgements' | 'terms' | 'privacy'
+  >('main');
   const [emailMode, setEmailMode] = useState<EmailMode>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -406,63 +411,63 @@ export function SettingsModal() {
                 the following open-source projects. Each is used with
                 attribution under its respective license.
               </Text>
-              {([
-                {
-                  name: 'Original',
-                  desc: 'Inspired by ',
-                  link: 'GitHub Primer',
-                  url: 'https://primer.style',
-                  suffix: ", GitHub's open-source design system.",
-                },
-                {
-                  name: 'Seoul256',
-                  desc: 'Based on ',
-                  link: 'seoul256.vim',
-                  url: 'https://github.com/junegunn/seoul256.vim',
-                  suffix: ' by junegunn. Licensed under MIT.',
-                },
-                {
-                  name: 'Primer',
-                  desc: 'Inspired by ',
-                  link: 'GitHub Primer',
-                  url: 'https://primer.style',
-                  suffix: ", GitHub's design system. Licensed under MIT.",
-                },
-                {
-                  name: 'Rosé Pine',
-                  desc: 'Based on ',
-                  link: 'Rosé Pine',
-                  url: 'https://rosepinetheme.com',
-                  suffix: ' by the Rosé Pine team. Licensed under MIT.',
-                  extra: {
-                    text: 'See their branding guidelines.',
-                    url: 'https://github.com/rose-pine/rose-pine-theme',
+              {(
+                [
+                  {
+                    name: 'Original',
+                    desc: 'Inspired by ',
+                    link: 'GitHub Primer',
+                    url: 'https://primer.style',
+                    suffix: ", GitHub's open-source design system.",
                   },
-                },
-                {
-                  name: 'Gruvbox',
-                  desc: 'Based on ',
-                  link: 'gruvbox',
-                  url: 'https://github.com/morhetz/gruvbox',
-                  suffix: ' by morhetz. Licensed under MIT.',
-                },
-                {
-                  name: 'Tokyo Night',
-                  desc: 'Based on ',
-                  link: 'Tokyo Night',
-                  url: 'https://github.com/enkia/tokyo-night-vscode-theme',
-                  suffix: ' by enkia. Licensed under MIT.',
-                },
-              ] as const).map(item => (
+                  {
+                    name: 'Seoul256',
+                    desc: 'Based on ',
+                    link: 'seoul256.vim',
+                    url: 'https://github.com/junegunn/seoul256.vim',
+                    suffix: ' by junegunn. Licensed under MIT.',
+                  },
+                  {
+                    name: 'Primer',
+                    desc: 'Inspired by ',
+                    link: 'GitHub Primer',
+                    url: 'https://primer.style',
+                    suffix: ", GitHub's design system. Licensed under MIT.",
+                  },
+                  {
+                    name: 'Rosé Pine',
+                    desc: 'Based on ',
+                    link: 'Rosé Pine',
+                    url: 'https://rosepinetheme.com',
+                    suffix: ' by the Rosé Pine team. Licensed under MIT.',
+                    extra: {
+                      text: 'See their branding guidelines.',
+                      url: 'https://github.com/rose-pine/rose-pine-theme',
+                    },
+                  },
+                  {
+                    name: 'Gruvbox',
+                    desc: 'Based on ',
+                    link: 'gruvbox',
+                    url: 'https://github.com/morhetz/gruvbox',
+                    suffix: ' by morhetz. Licensed under MIT.',
+                  },
+                  {
+                    name: 'Tokyo Night',
+                    desc: 'Based on ',
+                    link: 'Tokyo Night',
+                    url: 'https://github.com/enkia/tokyo-night-vscode-theme',
+                    suffix: ' by enkia. Licensed under MIT.',
+                  },
+                ] as const
+              ).map(item => (
                 <View key={item.name} style={styles.attributionRow}>
                   <Text style={styles.attributionName}>{item.name}</Text>
                   <Text style={styles.attributionBody}>
                     {item.desc}
                     <Text
                       style={styles.attributionLink}
-                      onPress={() =>
-                        Linking.openURL(item.url).catch(() => {})
-                      }
+                      onPress={() => Linking.openURL(item.url).catch(() => {})}
                     >
                       {item.link}
                     </Text>
@@ -1122,6 +1127,7 @@ const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       gap: 12,
     },
+  
     swatchCard: {
       flex: 1,
       borderRadius: 4,
@@ -1241,9 +1247,8 @@ const createStyles = (theme: Theme) => {
       gap: 6,
     },
     privacyLinkText: {
-      fontSize: theme.fontSizeSubhead,
+      fontSize: 13,
       color: theme.textSecondary,
-      textDecorationLine: 'underline',
     },
     legalSep: {
       fontSize: theme.fontSizeSubhead,

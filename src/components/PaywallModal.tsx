@@ -242,7 +242,7 @@ const createStyles = (theme: Theme) =>
     disclosureLink: {
       fontSize: 11,
       color: theme.textSecondary,
-      textDecorationLine: 'underline',
+      textDecorationLine: 'none',
     },
     disclosureSep: {
       fontSize: 11,
