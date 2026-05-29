@@ -1,14 +1,7 @@
-// Remove it if the separate time line was removed; keep if it's planned to return.
-//
 // NOTE: fontWeight values (900, 700, 600) are numeric here, while the rest of
 // the codebase uses string literals ('900', '600'). StyleSheet.create accepts
 // both on newer React Native, but numeric fontWeight can produce TS errors in
 // strict mode. Prefer string literals for consistency.
-//
-// NOTE: formatTime duplicates the mm:ss logic from HeaderTimer (which builds
-// the same format inline). Extract to a shared util to avoid drift if the
-// display format ever changes.
-//
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
 import { Text } from './Text';
@@ -18,6 +11,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { recordStreak } from '../utils/progress';
 import { STREAK_LABELS, STREAK_UNIT } from '../utils/streakDate';
+import { formatElapsedTime } from '../utils/time';
 
 import { useTheme } from '../hooks/useTheme';
 import type { Theme, RootStackParamList, WinBannerProps } from '../types';
@@ -102,7 +96,7 @@ export function WinBanner({
         {streakCount > 0 ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak` : ``}
         </Text>
       )}</Text>
-      <Text style={styles.winText}>{`Solved in ${formatTime(timeMs)}`}</Text>
+      <Text style={styles.winText}>{`Solved in ${formatElapsedTime(timeMs)}`}</Text>
 
       <Pressable onPress={handlePress} style={styles.winButton}>
         <Text style={styles.winButtonText}>{buttonLabel}</Text>
@@ -165,8 +159,3 @@ const createStyles = (theme: Theme) =>
     },
   });
 
-function formatTime(ms: number): string {
-  const min = Math.floor(ms / 60000);
-  const sec = Math.floor((ms % 60000) / 1000);
-  return `${min}:${String(sec).padStart(2, '0')}`;
-}

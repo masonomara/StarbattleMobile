@@ -3,6 +3,7 @@ import { AppState, StyleSheet } from 'react-native';
 import { Text } from './Text';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { useTheme } from '../hooks/useTheme';
+import { formatElapsedTime } from '../utils/time';
 import type { Theme } from '../types';
 
 export function HeaderTimer() {
@@ -37,10 +38,8 @@ export function HeaderTimer() {
     };
   }, [completed]);
 
-  const min = Math.floor(timeMs / 60000);
-  const sec = Math.floor((timeMs % 60000) / 1000);
   return (
-    <Text style={styles.timer}>{`${min}:${String(sec).padStart(2, '0')}`}</Text>
+    <Text style={styles.timer}>{formatElapsedTime(timeMs)}</Text>
   );
 }
 
