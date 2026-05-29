@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { AppState, StyleSheet } from 'react-native';
 import { Text } from './Text';
-import { usePuzzleStore } from '../store';
+import { usePuzzleStore } from '../stores/puzzleStore';
 import { useTheme } from '../hooks/useTheme';
 import type { Theme } from '../types';
 

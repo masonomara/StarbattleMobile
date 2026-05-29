@@ -28,6 +28,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
   render() {
     const { theme } = this.props;
     if (this.state.hasError) {
+      // CLEANUP: error state uses inline styles rather than StyleSheet.create.
+      // Minor inconsistency with the rest of the codebase. Extracting to
+      // StyleSheet would improve readability and enable style reuse.
       return (
         <View
           style={{

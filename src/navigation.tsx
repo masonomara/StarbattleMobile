@@ -10,7 +10,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
 import { ArchivePackScreen } from './screens/ArchivePackScreen';
-import { StreaksModal } from './screens/StreaksModal';
+import { StreaksModal } from './components/StreaksModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -25,6 +25,10 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 // Each screen is wrapped individually rather than using a HOC so that:
 // (a) TypeScript can infer screen props without extra generic plumbing, and
 // (b) each boundary can set a screen-specific onReset (e.g. goBack vs no-op).
+// REFACTOR: The four Wrapped* components are structurally identical except for
+// the screen component and the onReset callback. A typed generic helper would
+// eliminate the repetition, but the TypeScript ceremony is non-trivial. If
+// more screens are added, that tradeoff shifts — consider the HOC then.
 function WrappedHome(
   props: NativeStackScreenProps<RootStackParamList, 'Home'>,
 ) {

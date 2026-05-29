@@ -1,7 +1,17 @@
+// NOTE: markCell uses usePuzzleStore.getState() imperatively rather than through
+// a hook selector to avoid stale closures inside gesture event handlers.
+// The gesture callbacks fire outside React's render cycle, so the store must
+// be read imperatively at invocation time.
+//
+// NOTE: Draw strokes only ever write value 2 (mark/X). Stars (value 1) can only
+// be placed via tapCell. This constraint is enforced here — applyDrawStroke in
+// the store trusts that all changes contain only value 0 or 2. If violated,
+// stars placed via applyDrawStroke would bypass win detection (the store's
+// applyDrawStroke has no checkWin call; see store.ts for the explicit comment).
 import { useCallback, useRef } from 'react';
 import { Gesture } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
-import { usePuzzleStore } from '../store';
+import { usePuzzleStore } from '../stores/puzzleStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { Haptics } from 'react-native-nitro-haptics';
 import type { CellChange, DrawLayerHandle } from '../types';

@@ -21,6 +21,17 @@ function rowsToStreaks(rows: StreakRow[]): Streak[] {
 
 // Subscribes to the streaks table for the current user via PowerSync's live
 // query. Updates reactively as data syncs — no manual refresh needed.
+//
+// NOTE: The initial db.getAll() fires immediately before db.watch() starts.
+// db.watch() typically also fires with initial results shortly after, causing
+// two renders on mount. This is intentional — the initial load eliminates the
+// empty-flash window while the watcher initialises. If PowerSync's watch API
+// adds a synchronous initial-result option in future, the getAll() can be removed.
+//
+// INCONSISTENCY: HomeScreen uses this hook (reactive), but StreaksModal uses
+// `loadStreaks()` (imperative one-shot). StreaksModal won't reflect PowerSync
+// updates received while it's open. Replacing the loadStreaks() call in
+// StreaksModal with this hook would unify the pattern.
 export function useStreakRows(userId: string | undefined): Streak[] {
   const [streaks, setStreaks] = useState<Streak[]>([]);
 

@@ -134,6 +134,12 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   // Non-premium users are gated sequentially: they can only reach puzzle N
   // once puzzle N-1 is complete (puzzleIndex <= completedCount).
   // Premium users can jump to any puzzle immediately.
+  // NOTE: `completedCount` is passed in by the caller (LibraryScreen) rather
+  // than queried here, so canPlayPuzzle remains synchronous. The caller is
+  // responsible for keeping completedCount current (it's refreshed on focus).
+  // If completedCount is stale (e.g. caller forgot to refresh), this function
+  // may return an incorrect result — the bug would manifest as a puzzle
+  // appearing unlocked or locked incorrectly after a solve.
   canPlayPuzzle: (packId: string, puzzleIndex: number, completedCount: number) => {
     if (!get().hasPackAccess(packId)) return false;
     if (get().entitlements.isPremium) return true;

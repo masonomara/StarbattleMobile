@@ -20,6 +20,13 @@ type BackgroundCanvasProps = {
 };
 
 // Memoized so it never re-renders during gameplay — only when puzzle or theme changes.
+// DUPLICATION: the regionBorderPath and regionFillPaths algorithms here are
+// substantially similar to the equivalent useMemos in PuzzleThumbnail. The main
+// difference is that BackgroundCanvas includes outer-border segments while
+// PuzzleThumbnail draws only inner boundaries (the outer rect is a separate path).
+// Consider extracting `buildRegionBorderPath(regions, size, cs, bw)` and
+// `buildRegionFillPaths(regions, size, cs, bw, regionColors)` to a shared
+// utility (e.g. src/utils/skiaHelpers.ts) that both can import.
 const BackgroundCanvas = React.memo(function BackgroundCanvas({
   puzzle,
   theme,
@@ -134,6 +141,9 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
 // Border width shared between BackgroundCanvas (which pads its canvas by BORDER)
 // and the draw-layer Canvas (which is inset by BORDER via absolute positioning).
 // Both must agree on this value so stars and grid lines align exactly.
+// NOTE: BORDER = 3.375 matches the strokeWidth used for regionBorderPath below.
+// If either value changes, both must change together. Consider a single constant
+// (e.g. REGION_BORDER_WIDTH) shared between the two canvas layers.
 const BORDER = 3.375;
 
 // DrawLayerHandle is an imperative ref API (see types.ts) that lets the gesture

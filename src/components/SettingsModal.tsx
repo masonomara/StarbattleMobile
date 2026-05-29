@@ -1,3 +1,31 @@
+// ARCH: SettingsModal is a God Component (~1400 lines) responsible for:
+//   1. Auth flow (sign-in / sign-up / forgot-password / reset-sent / confirm-email)
+//   2. Subscription management (premium badge, buy, restore, owned packs list)
+//   3. Gameplay settings (toggle rows for auto-X, errors, regions, etc.)
+//   4. General settings (timer, toolbar, haptics, theme picker)
+//   5. Color palette selection with live preview (PalettePreview, SVG mini-grid)
+//   6. Legal sub-views (Terms WebView, Privacy WebView, Acknowledgements scroll)
+//
+// Each of those is a separable concern. Recommended split:
+//   components/settings/AccountSection.tsx     — auth forms + sign-out
+//   components/settings/SubscriptionSection.tsx — premium + owned packs
+//   components/settings/GameplaySection.tsx     — toggle rows
+//   components/settings/AppearanceSection.tsx  — theme + palette picker
+//   components/settings/LegalView.tsx          — Terms / Privacy / Acks
+// SettingsModal itself would then orchestrate sections and the view stack.
+//
+// DEBT: `authTabSegment` style is defined but no SegmentedControl uses it
+// (the sign-in/sign-up tab switch is now a Pressable link). Dead style — remove.
+//
+// DEBT: The `title` style (25px Bricolage Grotesque 900) is used for the modal
+// header title. The `formTitle` style (17px semibold) is for form section headers.
+// The naming collision makes reading createStyles confusing. Rename `title` to
+// `modalTitle` or `headerTitle` for clarity.
+//
+// CONCERN: All auth state (emailMode, authTab, email, password) is local to this
+// modal. Closing and re-opening the modal clears them (via onDismiss → setView).
+// This is intentional for security (password field reset) but means users lose
+// their half-typed email if they accidentally close the modal.
 import React, { useState, useEffect } from 'react';
 import {
   Alert,
@@ -23,7 +51,7 @@ import SegmentedControl from '@react-native-segmented-control/segmented-control'
 import Svg, { Rect, Line, Path } from 'react-native-svg';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAuthStore } from '../stores/authStore';
-import { usePuzzleStore } from '../store';
+import { usePuzzleStore } from '../stores/puzzleStore';
 import { useTheme } from '../hooks/useTheme';
 import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
@@ -43,6 +71,11 @@ type EmailMode =
   | 'reset-sent'
   | null;
 
+// CLEANUP: PalettePreview and its supporting constants (PREVIEW_GRID, S, N, bw,
+// cs, THICK_H, THICK_V, starPath, STAR, MARK1, MARK2, MR) should live in their
+// own file (e.g. components/settings/PalettePreview.tsx). They add ~130 lines
+// of module-level setup to an already-large file and are completely independent
+// of SettingsModal's state.
 const PREVIEW_GRID = [
   [0, 0, 1, 1],
   [0, 2, 2, 1],

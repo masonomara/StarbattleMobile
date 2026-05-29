@@ -1,10 +1,25 @@
+// NOTE: `winTime` style is defined in createStyles but never applied in JSX.
+// Remove it if the separate time line was removed; keep if it's planned to return.
+//
+// NOTE: fontWeight values (900, 700, 600) are numeric here, while the rest of
+// the codebase uses string literals ('900', '600'). StyleSheet.create accepts
+// both on newer React Native, but numeric fontWeight can produce TS errors in
+// strict mode. Prefer string literals for consistency.
+//
+// NOTE: formatTime duplicates the mm:ss logic from HeaderTimer (which builds
+// the same format inline). Extract to a shared util to avoid drift if the
+// display format ever changes.
+//
+// CONCERN: streakCount is loaded via an imperative loadStreaks() call on win.
+// If useStreakRows() were used from PuzzleScreen and passed down, this component
+// wouldn't need its own async load, keeping data flow unidirectional from parent.
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
 import { Text } from './Text';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { usePuzzleStore } from '../store';
+import { usePuzzleStore } from '../stores/puzzleStore';
 import { loadStreaks, recordStreak } from '../utils/progress';
 import { getActiveStreak, STREAK_LABELS, STREAK_UNIT } from '../utils/streakDate';
 
@@ -91,7 +106,11 @@ export function WinBanner({
     >
       <Text style={styles.winInfo}>{info} {streakType && (
         <Text style={styles.winInfo}>
-          {streakCount > 0 ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak` : ``}
+          {/* streakType! non-null assertion: safe here because the wrapping
+            `{streakType && ...}` already guards against null/undefined, but
+            TypeScript can't narrow through JSX text. Could rewrite as
+            `{streakType ? STREAK_UNIT[streakType] : ''}` to avoid the assertion. */}
+        {streakCount > 0 ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak` : ``}
         </Text>
       )}</Text>
       <Text style={styles.winText}>{`Solved in ${formatTime(timeMs)}`}</Text>

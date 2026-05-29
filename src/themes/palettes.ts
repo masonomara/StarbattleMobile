@@ -12,7 +12,15 @@ export const tokens = {
   cellSize: 36,
 };
 
-// ─── AYU ─────────────────────────────────────────────────────────────────────────
+// DEBT: This file contains ~1000 lines of commented-out palette definitions.
+// Commented-out code is high noise for maintainers and can cause confusion
+// about which palettes are active. Options:
+//   1. Delete them — git history preserves them if ever needed.
+//   2. Move to a separate palettes.candidates.ts file.
+// The active palettes are: original, primer, gruvbox, rosePine, seoul256, tokyoNight.
+// All others are candidates pending design review (see ThemeName in types.ts).
+
+// ─── ORIGINAL ────────────────────────────────────────────────────────────────────
 
 const originalDark: ThemeColors = {
   roles: {
@@ -73,6 +81,8 @@ const originalLight: ThemeColors = {
     cyanBright: '#4cbf99',
   },
 };
+
+// ─── CANDIDATE PALETTES (commented out, pending design review) ────────────────
 
 // ─── AYU ─────────────────────────────────────────────────────────────────────────
 

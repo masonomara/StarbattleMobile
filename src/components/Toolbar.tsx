@@ -8,7 +8,7 @@ import Lightbulb from 'lucide-react-native/dist/cjs/icons/lightbulb';
 import Pencil from 'lucide-react-native/dist/cjs/icons/pencil';
 import Eraser from 'lucide-react-native/dist/cjs/icons/eraser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { usePuzzleStore } from '../store';
+import { usePuzzleStore } from '../stores/puzzleStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { Haptics } from 'react-native-nitro-haptics';

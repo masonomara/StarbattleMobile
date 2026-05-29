@@ -45,6 +45,11 @@ export function getPreviousKey(type: StreakType, now = new Date()): string {
   return getCurrentKey(type, prev);
 }
 
+// NOTE: getPuzzleIndex is the core deterministic "which puzzle plays today"
+// function. The hardcoded epoch (April 16 2026) must match RELEASE_DATE below —
+// they are currently separate constants. If the release date ever changes,
+// both must be updated together. Consider deriving epoch from RELEASE_DATE to
+// eliminate the duplication and the risk of them drifting apart.
 export function getPuzzleIndex(
   type: StreakType,
   packSize: number,
@@ -109,6 +114,9 @@ export function archiveKeyToDate(type: StreakType, key: string): Date {
 }
 
 // App launch date — archive only surfaces puzzles from this date onward.
+// DEBT: This constant and the epoch inside getPuzzleIndex represent the same date.
+// Unify them: use RELEASE_DATE as the epoch in getPuzzleIndex to keep a single
+// source of truth.
 const RELEASE_DATE = new Date(2026, 3, 16); // April 16 2026
 
 export function getPastDateKeys(type: StreakType, now = new Date()): string[] {

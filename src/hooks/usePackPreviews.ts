@@ -7,6 +7,18 @@ import type { PackCatalogItem, Puzzle } from '../types';
 // Loads the first-glance preview puzzle for every pack:
 // - Streak packs: today's puzzle (deterministically selected by date index)
 // - Library packs: always puzzle index 0
+//
+// BUG: inside the Promise.all map, async callbacks have no individual try/catch.
+// If any single pack's load throws, Promise.all rejects and the outer `load()`
+// call (which is also uncaught) silently drops ALL previews. Each entry in the
+// map needs its own try/catch so one failed pack doesn't discard all others.
+//
+// RISK: `packCatalog` changes when entitlements sync (e.g. after purchase).
+// The effect re-runs, but the `cancelled` flag only guards against stale sets
+// — it does not cancel in-flight fetches. For large catalogs, a previous fetch
+// can still resolve and overwrite results from the latest fetch if `cancelled`
+// is reset before the old promise resolves. An AbortController per effect run
+// would be more robust.
 export function usePackPreviews(
   packCatalog: PackCatalogItem[],
 ): Record<string, Puzzle> {

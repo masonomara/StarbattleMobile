@@ -31,6 +31,10 @@ import type {
 } from '../types';
 
 const NUM_COLS = 3;
+// NOTE: The header height (57) is hard-coded in createStyles and in gridContent
+// paddingTop below. It should match HomeScreen's HEADER_HEIGHT and
+// ArchivePackScreen's equivalent. Extract to a shared layout constant to keep
+// all three screens in sync.
 
 type PuzzleCellProps = {
   packId: string;
@@ -46,6 +50,10 @@ type PuzzleCellProps = {
   cellSize: number;
 };
 
+// PERF: PuzzleCell is not memoized (no React.memo). When completedSet or
+// isPuzzlePlayable changes, every row re-renders every PuzzleCell.
+// Wrapping with React.memo and a stable prop comparison would limit re-renders
+// to cells whose individual props actually changed (most won't after one solve).
 function PuzzleCell({
   packId,
   index,
@@ -124,6 +132,8 @@ export function LibraryScreen({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  // CLEANUP: `numColumns` is a const alias of NUM_COLS and is never reassigned.
+  // Use NUM_COLS directly or remove the alias.
   const numColumns = NUM_COLS;
   const cellSize = Math.floor((width - 2 * 32 - numColumns * 12) / numColumns);
   const styles = useMemo(
@@ -166,6 +176,11 @@ export function LibraryScreen({
     }, [refreshCompleted]),
   );
 
+  // NOTE: isPuzzlePlayable falls back to sequential-unlock logic when
+  // catalogPack is undefined (pack not yet synced). This means a user on a
+  // slow connection sees the puzzle as locked until catalog sync completes,
+  // which is the safe-fail direction. The fallback mirrors the non-premium
+  // free-play rule; premium bypass only applies once the catalog is available.
   const isPuzzlePlayable = useCallback(
     (index: number): boolean => {
       if (!catalogPack) {

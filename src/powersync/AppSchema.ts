@@ -1,3 +1,7 @@
+// ARCH: AppSchema defines both the PowerSync schema (Table/column declarations)
+// and exports the singleton `db` instance. If the schema grows (more tables,
+// more indexes), consider moving `db` to a separate file (e.g. powersync/db.ts)
+// so AppSchema.ts is purely declarative and can be imported without side effects.
 import { column, Schema, Table, PowerSyncDatabase } from '@powersync/react-native';
 // OPSqliteOpenFactory uses the op-sqlite driver (faster than the default
 // expo-sqlite driver) for PowerSync's local SQLite database.

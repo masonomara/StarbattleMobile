@@ -49,6 +49,8 @@ async function resetToAnonymous(set: SetState, get: () => AuthState): Promise<vo
 // Parses a URL fragment string ("key=val&key2=val2") into a plain object.
 // Uses a manual loop instead of URLSearchParams because React Native's URL
 // implementation doesn't handle fragment params without a polyfill.
+// NOTE: If a React Native polyfill for URL/URLSearchParams is ever added (e.g.
+// via react-native-url-polyfill), this function can be replaced with two lines.
 function parseUrlFragment(fragment: string): Record<string, string> {
   const result: Record<string, string> = {};
   for (const pair of fragment.split('&')) {
@@ -64,6 +66,9 @@ function parseUrlFragment(fragment: string): Record<string, string> {
 // Must complete before the Supabase session exchange so all anonymous writes
 // reach Supabase before migrate_anonymous_progress reads them server-side.
 // Throws if the queue can't drain (offline, upload error, or timeout).
+// DEBT: The 600ms initial grace period is a magic number. Name it:
+//   const QUEUE_SETTLE_DELAY_MS = 600;
+// to make the intent clear and allow adjustment without hunting through the code.
 async function drainUploadQueue(timeoutMs = 30_000): Promise<void> {
   // Grace period: fire-and-forget writes (e.g. recordStreak) may not have
   // entered the queue yet. Wait briefly before the first check.
@@ -151,6 +156,10 @@ async function withAnonMigration(
 
 // Held at module scope so initialize() can unsubscribe the previous listener
 // before attaching a new one (guards against React Fast Refresh stacking duplicates).
+// NOTE: authSubscription never gets cleaned up if initialize() is never called
+// again (which is the normal production path). That is correct — the listener
+// must remain active for the lifetime of the app. Fast Refresh is the only
+// case where re-subscribing without clearing would stack listeners.
 let authSubscription: { unsubscribe: () => void } | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({

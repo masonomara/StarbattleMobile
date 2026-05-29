@@ -18,6 +18,16 @@ import { purchasePremium, purchasePack } from '../utils/payments';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../config';
 import type { Theme, PaywallModalProps } from '../types';
 
+// NOTE: `renderContent()` is a plain function call inside JSX, not a React
+// component. For the current scale this is fine; if PaywallModal grows, make
+// each context variant its own component so they can own their own hooks and
+// memoisation boundaries.
+//
+// NOTE: The sheet background uses `theme.textSecondary` (see styles.sheet below).
+// This is semantically incorrect — textSecondary is a text color token, not a
+// surface color. A dedicated `sheetBackground` or `surfaceElevated` token in
+// Theme would make the intent clearer and prevent future palette authors from
+// accidentally choosing a textSecondary that doesn't work as a surface color.
 export function PaywallModal({
   context,
   onClose,

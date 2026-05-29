@@ -3,6 +3,11 @@ import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import { rgba } from '../themes/ansi';
 import type { PuzzleThumbnailProps } from '../types';
 
+// DUPLICATION: The regionFillPaths, innerGridPath, and regionBorderPath useMemos
+// here mirror the equivalent logic in BackgroundCanvas (PuzzleCanvas.tsx). The
+// algorithms differ slightly (thumbnail omits outer border from the region border
+// path; BackgroundCanvas includes it). See BackgroundCanvas comment for the
+// shared-utility refactoring opportunity.
 export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   puzzle,
   size,

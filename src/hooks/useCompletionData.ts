@@ -25,6 +25,11 @@ export function useCompletionData(
     Record<string, number>
   >({});
 
+  // NOTE: load depends only on packCatalog (not userId). userId is checked in
+  // the useEffect condition (`if (isFocused && userId)`) rather than inside
+  // the callback — this is correct because loadAllCompletionData() reads userId
+  // directly from authStore.getState() at call time. If userId is ever needed
+  // inside the callback itself, it must be added to the useCallback dep array.
   const load = useCallback(async () => {
     const allCompleted = await loadAllCompletionData();
 
@@ -38,6 +43,10 @@ export function useCompletionData(
     setCompletedPuzzleIds(completedIds);
 
     // Library packs: count how many puzzles are solved (for the "X/Y" label).
+    // PERF: this iterates pack.puzzleCount times per pack, doing a Set.has()
+    // per puzzle. For a pack with 100 puzzles on a large catalog this is O(N×M).
+    // An alternative: filter allCompleted keys by pack prefix once and count.
+    // For current puzzle counts (~30-50 per pack) this is fine.
     const counts: Record<string, number> = {};
     for (const pack of packCatalog) {
       if (pack.type) continue;

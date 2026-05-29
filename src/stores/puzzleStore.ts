@@ -1,21 +1,24 @@
 import { create } from 'zustand';
 import { Haptics } from 'react-native-nitro-haptics';
-import { useSettingsStore } from './stores/settingsStore';
+import { useSettingsStore } from './settingsStore';
 import {
   computeAutoXForStar,
   applyMarks,
   rebuildAutoMarks,
   computeErrors,
   checkWin,
-} from './utils/puzzleLogic';
-import { loadProgress, saveProgress } from './utils/progress';
-import type { CellChange, CellValue, HintStep, Move, Puzzle, TapMode } from './types';
+} from '../utils/puzzleLogic';
+import { loadProgress, saveProgress } from '../utils/progress';
+import type { CellChange, CellValue, HintStep, Move, Puzzle, TapMode } from '../types';
 
 // Keeps memory usage bounded — older moves beyond this limit are dropped.
 const MAX_HISTORY = 50;
 
 // Debounces progress writes so rapid cell changes (fast tapping, drag strokes)
 // produce a single DB write 400 ms after the last change rather than one per event.
+// NOTE: PuzzleScreen bypasses this debounce intentionally for two lifecycle
+// events: navigating away (beforeRemove) and backgrounding (AppState change).
+// Those paths call saveProgress() directly to guarantee a flush before unmount.
 let _saveTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleSave(
   puzzleId: string,

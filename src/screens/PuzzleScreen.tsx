@@ -19,7 +19,7 @@ import { HeaderTimer } from '../components/HeaderTimer';
 import { PuzzleCanvas } from '../components/PuzzleCanvas';
 import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
-import { usePuzzleStore } from '../store';
+import { usePuzzleStore } from '../stores/puzzleStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
@@ -149,6 +149,11 @@ export function PuzzleScreen({
 
   // Parse the raw puzzle SBN and load it into the store. `isReady` gates
   // rendering so nothing shows until the store has a valid puzzle object.
+  // NOTE: loadPuzzle is async (it loads saved progress) but we don't await it
+  // here before calling setIsReady. The puzzle renders with an empty board first
+  // then cells update when progress arrives — an intentional optimistic render.
+  // If this causes a visible flash of empty→loaded state, await loadPuzzle
+  // before setIsReady and add a loading guard inside the store's loadPuzzle.
   useEffect(() => {
     if (!packData || !rawPuzzle) return;
     try {

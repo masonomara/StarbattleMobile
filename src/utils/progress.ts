@@ -3,6 +3,11 @@ import { useAuthStore } from '../stores/authStore';
 import { getCurrentKey, getPreviousKey } from './streakDate';
 import type { CellValue, StreakType, Streak } from '../types';
 
+// REFACTOR: saveProgress and saveStreak both follow the same SELECT-first-then-
+// upsert pattern for the same reason (PowerSync views have unreliable
+// rowsAffected). The two implementations are nearly identical — consider
+// extracting a shared `upsertById(table, id, insertData, updateSql, updateArgs)`
+// helper to reduce duplication and keep the reasoning in one place.
 export async function saveProgress(
   puzzleId: string,
   cells: CellValue[],
@@ -85,6 +90,11 @@ export async function loadProgress(puzzleId: string): Promise<{
   }
 }
 
+// DEBT: getCompletedCountForPack and getCompletedPuzzleIdsForPack both call
+// fetchCompletedIdsForPack, but getCompletedCountForPack discards the Set and
+// returns only `.size`. The count-only variant could skip building the Set
+// entirely with a COUNT(*) query for large packs. For current pack sizes this
+// is fine, but worth revisiting if puzzle counts grow.
 async function fetchCompletedIdsForPack(
   packId: string,
   puzzleCount: number,

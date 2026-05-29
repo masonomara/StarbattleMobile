@@ -20,6 +20,9 @@ import { useEntitlementsStore } from '../stores/entitlementsStore';
 import type { RootStackParamList, Theme } from '../types';
 
 const NUM_COLS = 2;
+// NOTE: Like LibraryScreen, this screen hard-codes the header height (57) in
+// createStyles and in gridContent.paddingTop. Extract to a shared layout
+// constant so all three screens (Home, Library, Archive) stay in sync.
 
 export function ArchivePackScreen({
   route,
@@ -48,6 +51,12 @@ export function ArchivePackScreen({
     });
   }, []);
 
+  // NOTE: reads packCatalog imperatively via getState() at callback invocation
+  // time, not at render time. This is correct for a navigation callback (we want
+  // the freshest catalog at the moment of tap), but means the component won't
+  // re-render if the catalog changes — which is fine here since we don't display
+  // catalog data. The `?? type` fallback uses the streakType string as the packId,
+  // which will fail to resolve to a valid pack if the catalog hasn't synced yet.
   const navigateToPuzzle = useCallback(
     (dateKey: string) => {
       const catalog = useEntitlementsStore.getState().packCatalog;

@@ -1,3 +1,15 @@
+// ARCH: This file owns four distinct responsibilities. As it grows, consider splitting:
+//   packStorage.ts   — RNFS read/write, path helpers, assertSafeKey
+//   packFetcher.ts   — supabase.storage.download, validatePackText, ETag logic
+//   packCache.ts     — in-memory packCache + hintsCache Maps, loadPack/loadPackHints
+//   index.ts         — public API (getPuzzlesForPack, getStreakPack, downloadPack, etc.)
+// The current single-file approach is fine for the current size, but the boundaries
+// above will prevent the file from becoming a 500-line maintenance hazard.
+//
+// NOTE: The verbose console.log/error calls throughout this file are marked with a
+// TODO below — gate them behind __DEV__ before any release build to avoid leaking
+// internal paths and pack metadata in production logs.
+// TODO: gate all [SB:PACK] and [SB:HINTS] logs behind `if (__DEV__)`.
 import { NativeModules } from 'react-native';
 import { supabase } from '../supabase';
 import { packMetaStorage } from '../mmkv';
@@ -44,6 +56,9 @@ function validatePackText(text: string): void {
 // Placeholders for a potential future encryption or compression layer.
 // encodeForDisk currently passes the JSON string through unchanged.
 // decodeFromDisk parses it back. If compression is added, update both.
+// DEBT: encodeForDisk is called in 3 write paths but decodeFromDisk is only
+// called in one read path (fetchPack). The asymmetry will cause subtle bugs if
+// encoding is ever changed — make sure every write path has a matching read.
 function encodeForDisk(text: string): string {
   return text;
 }
@@ -117,6 +132,12 @@ async function fetchPack(localKey: string, remoteKey?: string): Promise<Pack> {
 
 // In-memory cache keyed by local filename. Stores the in-flight or resolved
 // Promise so concurrent callers for the same key share one fetch.
+// NOTE: packCache is module-level and never evicted except on individual fetch
+// failures. This means a fresh install always populates from disk/network, but
+// once warm the app never re-reads from disk even across puzzle sessions.
+// If pack content is updated server-side, the cache must be explicitly
+// invalidated via packCache.delete() — currently only errors trigger eviction.
+// prefetchPackFile() handles ETag-based refresh; loadPack() does not.
 const packCache = new Map<string, Promise<Pack>>();
 
 function loadPack(localKey: string, remoteKey?: string): Promise<Pack> {

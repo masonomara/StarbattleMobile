@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 
 // NAVIGATION
+// All app-wide types are centralised here per CLAUDE.md. Keep it that way —
+// do not export types from component or utility files.
 
 export type RootStackParamList = {
   Home: undefined;
@@ -172,6 +174,9 @@ export type Pack = {
 
 // All data resolved from route params + remote pack source before a puzzle
 // can render. Loaded asynchronously by usePackData; null until ready.
+// ARCH: effectivePackId conflates two different ID spaces (streakType string
+// vs catalog packId). Consider a discriminated union here to make the
+// streak vs library distinction explicit at the type level.
 export type PackData = {
   rawPuzzle: RawPuzzle;
   puzzleId: string;
@@ -243,6 +248,12 @@ export type PaletteVariants = {
   light: ThemeColors;
 };
 
+// DEBT: Theme mixes semantic color roles with design tokens (spacing, radius,
+// font sizes). These are different concerns — colors should come from the
+// palette; tokens are layout constants that never change per-theme. Consider
+// separating them so callers can import tokens directly without needing a
+// full theme object (e.g. for non-themed utility components).
+// See: src/themes/palettes.ts `tokens` object.
 export type Theme = {
   isDark: boolean;
   background: string;

@@ -1,3 +1,15 @@
+// INCONSISTENCY: StreaksModal fetches streak data via loadStreaks() (imperative,
+// one-shot read) while HomeScreen uses useStreakRows() (reactive PowerSync
+// watch). If new streak data arrives while this modal is open, the counts won't
+// update. Replacing loadStreaks() with useStreakRows() would unify the pattern.
+//
+// CLEANUP: archiveCounts is recomputed inline on each render by calling
+// getPastDateKeys three times. Wrap in useMemo — the value only changes at
+// day-rollover so it's effectively stable across a session.
+//
+// CONCERN: The premium lock for archive access uses an Alert to redirect to
+// Settings. Consider a dedicated PaywallModal context variant instead of an
+// Alert so the UX is consistent with the rest of the paywall flows.
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -7,8 +19,8 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { Text } from '../components/Text';
-import { PackCard } from '../components/PackCard';
+import { Text } from './Text';
+import { PackCard } from './PackCard';
 import X from 'lucide-react-native/dist/cjs/icons/x';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { useNavigation } from '@react-navigation/native';

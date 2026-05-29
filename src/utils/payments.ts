@@ -4,6 +4,11 @@ import { downloadPack } from '../packs';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
 import { prefetchAllCatalog } from '../packs/prefetch';
 
+// NOTE: _productsPromise caches the paywall products for the lifetime of the
+// process. If Adapty's paywall configuration changes server-side (e.g. price
+// update, new product added), the app must be restarted to pick up the change.
+// This is acceptable for current usage (prices rarely change mid-session) but
+// worth noting for a future "refresh paywall" feature.
 let _productsPromise: Promise<AdaptyPaywallProduct[]> | null = null;
 
 async function getProducts(): Promise<AdaptyPaywallProduct[]> {
@@ -24,6 +29,9 @@ export async function getLocalizedPrice(vendorProductId: string): Promise<string
   }
 }
 
+// NOTE: 'sb_premium_599' is hard-coded here and duplicated in SettingsModal
+// (useProductPrice('sb_premium_599')). If the product ID ever changes, both
+// sites must be updated. Consider exporting a constant: PREMIUM_PRODUCT_ID.
 export async function purchasePremium(): Promise<boolean> {
   const products = await getProducts();
   const product = products.find(p => p.vendorProductId === 'sb_premium_599');

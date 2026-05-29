@@ -22,6 +22,9 @@ export function CircleButton({
   );
 }
 
+// NOTE: shadowColor here is '#000000' while Toolbar and WinBanner use '#25292E'.
+// Standardise to one value (or add a `shadowColor` token to Theme) so shadows
+// are visually consistent across components.
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     button: {

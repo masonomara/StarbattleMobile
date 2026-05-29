@@ -40,6 +40,10 @@ import type {
 
 // Fixed header height (excluding safe area inset) — used in both the header
 // style and the scroll view's top padding offset.
+// INCONSISTENCY: LibraryScreen and ArchivePackScreen hard-code `57` inline
+// rather than importing or defining this constant. Any change here must be
+// replicated manually in those files. Extract to a shared layout constant
+// (e.g. src/layout.ts) so all three screens stay in sync.
 const HEADER_HEIGHT = 57;
 
 // PaidPackRow is its own component because useProductPrice is a hook — hooks

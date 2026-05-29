@@ -41,6 +41,13 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     const transaction = await database.getNextCrudTransaction();
     if (!transaction) return;
 
+    // NOTE: The loop processes ops sequentially. A single fatal error in op N
+    // discards the entire transaction (all ops, including successfully applied
+    // ops 0..N-1). This is intentional — PowerSync transactions are atomic.
+    // The fatal-code check below prevents the queue from blocking on a row
+    // that will never succeed; the transaction is completed (consumed) without
+    // retrying. Non-fatal errors (network, transient) re-throw so PowerSync
+    // retries the whole transaction.
     try {
       for (const op of transaction.crud) {
         const table = supabase.from(op.table);
