@@ -10,6 +10,7 @@ export type RootStackParamList = {
   Puzzle:
     | { packId: string; puzzleIndex: number }
     | { packId: string; archiveKey?: string };
+  ArchivePack: { type: StreakType };
 };
 
 declare global {
@@ -59,6 +60,17 @@ export type PuzzleThumbnailProps = {
   size: number;
   theme: Theme;
   coloredRegions: boolean;
+};
+
+export type PackCardProps = {
+  name: string;
+  meta: string;
+  preview?: Puzzle;
+  onPress: () => void;
+  right?: ReactNode;
+  theme: Theme;
+  coloredRegions: boolean;
+  disabled?: boolean;
 };
 
 export type ToolbarProps = {

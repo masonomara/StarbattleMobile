@@ -9,6 +9,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeScreen } from './screens/HomeScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
+import { ArchivePackScreen } from './screens/ArchivePackScreen';
 import { StreaksModal } from './screens/StreaksModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
@@ -54,6 +55,17 @@ function WrappedPuzzle(
   );
 }
 
+function WrappedArchivePack(
+  props: NativeStackScreenProps<RootStackParamList, 'ArchivePack'>,
+) {
+  const theme = useTheme();
+  return (
+    <ErrorBoundary theme={theme} onReset={() => props.navigation.goBack()}>
+      <ArchivePackScreen {...props} />
+    </ErrorBoundary>
+  );
+}
+
 export function Navigation() {
   const theme = useTheme();
   const bgColor = theme.background;
@@ -76,6 +88,7 @@ export function Navigation() {
         <Stack.Screen name="Home" component={WrappedHome} />
         <Stack.Screen name="Library" component={WrappedLibrary} />
         <Stack.Screen name="Puzzle" component={WrappedPuzzle} />
+        <Stack.Screen name="ArchivePack" component={WrappedArchivePack} />
       </Stack.Navigator>
       <SettingsModal />
       <ResetPasswordModal />

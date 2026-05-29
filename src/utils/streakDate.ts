@@ -101,6 +101,30 @@ export function archiveKeyToDate(type: StreakType, key: string): Date {
   }
 }
 
+export function formatArchiveKey(type: StreakType, key: string): string {
+  switch (type) {
+    case 'daily': {
+      const [y, m, d] = key.split('-').map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+    case 'weekly': {
+      const [yearStr, weekStr] = key.split('-W');
+      return `Week ${Number(weekStr)}, ${yearStr}`;
+    }
+    case 'monthly': {
+      const [yearStr, monthStr] = key.split('-');
+      return new Date(Number(yearStr), Number(monthStr) - 1, 1).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+  }
+}
+
 export function getActiveStreak(streak: Streak, type: StreakType): number {
   const currentKey = getCurrentKey(type);
   const prevKey = getPreviousKey(type);

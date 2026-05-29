@@ -24,6 +24,7 @@ import { useAuthStore } from '../stores/authStore';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { startupTimer } from '../utils/startupTimer';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
+import { PackCard } from '../components/PackCard';
 import { useProductPrice } from '../hooks/useProductPrice';
 import type {
   Theme,
@@ -52,28 +53,20 @@ function PaidPackRow({
 }) {
   const price = useProductPrice(`starbattle_pack_${pack.id}`);
   return (
-    <Pressable style={styles.packCard} onPress={onPress}>
-      {preview && (
-        <View style={styles.packThumb}>
-          <PuzzleThumbnail
-            puzzle={preview}
-            size={48}
-            theme={theme}
-            coloredRegions={coloredRegions}
-          />
-        </View>
-      )}
-      <View style={styles.packInfo}>
-        <Text style={styles.packName}>{pack.name}</Text>
-        <Text style={styles.packMeta}>
-          {completed}/{pack.puzzleCount}
+    <PackCard
+      name={pack.name}
+      meta={`${completed}/${pack.puzzleCount}`}
+      preview={preview}
+      onPress={onPress}
+      theme={theme}
+      coloredRegions={coloredRegions}
+      right={
+        <Text style={styles.packPrice}>
+          {price ??
+            (pack.priceUsd != null ? `$${pack.priceUsd.toFixed(2)}` : '—')}
         </Text>
-      </View>
-      <Text style={styles.packPrice}>
-        {price ??
-          (pack.priceUsd != null ? `$${pack.priceUsd.toFixed(2)}` : '—')}
-      </Text>
-    </Pressable>
+      }
+    />
   );
 }
 
@@ -257,68 +250,37 @@ export function HomeScreen({
           <Text style={styles.sectionLabel}>Puzzle Library</Text>
           {freePacks.map(pack => {
             const completed = completedPerPack[pack.id] ?? 0;
-            const preview = packPreviews[pack.id];
             return (
-              <Pressable
+              <PackCard
                 key={pack.id}
-                style={styles.packCard}
+                name={pack.name}
+                meta={`${completed}/${pack.puzzleCount}`}
+                preview={packPreviews[pack.id]}
                 onPress={() =>
                   navigation.navigate('Library', { packId: pack.id })
                 }
-              >
-                {preview && (
-                  <View style={styles.packThumb}>
-                    <PuzzleThumbnail
-                      puzzle={preview}
-                      size={48}
-                      theme={theme}
-                      coloredRegions={coloredRegions}
-                    />
-                  </View>
-                )}
-                <View style={styles.packInfo}>
-                  <Text style={styles.packName}>{pack.name}</Text>
-                  <Text style={styles.packMeta}>
-                    {completed}/{pack.puzzleCount}
-                  </Text>
-                </View>
-                {/* <Text style={styles.packProgress}>
-                  {completed}/{pack.puzzleCount}
-                </Text> */}
-              </Pressable>
+                theme={theme}
+                coloredRegions={coloredRegions}
+              />
             );
           })}
 
           {paidPacks.map(pack => {
             const hasAccess = hasPackAccess(pack.id);
             const completed = completedPerPack[pack.id] ?? 0;
-            const preview = packPreviews[pack.id];
             if (hasAccess) {
               return (
-                <Pressable
+                <PackCard
                   key={pack.id}
-                  style={styles.packCard}
+                  name={pack.name}
+                  meta={`${completed}/${pack.puzzleCount}`}
+                  preview={packPreviews[pack.id]}
                   onPress={() =>
                     navigation.navigate('Library', { packId: pack.id })
                   }
-                >
-                  {preview && (
-                    <View style={styles.packThumb}>
-                      <PuzzleThumbnail
-                        puzzle={preview}
-                        size={48}
-                        theme={theme}
-                        coloredRegions={coloredRegions}
-                      />
-                    </View>
-                  )}
-                  <View style={styles.packInfo}>
-                    <Text style={styles.packName}>{pack.name}</Text>
-                    <Text style={styles.packMeta}>
-                      {completed}/{pack.puzzleCount}
-                    </Text>
-                  </View>
-                </Pressable>
+                  theme={theme}
+                  coloredRegions={coloredRegions}
+                />
               );
             }
             return (
@@ -330,7 +292,7 @@ export function HomeScreen({
                   navigation.navigate('Library', { packId: pack.id })
                 }
                 styles={styles}
-                preview={preview}
+                preview={packPreviews[pack.id]}
                 theme={theme}
                 coloredRegions={coloredRegions}
               />
@@ -462,41 +424,6 @@ const createStyles = (
       fontWeight: '900',
       color: theme.text,
       letterSpacing: -0.33,
-    },
-    packCard: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 16,
-      borderRadius: 4,
-      marginBottom: 12,
-      backgroundColor: theme.background,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    packThumb: {
-      marginRight: 14,
-    },
-    packInfo: { flex: 1 },
-    packName: {
-      fontSize: 17,
-      lineHeight: 22,
-      fontWeight: 700,
-      color: theme.text,
-      letterSpacing: -0.56,
-    },
-    packMeta: {
-      fontSize: 17,
-      lineHeight: 22,
-      fontWeight: 500,
-      color: theme.textSecondary,
-      letterSpacing: -0.56,
-      marginTop: 2,
-    },
-    packProgress: {
-      fontSize: theme.fontSizeCallout,
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.blue,
     },
     packPrice: {
       fontSize: theme.fontSizeCallout,
