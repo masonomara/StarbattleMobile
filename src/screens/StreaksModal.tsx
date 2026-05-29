@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { Modal, View, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { Text } from '../components/Text';
 import { PackCard } from '../components/PackCard';
 import X from 'lucide-react-native/dist/cjs/icons/x';
+import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header } from '../components/Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
+import { useEntitlements } from '../hooks/useEntitlements';
 import { loadStreaks } from '../utils/progress';
 import { getStreakPack } from '../packs';
 import { parsePuzzle } from '../utils/parsePuzzle';
@@ -42,6 +44,8 @@ export function StreaksModal() {
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const streaksModalVisible = useStreaksStore(s => s.streaksModalVisible);
   const closeStreaks = useStreaksStore(s => s.closeStreaks);
+  const { entitlements } = useEntitlements();
+  const isPremium = entitlements.isPremium;
 
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -126,6 +130,7 @@ export function StreaksModal() {
             const count = archiveCounts[type];
             const preview = thumbnails[type];
             const isEmpty = count === 0;
+            const locked = !isPremium;
             return (
               <PackCard
                 key={type}
@@ -134,9 +139,28 @@ export function StreaksModal() {
                 preview={preview}
                 disabled={isEmpty}
                 onPress={() => {
-                  closeStreaks();
-                  navigation.navigate('ArchivePack', { type });
+                  if (locked) {
+                    Alert.alert(
+                      'Premium Feature',
+                      'Upgrade to Premium to access past puzzles.',
+                      [
+                        { text: 'Not Now', style: 'cancel' },
+                        {
+                          text: 'Upgrade',
+                          onPress: () => useSettingsStore.getState().openSettings(),
+                        },
+                      ],
+                    );
+                  } else {
+                    closeStreaks();
+                    navigation.navigate('ArchivePack', { type });
+                  }
                 }}
+                right={
+                  locked ? (
+                    <Lock size={18} color={theme.textSecondary} />
+                  ) : undefined
+                }
                 theme={theme}
                 coloredRegions={coloredRegions}
               />
