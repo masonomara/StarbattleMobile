@@ -3,11 +3,28 @@ import { useAuthStore } from '../stores/authStore';
 import { getCurrentKey, getPreviousKey } from './streakDate';
 import type { CellValue, StreakType, Streak } from '../types';
 
-// REFACTOR: saveProgress and saveStreak both follow the same SELECT-first-then-
-// upsert pattern for the same reason (PowerSync views have unreliable
-// rowsAffected). The two implementations are nearly identical — consider
-// extracting a shared `upsertById(table, id, insertData, updateSql, updateArgs)`
-// helper to reduce duplication and keep the reasoning in one place.
+// PowerSync exposes tables as views with INSTEAD OF triggers. rowsAffected is
+// unreliable on views (SQLite does not count trigger-internal changes), so we
+// SELECT first to decide INSERT vs UPDATE rather than trusting rowsAffected.
+async function upsertById(
+  table: string,
+  id: string,
+  insertSql: string,
+  insertArgs: unknown[],
+  updateSql: string,
+  updateArgs: unknown[],
+): Promise<void> {
+  const existing = await db.getOptional<{ id: string }>(
+    `SELECT id FROM ${table} WHERE id = ?`,
+    [id],
+  );
+  if (existing) {
+    await db.execute(updateSql, updateArgs);
+  } else {
+    await db.execute(insertSql, insertArgs);
+  }
+}
+
 export async function saveProgress(
   puzzleId: string,
   cells: CellValue[],
@@ -25,34 +42,23 @@ export async function saveProgress(
   const completedInt = completed ? 1 : 0;
   const completedAt = completed ? now : null;
 
-  // PowerSync exposes tables as views with INSTEAD OF triggers. rowsAffected is
-  // unreliable on views (SQLite does not count trigger-internal changes), so we
-  // SELECT first to decide INSERT vs UPDATE rather than trusting rowsAffected.
-  const existing = await db.getOptional<{ id: string }>(
-    'SELECT id FROM puzzle_progress WHERE id = ?',
-    [id],
+  await upsertById(
+    'puzzle_progress',
+    id,
+    `INSERT INTO puzzle_progress
+       (id, user_id, puzzle_id, cells, auto_marks, time_ms, completed, completed_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, userId, puzzleId, cellsJson, autoMarksJson, timeMs, completedInt, completedAt, now],
+    `UPDATE puzzle_progress SET
+       cells = ?,
+       auto_marks = ?,
+       time_ms = ?,
+       completed = ?,
+       completed_at = COALESCE(completed_at, ?),
+       updated_at = ?
+     WHERE id = ?`,
+    [cellsJson, autoMarksJson, timeMs, completedInt, completedAt, now, id],
   );
-
-  if (existing) {
-    await db.execute(
-      `UPDATE puzzle_progress SET
-         cells = ?,
-         auto_marks = ?,
-         time_ms = ?,
-         completed = ?,
-         completed_at = COALESCE(completed_at, ?),
-         updated_at = ?
-       WHERE id = ?`,
-      [cellsJson, autoMarksJson, timeMs, completedInt, completedAt, now, id],
-    );
-  } else {
-    await db.execute(
-      `INSERT INTO puzzle_progress
-         (id, user_id, puzzle_id, cells, auto_marks, time_ms, completed, completed_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, userId, puzzleId, cellsJson, autoMarksJson, timeMs, completedInt, completedAt, now],
-    );
-  }
 }
 
 export async function loadProgress(puzzleId: string): Promise<{
@@ -151,30 +157,19 @@ export async function saveStreak(
   const now = new Date().toISOString();
   const id = `${userId}:${type}`;
 
-  // PowerSync exposes tables as views with INSTEAD OF triggers. rowsAffected is
-  // unreliable on views (SQLite does not count trigger-internal changes), so we
-  // SELECT first to decide INSERT vs UPDATE rather than trusting rowsAffected.
-  const existing = await db.getOptional<{ id: string }>(
-    'SELECT id FROM streaks WHERE id = ?',
-    [id],
+  await upsertById(
+    'streaks',
+    id,
+    `INSERT INTO streaks (id, user_id, type, current_count, last_completed_key, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, userId, type, currentCount, lastCompletedKey, now],
+    `UPDATE streaks SET
+       current_count = ?,
+       last_completed_key = ?,
+       updated_at = ?
+     WHERE id = ?`,
+    [currentCount, lastCompletedKey, now, id],
   );
-
-  if (existing) {
-    await db.execute(
-      `UPDATE streaks SET
-         current_count = ?,
-         last_completed_key = ?,
-         updated_at = ?
-       WHERE id = ?`,
-      [currentCount, lastCompletedKey, now, id],
-    );
-  } else {
-    await db.execute(
-      `INSERT INTO streaks (id, user_id, type, current_count, last_completed_key, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, userId, type, currentCount, lastCompletedKey, now],
-    );
-  }
 }
 
 // Imperative one-shot read of streak rows. For reactive updates (e.g. the
