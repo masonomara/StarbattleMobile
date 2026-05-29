@@ -1,13 +1,12 @@
 import React, { useMemo } from 'react';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import { rgba } from '../themes/ansi';
+import {
+  buildRegionFillPaths,
+  buildRegionBorderPath,
+} from '../utils/skiaHelpers';
 import type { PuzzleThumbnailProps } from '../types';
 
-// DUPLICATION: The regionFillPaths, innerGridPath, and regionBorderPath useMemos
-// here mirror the equivalent logic in BackgroundCanvas (PuzzleCanvas.tsx). The
-// algorithms differ slightly (thumbnail omits outer border from the region border
-// path; BackgroundCanvas includes it). See BackgroundCanvas comment for the
-// shared-utility refactoring opportunity.
 export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   puzzle,
   size,
@@ -21,25 +20,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
 
   const regionFillPaths = useMemo(() => {
     if (!coloredRegions) return null;
-    const builders = new Map<
-      number,
-      ReturnType<typeof Skia.PathBuilder.Make>
-    >();
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        const colorIdx = regions[row][col] % theme.regionColors.length;
-        if (!builders.has(colorIdx)) {
-          builders.set(colorIdx, Skia.PathBuilder.Make());
-        }
-        builders
-          .get(colorIdx)!
-          .addRect(Skia.XYWHRect(col * cs, row * cs, cs, cs));
-      }
-    }
-    return [...builders.entries()].map(([colorIdx, b]) => ({
-      colorIdx,
-      path: b.detach(),
-    }));
+    return buildRegionFillPaths(regions, gridSize, cs);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzle.id, size, coloredRegions]);
 
@@ -55,27 +36,11 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzle.id, size]);
 
-  const regionBorderPath = useMemo(() => {
-    const rb = Skia.PathBuilder.Make();
-    for (let row = 1; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        if (regions[row - 1][col] !== regions[row][col]) {
-          rb.moveTo(col * cs, row * cs);
-          rb.lineTo((col + 1) * cs, row * cs);
-        }
-      }
-    }
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 1; col < gridSize; col++) {
-        if (regions[row][col - 1] !== regions[row][col]) {
-          rb.moveTo(col * cs, row * cs);
-          rb.lineTo(col * cs, (row + 1) * cs);
-        }
-      }
-    }
-    return rb.detach();
+  const regionBorderPath = useMemo(
+    () => buildRegionBorderPath(regions, gridSize, cs),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle.id, size]);
+    [puzzle.id, size],
+  );
 
   const outerBorderPath = useMemo(() => {
     const b = Skia.PathBuilder.Make();

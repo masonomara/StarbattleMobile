@@ -3,6 +3,10 @@ import { View } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import { rgba } from '../themes/ansi';
+import {
+  buildRegionFillPaths,
+  buildRegionBorderPath,
+} from '../utils/skiaHelpers';
 import type {
   Puzzle,
   CellValue,
@@ -20,13 +24,6 @@ type BackgroundCanvasProps = {
 };
 
 // Memoized so it never re-renders during gameplay — only when puzzle or theme changes.
-// DUPLICATION: the regionBorderPath and regionFillPaths algorithms here are
-// substantially similar to the equivalent useMemos in PuzzleThumbnail. The main
-// difference is that BackgroundCanvas includes outer-border segments while
-// PuzzleThumbnail draws only inner boundaries (the outer rect is a separate path).
-// Consider extracting `buildRegionBorderPath(regions, size, cs, bw)` and
-// `buildRegionFillPaths(regions, size, cs, bw, regionColors)` to a shared
-// utility (e.g. src/utils/skiaHelpers.ts) that both can import.
 const BackgroundCanvas = React.memo(function BackgroundCanvas({
   puzzle,
   theme,
@@ -40,60 +37,20 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
   const totalSize = canvasSize + bw * 2;
   const regionColors = theme.regionColors;
 
-  const regionFillPaths = useMemo(() => {
-    const builders = new Map<
-      number,
-      ReturnType<typeof Skia.PathBuilder.Make>
-    >();
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
-        const colorIdx = regions[row][col] % regionColors.length;
-        if (!builders.has(colorIdx)) {
-          builders.set(colorIdx, Skia.PathBuilder.Make());
-        }
-        builders
-          .get(colorIdx)!
-          .addRect(Skia.XYWHRect(bw + col * cs, bw + row * cs, cs, cs));
-      }
-    }
-    return [...builders.entries()].map(([colorIdx, b]) => ({
-      colorIdx,
-      path: b.detach(),
-    }));
-    // regionColors.length is intentionally omitted: buildTheme always constructs
-    // regionColors from exactly 6 fixed color slots, so its length is invariant
-    // across palettes and theme switches. Paths encode geometry only; colors are
-    // applied in JSX below.
+  // regionColors.length is intentionally omitted from deps: buildTheme always
+  // constructs regionColors from exactly 6 fixed color slots, so its length is
+  // invariant across palettes and theme switches. Paths encode geometry only.
+  const regionFillPaths = useMemo(
+    () => buildRegionFillPaths(regions, size, cs, bw),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle.id, canvasSize, bw]);
+    [puzzle.id, canvasSize, bw],
+  );
 
-  const regionBorderPath = useMemo(() => {
-    const rb = Skia.PathBuilder.Make();
-    for (let row = 0; row <= size; row++) {
-      for (let col = 0; col < size; col++) {
-        const isOuter = row === 0 || row === size;
-        const isRegionBoundary =
-          !isOuter && regions[row - 1][col] !== regions[row][col];
-        if (isOuter || isRegionBoundary) {
-          rb.moveTo(bw + col * cs, bw + row * cs);
-          rb.lineTo(bw + (col + 1) * cs, bw + row * cs);
-        }
-      }
-    }
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col <= size; col++) {
-        const isOuter = col === 0 || col === size;
-        const isRegionBoundary =
-          !isOuter && regions[row][col - 1] !== regions[row][col];
-        if (isOuter || isRegionBoundary) {
-          rb.moveTo(bw + col * cs, bw + row * cs);
-          rb.lineTo(bw + col * cs, bw + (row + 1) * cs);
-        }
-      }
-    }
-    return rb.detach();
+  const regionBorderPath = useMemo(
+    () => buildRegionBorderPath(regions, size, cs, bw, true),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzle.id, canvasSize, bw]);
+    [puzzle.id, canvasSize, bw],
+  );
 
   const innerGridPath = useMemo(() => {
     const b = Skia.PathBuilder.Make();
