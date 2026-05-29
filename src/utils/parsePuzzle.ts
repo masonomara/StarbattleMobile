@@ -61,6 +61,7 @@ function _parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
     regions,
     regionCells,
     solution: raw.solution,
+    solutionSet: new Set(raw.solution.map(([r, c]) => r * size + c)),
     hints: (raw.hints ?? []) as HintStep[],
   };
 }

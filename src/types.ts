@@ -160,6 +160,7 @@ export type Puzzle = {
   regions: number[][];
   regionCells: number[][];
   solution: Coord[];
+  solutionSet: Set<number>;
   hints: HintStep[];
 };
 

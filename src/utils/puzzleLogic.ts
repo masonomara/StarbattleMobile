@@ -182,24 +182,17 @@ export function computeErrors(
   return errors;
 }
 
-// PERF: checkWin is called after every tap and redo. The inner `solution.some`
-// makes this O(stars × solution.length). For large grids (12×12, many stars)
-// this degrades noticeably. Pre-computing `new Set(solution.map(([r,c]) =>
-// r * boardSize + c))` once in parsePuzzle and storing it on the Puzzle object
-// would reduce each win check to O(stars).
 export function checkWin(
   cells: CellValue[],
   boardSize: number,
   puzzle: Puzzle,
 ): boolean {
-  const solution = puzzle.solution;
+  const { solutionSet, solution } = puzzle;
   let starCount = 0;
   for (let i = 0; i < cells.length; i++) {
     if (cells[i] === 1) {
       starCount++;
-      const r = Math.floor(i / boardSize);
-      const c = i % boardSize;
-      if (!solution.some(([sr, sc]) => sr === r && sc === c)) return false;
+      if (!solutionSet.has(i)) return false;
     }
   }
   return starCount === solution.length;
