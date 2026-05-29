@@ -6,10 +6,6 @@
 // The current single-file approach is fine for the current size, but the boundaries
 // above will prevent the file from becoming a 500-line maintenance hazard.
 //
-// NOTE: The verbose console.log/error calls throughout this file are marked with a
-// TODO below — gate them behind __DEV__ before any release build to avoid leaking
-// internal paths and pack metadata in production logs.
-// TODO: gate all [SB:PACK] and [SB:HINTS] logs behind `if (__DEV__)`.
 import { NativeModules } from 'react-native';
 import { supabase } from '../supabase';
 import { packMetaStorage } from '../mmkv';
@@ -83,11 +79,8 @@ function setCachedEtag(key: string, etag: string): void {
   packMetaStorage.set(`etag:${key}`, etag);
 }
 
-// NOTE: console.log/error calls throughout this file are intentionally verbose
-// for diagnosing pack loading issues in development. Consider gating them
-// behind __DEV__ or a feature flag before shipping a release build.
 async function fetchFromSupabase(storageKey: string): Promise<string> {
-  console.log(`[SB:PACK] supabase.storage.from('packs').download('${storageKey}')`);
+  __DEV__ && console.log(`[SB:PACK] supabase.storage.from('packs').download('${storageKey}')`);
   const { data, error } = await supabase.storage
     .from('packs')
     .download(storageKey);
@@ -107,7 +100,7 @@ async function fetchPack(localKey: string, remoteKey?: string): Promise<Pack> {
     try {
       const raw = await rnfs.readFile(localPath, 'utf8');
       const pack = decodeFromDisk(raw);
-      console.log(`[SB:PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${pack.puzzles?.length ?? '?'} puzzles`);
+      __DEV__ && console.log(`[SB:PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${pack.puzzles?.length ?? '?'} puzzles`);
       if (pack.version < PACK_MIN_VERSION) {
         await rnfs.unlink(localPath).catch(() => {});
         packMetaStorage.remove(`etag:${localKey}`);
@@ -124,7 +117,7 @@ async function fetchPack(localKey: string, remoteKey?: string): Promise<Pack> {
       .writeFile(localPath, encodeForDisk(text), 'utf8')
       .catch(() => {});
     const downloaded = JSON.parse(text) as Pack;
-    console.log(`[SB:PACK] ${localKey} downloaded — v${downloaded.version}, ${downloaded.puzzles?.length} puzzles, keys: ${Object.keys(downloaded.puzzles?.[0] ?? {}).join(',')}`);
+    __DEV__ && console.log(`[SB:PACK] ${localKey} downloaded — v${downloaded.version}, ${downloaded.puzzles?.length} puzzles, keys: ${Object.keys(downloaded.puzzles?.[0] ?? {}).join(',')}`);
     return downloaded;
   }
   return fetchFromSupabase(effectiveRemoteKey).then(text => JSON.parse(text) as Pack);
@@ -151,7 +144,7 @@ function loadPack(localKey: string, remoteKey?: string): Promise<Pack> {
   // Pre-warm the hints cache in parallel — preview packs have no hints file.
   if (!localKey.includes('_preview')) {
     const hintId = localKey.replace(/\.json$/, '');
-    console.log(`[SB:HINTS] loadPack side-effect: loadPackHints(${hintId})`);
+    __DEV__ && console.log(`[SB:HINTS] loadPack side-effect: loadPackHints(${hintId})`);
     loadPackHints(hintId).catch(e => console.error(`[SB:HINTS] side-effect failed for ${hintId}:`, e));
   }
   return promise;
@@ -163,7 +156,7 @@ const hintsCache = new Map<string, Promise<HintStep[][]>>();
 
 async function fetchPackHints(packId: string): Promise<HintStep[][]> {
   const storageKey = `${packId}-hints.json`;
-  console.log(`[SB:HINTS] fetching ${storageKey}`);
+  __DEV__ && console.log(`[SB:HINTS] fetching ${storageKey}`);
   try {
     const text = await Promise.race([
       fetchFromSupabase(storageKey),
@@ -172,7 +165,7 @@ async function fetchPackHints(packId: string): Promise<HintStep[][]> {
       ),
     ]);
     const hints = (JSON.parse(text) as { hints: HintStep[][] }).hints;
-    console.log(`[SB:HINTS] ${packId}: ${(text.length / 1024).toFixed(1)} KB, ${hints.length} entries`);
+    __DEV__ && console.log(`[SB:HINTS] ${packId}: ${(text.length / 1024).toFixed(1)} KB, ${hints.length} entries`);
     return hints;
   } catch (e) {
     console.error(`[SB:HINTS] ${packId} fetch failed:`, e);
@@ -183,10 +176,10 @@ async function fetchPackHints(packId: string): Promise<HintStep[][]> {
 export function loadPackHints(packId: string): Promise<HintStep[][]> {
   const cached = hintsCache.get(packId);
   if (cached) {
-    console.log(`[SB:HINTS] ${packId}: cache hit`);
+    __DEV__ && console.log(`[SB:HINTS] ${packId}: cache hit`);
     return cached;
   }
-  console.log(`[SB:HINTS] ${packId}: cache miss — starting fetch`);
+  __DEV__ && console.log(`[SB:HINTS] ${packId}: cache miss — starting fetch`);
   const promise = fetchPackHints(packId);
   hintsCache.set(packId, promise);
   promise.catch(() => hintsCache.delete(packId));
