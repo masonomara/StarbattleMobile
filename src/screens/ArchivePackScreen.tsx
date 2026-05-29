@@ -51,16 +51,11 @@ export function ArchivePackScreen({
     });
   }, []);
 
-  // NOTE: reads packCatalog imperatively via getState() at callback invocation
-  // time, not at render time. This is correct for a navigation callback (we want
-  // the freshest catalog at the moment of tap), but means the component won't
-  // re-render if the catalog changes — which is fine here since we don't display
-  // catalog data. The `?? type` fallback uses the streakType string as the packId,
-  // which will fail to resolve to a valid pack if the catalog hasn't synced yet.
   const navigateToPuzzle = useCallback(
     (dateKey: string) => {
       const catalog = useEntitlementsStore.getState().packCatalog;
-      const packId = catalog.find(p => p.type === type)?.id ?? type;
+      const packId = catalog.find(p => p.type === type)?.id;
+      if (!packId) return;
       navigation.navigate('Puzzle', { packId, archiveKey: dateKey });
     },
     [navigation, type],

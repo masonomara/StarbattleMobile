@@ -15,14 +15,6 @@ import type { PackData } from '../types';
 //   Streak pack  — packId matches a catalog entry with a type field.
 //                  Loads today's puzzle or an archive puzzle by archiveKey.
 //   Library pack — puzzleIndex selects the specific puzzle.
-//
-// RISK: reads packCatalog via getState() at effect run-time rather than
-// subscribing reactively. If the catalog hasn't synced yet when the effect
-// first fires (e.g. cold start, slow network), `meta` will be undefined and
-// the pack will be treated as a library pack even if it's a streak pack.
-// The effect re-runs when packId/puzzleIndex/archiveKey change, but NOT when
-// the catalog loads. A fix: add `useEntitlementsStore(s => s.packCatalog)` as
-// a dep (reading it as a hook) or pass `packCatalog` from the caller.
 export function usePackData(
   packId: string,
   puzzleIndex: number | undefined,
@@ -30,12 +22,12 @@ export function usePackData(
   navigation: { goBack: () => void },
 ): PackData | null {
   const [packData, setPackData] = useState<PackData | null>(null);
+  const packCatalog = useEntitlementsStore(s => s.packCatalog);
 
   useEffect(() => {
     setPackData(null);
 
-    const catalog = useEntitlementsStore.getState().packCatalog;
-    const meta = catalog.find(p => p.id === packId);
+    const meta = packCatalog.find(p => p.id === packId);
     const streakType = meta?.type;
 
     if (streakType) {
@@ -98,7 +90,7 @@ export function usePackData(
         })
         .catch(() => navigation.goBack());
     }
-  }, [packId, puzzleIndex, archiveKey, navigation]);
+  }, [packId, puzzleIndex, archiveKey, navigation, packCatalog]);
 
   return packData;
 }
