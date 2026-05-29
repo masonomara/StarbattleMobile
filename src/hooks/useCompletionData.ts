@@ -43,18 +43,17 @@ export function useCompletionData(
     setCompletedPuzzleIds(completedIds);
 
     // Library packs: count how many puzzles are solved (for the "X/Y" label).
-    // PERF: this iterates pack.puzzleCount times per pack, doing a Set.has()
-    // per puzzle. For a pack with 100 puzzles on a large catalog this is O(N×M).
-    // An alternative: filter allCompleted keys by pack prefix once and count.
-    // For current puzzle counts (~30-50 per pack) this is fine.
+    // Single pass over allCompleted — O(K) where K = completed puzzle count.
+    const libraryPackIds = new Set(
+      packCatalog.filter(p => !p.type).map(p => p.id),
+    );
     const counts: Record<string, number> = {};
-    for (const pack of packCatalog) {
-      if (pack.type) continue;
-      let count = 0;
-      for (let i = 0; i < pack.puzzleCount; i++) {
-        if (allCompleted.has(`${pack.id}:${i}`)) count++;
-      }
-      counts[pack.id] = count;
+    for (const packId of libraryPackIds) counts[packId] = 0;
+    for (const key of allCompleted) {
+      const sep = key.indexOf(':');
+      if (sep === -1) continue;
+      const packId = key.slice(0, sep);
+      if (libraryPackIds.has(packId)) counts[packId]++;
     }
     setCompletedPerPack(counts);
   }, [packCatalog]);
