@@ -179,7 +179,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.surface,
     },
     buttonAccent: {
-      backgroundColor: theme.textSecondary,
+      backgroundColor: theme.border,
     },
     buttonDisabled: {
       opacity: 0.4,

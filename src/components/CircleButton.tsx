@@ -7,11 +7,16 @@ export function CircleButton({
   onPress,
   children,
   hitSlop = 8,
+  ghost = false,
 }: CircleButtonProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
   return (
-    <Pressable onPress={onPress} hitSlop={hitSlop} style={styles.button}>
+    <Pressable
+      onPress={onPress}
+      hitSlop={hitSlop}
+      style={[styles.button, ghost && styles.ghost]}
+    >
       {children}
     </Pressable>
   );
@@ -31,5 +36,12 @@ const createStyles = (theme: Theme) =>
       shadowOpacity: 0.1,
       shadowRadius: 24,
       elevation: 8,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+      shadowOpacity: 0,
+      elevation: 0,
+      height: 44,
+      width: 44,
     },
   });

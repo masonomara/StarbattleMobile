@@ -1639,6 +1639,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-segmented-control (2.5.7):
+    - React-Core
   - react-native-skia (2.6.2):
     - hermes-engine
     - RCTRequired
@@ -2427,6 +2429,7 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-adapty-sdk (from `../node_modules/react-native-adapty`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-segmented-control (from `../node_modules/@react-native-segmented-control/segmented-control`)"
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2583,6 +2586,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-adapty"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-segmented-control:
+    :path: "../node_modules/@react-native-segmented-control/segmented-control"
   react-native-skia:
     :path: "../node_modules/@shopify/react-native-skia"
   react-native-webview:
@@ -2736,6 +2741,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 2fe0f2bd2840dedbd66c0ac249c64f977f39cc18
   react-native-adapty-sdk: c7e117d486d6f19626fb020e446d762adadadde8
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
+  react-native-segmented-control: bf6e0032726727498e18dd437ae88afcdbc18e99
   react-native-skia: e8b9354dc16c4099537ba0659cd70ea4adf8efc4
   react-native-webview: 0ed52ddb2eafc64a502871218440b8b4d37961c3
   React-NativeModulesApple: 44a9474594566cd03659f92e38f42599c6b9dee4

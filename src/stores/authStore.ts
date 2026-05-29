@@ -6,6 +6,9 @@ import { supabase } from '../supabase';
 import { adapty } from 'react-native-adapty';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../config';
 import { startupTimer } from '../utils/startupTimer';
+import { db } from '../powersync/AppSchema';
+import { SupabaseConnector } from '../powersync/Connector';
+import { useEntitlementsStore } from './entitlementsStore';
 
 type AuthState = {
   session: Session | null;
@@ -29,7 +32,7 @@ type SetState = (partial: Partial<AuthState>) => void;
 
 async function applySignIn(set: SetState, session: Session | null, user: User): Promise<void> {
   set({ session, user, isAnonymous: false });
-  await adapty.identify(user.id);
+  try { await adapty.identify(user.id); } catch {}
 }
 
 function parseUrlFragment(fragment: string): Record<string, string> {
@@ -43,14 +46,58 @@ function parseUrlFragment(fragment: string): Record<string, string> {
   return result;
 }
 
-async function deleteAnonymousUser(id: string | null): Promise<void> {
-  if (!id) return;
-  try { await supabase.rpc('delete_anonymous_user', { target_id: id }); } catch {}
+// Polls the PowerSync upload queue until empty, with a timeout.
+// Must complete before the Supabase session exchange so all anonymous writes
+// reach Supabase before migrate_anonymous_progress reads them server-side.
+// Throws if the queue can't drain (offline, upload error, or timeout).
+async function drainUploadQueue(timeoutMs = 30_000): Promise<void> {
+  // Grace period: fire-and-forget writes (e.g. recordStreak) may not have
+  // entered the queue yet. Wait briefly before the first check.
+  await new Promise<void>(resolve => setTimeout(resolve, 600));
+
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const stats = await db.getUploadQueueStats();
+    if (stats.count === 0) return;
+
+    // Fail fast if PowerSync has given up uploading.
+    if (!db.connected) {
+      throw new Error('You appear to be offline. Please check your connection and try again.');
+    }
+    const uploadError = db.currentStatus.dataFlowStatus?.uploadError;
+    if (uploadError) {
+      throw new Error('Progress sync failed. Please check your connection and try again.');
+    }
+
+    await new Promise<void>(resolve => setTimeout(resolve, 500));
+  }
+  throw new Error(
+    'Your progress is taking too long to sync. Please check your connection and try again.',
+  );
 }
 
-// Held at module scope so `initialize()` can unsubscribe the previous listener
-// before attaching a new one. Without this guard, React Fast Refresh (dev) or
-// repeated `initialize()` calls would stack up duplicate listeners.
+// Invokes the server-side merge Edge Function.
+// Errors surface to the caller — unlike the old deleteAnonymousUser, failures
+// are NOT swallowed. On failure the anon user is still intact, so a retry is safe.
+async function migrateAnonProgress(anonId: string, anonToken: string): Promise<void> {
+  const { error } = await supabase.functions.invoke('migrate-anon-account', {
+    body: { anonId, anonToken },
+  });
+  if (error) throw new Error(`Progress migration failed: ${error.message}`);
+}
+
+// After a successful merge, wipes the local PowerSync database and rebuilds it
+// for the named user. Prevents anon rows from coexisting with named-user rows
+// locally and ensures the UI reads merged data before it becomes visible.
+async function reconnectPowerSync(namedId: string): Promise<void> {
+  await db.disconnectAndClear();
+  await db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
+  await db.waitForFirstSync();
+  await useEntitlementsStore.getState().loadEntitlements(namedId);
+}
+
+// Held at module scope so initialize() can unsubscribe the previous listener
+// before attaching a new one (guards against React Fast Refresh stacking duplicates).
 let authSubscription: { unsubscribe: () => void } | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -73,7 +120,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const isAnonymous = initialSession.user.is_anonymous ?? true;
       set({ session: initialSession, user: initialSession.user, isAnonymous });
       if (!isAnonymous) {
-        await adapty.identify(initialSession.user.id);
+        try { await adapty.identify(initialSession.user.id); } catch {}
       }
     } else {
       await get().signInAnonymously();
@@ -84,7 +131,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         set({ session, user: session?.user ?? null, isAnonymous: false, isPasswordRecovery: true });
-        if (session) await adapty.identify(session.user.id);
+        if (session) try { await adapty.identify(session.user.id); } catch {}
         return;
       }
       if (event === 'USER_UPDATED') {
@@ -100,7 +147,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const isAnonymous = session?.user?.is_anonymous ?? true;
       set({ session, user: session?.user ?? null, isAnonymous });
       if (session && !isAnonymous) {
-        await adapty.identify(session.user.id);
+        try { await adapty.identify(session.user.id); } catch {}
       }
       if (event === 'SIGNED_OUT') {
         await adapty.logout();
@@ -138,22 +185,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
     // Don't set isAnonymous: false yet — wait for email confirmation.
     // onAuthStateChange fires USER_UPDATED once the link is clicked.
+    // This is an in-place upgrade (same user ID) so no migration is needed.
   },
 
   signInWithEmail: async (email: string, password: string) => {
-    // Capture before sign-in — state changes once applySignIn fires.
     const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
+    const anonToken = anonId
+      ? ((await supabase.auth.getSession()).data.session?.access_token ?? null)
+      : null;
+
+    // Fix A: ensure all anonymous writes have reached Supabase before the merge
+    // reads them. Aborts with a user-visible error if the queue can't drain.
+    if (anonId) await drainUploadQueue();
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
-    // Clean up the now-orphaned anonymous record only after sign-in succeeds.
-    // A failed cleanup is acceptable (orphan); a pre-sign-in delete on a failed
-    // sign-in would permanently destroy the anonymous user's progress.
-    await deleteAnonymousUser(anonId);
+
+    const namedId = data.user.id;
+    if (anonId && anonToken && namedId !== anonId) {
+      await migrateAnonProgress(anonId, anonToken);
+    }
+
+    // Fix B: rebuild local PowerSync DB for the named user so merged rows are
+    // visible and no anon rows coexist under the named token.
+    await reconnectPowerSync(namedId);
   },
 
   signInWithGoogle: async () => {
     const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
+    const anonToken = anonId
+      ? ((await supabase.auth.getSession()).data.session?.access_token ?? null)
+      : null;
+
+    // Fix A: drain before the Supabase token exchange.
+    if (anonId) await drainUploadQueue();
+
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
     if (!response.data?.idToken) throw new Error('No Google ID token');
@@ -163,11 +230,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
-    await deleteAnonymousUser(anonId);
+
+    const namedId = data.user.id;
+    if (anonId && anonToken && namedId !== anonId) {
+      await migrateAnonProgress(anonId, anonToken);
+    }
+
+    // Fix B: rebuild local PowerSync DB for the named user.
+    await reconnectPowerSync(namedId);
   },
 
   signInWithApple: async () => {
     const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
+    const anonToken = anonId
+      ? ((await supabase.auth.getSession()).data.session?.access_token ?? null)
+      : null;
+
+    // Fix A: drain before the Supabase token exchange.
+    if (anonId) await drainUploadQueue();
+
     const { appleAuth } = await import('@invertase/react-native-apple-authentication');
     // FULL_NAME is intentionally omitted — Apple only sends it on the very first
     // authorization and never again. Requesting it without storing it immediately
@@ -184,7 +265,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
     if (error) throw error;
     await applySignIn(set, data.session, data.user);
-    await deleteAnonymousUser(anonId);
+
+    const namedId = data.user.id;
+    if (anonId && anonToken && namedId !== anonId) {
+      await migrateAnonProgress(anonId, anonToken);
+    }
+
+    // Fix B: rebuild local PowerSync DB for the named user.
+    await reconnectPowerSync(namedId);
   },
 
   requestPasswordReset: async (email: string) => {
@@ -203,31 +291,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
-    await adapty.logout();
+    try { await adapty.logout(); } catch {}
     set({ session: null, user: null, isAnonymous: true });
     try { await get().signInAnonymously(); } catch {}
   },
 
   // Permanently deletes the account and all associated server-side data.
   //
-  // REQUIRED: Two SQL functions must exist in Supabase. Run once in the SQL editor:
+  // REQUIRED: SQL function must exist in Supabase. Run once in the SQL editor:
   //
-  //   -- Deletes the currently authenticated user (used by deleteAccount).
   //   CREATE OR REPLACE FUNCTION public.delete_user()
   //   RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
   //   AS $$ BEGIN DELETE FROM auth.users WHERE id = auth.uid(); END; $$;
   //   GRANT EXECUTE ON FUNCTION public.delete_user() TO authenticated;
-  //
-  //   -- Deletes a specific anonymous user by ID (used after upgrading to a named
-  //   -- account). The is_anonymous guard prevents IDOR exploitation — a named
-  //   -- user's ID passed here simply produces no-op.
-  //   CREATE OR REPLACE FUNCTION public.delete_anonymous_user(target_id uuid)
-  //   RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
-  //   AS $$
-  //   BEGIN
-  //     DELETE FROM auth.users WHERE id = target_id AND is_anonymous = true;
-  //   END; $$;
-  //   GRANT EXECUTE ON FUNCTION public.delete_anonymous_user(uuid) TO authenticated;
   //
   // The CASCADE on auth.users propagates to puzzle_progress, streaks,
   // user_entitlements, and streak_archive automatically.

@@ -18,8 +18,10 @@ import {
   getActiveStreak,
   getPuzzleIndex,
   STREAK_TYPES,
+  STREAK_UNIT,
 } from '../utils/streakDate';
-import { loadStreaks, loadAllCompletionData } from '../utils/progress';
+import { loadAllCompletionData } from '../utils/progress';
+import { db } from '../powersync/AppSchema';
 import { useAuthStore } from '../stores/authStore';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { startupTimer } from '../utils/startupTimer';
@@ -101,7 +103,10 @@ export function HomeScreen({
               `${pack.id}:${getCurrentKey(pack.type)}`,
             );
           } else {
-            const rawPuzzles = await getPuzzlesForPack(pack.id, pack.storagePath);
+            const rawPuzzles = await getPuzzlesForPack(
+              pack.id,
+              pack.storagePath,
+            );
             if (!rawPuzzles?.length) return;
             results[pack.id] = parsePuzzle(rawPuzzles[0], `${pack.id}:0`);
           }
@@ -112,6 +117,7 @@ export function HomeScreen({
     loadPackPreviews();
   }, [packCatalog]);
 
+  const [scrolled, setScrolled] = useState(false);
   const [streaks, setStreaks] = useState<Streak[]>([]);
   const [completedPuzzleIds, setCompletedPuzzleIds] = useState<Set<string>>(
     new Set(),
@@ -124,19 +130,23 @@ export function HomeScreen({
     () =>
       packCatalog
         .filter(p => !!p.type)
-        .sort((a, b) => STREAK_TYPES.indexOf(a.type!) - STREAK_TYPES.indexOf(b.type!)),
+        .sort(
+          (a, b) =>
+            STREAK_TYPES.indexOf(a.type!) - STREAK_TYPES.indexOf(b.type!),
+        ),
     [packCatalog],
   );
-  const freePacks = useMemo(() => packCatalog.filter(p => !p.type && p.isFree), [packCatalog]);
-  const paidPacks = useMemo(() => packCatalog.filter(p => !p.type && !p.isFree), [packCatalog]);
+  const freePacks = useMemo(
+    () => packCatalog.filter(p => !p.type && p.isFree),
+    [packCatalog],
+  );
+  const paidPacks = useMemo(
+    () => packCatalog.filter(p => !p.type && !p.isFree),
+    [packCatalog],
+  );
 
   const load = useCallback(async () => {
-    const [fetchedStreaks, allCompleted] = await Promise.all([
-      loadStreaks(),
-      loadAllCompletionData(),
-    ]);
-
-    setStreaks(fetchedStreaks);
+    const allCompleted = await loadAllCompletionData();
 
     const completedIds = new Set<string>();
     for (const pack of packCatalog) {
@@ -162,25 +172,75 @@ export function HomeScreen({
     if (isFocused && userId) load();
   }, [isFocused, userId, load]);
 
+  useEffect(() => {
+    if (!userId) return;
+
+    const applyRows = (
+      rows: {
+        type: string;
+        current_count: number;
+        last_completed_key: string;
+      }[],
+    ) => {
+      setStreaks(
+        rows.map(r => ({
+          type: r.type as Streak['type'],
+          current: r.current_count,
+          lastCompletedKey: r.last_completed_key,
+        })),
+      );
+    };
+
+    db.getAll<{
+      type: string;
+      current_count: number;
+      last_completed_key: string;
+    }>(
+      'SELECT type, current_count, last_completed_key FROM streaks WHERE user_id = ?',
+      [userId],
+    ).then(applyRows);
+
+    const controller = new AbortController();
+    db.watch(
+      'SELECT type, current_count, last_completed_key FROM streaks WHERE user_id = ?',
+      [userId],
+      {
+        onResult: result => applyRows(result.rows?._array ?? []),
+      },
+      { signal: controller.signal },
+    );
+    return () => controller.abort();
+  }, [userId]);
+
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top },
+          scrolled && styles.headerBorder,
+        ]}
+      >
         <Text style={styles.appTitle}>Star Battle Free</Text>
         <View style={styles.headerRight}>
           <CircleButton
+            ghost
             onPress={() => useStreaksStore.getState().openStreaks()}
           >
-            <Flame size={24} color={theme.text} />
+            <Flame size={26} strokeWidth={2} color={theme.text} />
           </CircleButton>
           <CircleButton
+            ghost
             onPress={() => useSettingsStore.getState().openSettings()}
           >
-            <User size={24} color={theme.text} />
+            <User size={26} strokeWidth={2} color={theme.text} />
           </CircleButton>
         </View>
       </View>
 
       <ScrollView
+        onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+        scrollEventThrottle={16}
         contentContainerStyle={{
           paddingTop: 57 + insets.top,
           paddingBottom: insets.bottom,
@@ -233,11 +293,13 @@ export function HomeScreen({
                       </View>
                     )}
                     <Text style={styles.streakMeta}>
-                      {isCompleted
-                        ? `${streakCount} day streak`
+                      {isCompleted && streakCount > 0
+                        ? `${streakCount} ${STREAK_UNIT[type]} streak`
+                        : isCompleted
+                        ? `Completed`
                         : streakCount > 0
-                          ? `Continue your ${streakCount} day streak`
-                          : `Start your ${pack.name} streak`}
+                        ? `Continue your ${streakCount} ${STREAK_UNIT[type]} streak`
+                        : `Start your ${pack.name} streak`}
                     </Text>
                   </View>
                 </Pressable>
@@ -325,6 +387,12 @@ const createStyles = (
       paddingHorizontal: 16,
       height: 57 + insets.top,
       backgroundColor: theme.background,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.background,
+    },
+    headerBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
     },
     appTitle: {
       fontSize: 25,
@@ -336,7 +404,7 @@ const createStyles = (
     },
     headerRight: {
       flexDirection: 'row',
-      gap: theme.spacingMd,
+      gap: 8,
     },
     streakSection: {
       paddingTop: 24,

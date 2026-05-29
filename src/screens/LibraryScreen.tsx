@@ -16,7 +16,6 @@ import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { CircleButton } from '../components/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../packs';
-import { Header } from '../components/Header';
 import { PaywallModal } from '../components/PaywallModal';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { useTheme } from '../hooks/useTheme';
@@ -128,8 +127,8 @@ export function LibraryScreen({
   const numColumns = NUM_COLS;
   const cellSize = Math.floor((width - 2 * 32 - numColumns * 12) / numColumns);
   const styles = useMemo(
-    () => createStyles(theme, cellSize),
-    [theme, cellSize],
+    () => createStyles(theme, cellSize, insets),
+    [theme, cellSize, insets],
   );
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, canPlayPuzzle, hasPackAccess } = useEntitlements();
@@ -141,6 +140,7 @@ export function LibraryScreen({
   const priceUsd = catalogPack?.priceUsd;
   const storagePath = catalogPack?.storagePath;
 
+  const [scrolled, setScrolled] = useState(false);
   const [rawPuzzles, setRawPuzzles] = useState<RawPuzzle[] | null>(null);
 
   useEffect(() => {
@@ -256,23 +256,27 @@ export function LibraryScreen({
 
   return (
     <View style={styles.container}>
-      <Header
-        left={
-          <CircleButton onPress={() => navigation.goBack()}>
-            <ChevronLeft size={26} color={theme.text} />
-          </CircleButton>
-        }
-        center={<Text style={styles.headerTitle}>{packName}</Text>}
-      />
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top },
+          scrolled && styles.headerBorder,
+        ]}
+      >
+        <CircleButton ghost onPress={() => navigation.goBack()}>
+          <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
+        </CircleButton>
+        <Text style={styles.headerTitle}>{packName}</Text>
+        <View style={styles.headerSpacer} />
+      </View>
       <FlatList
         data={rows}
         keyExtractor={item => String(item[0])}
         renderItem={renderRow}
         style={styles.scroll}
-        contentContainerStyle={[
-          styles.gridContent,
-          { paddingTop: 48 + insets.top, paddingBottom: insets.bottom },
-        ]}
+        onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.gridContent}
       />
       <PaywallModal
         context={paywallContext}
@@ -286,15 +290,43 @@ export function LibraryScreen({
   );
 }
 
-const createStyles = (theme: Theme, cellSize: number) => {
+const createStyles = (
+  theme: Theme,
+  cellSize: number,
+  insets: { top: number; bottom: number },
+) => {
   return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.background,
     },
+    header: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 100,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      height: 57 + insets.top,
+      backgroundColor: theme.background,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.background,
+    },
+    headerBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    headerSpacer: {
+      width: 44,
+    },
     scroll: { flex: 1 },
     gridContent: {
-      padding: 32,
+      paddingHorizontal: 32,
+      paddingTop: 57 + insets.top + 24,
+      paddingBottom: insets.bottom,
       rowGap: 12,
     },
     row: {
@@ -337,7 +369,6 @@ const createStyles = (theme: Theme, cellSize: number) => {
     locked: { opacity: 0.4 },
     headerTitle: {
       fontSize: 17,
-      fontVariant: ['tabular-nums'],
       fontWeight: '600',
       color: theme.text,
     },

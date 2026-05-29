@@ -57,6 +57,7 @@ export function StreaksModal() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  const [scrolled, setScrolled] = useState(false);
   const [streaks, setStreaks] = useState<Streak[]>([]);
   const archiveCounts: Record<StreakType, number> = {
     daily: getPastDateKeys('daily').length,
@@ -108,6 +109,7 @@ export function StreaksModal() {
       <View style={styles.container}>
         <Header
           absolute={false}
+          bordered={scrolled}
           center={<Text style={styles.headerTitle}>Streaks</Text>}
           right={
             <Pressable onPress={closeStreaks} hitSlop={8}>
@@ -116,7 +118,11 @@ export function StreaksModal() {
           }
         />
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.scrollContent}
+        >
           <View style={styles.streakGrid}>
             {STREAK_TYPES.map((type, i) => {
               const found = streaks.find(s => s.type === type);

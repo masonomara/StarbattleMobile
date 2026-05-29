@@ -28,6 +28,7 @@ export function ArchivePackScreen({
 
   const dateKeys = getPastDateKeys(type);
 
+  const [scrolled, setScrolled] = useState(false);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -66,6 +67,7 @@ export function ArchivePackScreen({
     <View style={styles.container}>
       <Header
         absolute={false}
+        bordered={scrolled}
         center={
           <Text style={styles.headerTitle}>
             Past {STREAK_LABELS[type]} Puzzles
@@ -87,6 +89,8 @@ export function ArchivePackScreen({
           data={dateKeys}
           keyExtractor={item => item}
           renderItem={renderItem}
+          onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+          scrollEventThrottle={16}
           contentContainerStyle={styles.listContent}
         />
       )}

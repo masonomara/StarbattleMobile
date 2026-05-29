@@ -15,7 +15,9 @@ function toUserMessage(e: unknown): string | null {
   if (
     msg.includes('Purchase did not complete') ||
     msg.includes('Account deletion failed') ||
-    msg.includes('product not found')
+    msg.includes('product not found') ||
+    msg.includes('Progress migration failed') ||
+    msg.includes('hasn\'t synced yet')
   ) return msg;
 
   // Supabase auth
@@ -55,6 +57,7 @@ export function useAsyncAction() {
       await fn();
       onSuccess?.();
     } catch (e) {
+      console.error('[useAsyncAction]', e);
       setError(toUserMessage(e));
     } finally {
       setLoading(false);

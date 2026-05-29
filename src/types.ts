@@ -25,6 +25,7 @@ export type CircleButtonProps = {
   onPress: () => void;
   children: ReactNode;
   hitSlop?: number;
+  ghost?: boolean;
 };
 
 export type HeaderProps = {
@@ -32,6 +33,7 @@ export type HeaderProps = {
   center?: ReactNode;
   right?: ReactNode;
   absolute?: boolean;
+  bordered?: boolean;
 };
 
 export type ErrorBoundaryProps = {

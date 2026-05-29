@@ -8,6 +8,12 @@ export const STREAK_LABELS: Record<StreakType, string> = {
   monthly: 'Monthly',
 };
 
+export const STREAK_UNIT: Record<StreakType, string> = {
+  daily: 'day',
+  weekly: 'week',
+  monthly: 'month',
+};
+
 export function getCurrentKey(type: StreakType, now = new Date()): string {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');

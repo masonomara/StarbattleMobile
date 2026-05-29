@@ -172,6 +172,7 @@ export const PuzzleCanvas = React.forwardRef<
     const starError = Skia.PathBuilder.Make();
     const starGhost = Skia.PathBuilder.Make();
     const marks = Skia.PathBuilder.Make();
+    const marksGhost = Skia.PathBuilder.Make();
 
     for (let idx = 0; idx < cells.length; idx++) {
       const value = previewMap.has(idx) ? previewMap.get(idx)! : cells[idx];
@@ -201,10 +202,12 @@ export const PuzzleCanvas = React.forwardRef<
         }
         b.close();
       } else if (value === 2 || ghost === 'mark') {
-        marks.moveTo(cx - half, cy - half);
-        marks.lineTo(cx + half, cy + half);
-        marks.moveTo(cx + half, cy - half);
-        marks.lineTo(cx - half, cy + half);
+        const isGhostMark = ghost === 'mark' && value !== 2;
+        const m = isGhostMark ? marksGhost : marks;
+        m.moveTo(cx - half, cy - half);
+        m.lineTo(cx + half, cy + half);
+        m.moveTo(cx + half, cy - half);
+        m.lineTo(cx - half, cy + half);
       }
     }
 
@@ -213,6 +216,7 @@ export const PuzzleCanvas = React.forwardRef<
       starError: starError.detach(),
       starGhost: starGhost.detach(),
       marks: marks.detach(),
+      marksGhost: marksGhost.detach(),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cells, errorCells, hintGhosts, previewMap, canvasSize]);
@@ -237,10 +241,17 @@ export const PuzzleCanvas = React.forwardRef<
       >
         <Path path={dynamicPaths.starNormal} color={theme.text} />
         <Path path={dynamicPaths.starError} color={theme.red} />
-        <Path path={dynamicPaths.starGhost} color={rgba(theme.text, 0.33)} />
+        <Path path={dynamicPaths.starGhost} color={theme.border} />
         <Path
           path={dynamicPaths.marks}
           color={theme.red}
+          style="stroke"
+          strokeWidth={2.25}
+          strokeCap="square"
+        />
+        <Path
+          path={dynamicPaths.marksGhost}
+          color={theme.border}
           style="stroke"
           strokeWidth={2.25}
           strokeCap="square"

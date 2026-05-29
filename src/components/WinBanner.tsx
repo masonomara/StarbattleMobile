@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from '../store';
 import { loadStreaks, recordStreak } from '../utils/progress';
-import { getActiveStreak, STREAK_LABELS } from '../utils/streakDate';
+import { getActiveStreak, STREAK_LABELS, STREAK_UNIT } from '../utils/streakDate';
 
 import { useTheme } from '../hooks/useTheme';
 import type { Theme, RootStackParamList, WinBannerProps } from '../types';
@@ -91,7 +91,7 @@ export function WinBanner({
     >
       <Text style={styles.winInfo}>{info} {streakType && (
         <Text style={styles.winInfo}>
-          {streakCount > 0 ? ` •  ${streakCount} day streak` : ``}
+          {streakCount > 0 ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak` : ``}
         </Text>
       )}</Text>
       <Text style={styles.winText}>{`Solved in ${formatTime(timeMs)}`}</Text>
