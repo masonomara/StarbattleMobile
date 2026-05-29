@@ -1,4 +1,3 @@
-// NOTE: `winTime` style is defined in createStyles but never applied in JSX.
 // Remove it if the separate time line was removed; keep if it's planned to return.
 //
 // NOTE: fontWeight values (900, 700, 600) are numeric here, while the rest of
@@ -148,13 +147,6 @@ const createStyles = (theme: Theme) =>
       lineHeight: 22,
       fontWeight: 600,
       marginBottom: 7,
-    },
-    winTime: {
-      fontSize: 15,
-      lineHeight: 20,
-      fontWeight: 600,
-      marginTop: 0,
-      color: theme.text,
     },
     winButton: {
       height: 56,

@@ -132,10 +132,7 @@ export function LibraryScreen({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  // CLEANUP: `numColumns` is a const alias of NUM_COLS and is never reassigned.
-  // Use NUM_COLS directly or remove the alias.
-  const numColumns = NUM_COLS;
-  const cellSize = Math.floor((width - 2 * 32 - numColumns * 12) / numColumns);
+  const cellSize = Math.floor((width - 2 * 32 - NUM_COLS * 12) / NUM_COLS);
   const styles = useMemo(
     () => createStyles(theme, cellSize, insets),
     [theme, cellSize, insets],
@@ -214,16 +211,16 @@ export function LibraryScreen({
 
   const rows = useMemo(() => {
     const result: number[][] = [];
-    for (let i = 0; i < puzzleCount; i += numColumns) {
+    for (let i = 0; i < puzzleCount; i += NUM_COLS) {
       result.push(
         Array.from(
-          { length: Math.min(numColumns, puzzleCount - i) },
+          { length: Math.min(NUM_COLS, puzzleCount - i) },
           (_, j) => i + j,
         ),
       );
     }
     return result;
-  }, [puzzleCount, numColumns]);
+  }, [puzzleCount, NUM_COLS]);
 
   const renderRow = useCallback(
     ({ item: rowIndices }: { item: number[] }) => (

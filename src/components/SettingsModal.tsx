@@ -14,7 +14,6 @@
 //   components/settings/LegalView.tsx          — Terms / Privacy / Acks
 // SettingsModal itself would then orchestrate sections and the view stack.
 //
-// DEBT: `authTabSegment` style is defined but no SegmentedControl uses it
 // (the sign-in/sign-up tab switch is now a Pressable link). Dead style — remove.
 //
 // DEBT: The `title` style (25px Bricolage Grotesque 900) is used for the modal
@@ -1197,9 +1196,6 @@ const createStyles = (theme: Theme) => {
     },
     themeSegment: {
       width: 240,
-      height: 36,
-    },
-    authTabSegment: {
       height: 36,
     },
     paletteRow: {
