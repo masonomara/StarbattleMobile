@@ -10,9 +10,6 @@
 // the same format inline). Extract to a shared util to avoid drift if the
 // display format ever changes.
 //
-// CONCERN: streakCount is loaded via an imperative loadStreaks() call on win.
-// If useStreakRows() were used from PuzzleScreen and passed down, this component
-// wouldn't need its own async load, keeping data flow unidirectional from parent.
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
 import { Text } from './Text';
@@ -20,8 +17,8 @@ import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from '../stores/puzzleStore';
-import { loadStreaks, recordStreak } from '../utils/progress';
-import { getActiveStreak, STREAK_LABELS, STREAK_UNIT } from '../utils/streakDate';
+import { recordStreak } from '../utils/progress';
+import { STREAK_LABELS, STREAK_UNIT } from '../utils/streakDate';
 
 import { useTheme } from '../hooks/useTheme';
 import type { Theme, RootStackParamList, WinBannerProps } from '../types';
@@ -32,6 +29,7 @@ export function WinBanner({
   packName,
   isLastPuzzle,
   streakType,
+  streakCount = 0,
 }: WinBannerProps) {
   const completed = usePuzzleStore(s => s.completed);
   const loadedAsCompleted = usePuzzleStore(s => s.loadedAsCompleted);
@@ -41,7 +39,6 @@ export function WinBanner({
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const [streakCount, setStreakCount] = useState(0);
   const [bannerHeight, setBannerHeight] = useState(0);
   const bannerTranslateY = useRef(new Animated.Value(0)).current;
 
@@ -50,15 +47,8 @@ export function WinBanner({
   };
 
   useEffect(() => {
-    if (!completed || !streakType) return;
-    const type = streakType;
-    async function updateStreak() {
-      if (!loadedAsCompleted) await recordStreak(type);
-      const streaks = await loadStreaks();
-      const found = streaks.find(s => s.type === type);
-      if (found) setStreakCount(getActiveStreak(found, type));
-    }
-    updateStreak();
+    if (!completed || !streakType || loadedAsCompleted) return;
+    recordStreak(streakType);
   }, [completed, streakType, loadedAsCompleted]);
 
   useEffect(() => {

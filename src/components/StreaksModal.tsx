@@ -1,8 +1,3 @@
-// INCONSISTENCY: StreaksModal fetches streak data via loadStreaks() (imperative,
-// one-shot read) while HomeScreen uses useStreakRows() (reactive PowerSync
-// watch). If new streak data arrives while this modal is open, the counts won't
-// update. Replacing loadStreaks() with useStreakRows() would unify the pattern.
-//
 // CLEANUP: archiveCounts is recomputed inline on each render by calling
 // getPastDateKeys three times. Wrap in useMemo — the value only changes at
 // day-rollover so it's effectively stable across a session.
@@ -27,9 +22,10 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
+import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
-import { loadStreaks } from '../utils/progress';
+import { useStreakRows } from '../hooks/useStreakRows';
 import { getStreakPack } from '../packs';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import {
@@ -43,7 +39,6 @@ import {
 import type {
   Theme,
   StreakType,
-  Streak,
   Puzzle,
   RootStackParamList,
 } from '../types';
@@ -68,8 +63,10 @@ export function StreaksModal() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  const userId = useAuthStore(s => s.user?.id);
+  const streaks = useStreakRows(userId);
+
   const [scrolled, setScrolled] = useState(false);
-  const [streaks, setStreaks] = useState<Streak[]>([]);
   const archiveCounts: Record<StreakType, number> = {
     daily: getPastDateKeys('daily').length,
     weekly: getPastDateKeys('weekly').length,
@@ -82,10 +79,7 @@ export function StreaksModal() {
   useEffect(() => {
     if (!streaksModalVisible) return;
 
-    async function load() {
-      const rawStreaks = await loadStreaks();
-      setStreaks(rawStreaks);
-
+    async function loadThumbnails() {
       const thumbResults: Partial<Record<StreakType, Puzzle>> = {};
       await Promise.all(
         STREAK_TYPES.map(async type => {
@@ -107,7 +101,7 @@ export function StreaksModal() {
       setThumbnails(thumbResults);
     }
 
-    load();
+    loadThumbnails();
   }, [streaksModalVisible]);
 
   return (

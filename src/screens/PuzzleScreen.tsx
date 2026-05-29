@@ -21,13 +21,16 @@ import { Toolbar } from '../components/Toolbar';
 import { WinBanner } from '../components/WinBanner';
 import { usePuzzleStore } from '../stores/puzzleStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../hooks/useTheme';
 import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { usePackData } from '../hooks/usePackData';
+import { useStreakRows } from '../hooks/useStreakRows';
 import { loadPackHints } from '../packs';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { saveProgress } from '../utils/progress';
+import { getActiveStreak } from '../utils/streakDate';
 import type { Theme, RootStackParamList, DrawLayerHandle } from '../types';
 
 // Chrome heights used both in the board layout calculation and in the view
@@ -73,6 +76,11 @@ export function PuzzleScreen({
   const alwaysShowToolbar = useSettingsStore(s => s.settings.alwaysShowToolbar);
   const alwaysShowTimer = useSettingsStore(s => s.settings.alwaysShowTimer);
   const openSettings = useSettingsStore(s => s.openSettings);
+
+  const userId = useAuthStore(s => s.user?.id);
+  const streakRows = useStreakRows(userId);
+  const streakRow = streakType ? streakRows.find(s => s.type === streakType) : undefined;
+  const streakCount = streakRow ? getActiveStreak(streakRow, streakType!) : 0;
 
   const [isReady, setIsReady] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -293,6 +301,7 @@ export function PuzzleScreen({
         packName={packName}
         isLastPuzzle={isLastPuzzle}
         streakType={streakType}
+        streakCount={streakCount}
       />
     </View>
   );

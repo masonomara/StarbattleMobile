@@ -88,6 +88,7 @@ export type WinBannerProps = {
   packName: string;
   isLastPuzzle: boolean;
   streakType?: StreakType;
+  streakCount?: number;
 };
 
 // STATE

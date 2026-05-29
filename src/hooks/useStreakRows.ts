@@ -28,10 +28,6 @@ function rowsToStreaks(rows: StreakRow[]): Streak[] {
 // empty-flash window while the watcher initialises. If PowerSync's watch API
 // adds a synchronous initial-result option in future, the getAll() can be removed.
 //
-// INCONSISTENCY: HomeScreen uses this hook (reactive), but StreaksModal uses
-// `loadStreaks()` (imperative one-shot). StreaksModal won't reflect PowerSync
-// updates received while it's open. Replacing the loadStreaks() call in
-// StreaksModal with this hook would unify the pattern.
 export function useStreakRows(userId: string | undefined): Streak[] {
   const [streaks, setStreaks] = useState<Streak[]>([]);
 
