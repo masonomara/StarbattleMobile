@@ -41,17 +41,13 @@ type PuzzleCellProps = {
   onLockedPress: (index: number) => void;
   styles: ReturnType<typeof createStyles>;
   theme: Theme;
-  completedSet: Set<string>;
+  isCompleted: boolean;
   canPlay: boolean;
   coloredRegions: boolean;
   cellSize: number;
 };
 
-// PERF: PuzzleCell is not memoized (no React.memo). When completedSet or
-// isPuzzlePlayable changes, every row re-renders every PuzzleCell.
-// Wrapping with React.memo and a stable prop comparison would limit re-renders
-// to cells whose individual props actually changed (most won't after one solve).
-function PuzzleCell({
+const PuzzleCell = React.memo(function PuzzleCell({
   packId,
   index,
   rawPuzzle,
@@ -59,13 +55,12 @@ function PuzzleCell({
   onLockedPress,
   styles,
   theme,
-  completedSet,
+  isCompleted,
   canPlay,
   coloredRegions,
   cellSize,
 }: PuzzleCellProps) {
   const puzzleId = `${packId}:${index}`;
-  const isCompleted = completedSet.has(puzzleId);
   const puzzle = useMemo(
     () => (rawPuzzle ? parsePuzzle(rawPuzzle, puzzleId) : null),
     [rawPuzzle, puzzleId],
@@ -119,7 +114,7 @@ function PuzzleCell({
       </View>
     </Pressable>
   );
-}
+});
 
 export function LibraryScreen({
   route,
@@ -217,7 +212,7 @@ export function LibraryScreen({
       );
     }
     return result;
-  }, [puzzleCount, NUM_COLS]);
+  }, [puzzleCount]);
 
   const renderRow = useCallback(
     ({ item: rowIndices }: { item: number[] }) => (
@@ -234,7 +229,7 @@ export function LibraryScreen({
             onLockedPress={handleLockedPress}
             styles={styles}
             theme={theme}
-            completedSet={completedSet}
+            isCompleted={completedSet.has(`${packId}:${index}`)}
             canPlay={isPuzzlePlayable(index)}
             coloredRegions={coloredRegions}
             cellSize={cellSize}
