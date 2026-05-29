@@ -98,6 +98,8 @@ function PuzzleCell({
             )}
           </View>
         )}
+      </View>
+      <View>
         <Text
           style={[
             styles.puzzleNumber,
@@ -124,9 +126,7 @@ export function LibraryScreen({
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const numColumns = NUM_COLS;
-  const cellSize = Math.floor(
-    (width - 2 * theme.spacingLg - numColumns * 12) / numColumns,
-  );
+  const cellSize = Math.floor((width - 2 * 32 - numColumns * 12) / numColumns);
   const styles = useMemo(
     () => createStyles(theme, cellSize),
     [theme, cellSize],
@@ -295,6 +295,7 @@ const createStyles = (theme: Theme, cellSize: number) => {
     scroll: { flex: 1 },
     gridContent: {
       padding: 32,
+      rowGap: 12,
     },
     row: {
       flexDirection: 'row',
@@ -318,9 +319,14 @@ const createStyles = (theme: Theme, cellSize: number) => {
     },
     puzzleIcon: {
       position: 'absolute',
-      opacity: 0.55,
+      opacity: 0.6,
     },
-    puzzleNumber: { fontSize: 16, fontWeight: '700' },
+    puzzleNumber: {
+      fontSize: 17,
+      fontWeight: '700',
+      textAlign: 'center',
+      lineHeight: 22,
+    },
     puzzleNumberCompleted: { color: theme.blue },
     puzzleNumberActive: {
       color: theme.text,
@@ -328,7 +334,7 @@ const createStyles = (theme: Theme, cellSize: number) => {
     puzzleNumberLocked: {
       color: theme.textSecondary,
     },
-    locked: { opacity: 0.45 },
+    locked: { opacity: 0.4 },
     headerTitle: {
       fontSize: 17,
       fontVariant: ['tabular-nums'],

@@ -12,8 +12,8 @@ import { db } from './src/powersync/AppSchema';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
-import { getStreakPack, purgeStalePacks } from './src/packs';
-import { schedulePrefetch, prefetchAllCatalog } from './src/packs/prefetch';
+import { getStreakPack } from './src/packs';
+import { prefetchAllCatalog } from './src/packs/prefetch';
 import { supabase } from './src/supabase';
 import BootSplash from 'react-native-bootsplash';
 import type { PackCatalogItem, Entitlements } from './src/types';
@@ -68,14 +68,6 @@ export default function App() {
         BootSplash.hide({ fade: true }).catch(() => {});
       });
 
-    // After streak packs are warmed, kick off tiered background downloads
-    // and purge stale files. At this point the catalog may not be populated
-    // yet — schedulePrefetch will run streaks + whatever catalog exists.
-    streakReady.catch(() => {}).then(() => {
-      purgeStalePacks().catch(() => {});
-      const { packCatalog, entitlements } = useEntitlementsStore.getState();
-      schedulePrefetch(packCatalog, entitlements);
-    });
 
     useSettingsStore.getState().initialize();
     startupTimer.log('settings store initialized');
@@ -144,7 +136,7 @@ export default function App() {
       if (nextState === 'active') {
         await supabase.auth.refreshSession();
         const { packCatalog, entitlements } = useEntitlementsStore.getState();
-        schedulePrefetch(packCatalog, entitlements);
+        runTieredPrefetch(packCatalog, entitlements);
       }
     });
 

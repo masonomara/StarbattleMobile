@@ -25,17 +25,3 @@ export async function prefetchAllCatalog(
   await Promise.allSettled(packWork);
 }
 
-// Debounced wrapper so rapid app-foreground events collapse into a single run.
-// Catalog and entitlements are captured at schedule time.
-let _prefetchTimer: ReturnType<typeof setTimeout> | null = null;
-
-export function schedulePrefetch(
-  catalog: PackCatalogItem[],
-  entitlements: Entitlements,
-): void {
-  if (_prefetchTimer) return;
-  _prefetchTimer = setTimeout(() => {
-    _prefetchTimer = null;
-    prefetchAllCatalog(catalog, entitlements).catch(() => {});
-  }, 2000);
-}

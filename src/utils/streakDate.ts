@@ -44,7 +44,7 @@ export function getPuzzleIndex(
   packSize: number,
   now = new Date(),
 ): number {
-  const epoch = new Date(2025, 0, 1);
+  const epoch = new Date(2026, 3, 16); // April 16 2026
   const msPerDay = 86400000;
   const daysSinceEpoch = Math.floor(
     (now.getTime() - epoch.getTime()) / msPerDay,
@@ -56,7 +56,8 @@ export function getPuzzleIndex(
     case 'weekly':
       return Math.floor(daysSinceEpoch / 7) % packSize;
     case 'monthly': {
-      const monthsSinceEpoch = (now.getFullYear() - 2025) * 12 + now.getMonth();
+      const monthsSinceEpoch =
+        (now.getFullYear() - 2026) * 12 + (now.getMonth() - 3);
       return monthsSinceEpoch % packSize;
     }
   }
@@ -99,6 +100,55 @@ export function archiveKeyToDate(type: StreakType, key: string): Date {
       return new Date(Number(yearStr), Number(monthStr) - 1, 1);
     }
   }
+}
+
+// App launch date — archive only surfaces puzzles from this date onward.
+const RELEASE_DATE = new Date(2026, 3, 16); // April 16 2026
+
+export function getPastDateKeys(type: StreakType, now = new Date()): string[] {
+  const msPerDay = 86400000;
+  const releaseYear = RELEASE_DATE.getFullYear();
+  const releaseMonth = RELEASE_DATE.getMonth();
+  const keys: string[] = [];
+
+  switch (type) {
+    case 'daily': {
+      // Exclude today — only show dates that have fully passed.
+      const daysElapsed = Math.floor(
+        (now.getTime() - RELEASE_DATE.getTime()) / msPerDay,
+      );
+      for (let i = 0; i < daysElapsed; i++) {
+        const d = new Date(RELEASE_DATE.getTime() + i * msPerDay);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        keys.push(`${y}-${m}-${day}`);
+      }
+      break;
+    }
+    case 'weekly': {
+      // Exclude the current week — only show weeks that have fully ended.
+      const currentKey = getCurrentKey('weekly', now);
+      let d = new Date(RELEASE_DATE);
+      while (getCurrentKey('weekly', d) < currentKey) {
+        keys.push(getCurrentKey('weekly', d));
+        d = new Date(d.getTime() + 7 * msPerDay);
+      }
+      break;
+    }
+    case 'monthly': {
+      // Exclude the current month — only show months that have fully ended.
+      const monthsElapsed =
+        (now.getFullYear() - releaseYear) * 12 +
+        (now.getMonth() - releaseMonth);
+      for (let i = 0; i < monthsElapsed; i++) {
+        keys.push(getCurrentKey('monthly', new Date(releaseYear, releaseMonth + i, 1)));
+      }
+      break;
+    }
+  }
+
+  return keys.reverse();
 }
 
 export function formatArchiveKey(type: StreakType, key: string): string {

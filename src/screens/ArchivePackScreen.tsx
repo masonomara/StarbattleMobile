@@ -13,16 +13,10 @@ import X from 'lucide-react-native/dist/cjs/icons/x';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../hooks/useTheme';
-import { getPastArchive, loadAllCompletionData } from '../utils/progress';
-import {
-  getCurrentKey,
-  STREAK_LABELS,
-  formatArchiveKey,
-} from '../utils/streakDate';
+import { loadAllCompletionData } from '../utils/progress';
+import { getPastDateKeys, STREAK_LABELS, formatArchiveKey } from '../utils/streakDate';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
 import type { RootStackParamList, StreakType, Theme } from '../types';
-
-type ArchiveEntry = { dateKey: string; puzzleId: string };
 
 export function ArchivePackScreen({
   route,
@@ -32,24 +26,17 @@ export function ArchivePackScreen({
   const theme = useTheme();
   const styles = createStyles(theme);
 
-  const [entries, setEntries] = useState<ArchiveEntry[]>([]);
+  const dateKeys = getPastDateKeys(type);
+
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [archive, allCompleted] = await Promise.all([
-      getPastArchive(type, getCurrentKey(type)),
-      loadAllCompletionData(),
-    ]);
-    setEntries(archive);
-    setCompletedIds(allCompleted);
-    setLoading(false);
-  }, [type]);
-
   useEffect(() => {
-    load();
-  }, [load]);
+    loadAllCompletionData().then(ids => {
+      setCompletedIds(ids);
+      setLoading(false);
+    });
+  }, []);
 
   const navigateToPuzzle = useCallback(
     (dateKey: string) => {
@@ -60,17 +47,11 @@ export function ArchivePackScreen({
     [navigation, type],
   );
 
-  const renderItem = ({ item }: { item: ArchiveEntry }) => {
-    const archivePuzzleId = `${type}:archive:${item.dateKey}`;
-    const isCompleted = completedIds.has(archivePuzzleId);
+  const renderItem = ({ item }: { item: string }) => {
+    const isCompleted = completedIds.has(`${type}:archive:${item}`);
     return (
-      <Pressable
-        style={styles.row}
-        onPress={() => navigateToPuzzle(item.dateKey)}
-      >
-        <Text style={styles.dateText}>
-          {formatArchiveKey(type, item.dateKey)}
-        </Text>
+      <Pressable style={styles.row} onPress={() => navigateToPuzzle(item)}>
+        <Text style={styles.dateText}>{formatArchiveKey(type, item)}</Text>
         <View style={styles.rowRight}>
           {isCompleted && (
             <Check size={16} color={theme.green} strokeWidth={2.5} />
@@ -98,17 +79,13 @@ export function ArchivePackScreen({
       />
 
       {loading ? (
-        <View style={styles.loadingWrap}>
+        <View style={styles.centerWrap}>
           <ActivityIndicator color={theme.textSecondary} />
-        </View>
-      ) : entries.length === 0 ? (
-        <View style={styles.emptyWrap}>
-          <Text style={styles.emptyText}>No past puzzles yet.</Text>
         </View>
       ) : (
         <FlatList
-          data={entries}
-          keyExtractor={item => item.dateKey}
+          data={dateKeys}
+          keyExtractor={item => item}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
         />
@@ -153,18 +130,9 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       gap: 6,
     },
-    loadingWrap: {
+    centerWrap: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    emptyWrap: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    emptyText: {
-      fontSize: theme.fontSizeCallout,
-      color: theme.textSecondary,
     },
   });

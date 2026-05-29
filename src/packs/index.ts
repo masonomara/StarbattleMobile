@@ -199,33 +199,6 @@ export async function getStreakPack(type: StreakType): Promise<Pack | null> {
   }
 }
 
-// Removes pack files from the local disk cache that haven't been accessed in
-// more than 90 days. Streak files are never purged — they're small and always
-// needed. Safe to call fire-and-forget on app startup.
-export async function purgeStalePacks(): Promise<void> {
-  const rnfs = getRNFS();
-  if (!rnfs) return;
-
-  const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
-  const files = await rnfs.readdir(packDir).catch(() => [] as string[]);
-  const cutoffMs = Date.now() - 90 * 24 * 60 * 60 * 1000;
-  const STREAK_FILES = new Set(['daily.json', 'weekly.json', 'monthly.json']);
-
-  for (const file of files) {
-    if (STREAK_FILES.has(file)) continue;
-    const path = `${packDir}/${file}`;
-    try {
-      const stat = await rnfs.stat(path);
-      if (new Date(stat.mtime).getTime() < cutoffMs) {
-        await rnfs.unlink(path);
-        packMetaStorage.remove(`etag:${file}`);
-      }
-    } catch {
-      // Skip files we can't stat or delete.
-    }
-  }
-}
-
 export async function downloadPack(
   packId: string,
   storagePath: string,

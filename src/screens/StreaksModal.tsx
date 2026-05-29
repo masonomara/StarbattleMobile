@@ -9,13 +9,13 @@ import { Header } from '../components/Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
-import { loadStreaks, getPastArchive } from '../utils/progress';
+import { loadStreaks } from '../utils/progress';
 import { getStreakPack } from '../packs';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import {
-  getCurrentKey,
   getActiveStreak,
   getPuzzleIndex,
+  getPastDateKeys,
   archiveKeyToDate,
   STREAK_TYPES,
   STREAK_LABELS,
@@ -31,9 +31,9 @@ import type {
 const STREAK_TILE_COLORS = ['#8FD6AE', '#81D0E7', '#D3C2FA'];
 
 const ARCHIVE_NAMES: Record<StreakType, string> = {
-  daily: 'Past Daily Puzzles',
-  weekly: 'Past Weekly Puzzles',
-  monthly: 'Past Monthly Puzzles',
+  daily: 'Daily Special Archive',
+  weekly: 'Weekly Special Archive',
+  monthly: 'Monthly Special Archive',
 };
 
 export function StreaksModal() {
@@ -47,9 +47,11 @@ export function StreaksModal() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [streaks, setStreaks] = useState<Streak[]>([]);
-  const [archiveCounts, setArchiveCounts] = useState<Record<StreakType, number>>(
-    { daily: 0, weekly: 0, monthly: 0 },
-  );
+  const archiveCounts: Record<StreakType, number> = {
+    daily: getPastDateKeys('daily').length,
+    weekly: getPastDateKeys('weekly').length,
+    monthly: getPastDateKeys('monthly').length,
+  };
   const [thumbnails, setThumbnails] = useState<
     Partial<Record<StreakType, Puzzle>>
   >({});
@@ -58,43 +60,19 @@ export function StreaksModal() {
     if (!streaksModalVisible) return;
 
     async function load() {
-      const [rawStreaks, dailyArchive, weeklyArchive, monthlyArchive] =
-        await Promise.all([
-          loadStreaks(),
-          getPastArchive('daily', getCurrentKey('daily')),
-          getPastArchive('weekly', getCurrentKey('weekly')),
-          getPastArchive('monthly', getCurrentKey('monthly')),
-        ]);
-
+      const rawStreaks = await loadStreaks();
       setStreaks(rawStreaks);
-      setArchiveCounts({
-        daily: dailyArchive.length,
-        weekly: weeklyArchive.length,
-        monthly: monthlyArchive.length,
-      });
 
-      // Load a thumbnail for each type using the most-recent archive entry's
-      // puzzle. Falls back to the current key if the archive is empty.
-      const archiveByType = {
-        daily: dailyArchive,
-        weekly: weeklyArchive,
-        monthly: monthlyArchive,
-      };
       const thumbResults: Partial<Record<StreakType, Puzzle>> = {};
       await Promise.all(
         STREAK_TYPES.map(async type => {
           try {
             const pack = await getStreakPack(type);
             if (!pack) return;
-            const recentEntry = archiveByType[type][0];
-            const date = recentEntry
-              ? archiveKeyToDate(type, recentEntry.dateKey)
-              : new Date();
+            const recentKey = getPastDateKeys(type)[0];
+            const date = recentKey ? archiveKeyToDate(type, recentKey) : new Date();
             const idx = getPuzzleIndex(type, pack.puzzles.length, date);
-            thumbResults[type] = parsePuzzle(
-              pack.puzzles[idx],
-              `${type}:thumb`,
-            );
+            thumbResults[type] = parsePuzzle(pack.puzzles[idx], `${type}:thumb`);
           } catch {}
         }),
       );
