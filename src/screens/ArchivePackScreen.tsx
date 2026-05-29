@@ -18,11 +18,9 @@ import { loadAllCompletionData } from '../utils/progress';
 import { getPastDateKeys, STREAK_LABELS, formatArchiveKey } from '../utils/streakDate';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
 import type { RootStackParamList, Theme } from '../types';
+import { SCREEN_HEADER_HEIGHT } from '../layout';
 
 const NUM_COLS = 2;
-// NOTE: Like LibraryScreen, this screen hard-codes the header height (57) in
-// createStyles and in gridContent.paddingTop. Extract to a shared layout
-// constant so all three screens (Home, Library, Archive) stay in sync.
 
 export function ArchivePackScreen({
   route,
@@ -154,7 +152,7 @@ const createStyles = (
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 16,
-      height: 57 + insets.top,
+      height: SCREEN_HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
       borderBottomWidth: 1,
       borderBottomColor: theme.background,
@@ -173,7 +171,7 @@ const createStyles = (
     scroll: { flex: 1 },
     gridContent: {
       paddingHorizontal: 32,
-      paddingTop: 57 + insets.top + 24,
+      paddingTop: SCREEN_HEADER_HEIGHT + insets.top + 24,
       paddingBottom: insets.bottom + 24,
       rowGap: 12,
     },

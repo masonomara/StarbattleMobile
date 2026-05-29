@@ -29,12 +29,9 @@ import type {
   RootStackParamList,
   PaywallContext,
 } from '../types';
+import { SCREEN_HEADER_HEIGHT } from '../layout';
 
 const NUM_COLS = 3;
-// NOTE: The header height (57) is hard-coded in createStyles and in gridContent
-// paddingTop below. It should match HomeScreen's HEADER_HEIGHT and
-// ArchivePackScreen's equivalent. Extract to a shared layout constant to keep
-// all three screens in sync.
 
 type PuzzleCellProps = {
   packId: string;
@@ -322,7 +319,7 @@ const createStyles = (
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 16,
-      height: 57 + insets.top,
+      height: SCREEN_HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
       borderBottomWidth: 1,
       borderBottomColor: theme.background,
@@ -337,7 +334,7 @@ const createStyles = (
     scroll: { flex: 1 },
     gridContent: {
       paddingHorizontal: 32,
-      paddingTop: 57 + insets.top + 24,
+      paddingTop: SCREEN_HEADER_HEIGHT + insets.top + 24,
       paddingBottom: insets.bottom,
       rowGap: 12,
     },
