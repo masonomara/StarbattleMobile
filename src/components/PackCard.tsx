@@ -36,7 +36,7 @@ export function PackCard({
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.metaText}>{meta}</Text>
       </View>
-      {right}
+      {right && <View style={styles.right}>{right}</View>}
     </Pressable>
   );
 }
@@ -82,4 +82,11 @@ const createStyles = (theme: Theme) =>
       letterSpacing: -0.56,
       marginTop: 2,
     },
+    right: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 28,
+      width: 28,
+    }
   });

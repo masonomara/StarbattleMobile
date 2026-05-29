@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
+import {
+  Modal,
+  View,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import { Text } from '../components/Text';
 import { PackCard } from '../components/PackCard';
 import X from 'lucide-react-native/dist/cjs/icons/x';
@@ -33,9 +40,9 @@ import type {
 const STREAK_TILE_COLORS = ['#8FD6AE', '#81D0E7', '#D3C2FA'];
 
 const ARCHIVE_NAMES: Record<StreakType, string> = {
-  daily: 'Daily Special Archive',
-  weekly: 'Weekly Special Archive',
-  monthly: 'Monthly Special Archive',
+  daily: 'Daily Specials',
+  weekly: 'Weekly Specials',
+  monthly: 'Monthly Specials',
 };
 
 export function StreaksModal() {
@@ -74,9 +81,14 @@ export function StreaksModal() {
             const pack = await getStreakPack(type);
             if (!pack) return;
             const recentKey = getPastDateKeys(type)[0];
-            const date = recentKey ? archiveKeyToDate(type, recentKey) : new Date();
+            const date = recentKey
+              ? archiveKeyToDate(type, recentKey)
+              : new Date();
             const idx = getPuzzleIndex(type, pack.puzzles.length, date);
-            thumbResults[type] = parsePuzzle(pack.puzzles[idx], `${type}:thumb`);
+            thumbResults[type] = parsePuzzle(
+              pack.puzzles[idx],
+              `${type}:thumb`,
+            );
           } catch {}
         }),
       );
@@ -124,7 +136,7 @@ export function StreaksModal() {
             })}
           </View>
 
-          <Text style={styles.sectionTitle}>Past Puzzles</Text>
+          <Text style={styles.sectionTitle}>Puzzle Archive</Text>
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
@@ -135,7 +147,7 @@ export function StreaksModal() {
               <PackCard
                 key={type}
                 name={ARCHIVE_NAMES[type]}
-                meta={isEmpty ? 'Coming soon' : `${count} available`}
+                meta={isEmpty ? 'Coming soon' : `${count} puzzles`}
                 preview={preview}
                 disabled={isEmpty}
                 onPress={() => {
@@ -147,7 +159,8 @@ export function StreaksModal() {
                         { text: 'Not Now', style: 'cancel' },
                         {
                           text: 'Upgrade',
-                          onPress: () => useSettingsStore.getState().openSettings(),
+                          onPress: () =>
+                            useSettingsStore.getState().openSettings(),
                         },
                       ],
                     );
@@ -158,7 +171,7 @@ export function StreaksModal() {
                 }}
                 right={
                   locked ? (
-                    <Lock size={18} color={theme.textSecondary} />
+                    <Lock size={19} color={theme.textSecondary} strokeWidth={2.5}/>
                   ) : undefined
                 }
                 theme={theme}
@@ -217,10 +230,12 @@ const createStyles = (theme: Theme) => {
       marginTop: 4,
     },
     sectionTitle: {
-      fontSize: theme.fontSizeBody,
-      fontWeight: theme.fontWeightSemibold,
+      fontSize: 20,
       color: theme.text,
-      marginBottom: theme.spacingLg,
+      lineHeight: 22,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
+      marginBottom: 14,
     },
   });
 };
