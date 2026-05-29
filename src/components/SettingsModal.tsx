@@ -227,17 +227,19 @@ function ToggleRow({
   onToggle,
   styles,
   theme,
+  first,
 }: {
   label: string;
   value: boolean;
   onToggle: (v: boolean) => void;
   styles: ReturnType<typeof createStyles>;
   theme: Theme;
+  first?: boolean;
 }) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, first && { borderTopWidth: 0 }]}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <View style={styles.switchContainer}>
+      <View>
         <Switch
           value={value}
           onValueChange={onToggle}
@@ -863,6 +865,7 @@ export function SettingsModal() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Gameplay</Text>
             <ToggleRow
+              first
               label="Auto-X Neighbors"
               value={settings.autoXNeighbors}
               onToggle={v => {
@@ -912,6 +915,7 @@ export function SettingsModal() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>General</Text>
             <ToggleRow
+              first
               label="Always show timer"
               value={settings.alwaysShowTimer}
               onToggle={v => updateSettings({ alwaysShowTimer: v })}
@@ -961,78 +965,83 @@ export function SettingsModal() {
                 })}
               </View>
             </View>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Color Theme</Text>
-              <View style={styles.paletteRow}>
-                <View style={styles.swatchGrid}>
-                  {paletteRows.map((row, rowIdx) => (
-                    <View key={rowIdx} style={styles.swatchRow}>
-                      {row.map(name => {
-                        const active = settings.palette === name;
-                        const variant = isCurrentlyDark
-                          ? PALETTES[name].dark
-                          : PALETTES[name].light;
-                        const paletteTheme = buildTheme(variant);
-                        return (
-                          <Pressable
-                            key={name}
-                            onPress={() => updateSettings({ palette: name })}
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Color Theme</Text>
+            <View style={styles.paletteRow}>
+              <View style={styles.swatchGrid}>
+                {paletteRows.map((row, rowIdx) => (
+                  <View key={rowIdx} style={styles.swatchRow}>
+                    {row.map(name => {
+                      const active = settings.palette === name;
+                      const variant = isCurrentlyDark
+                        ? PALETTES[name].dark
+                        : PALETTES[name].light;
+                      const paletteTheme = buildTheme(variant);
+                      return (
+                        <Pressable
+                          key={name}
+                          onPress={() => updateSettings({ palette: name })}
+                          style={[
+                            styles.swatchCard,
+                            {
+                              backgroundColor: paletteTheme.background,
+                            },
+                            active && {
+                              borderColor: paletteTheme.text,
+                            },
+                          ]}
+                        >
+                          <PalettePreview
+                            paletteTheme={paletteTheme}
+                            coloredRegions={settings.coloredRegions}
+                          />
+                          <Text
                             style={[
-                              styles.swatchCard,
+                              styles.swatchLabel,
                               {
-                                backgroundColor: paletteTheme.background,
-                              },
-                              active && {
-                                borderColor: paletteTheme.text,
+                                color: rgba(
+                                  paletteTheme.isDark
+                                    ? paletteTheme.text
+                                    : paletteTheme.text,
+                                  1,
+                                ),
                               },
                             ]}
                           >
-                            <PalettePreview
-                              paletteTheme={paletteTheme}
-                              coloredRegions={settings.coloredRegions}
-                            />
-                            <Text
-                              style={[
-                                styles.swatchLabel,
-                                {
-                                  color: rgba(
-                                    paletteTheme.isDark
-                                      ? paletteTheme.text
-                                      : paletteTheme.text,
-                                    1,
-                                  ),
-                                },
-                              ]}
-                            >
-                              {PALETTES[name].label}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                      {row.length < 3 &&
-                        Array.from({ length: 3 - row.length }).map((_, j) => (
-                          <View key={j} style={styles.swatchCard} />
-                        ))}
-                    </View>
-                  ))}
-                </View>
+                            {PALETTES[name].label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                    {row.length < 3 &&
+                      Array.from({ length: 3 - row.length }).map((_, j) => (
+                        <View key={j} style={styles.swatchCard} />
+                      ))}
+                  </View>
+                ))}
               </View>
             </View>
           </View>
 
           {/* Legal */}
-          <View style={styles.legalLinks}>
-            <Pressable onPress={() => setView('terms')} hitSlop={8}>
-              <Text style={styles.privacyLinkText}>Terms of Use</Text>
-            </Pressable>
-            <Text style={styles.legalSep}>·</Text>
-            <Pressable onPress={() => setView('privacy')} hitSlop={8}>
-              <Text style={styles.privacyLinkText}>Privacy Policy</Text>
-            </Pressable>
-            <Text style={styles.legalSep}>·</Text>
-            <Pressable onPress={() => setView('acknowledgements')} hitSlop={8}>
-              <Text style={styles.privacyLinkText}>Acknowledgements</Text>
-            </Pressable>
+          <View style={styles.section}>
+            <View style={styles.legalLinks}>
+              <Pressable onPress={() => setView('terms')} hitSlop={8}>
+                <Text style={styles.privacyLinkText}>Terms of Use</Text>
+              </Pressable>
+              <Text style={styles.legalSep}>·</Text>
+              <Pressable onPress={() => setView('privacy')} hitSlop={8}>
+                <Text style={styles.privacyLinkText}>Privacy Policy</Text>
+              </Pressable>
+              <Text style={styles.legalSep}>·</Text>
+              <Pressable
+                onPress={() => setView('acknowledgements')}
+                hitSlop={8}
+              >
+                <Text style={styles.privacyLinkText}>Acknowledgements</Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -1055,9 +1064,9 @@ const createStyles = (theme: Theme) => {
     scrollContent: {
       paddingHorizontal: 16,
       paddingBottom: theme.spacingXl,
-      gap: theme.spacingXl,
+   
     },
-    section: {},
+    section: {marginTop: 40, marginBottom: 0,},
     sectionTitle: {
       fontSize: 20,
       color: theme.text,
@@ -1127,7 +1136,7 @@ const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       gap: 12,
     },
-  
+
     swatchCard: {
       flex: 1,
       borderRadius: 4,
