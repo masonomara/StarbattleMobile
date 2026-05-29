@@ -68,6 +68,15 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
     scheduleSave(puzzleId, cells, autoMarks, timeMs, completed);
   }
 
+  // Clears any active hint ghost overlay. Every cell mutation (tap, draw,
+  // undo, redo, clear) must call this because the ghost suggestions would
+  // no longer reflect the updated board state.
+  function dismissHints() {
+    if (get().hintGhosts.size > 0) {
+      set({ hintGhosts: new Map(), hintStepIndex: -1 });
+    }
+  }
+
   return {
   puzzle: null,
   cells: [],
@@ -97,6 +106,8 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
       redoStack: [],
       hintGhosts: new Map(),
       hintStepIndex: -1,
+      // hintsLoading=true when the pack has no bundled hints — they'll arrive
+      // asynchronously via setHints() after the pack file is fetched.
       hintsLoading: puzzle.hints.length === 0,
     });
     try {
@@ -115,13 +126,14 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
     }
   },
 
+  // Handles a single tap on cell (row, col). Responsible for:
+  // mode-based value cycling, auto-mark updates, error highlighting,
+  // win detection, haptics, and pushing an entry to the move history.
   tapCell: (row: number, col: number) => {
-    const { cells, completed, puzzle, tapMode, autoMarks, hintGhosts } = get();
+    const { cells, completed, puzzle, tapMode, autoMarks } = get();
     if (completed || !puzzle) return;
 
-    if (hintGhosts.size > 0) {
-      set({ hintGhosts: new Map(), hintStepIndex: -1 });
-    }
+    dismissHints();
 
     const size = puzzle.size;
     const settings = useSettingsStore.getState().settings;
@@ -234,12 +246,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
   },
 
   undo: () => {
-    const { moveLog, cells, completed, autoMarks, hintGhosts, puzzle } = get();
+    const { moveLog, cells, completed, autoMarks, puzzle } = get();
     if (moveLog.length === 0 || completed) return;
 
-    if (hintGhosts.size > 0) {
-      set({ hintGhosts: new Map(), hintStepIndex: -1 });
-    }
+    dismissHints();
 
     const lastMove = moveLog[moveLog.length - 1];
 
@@ -272,13 +282,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
   },
 
   redo: () => {
-    const { redoStack, cells, autoMarks, completed, hintGhosts, puzzle } =
-      get();
+    const { redoStack, cells, autoMarks, completed, puzzle } = get();
     if (redoStack.length === 0 || completed) return;
 
-    if (hintGhosts.size > 0) {
-      set({ hintGhosts: new Map(), hintStepIndex: -1 });
-    }
+    dismissHints();
 
     const entry = redoStack[redoStack.length - 1];
 
@@ -320,12 +327,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
   // No checkWin call here because drag strokes only ever write value 2 (marks);
   // stars (value 1) can only be placed by tapCell, which does check for a win.
   applyDrawStroke: (changes: CellChange[]) => {
-    const { completed, puzzle, hintGhosts } = get();
+    const { completed, puzzle } = get();
     if (completed || !puzzle || changes.length === 0) return;
 
-    if (hintGhosts.size > 0) {
-      set({ hintGhosts: new Map(), hintStepIndex: -1 });
-    }
+    dismissHints();
 
     const size = puzzle.size;
     const settings = useSettingsStore.getState().settings;
@@ -361,12 +366,10 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
   },
 
   clearBoard: () => {
-    const { cells, completed, puzzle, autoMarks, hintGhosts } = get();
+    const { cells, completed, puzzle, autoMarks } = get();
     if (completed || !puzzle) return;
 
-    if (hintGhosts.size > 0) {
-      set({ hintGhosts: new Map(), hintStepIndex: -1 });
-    }
+    dismissHints();
 
     const changes: CellChange[] = [];
     for (let i = 0; i < cells.length; i++) {

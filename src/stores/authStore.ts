@@ -28,13 +28,27 @@ type AuthState = {
   handleDeepLink: (url: string) => Promise<void>;
 };
 
+// Simplified set signature used by helper functions outside the create closure.
+// We only ever pass partial objects, so the full Zustand type isn't needed.
 type SetState = (partial: Partial<AuthState>) => void;
 
+// Updates store state and identifies the user in Adapty for entitlements.
+// Always sets isAnonymous: false — callers must not use this for anonymous sign-ins.
 async function applySignIn(set: SetState, session: Session | null, user: User): Promise<void> {
   set({ session, user, isAnonymous: false });
   try { await adapty.identify(user.id); } catch {}
 }
 
+// Clears the named session and drops back to a fresh anonymous user.
+// Used by both signOut and deleteAccount, which share identical post-action cleanup.
+async function resetToAnonymous(set: SetState, get: () => AuthState): Promise<void> {
+  set({ session: null, user: null, isAnonymous: true });
+  try { await get().signInAnonymously(); } catch {}
+}
+
+// Parses a URL fragment string ("key=val&key2=val2") into a plain object.
+// Uses a manual loop instead of URLSearchParams because React Native's URL
+// implementation doesn't handle fragment params without a polyfill.
 function parseUrlFragment(fragment: string): Record<string, string> {
   const result: Record<string, string> = {};
   for (const pair of fragment.split('&')) {
@@ -77,8 +91,8 @@ async function drainUploadQueue(timeoutMs = 30_000): Promise<void> {
 }
 
 // Invokes the server-side merge Edge Function.
-// Errors surface to the caller — unlike the old deleteAnonymousUser, failures
-// are NOT swallowed. On failure the anon user is still intact, so a retry is safe.
+// Errors surface to the caller — failures are NOT swallowed because the anon
+// user is still intact at this point, so a retry is safe.
 async function migrateAnonProgress(anonId: string, anonToken: string): Promise<void> {
   const { error } = await supabase.functions.invoke('migrate-anon-account', {
     body: { anonId, anonToken },
@@ -94,6 +108,45 @@ async function reconnectPowerSync(namedId: string): Promise<void> {
   await db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
   await db.waitForFirstSync();
   await useEntitlementsStore.getState().loadEntitlements(namedId);
+}
+
+// Shared wrapper for all three social/password sign-in flows.
+//
+// Every sign-in that could replace an anonymous session follows this sequence:
+//   1. Capture anon identity before the exchange (drain queue for safety).
+//   2. Run the provider-specific credential exchange (doSignIn).
+//   3. Merge anonymous progress server-side if IDs differ.
+//   4. Rebuild PowerSync for the named user.
+//
+// doSignIn is the only part that differs between email, Google, and Apple.
+// If doSignIn throws, steps 3–4 are skipped and the anon session remains intact.
+async function withAnonMigration(
+  get: () => AuthState,
+  set: SetState,
+  doSignIn: () => Promise<{ session: Session | null; user: User }>,
+): Promise<void> {
+  const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
+  // Fresh session fetch (not from store) to ensure the token is current before
+  // passing it to the server-side merge function.
+  const anonToken = anonId
+    ? ((await supabase.auth.getSession()).data.session?.access_token ?? null)
+    : null;
+
+  // Drain before the credential exchange so all anon writes reach the server
+  // before the merge Edge Function reads them.
+  if (anonId) await drainUploadQueue();
+
+  const { session, user } = await doSignIn();
+  await applySignIn(set, session, user);
+
+  const namedId = user.id;
+  // Skip migration when signing into the same account that was already linked
+  // to this device (namedId === anonId means no actual account switch occurred).
+  if (anonId && anonToken && namedId !== anonId) {
+    await migrateAnonProgress(anonId, anonToken);
+  }
+
+  await reconnectPowerSync(namedId);
 }
 
 // Held at module scope so initialize() can unsubscribe the previous listener
@@ -119,6 +172,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (initialSession) {
       const isAnonymous = initialSession.user.is_anonymous ?? true;
       set({ session: initialSession, user: initialSession.user, isAnonymous });
+      // Identify named users in Adapty for entitlement checks.
+      // Can't use applySignIn() here because that always sets isAnonymous: false,
+      // but we need to preserve the value derived from the existing session.
       if (!isAnonymous) {
         try { await adapty.identify(initialSession.user.id); } catch {}
       }
@@ -156,12 +212,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     authSubscription = subscription;
 
     // Handle deep links that launched the app cold (e.g. password recovery email).
+    // Fire-and-forget — we don't await so initialization isn't blocked.
     Linking.getInitialURL()
       .then(url => { if (url) get().handleDeepLink(url); })
       .catch(() => {});
   },
 
   handleDeepLink: async (url: string) => {
+    // Supabase embeds the link type as a query param OR fragment param depending
+    // on the flow. Checking the full URL string catches both cases.
     if (!url.includes('type=recovery') && !url.includes('type=signup') && !url.includes('type=email_change')) return;
     const hashIdx = url.indexOf('#');
     if (hashIdx < 0) return;
@@ -189,90 +248,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInWithEmail: async (email: string, password: string) => {
-    const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
-    const anonToken = anonId
-      ? ((await supabase.auth.getSession()).data.session?.access_token ?? null)
-      : null;
-
-    // Fix A: ensure all anonymous writes have reached Supabase before the merge
-    // reads them. Aborts with a user-visible error if the queue can't drain.
-    if (anonId) await drainUploadQueue();
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    await applySignIn(set, data.session, data.user);
-
-    const namedId = data.user.id;
-    if (anonId && anonToken && namedId !== anonId) {
-      await migrateAnonProgress(anonId, anonToken);
-    }
-
-    // Fix B: rebuild local PowerSync DB for the named user so merged rows are
-    // visible and no anon rows coexist under the named token.
-    await reconnectPowerSync(namedId);
+    await withAnonMigration(get, set, async () => {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return { session: data.session, user: data.user };
+    });
   },
 
   signInWithGoogle: async () => {
-    const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
-    const anonToken = anonId
-      ? ((await supabase.auth.getSession()).data.session?.access_token ?? null)
-      : null;
-
-    // Fix A: drain before the Supabase token exchange.
-    if (anonId) await drainUploadQueue();
-
-    await GoogleSignin.hasPlayServices();
-    const response = await GoogleSignin.signIn();
-    if (!response.data?.idToken) throw new Error('No Google ID token');
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
-      token: response.data.idToken,
+    await withAnonMigration(get, set, async () => {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      if (!response.data?.idToken) throw new Error('No Google ID token');
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: response.data.idToken,
+      });
+      if (error) throw error;
+      return { session: data.session, user: data.user };
     });
-    if (error) throw error;
-    await applySignIn(set, data.session, data.user);
-
-    const namedId = data.user.id;
-    if (anonId && anonToken && namedId !== anonId) {
-      await migrateAnonProgress(anonId, anonToken);
-    }
-
-    // Fix B: rebuild local PowerSync DB for the named user.
-    await reconnectPowerSync(namedId);
   },
 
   signInWithApple: async () => {
-    const anonId = get().isAnonymous ? (get().user?.id ?? null) : null;
-    const anonToken = anonId
-      ? ((await supabase.auth.getSession()).data.session?.access_token ?? null)
-      : null;
-
-    // Fix A: drain before the Supabase token exchange.
-    if (anonId) await drainUploadQueue();
-
-    const { appleAuth } = await import('@invertase/react-native-apple-authentication');
-    // FULL_NAME is intentionally omitted — Apple only sends it on the very first
-    // authorization and never again. Requesting it without storing it immediately
-    // is a GDPR data-minimization violation. If a display name is ever needed,
-    // prompt the user to enter one after sign-in rather than relying on Apple.
-    const credential = await appleAuth.performRequest({
-      requestedOperation: appleAuth.Operation.LOGIN,
-      requestedScopes: [appleAuth.Scope.EMAIL],
+    await withAnonMigration(get, set, async () => {
+      const { appleAuth } = await import('@invertase/react-native-apple-authentication');
+      // FULL_NAME is intentionally omitted — Apple only sends it on the very first
+      // authorization and never again. Requesting it without storing it immediately
+      // is a GDPR data-minimization violation. If a display name is ever needed,
+      // prompt the user to enter one after sign-in rather than relying on Apple.
+      const credential = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL],
+      });
+      if (!credential.identityToken) throw new Error('Apple sign-in: missing identity token');
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+      if (error) throw error;
+      return { session: data.session, user: data.user };
     });
-    if (!credential.identityToken) throw new Error('Apple sign-in: missing identity token');
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'apple',
-      token: credential.identityToken,
-    });
-    if (error) throw error;
-    await applySignIn(set, data.session, data.user);
-
-    const namedId = data.user.id;
-    if (anonId && anonToken && namedId !== anonId) {
-      await migrateAnonProgress(anonId, anonToken);
-    }
-
-    // Fix B: rebuild local PowerSync DB for the named user.
-    await reconnectPowerSync(namedId);
   },
 
   requestPasswordReset: async (email: string) => {
@@ -292,8 +307,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     await supabase.auth.signOut();
     try { await adapty.logout(); } catch {}
-    set({ session: null, user: null, isAnonymous: true });
-    try { await get().signInAnonymously(); } catch {}
+    await resetToAnonymous(set, get);
   },
 
   // Permanently deletes the account and all associated server-side data.
@@ -311,7 +325,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { error } = await supabase.rpc('delete_user');
     if (error) throw new Error('Account deletion failed. Please try again or contact support.');
     try { await adapty.logout(); } catch {}
-    set({ session: null, user: null, isAnonymous: true });
-    try { await get().signInAnonymously(); } catch {}
+    await resetToAnonymous(set, get);
   },
 }));

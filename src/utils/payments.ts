@@ -35,8 +35,8 @@ export async function purchasePremium(): Promise<boolean> {
       throw new Error('Purchase recorded but access not yet active. Please use Restore Purchases.');
     }
     useEntitlementsStore.getState().setIsPremium(true);
-    const { packCatalog, entitlements } = useEntitlementsStore.getState();
-    prefetchAllCatalog(packCatalog, entitlements).catch(() => {});
+    const { packCatalog } = useEntitlementsStore.getState();
+    prefetchAllCatalog(packCatalog).catch(() => {});
     return true;
   }
   throw new Error('Purchase did not complete. Please try again.');

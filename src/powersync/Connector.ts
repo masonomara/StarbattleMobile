@@ -67,6 +67,9 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     } catch (ex) {
       if (ex !== null && typeof ex === 'object' && isFatal(ex as { code?: string })) {
         const err = ex as { code?: string; message?: string };
+        // `op` here is the last processed operation — if the error came from
+        // transaction.complete() rather than an individual upsert, the logged
+        // op details will be the last loop iteration, not the true failure site.
         console.error(`[PowerSync] Fatal upload error (code=${err.code}) — discarded: ${err.message}`, op.table, op.op, op.id);
         await transaction.complete();
       } else {

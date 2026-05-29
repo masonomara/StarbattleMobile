@@ -148,16 +148,14 @@ export function PaywallModal({
         </Pressable>
         {renderContent()}
         {error && <Text style={styles.error}>{error}</Text>}
-        <View style={styles.disclosureContainer}>
-          <View style={styles.disclosureLinks}>
-            <Pressable onPress={() => Linking.openURL(TERMS_URL).catch(() => {})} hitSlop={8}>
-              <Text style={styles.disclosureLink}>Terms of Use</Text>
-            </Pressable>
-            <Text style={styles.disclosureSep}>·</Text>
-            <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} hitSlop={8}>
-              <Text style={styles.disclosureLink}>Privacy Policy</Text>
-            </Pressable>
-          </View>
+        <View style={styles.disclosureLinks}>
+          <Pressable onPress={() => Linking.openURL(TERMS_URL).catch(() => {})} hitSlop={8}>
+            <Text style={styles.disclosureLink}>Terms of Use</Text>
+          </Pressable>
+          <Text style={styles.disclosureSep}>·</Text>
+          <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} hitSlop={8}>
+            <Text style={styles.disclosureLink}>Privacy Policy</Text>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -176,6 +174,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: rgba(theme.text, 0.4),
     },
     sheet: {
+      // textSecondary doubles as the modal sheet surface color in all palettes.
       backgroundColor: theme.textSecondary,
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
@@ -230,10 +229,8 @@ const createStyles = (theme: Theme) =>
       color: theme.red,
       textAlign: 'center',
     },
-    disclosureContainer: {
-      marginTop: theme.spacingMd,
-    },
     disclosureLinks: {
+      marginTop: theme.spacingMd,
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
@@ -242,7 +239,6 @@ const createStyles = (theme: Theme) =>
     disclosureLink: {
       fontSize: 11,
       color: theme.textSecondary,
-      textDecorationLine: 'none',
     },
     disclosureSep: {
       fontSize: 11,

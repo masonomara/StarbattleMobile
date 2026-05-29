@@ -1,57 +1,66 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  TextStyle,
+} from 'react-native';
 import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useIsFocused } from '@react-navigation/native';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import Flame from 'lucide-react-native/dist/cjs/icons/flame';
 import User from 'lucide-react-native/dist/cjs/icons/user';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getStreakPack, getPuzzlesForPack } from '../packs';
 import { CircleButton } from '../components/CircleButton';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
+import { usePackPreviews } from '../hooks/usePackPreviews';
+import { useCompletionData } from '../hooks/useCompletionData';
+import { useStreakRows } from '../hooks/useStreakRows';
 import {
   getCurrentKey,
   getActiveStreak,
-  getPuzzleIndex,
   STREAK_TYPES,
   STREAK_UNIT,
 } from '../utils/streakDate';
-import { loadAllCompletionData } from '../utils/progress';
-import { db } from '../powersync/AppSchema';
 import { useAuthStore } from '../stores/authStore';
-import { parsePuzzle } from '../utils/parsePuzzle';
 import { startupTimer } from '../utils/startupTimer';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { PackCard } from '../components/PackCard';
 import { useProductPrice } from '../hooks/useProductPrice';
 import type {
   Theme,
-  Streak,
-  Puzzle,
   PackCatalogItem,
+  Puzzle,
   RootStackParamList,
 } from '../types';
 
+// Fixed header height (excluding safe area inset) — used in both the header
+// style and the scroll view's top padding offset.
+const HEADER_HEIGHT = 57;
+
+// PaidPackRow is its own component because useProductPrice is a hook — hooks
+// cannot be called conditionally, so this component wraps the per-pack call
+// that would otherwise live inside the paidPacks.map() callback.
 function PaidPackRow({
   pack,
   completed,
   onPress,
-  styles,
   preview,
   theme,
   coloredRegions,
+  priceStyle,
 }: {
   pack: PackCatalogItem;
   completed: number;
   onPress: () => void;
-  styles: ReturnType<typeof createStyles>;
   preview: Puzzle | undefined;
   theme: Theme;
   coloredRegions: boolean;
+  priceStyle: TextStyle;
 }) {
   const price = useProductPrice(`starbattle_pack_${pack.id}`);
   return (
@@ -63,7 +72,7 @@ function PaidPackRow({
       theme={theme}
       coloredRegions={coloredRegions}
       right={
-        <Text style={styles.packPrice}>
+        <Text style={priceStyle}>
           {price ??
             (pack.priceUsd != null ? `$${pack.priceUsd.toFixed(2)}` : '—')}
         </Text>
@@ -72,148 +81,71 @@ function PaidPackRow({
   );
 }
 
+// Returns the subtitle shown beneath each streak card based on whether the
+// user completed today's puzzle and their current streak length.
+function getStreakLabel(
+  isCompleted: boolean,
+  streakCount: number,
+  type: string,
+  packName: string,
+): string {
+  if (isCompleted && streakCount > 0)
+    return `${streakCount} ${STREAK_UNIT[type]} streak`;
+  if (isCompleted) return 'Completed';
+  if (streakCount > 0)
+    return `Continue your ${streakCount} ${STREAK_UNIT[type]} streak`;
+  return `Start your ${packName} streak`;
+}
+
 export function HomeScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets);
-  const isFocused = useIsFocused();
   const userId = useAuthStore(s => s.user?.id);
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, hasPackAccess } = useEntitlements();
 
-  const [packPreviews, setPackPreviews] = useState<Record<string, Puzzle>>({});
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     startupTimer.log('HomeScreen first mount');
   }, []);
 
-  useEffect(() => {
-    async function loadPackPreviews() {
-      const results: Record<string, Puzzle> = {};
-      await Promise.all(
-        packCatalog.map(async pack => {
-          if (pack.type) {
-            const streakPack = await getStreakPack(pack.type);
-            if (!streakPack) return;
-            const idx = getPuzzleIndex(pack.type, streakPack.puzzles.length);
-            results[pack.id] = parsePuzzle(
-              streakPack.puzzles[idx],
-              `${pack.id}:${getCurrentKey(pack.type)}`,
-            );
-          } else {
-            const rawPuzzles = await getPuzzlesForPack(
-              pack.id,
-              pack.storagePath,
-            );
-            if (!rawPuzzles?.length) return;
-            results[pack.id] = parsePuzzle(rawPuzzles[0], `${pack.id}:0`);
-          }
-        }),
-      );
-      setPackPreviews(results);
+  // Categorize packs in a single pass rather than three separate filter calls.
+  // Streak packs are sorted to match the canonical STREAK_TYPES order.
+  const { streakPacks, freePacks, paidPacks } = useMemo(() => {
+    const streak: PackCatalogItem[] = [];
+    const free: PackCatalogItem[] = [];
+    const paid: PackCatalogItem[] = [];
+    for (const p of packCatalog) {
+      if (p.type) streak.push(p);
+      else if (p.isFree) free.push(p);
+      else paid.push(p);
     }
-    loadPackPreviews();
-  }, [packCatalog]);
-
-  const [scrolled, setScrolled] = useState(false);
-  const [streaks, setStreaks] = useState<Streak[]>([]);
-  const [completedPuzzleIds, setCompletedPuzzleIds] = useState<Set<string>>(
-    new Set(),
-  );
-  const [completedPerPack, setCompletedPerPack] = useState<
-    Record<string, number>
-  >({});
-
-  const streakPacks = useMemo(
-    () =>
-      packCatalog
-        .filter(p => !!p.type)
-        .sort(
-          (a, b) =>
-            STREAK_TYPES.indexOf(a.type!) - STREAK_TYPES.indexOf(b.type!),
-        ),
-    [packCatalog],
-  );
-  const freePacks = useMemo(
-    () => packCatalog.filter(p => !p.type && p.isFree),
-    [packCatalog],
-  );
-  const paidPacks = useMemo(
-    () => packCatalog.filter(p => !p.type && !p.isFree),
-    [packCatalog],
-  );
-
-  const load = useCallback(async () => {
-    const allCompleted = await loadAllCompletionData();
-
-    const completedIds = new Set<string>();
-    for (const pack of packCatalog) {
-      if (!pack.type) continue;
-      const puzzleId = `${pack.id}:${getCurrentKey(pack.type)}`;
-      if (allCompleted.has(puzzleId)) completedIds.add(puzzleId);
-    }
-    setCompletedPuzzleIds(completedIds);
-
-    const counts: Record<string, number> = {};
-    for (const pack of packCatalog) {
-      if (pack.type) continue;
-      let count = 0;
-      for (let i = 0; i < pack.puzzleCount; i++) {
-        if (allCompleted.has(`${pack.id}:${i}`)) count++;
-      }
-      counts[pack.id] = count;
-    }
-    setCompletedPerPack(counts);
-  }, [packCatalog]);
-
-  useEffect(() => {
-    if (isFocused && userId) load();
-  }, [isFocused, userId, load]);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const applyRows = (
-      rows: {
-        type: string;
-        current_count: number;
-        last_completed_key: string;
-      }[],
-    ) => {
-      setStreaks(
-        rows.map(r => ({
-          type: r.type as Streak['type'],
-          current: r.current_count,
-          lastCompletedKey: r.last_completed_key,
-        })),
-      );
-    };
-
-    db.getAll<{
-      type: string;
-      current_count: number;
-      last_completed_key: string;
-    }>(
-      'SELECT type, current_count, last_completed_key FROM streaks WHERE user_id = ?',
-      [userId],
-    ).then(applyRows);
-
-    const controller = new AbortController();
-    db.watch(
-      'SELECT type, current_count, last_completed_key FROM streaks WHERE user_id = ?',
-      [userId],
-      {
-        onResult: result => applyRows(result.rows?._array ?? []),
-      },
-      { signal: controller.signal },
+    streak.sort(
+      (a, b) => STREAK_TYPES.indexOf(a.type!) - STREAK_TYPES.indexOf(b.type!),
     );
-    return () => controller.abort();
-  }, [userId]);
+    return { streakPacks: streak, freePacks: free, paidPacks: paid };
+  }, [packCatalog]);
+
+  // Thumbnail puzzle previews for every pack (today's for streaks, first puzzle for library).
+  const packPreviews = usePackPreviews(packCatalog);
+
+  // Completion state: today's streak puzzle IDs and solved counts per library pack.
+  // Reloads on screen focus so numbers update after the user solves a puzzle.
+  const { completedPuzzleIds, completedPerPack } = useCompletionData(
+    packCatalog,
+    userId,
+  );
+
+  // Live streak rows from PowerSync — updates reactively as data syncs.
+  const streaks = useStreakRows(userId);
 
   return (
     <View style={styles.container}>
+      {/* Floating header — shows a bottom border once the user has scrolled */}
       <View
         style={[
           styles.header,
@@ -242,10 +174,11 @@ export function HomeScreen({
         onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
         scrollEventThrottle={16}
         contentContainerStyle={{
-          paddingTop: 57 + insets.top,
+          paddingTop: HEADER_HEIGHT + insets.top,
           paddingBottom: insets.bottom,
         }}
       >
+        {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
         <View style={styles.streakSection}>
           <ScrollView
             style={styles.streakRow}
@@ -261,10 +194,12 @@ export function HomeScreen({
               const type = pack.type!;
               const preview = packPreviews[pack.id];
               if (!preview) return null;
-              const key = getCurrentKey(type);
-              const puzzleId = `${pack.id}:${key}`;
+
+              // puzzleId format matches keys stored by useCompletionData.
+              const puzzleId = `${pack.id}:${getCurrentKey(type)}`;
               const isCompleted = completedPuzzleIds.has(puzzleId);
               const found = streaks.find(s => s.type === type);
+              // getActiveStreak returns 0 if the streak wasn't maintained.
               const streakCount = found ? getActiveStreak(found, type) : 0;
 
               return (
@@ -275,6 +210,8 @@ export function HomeScreen({
                   key={pack.id}
                   style={[
                     styles.streakCard,
+                    // streakCardCompleted is intentionally empty — reserved for
+                    // future visual differentiation of completed cards.
                     isCompleted && styles.streakCardCompleted,
                   ]}
                 >
@@ -284,7 +221,6 @@ export function HomeScreen({
                     theme={theme}
                     coloredRegions={coloredRegions}
                   />
-
                   <Text style={styles.streakLabel}>{pack.name}</Text>
                   <View style={styles.streakMetaRow}>
                     {isCompleted && (
@@ -293,13 +229,12 @@ export function HomeScreen({
                       </View>
                     )}
                     <Text style={styles.streakMeta}>
-                      {isCompleted && streakCount > 0
-                        ? `${streakCount} ${STREAK_UNIT[type]} streak`
-                        : isCompleted
-                        ? `Completed`
-                        : streakCount > 0
-                        ? `Continue your ${streakCount} ${STREAK_UNIT[type]} streak`
-                        : `Start your ${pack.name} streak`}
+                      {getStreakLabel(
+                        isCompleted,
+                        streakCount,
+                        type,
+                        pack.name,
+                      )}
                     </Text>
                   </View>
                 </Pressable>
@@ -308,29 +243,29 @@ export function HomeScreen({
           </ScrollView>
         </View>
 
+        {/* Puzzle library: free packs, then purchasable packs */}
         <View style={styles.packSection}>
           <Text style={styles.sectionLabel}>Puzzle Library</Text>
-          {freePacks.map(pack => {
-            const completed = completedPerPack[pack.id] ?? 0;
-            return (
-              <PackCard
-                key={pack.id}
-                name={pack.name}
-                meta={`${completed}/${pack.puzzleCount}`}
-                preview={packPreviews[pack.id]}
-                onPress={() =>
-                  navigation.navigate('Library', { packId: pack.id })
-                }
-                theme={theme}
-                coloredRegions={coloredRegions}
-              />
-            );
-          })}
+
+          {freePacks.map(pack => (
+            <PackCard
+              key={pack.id}
+              name={pack.name}
+              meta={`${completedPerPack[pack.id] ?? 0}/${pack.puzzleCount}`}
+              preview={packPreviews[pack.id]}
+              onPress={() =>
+                navigation.navigate('Library', { packId: pack.id })
+              }
+              theme={theme}
+              coloredRegions={coloredRegions}
+            />
+          ))}
 
           {paidPacks.map(pack => {
-            const hasAccess = hasPackAccess(pack.id);
             const completed = completedPerPack[pack.id] ?? 0;
-            if (hasAccess) {
+
+            // Purchased packs render identically to free packs.
+            if (hasPackAccess(pack.id)) {
               return (
                 <PackCard
                   key={pack.id}
@@ -345,6 +280,7 @@ export function HomeScreen({
                 />
               );
             }
+
             return (
               <PaidPackRow
                 key={pack.id}
@@ -353,10 +289,10 @@ export function HomeScreen({
                 onPress={() =>
                   navigation.navigate('Library', { packId: pack.id })
                 }
-                styles={styles}
                 preview={packPreviews[pack.id]}
                 theme={theme}
                 coloredRegions={coloredRegions}
+                priceStyle={styles.packPrice}
               />
             );
           })}
@@ -385,13 +321,14 @@ const createStyles = (
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 16,
-      height: 57 + insets.top,
+      height: HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
+      // Default border color matches background so it's invisible until
+      // headerBorder overrides it on scroll.
       borderBottomWidth: 1,
       borderBottomColor: theme.background,
     },
     headerBorder: {
-      borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
     appTitle: {
@@ -427,12 +364,11 @@ const createStyles = (
       padding: 16,
       gap: 0,
       justifyContent: 'flex-start',
-
       borderWidth: 1,
       borderColor: theme.border,
     },
+    // Intentionally empty — placeholder for future completed-card styling.
     streakCardCompleted: {},
-
     streakLabel: {
       color: theme.text,
       lineHeight: 36,
@@ -452,40 +388,19 @@ const createStyles = (
       color: theme.text,
       fontSize: 17,
       lineHeight: 22,
-      fontWeight: 600,
+      fontWeight: '600',
       marginTop: 7,
     },
     streakCheckCircle: {
       width: 22,
       height: 22,
       borderRadius: 100,
-      // backgroundColor: theme.green + "2E",
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: 7,
     },
-    streakThumbnailWrap: {
-      overflow: 'hidden',
-      backgroundColor: theme.textSecondary,
-    },
-
-    streakPlayButton: {
-      borderRadius: 8,
-      alignItems: 'center',
-      height: 56,
-      borderWidth: 2,
-      justifyContent: 'center',
-      borderColor: theme.text,
-      backgroundColor: theme.isDark ? theme.background : theme.blue,
-    },
-    streakPlayButtonText: {
-      fontSize: 19,
-      fontWeight: '600',
-      color: theme.text,
-    },
     sectionLabel: {
       lineHeight: 28,
-
       marginBottom: 16,
       fontSize: 25,
       fontFamily: 'Bricolage Grotesque',

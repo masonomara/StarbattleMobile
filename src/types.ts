@@ -170,6 +170,22 @@ export type Pack = {
   puzzles: RawPuzzle[];
 };
 
+// All data resolved from route params + remote pack source before a puzzle
+// can render. Loaded asynchronously by usePackData; null until ready.
+export type PackData = {
+  rawPuzzle: RawPuzzle;
+  puzzleId: string;
+  gridSize: number;
+  packName: string;
+  // True when this is the final puzzle in a library pack (disables "Next").
+  isLastPuzzle: boolean;
+  // For streak packs this is the streakType ('daily' | 'weekly' | 'monthly'),
+  // NOT the catalog packId. Hints and archive keys are indexed by streakType.
+  effectivePackId: string;
+  puzzleIndexInPack: number;
+  streakType?: StreakType;
+};
+
 // THEME
 
 export type RoleColors = {
@@ -206,28 +222,20 @@ export type ThemeColors = {
   regions: RegionColors;
 };
 
+// Themes that are shipped and selectable by the user.
+// Commented-out names are palette definitions that exist in src/themes/ but
+// are not yet exposed in the settings UI (pending design review).
 export type ThemeName =
   | 'original'
-  // | 'ayu'
-  // | 'catppuccin'
-  // | 'everforest'
   | 'primer'
   | 'gruvbox'
-  // | 'iceberg'
-  // | 'nightOwl'
-  // | 'nightfox'
-  // | 'one'
-  // | 'oneHalf'
   | 'rosePine'
   | 'seoul256'
-  // | 'solarized'
   | 'tokyoNight';
-// | 'zenbonesForestbones'
-// | 'zenbonesNeobones'
-// | 'zenbonesRosebones'
-// | 'zenbonesSeoulbones'
-// | 'zenbonesTokyobones'
-// | 'zenbonesZenwritten';
+// Candidates: ayu, catppuccin, everforest, iceberg, nightOwl, nightfox,
+//             one, oneHalf, solarized, zenbonesForestbones, zenbonesNeobones,
+//             zenbonesRosebones, zenbonesSeoulbones, zenbonesTokyobones,
+//             zenbonesZenwritten.
 
 export type PaletteVariants = {
   label: string;
@@ -279,7 +287,8 @@ export type PackCatalogItem = {
   priceUsd?: number;
   puzzleCount: number;
   storagePath?: string;
-  type?: 'daily' | 'weekly' | 'monthly';
+  // Present only for streak packs (daily/weekly/monthly). Absent for library packs.
+  type?: StreakType;
 };
 
 export type PaywallContext =

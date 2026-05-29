@@ -22,6 +22,9 @@ import './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Each screen is wrapped individually rather than using a HOC so that:
+// (a) TypeScript can infer screen props without extra generic plumbing, and
+// (b) each boundary can set a screen-specific onReset (e.g. goBack vs no-op).
 function WrappedHome(
   props: NativeStackScreenProps<RootStackParamList, 'Home'>,
 ) {
@@ -69,12 +72,10 @@ function WrappedArchivePack(
 export function Navigation() {
   const theme = useTheme();
   const bgColor = theme.background;
+  const baseNavTheme = theme.isDark ? DarkTheme : DefaultTheme;
   const navTheme = {
-    ...(theme.isDark ? DarkTheme : DefaultTheme),
-    colors: {
-      ...(theme.isDark ? DarkTheme : DefaultTheme).colors,
-      background: bgColor,
-    },
+    ...baseNavTheme,
+    colors: { ...baseNavTheme.colors, background: bgColor },
   };
   return (
     <NavigationContainer theme={navTheme}>

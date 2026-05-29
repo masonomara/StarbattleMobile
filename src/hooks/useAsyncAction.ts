@@ -57,6 +57,8 @@ export function useAsyncAction() {
       await fn();
       onSuccess?.();
     } catch (e) {
+      // Log everything including user cancellations — cancellations return null
+      // from toUserMessage() so no error is shown, but the log helps debugging.
       console.error('[useAsyncAction]', e);
       setError(toUserMessage(e));
     } finally {

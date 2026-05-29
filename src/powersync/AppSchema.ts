@@ -1,4 +1,6 @@
 import { column, Schema, Table, PowerSyncDatabase } from '@powersync/react-native';
+// OPSqliteOpenFactory uses the op-sqlite driver (faster than the default
+// expo-sqlite driver) for PowerSync's local SQLite database.
 import { OPSqliteOpenFactory } from '@powersync/op-sqlite';
 
 const packs = new Table({
@@ -15,6 +17,9 @@ const packs = new Table({
   type: column.text,
 });
 
+// Primary key for user-scoped rows is a composite string: "${userId}:${puzzleId}".
+// This avoids a separate UNIQUE constraint while keeping the row addressable by
+// the same ID format used by progress.ts (saveProgress / saveStreak).
 const puzzle_progress = new Table(
   {
     user_id: column.text,

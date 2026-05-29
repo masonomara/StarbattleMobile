@@ -19,7 +19,14 @@ export const DEFAULT_SETTINGS: UserSettings = {
 export function getSettings(): UserSettings {
   const json = storage.getString(SETTINGS_KEY);
   if (!json) return DEFAULT_SETTINGS;
-  return { ...DEFAULT_SETTINGS, ...JSON.parse(json) };
+  try {
+    // Spread over DEFAULT_SETTINGS so any new keys added later get their
+    // default values even when the stored JSON predates them.
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(json) };
+  } catch {
+    // Corrupt MMKV value — start fresh rather than crashing.
+    return DEFAULT_SETTINGS;
+  }
 }
 
 export function saveSettings(update: Partial<UserSettings>): void {

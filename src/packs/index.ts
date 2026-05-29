@@ -3,6 +3,8 @@ import { supabase } from '../supabase';
 import { packMetaStorage } from '../mmkv';
 import type { RawPuzzle, Pack, StreakType, HintStep } from '../types';
 
+// Packs below this version use a format that the parser no longer supports.
+// On first load, stale packs are evicted from disk and re-fetched.
 const PACK_MIN_VERSION = 2;
 
 import type * as RNFSType from 'react-native-fs';
@@ -39,6 +41,9 @@ function validatePackText(text: string): void {
   }
 }
 
+// Placeholders for a potential future encryption or compression layer.
+// encodeForDisk currently passes the JSON string through unchanged.
+// decodeFromDisk parses it back. If compression is added, update both.
 function encodeForDisk(text: string): string {
   return text;
 }
@@ -47,6 +52,8 @@ function decodeFromDisk(text: string): Pack {
   return JSON.parse(text) as Pack;
 }
 
+// Guards against path traversal: pack keys are used directly as filenames,
+// so slashes or ".." in a key could escape the packs directory.
 function assertSafeKey(key: string): void {
   if (/[/\\]/.test(key) || key.includes('..')) {
     throw new Error(`Unsafe pack key: ${key}`);
@@ -61,6 +68,9 @@ function setCachedEtag(key: string, etag: string): void {
   packMetaStorage.set(`etag:${key}`, etag);
 }
 
+// NOTE: console.log/error calls throughout this file are intentionally verbose
+// for diagnosing pack loading issues in development. Consider gating them
+// behind __DEV__ or a feature flag before shipping a release build.
 async function fetchFromSupabase(storageKey: string): Promise<string> {
   console.log(`[SB:PACK] supabase.storage.from('packs').download('${storageKey}')`);
   const { data, error } = await supabase.storage

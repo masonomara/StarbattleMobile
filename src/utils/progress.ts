@@ -117,6 +117,9 @@ export async function getCompletedPuzzleIdsForPack(
   return fetchCompletedIdsForPack(packId, puzzleCount);
 }
 
+// Fetches every completed puzzle ID for the current user in one query.
+// Scales O(n) with the number of completed puzzles — fine for typical usage.
+// Used by useCompletionData to build both streak and library completion state.
 export async function loadAllCompletionData(): Promise<Set<string>> {
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return new Set();
@@ -164,6 +167,9 @@ export async function saveStreak(
   }
 }
 
+// Imperative one-shot read of streak rows. For reactive updates (e.g. the
+// home screen), use the useStreakRows hook instead — it subscribes to live
+// PowerSync changes rather than running a single query.
 export async function loadStreaks(): Promise<Streak[]> {
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return [];

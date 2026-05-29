@@ -3,8 +3,13 @@ import { View } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import { rgba } from '../themes/ansi';
-import type { Puzzle, CellValue, DrawLayerHandle, Theme, PuzzleCanvasProps } from '../types';
-
+import type {
+  Puzzle,
+  CellValue,
+  DrawLayerHandle,
+  Theme,
+  PuzzleCanvasProps,
+} from '../types';
 
 type BackgroundCanvasProps = {
   puzzle: Puzzle;
@@ -101,7 +106,11 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
         <Path
           key={`region-${colorIdx}`}
           path={path}
-          color={coloredRegions ? rgba(regionColors[colorIdx], theme.regionColorAlpha) : theme.background}
+          color={
+            coloredRegions
+              ? rgba(regionColors[colorIdx], theme.regionColorAlpha)
+              : theme.background
+          }
         />
       ))}
       <Path
@@ -142,6 +151,10 @@ export const PuzzleCanvas = React.forwardRef<
 ) {
   const { size } = puzzle;
   const cs = canvasSize / size;
+  // coloredRegions is read from the store rather than passed as a prop because
+  // it only affects BackgroundCanvas (static layer) and doesn't influence
+  // gesture handling or cell logic in the parent. Keeping it internal reduces
+  // prop drilling through PuzzleScreen → PuzzleCanvas → BackgroundCanvas.
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const totalSize = canvasSize + BORDER * 2;
 
@@ -164,6 +177,11 @@ export const PuzzleCanvas = React.forwardRef<
 
   // Rebuilt on stroke end or preview update — O(n) over all cells, 4 paths total.
   const dynamicPaths = useMemo(() => {
+    // Star polygon geometry — tuned to look balanced at all grid sizes.
+    // outerR: distance from center to spike tip (33% of cell width).
+    // innerR: distance from center to inner concave vertex (44% of outerR).
+    //         Lower ratio = sharper points; 0.44 matches classic 5-point star proportions.
+    // half:   half-width of the elimination-mark cross arms.
     const outerR = cs * 0.33;
     const innerR = outerR * 0.44;
     const half = cs * 0.12;
@@ -185,13 +203,21 @@ export const PuzzleCanvas = React.forwardRef<
       const cy = row * cs + cs / 2;
 
       if (value === 1 || ghost === 'star') {
+        // Route to the correct path builder:
+        //   ghost  → hint overlay (rendered in border color, low contrast)
+        //   error  → placed star that violates a constraint (rendered in red)
+        //   normal → valid placed star
         const isGhost = ghost === 'star' && value !== 1;
         const b = isGhost
           ? starGhost
           : errorCells.has(idx)
           ? starError
           : starNormal;
+        // Tiny downward nudge: stars look optically high without this because
+        // the top spike is visually heavier than the flat base of the polygon.
         const cyAdj = cy + outerR * 0.02;
+        // Draw a 10-vertex polygon alternating between outerR and innerR to
+        // form a 5-pointed star. Starting angle (-π/2) puts the top spike up.
         for (let p = 0; p < 10; p++) {
           const angle = (p * Math.PI) / 5 - Math.PI / 2;
           const rad = p % 2 === 0 ? outerR : innerR;
@@ -202,6 +228,8 @@ export const PuzzleCanvas = React.forwardRef<
         }
         b.close();
       } else if (value === 2 || ghost === 'mark') {
+        // Elimination mark: two crossed lines (×). Ghost variant uses same
+        // low-contrast color as ghost stars so hint overlays look consistent.
         const isGhostMark = ghost === 'mark' && value !== 2;
         const m = isGhostMark ? marksGhost : marks;
         m.moveTo(cx - half, cy - half);

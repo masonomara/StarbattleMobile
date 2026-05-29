@@ -17,6 +17,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
 
   componentDidCatch(error: Error) {
     console.error('Boundary caught:', error);
+    // TODO: forward to a crash-reporting service (e.g. Sentry) when one is added.
   }
 
   private handleReset = () => {
