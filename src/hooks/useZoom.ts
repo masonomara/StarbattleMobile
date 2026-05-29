@@ -20,12 +20,6 @@ const PAN_PADDING = 120;
 // uses its default (critically damped), avoiding oscillation.
 const SPRING_CONFIG = { stiffness: 750 } as const;
 
-// NOTE: `isZoomed` tracks scale only — it does NOT account for translation.
-// A user could pinch back to scale=1 while the board remains panned off-center,
-// causing the "reset zoom" toolbar button to hide even though the board is not
-// centered. The Toolbar uses isZoomed to disable the reset button, so the button
-// becomes inaccessible after a pan without a scale change. Fix: derive isZoomed
-// from both `savedScale !== DEFAULT_ZOOM` and `savedTranslate !== 0`.
 export function useZoom(puzzleSize: number, cellSize: number) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
@@ -85,7 +79,11 @@ export function useZoom(puzzleSize: number, cellSize: number) {
         translateY.value = withSpring(cy, SPRING_CONFIG);
       }
 
-      runOnJS(setIsZoomed)(clampedScale !== DEFAULT_ZOOM);
+      runOnJS(setIsZoomed)(
+        clampedScale !== DEFAULT_ZOOM ||
+          savedTranslateX.value !== 0 ||
+          savedTranslateY.value !== 0,
+      );
       runOnJS(recordGestureEnd)();
     });
 
@@ -115,6 +113,9 @@ export function useZoom(puzzleSize: number, cellSize: number) {
         translateY.value = withSpring(cy, SPRING_CONFIG);
       }
 
+      runOnJS(setIsZoomed)(
+        savedScale.value !== DEFAULT_ZOOM || cx !== 0 || cy !== 0,
+      );
       runOnJS(recordGestureEnd)();
     });
 
@@ -129,7 +130,14 @@ export function useZoom(puzzleSize: number, cellSize: number) {
     savedTranslateX.value = 0;
     savedTranslateY.value = 0;
     setIsZoomed(false);
-  }, [scale, translateX, translateY, savedScale, savedTranslateX, savedTranslateY]);
+  }, [
+    scale,
+    translateX,
+    translateY,
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
+  ]);
 
   return {
     pinchGesture,
