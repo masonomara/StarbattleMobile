@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Text } from './Text';
-import { Header } from './Header';
 import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../hooks/useTheme';
 import { useAsyncAction } from '../hooks/useAsyncAction';
@@ -38,10 +37,9 @@ export function ResetPasswordModal() {
       presentationStyle="pageSheet"
     >
       <View style={styles.container}>
-        <Header
-          absolute={false}
-          center={<Text style={styles.title}>New Password</Text>}
-        />
+        <View style={styles.modalHeader}>
+          <Text style={styles.title}>New Password</Text>
+        </View>
         <View style={styles.body}>
           <Text style={styles.description}>
             Choose a new password for your account.
@@ -83,6 +81,12 @@ const createStyles = (theme: Theme) => {
       flex: 1,
       paddingTop: theme.spacingXl,
       backgroundColor: theme.surface,
+    },
+    modalHeader: {
+      height: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 14,
     },
     title: {
       fontSize: theme.fontSizeBody,

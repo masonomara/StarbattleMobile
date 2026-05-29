@@ -13,7 +13,6 @@ import X from 'lucide-react-native/dist/cjs/icons/x';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Header } from '../components/Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
@@ -107,16 +106,17 @@ export function StreaksModal() {
       onRequestClose={closeStreaks}
     >
       <View style={styles.container}>
-        <Header
-          absolute={false}
-          bordered={scrolled}
-          center={<Text style={styles.headerTitle}>Streaks</Text>}
-          right={
+        <View style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}>
+          <View style={styles.modalHeaderSide} />
+          <View style={styles.modalHeaderCenter}>
+            <Text style={styles.headerTitle}>Streaks</Text>
+          </View>
+          <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeStreaks} hitSlop={8}>
               <X size={24} color={theme.text} />
             </Pressable>
-          }
-        />
+          </View>
+        </View>
 
         <ScrollView
           onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
@@ -201,6 +201,27 @@ const createStyles = (theme: Theme) => {
     scrollContent: {
       paddingHorizontal: theme.spacingXl,
       paddingBottom: theme.spacingXl,
+    },
+    modalHeader: {
+      height: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: 'transparent',
+    },
+    modalHeaderBorder: {
+      borderBottomColor: theme.border,
+    },
+    modalHeaderSide: {
+      width: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalHeaderCenter: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     headerTitle: {
       fontSize: theme.fontSizeBody,

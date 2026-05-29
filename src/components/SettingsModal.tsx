@@ -21,7 +21,6 @@ import AtSign from 'lucide-react-native/dist/cjs/icons/at-sign';
 import { WebView } from 'react-native-webview';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import Svg, { Rect, Line, Path } from 'react-native-svg';
-import { Header } from './Header';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAuthStore } from '../stores/authStore';
 import { usePuzzleStore } from '../store';
@@ -403,10 +402,15 @@ export function SettingsModal() {
       onDismiss={() => setView('main')}
     >
       <View style={styles.container}>
-        <Header
-          absolute={false}
-          bordered={scrolled}
-          center={
+        <View style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}>
+          <View style={styles.modalHeaderSide}>
+            {view !== 'main' && (
+              <Pressable onPress={() => setView('main')} hitSlop={8}>
+                <ChevronLeft size={24} color={theme.text} />
+              </Pressable>
+            )}
+          </View>
+          <View style={styles.modalHeaderCenter}>
             <Text style={styles.title}>
               {view === 'acknowledgements'
                 ? 'Acknowledgements'
@@ -416,22 +420,15 @@ export function SettingsModal() {
                 ? 'Privacy Policy'
                 : 'Settings'}
             </Text>
-          }
-          left={
-            view !== 'main' ? (
-              <Pressable onPress={() => setView('main')} hitSlop={8}>
-                <ChevronLeft size={24} color={theme.text} />
-              </Pressable>
-            ) : undefined
-          }
-          right={
-            view === 'main' ? (
+          </View>
+          <View style={styles.modalHeaderSide}>
+            {view === 'main' && (
               <Pressable onPress={closeSettings} hitSlop={8}>
                 <X size={24} color={theme.text} />
               </Pressable>
-            ) : undefined
-          }
-        />
+            )}
+          </View>
+        </View>
 
         {view === 'acknowledgements' && (
           <ScrollView
@@ -580,7 +577,10 @@ export function SettingsModal() {
                 {emailMode === null && (
                   <View style={{ gap: 12, marginTop: 4 }}>
                     <Pressable
-                      style={[styles.secondaryButton, loading && styles.disabled]}
+                      style={[
+                        styles.secondaryButton,
+                        loading && styles.disabled,
+                      ]}
                       onPress={() => {
                         setError(null);
                         setEmailMode(authTab);
@@ -1100,6 +1100,27 @@ const createStyles = (theme: Theme) => {
     container: {
       flex: 1,
       backgroundColor: theme.background,
+    },
+    modalHeader: {
+      height: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: 'transparent',
+    },
+    modalHeaderBorder: {
+      borderBottomColor: theme.border,
+    },
+    modalHeaderSide: {
+      width: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalHeaderCenter: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     title: {
       color: theme.text,

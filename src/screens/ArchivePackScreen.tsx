@@ -1,22 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   FlatList,
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { Text } from '../components/Text';
-import { Header } from '../components/Header';
-import ChevronRight from 'lucide-react-native/dist/cjs/icons/chevron-right';
-import X from 'lucide-react-native/dist/cjs/icons/x';
+import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
+import { CircleButton } from '../components/CircleButton';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../hooks/useTheme';
 import { loadAllCompletionData } from '../utils/progress';
 import { getPastDateKeys, STREAK_LABELS, formatArchiveKey } from '../utils/streakDate';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
-import type { RootStackParamList, StreakType, Theme } from '../types';
+import type { RootStackParamList, Theme } from '../types';
+
+const NUM_COLS = 2;
 
 export function ArchivePackScreen({
   route,
@@ -24,7 +27,13 @@ export function ArchivePackScreen({
 }: NativeStackScreenProps<RootStackParamList, 'ArchivePack'>) {
   const { type } = route.params;
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const cellSize = Math.floor((width - 2 * 32 - NUM_COLS * 12) / NUM_COLS);
+  const styles = useMemo(
+    () => createStyles(theme, cellSize, insets),
+    [theme, cellSize, insets],
+  );
 
   const dateKeys = getPastDateKeys(type);
 
@@ -48,95 +57,145 @@ export function ArchivePackScreen({
     [navigation, type],
   );
 
-  const renderItem = ({ item }: { item: string }) => {
-    const isCompleted = completedIds.has(`${type}:archive:${item}`);
+  const rows = useMemo(() => {
+    const result: string[][] = [];
+    for (let i = 0; i < dateKeys.length; i += NUM_COLS) {
+      result.push(dateKeys.slice(i, i + NUM_COLS));
+    }
+    return result;
+  }, [dateKeys]);
+
+  const renderRow = useCallback(
+    ({ item: rowKeys }: { item: string[] }) => (
+      <View style={styles.row}>
+        {rowKeys.map(dateKey => {
+          const isCompleted = completedIds.has(`${type}:archive:${dateKey}`);
+          return (
+            <Pressable
+              key={dateKey}
+              style={styles.cell}
+              onPress={() => navigateToPuzzle(dateKey)}
+            >
+              {isCompleted && (
+                <View style={styles.checkOverlay}>
+                  <Check size={22} color={theme.blue} strokeWidth={2.5} />
+                </View>
+              )}
+              <Text style={styles.dateText}>
+                {formatArchiveKey(type, dateKey)}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    ),
+    [completedIds, type, navigateToPuzzle, styles, theme],
+  );
+
+  if (loading) {
     return (
-      <Pressable style={styles.row} onPress={() => navigateToPuzzle(item)}>
-        <Text style={styles.dateText}>{formatArchiveKey(type, item)}</Text>
-        <View style={styles.rowRight}>
-          {isCompleted && (
-            <Check size={16} color={theme.green} strokeWidth={2.5} />
-          )}
-          <ChevronRight size={18} color={theme.textSecondary} />
-        </View>
-      </Pressable>
+      <View style={styles.container}>
+        <ActivityIndicator style={StyleSheet.absoluteFill} color={theme.textSecondary} />
+      </View>
     );
-  };
+  }
 
   return (
     <View style={styles.container}>
-      <Header
-        absolute={false}
-        bordered={scrolled}
-        center={
-          <Text style={styles.headerTitle}>
-            Past {STREAK_LABELS[type]} Puzzles
-          </Text>
-        }
-        right={
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <X size={24} color={theme.text} />
-          </Pressable>
-        }
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top },
+          scrolled && styles.headerBorder,
+        ]}
+      >
+        <CircleButton ghost onPress={() => navigation.goBack()}>
+          <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
+        </CircleButton>
+        <Text style={styles.headerTitle}>
+          Past {STREAK_LABELS[type]} Puzzles
+        </Text>
+        <View style={styles.headerSpacer} />
+      </View>
+      <FlatList
+        data={rows}
+        keyExtractor={item => item[0]}
+        renderItem={renderRow}
+        style={styles.scroll}
+        onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.gridContent}
       />
-
-      {loading ? (
-        <View style={styles.centerWrap}>
-          <ActivityIndicator color={theme.textSecondary} />
-        </View>
-      ) : (
-        <FlatList
-          data={dateKeys}
-          keyExtractor={item => item}
-          renderItem={renderItem}
-          onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
-          scrollEventThrottle={16}
-          contentContainerStyle={styles.listContent}
-        />
-      )}
     </View>
   );
 }
 
-const createStyles = (theme: Theme) =>
+const createStyles = (
+  theme: Theme,
+  cellSize: number,
+  insets: { top: number; bottom: number },
+) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.background,
     },
+    header: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 100,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      height: 57 + insets.top,
+      backgroundColor: theme.background,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.background,
+    },
+    headerBorder: {
+      borderBottomColor: theme.border,
+    },
+    headerSpacer: {
+      width: 44,
+    },
     headerTitle: {
-      fontSize: theme.fontSizeBody,
-      fontWeight: theme.fontWeightSemibold,
+      fontSize: 17,
+      fontWeight: '600',
       color: theme.text,
     },
-    listContent: {
-      paddingHorizontal: theme.spacingXl,
-      paddingBottom: theme.spacingXl,
+    scroll: { flex: 1 },
+    gridContent: {
+      paddingHorizontal: 32,
+      paddingTop: 57 + insets.top + 24,
+      paddingBottom: insets.bottom + 24,
+      rowGap: 12,
     },
     row: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: theme.spacingLg,
-      paddingHorizontal: theme.spacingXl,
+      justifyContent: 'center',
+    },
+    cell: {
+      height: cellSize,
+      width: cellSize,
+      margin: 8,
+      backgroundColor: theme.surface,
       borderRadius: theme.radiusMd,
-      backgroundColor: theme.background,
-      marginBottom: theme.spacingMd,
-      borderWidth: 1,
-      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 12,
+    },
+    checkOverlay: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
     },
     dateText: {
-      fontSize: theme.fontSizeCallout,
+      fontSize: 15,
+      fontWeight: '600',
       color: theme.text,
-    },
-    rowRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    centerWrap: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+      textAlign: 'center',
     },
   });
