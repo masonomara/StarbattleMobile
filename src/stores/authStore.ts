@@ -66,13 +66,12 @@ function parseUrlFragment(fragment: string): Record<string, string> {
 // Must complete before the Supabase session exchange so all anonymous writes
 // reach Supabase before migrate_anonymous_progress reads them server-side.
 // Throws if the queue can't drain (offline, upload error, or timeout).
-// DEBT: The 600ms initial grace period is a magic number. Name it:
-//   const QUEUE_SETTLE_DELAY_MS = 600;
-// to make the intent clear and allow adjustment without hunting through the code.
+const QUEUE_SETTLE_DELAY_MS = 600;
+
 async function drainUploadQueue(timeoutMs = 30_000): Promise<void> {
   // Grace period: fire-and-forget writes (e.g. recordStreak) may not have
   // entered the queue yet. Wait briefly before the first check.
-  await new Promise<void>(resolve => setTimeout(resolve, 600));
+  await new Promise<void>(resolve => setTimeout(resolve, QUEUE_SETTLE_DELAY_MS));
 
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {

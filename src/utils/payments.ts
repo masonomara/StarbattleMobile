@@ -29,12 +29,11 @@ export async function getLocalizedPrice(vendorProductId: string): Promise<string
   }
 }
 
-// NOTE: 'sb_premium_599' is hard-coded here and duplicated in SettingsModal
-// (useProductPrice('sb_premium_599')). If the product ID ever changes, both
-// sites must be updated. Consider exporting a constant: PREMIUM_PRODUCT_ID.
+export const PREMIUM_PRODUCT_ID = 'sb_premium_599';
+
 export async function purchasePremium(): Promise<boolean> {
   const products = await getProducts();
-  const product = products.find(p => p.vendorProductId === 'sb_premium_599');
+  const product = products.find(p => p.vendorProductId === PREMIUM_PRODUCT_ID);
   if (!product) throw new Error('Premium product not found in paywall');
 
   const result = await adapty.makePurchase(product);

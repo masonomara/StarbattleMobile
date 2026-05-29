@@ -56,7 +56,7 @@ import { useTheme } from '../hooks/useTheme';
 import { rgba } from '../themes/ansi';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useAsyncAction } from '../hooks/useAsyncAction';
-import { purchasePremium, restorePurchases } from '../utils/payments';
+import { purchasePremium, restorePurchases, PREMIUM_PRODUCT_ID } from '../utils/payments';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { PALETTES, PALETTE_NAMES } from '../themes/palettes';
 import { buildTheme } from '../hooks/useTheme';
@@ -342,7 +342,7 @@ export function SettingsModal() {
   const signOut = useAuthStore(s => s.signOut);
   const deleteAccount = useAuthStore(s => s.deleteAccount);
 
-  const premiumPrice = useProductPrice('sb_premium_599');
+  const premiumPrice = useProductPrice(PREMIUM_PRODUCT_ID);
 
   const { entitlements, packCatalog } = useEntitlements();
 
