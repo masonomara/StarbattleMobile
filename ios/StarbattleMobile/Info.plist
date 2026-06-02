@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>StarbattleMobile</string>
+	<string>Star Battle Free</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -30,15 +30,11 @@
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<string>BootSplash</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>
@@ -56,5 +52,162 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>starbattle</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.312698113706-09ejigbp1khjkk1p1dmd5kafitptkfvu</string>
+			</array>
+		</dict>
+	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>BricolageGrotesque-Variable.ttf</string>
+		<string>Karla-Variable.ttf</string>
+	</array>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconName</key>
+			<string>AppIcon</string>
+		</dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>AppIcon-original</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-original</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-primer</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-primer</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-gruvbox</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-gruvbox</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-rosePine</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-rosePine</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-seoul256</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-seoul256</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-tokyoNight</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-tokyoNight</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-original-dark</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-original-dark</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-original-light</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-original-light</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-primer-dark</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-primer-dark</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-primer-light</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-primer-light</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-gruvbox-dark</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-gruvbox-dark</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-gruvbox-light</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-gruvbox-light</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-rosePine-dark</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-rosePine-dark</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-rosePine-light</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-rosePine-light</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-seoul256-dark</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-seoul256-dark</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-seoul256-light</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-seoul256-light</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-tokyoNight-dark</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-tokyoNight-dark</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+			<key>AppIcon-tokyoNight-light</key>
+			<dict>
+				<key>CFBundleIconName</key>
+				<string>AppIcon-tokyoNight-light</string>
+				<key>UIPrerenderedIcon</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

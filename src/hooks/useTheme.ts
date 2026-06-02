@@ -1,82 +1,53 @@
 import { useColorScheme } from 'react-native';
-import { useUserStore } from '../stores/userStore';
+import { useSettingsStore } from '../stores/settingsStore';
+import { PALETTES, tokens } from '../themes/palettes';
+import type { Theme, ThemeColors } from '../types';
 
-export type Theme = {
-  isDark: boolean;
-  bg: string;
-  card: string;
-  text: string;
-  textSecondary: string;
-  regionBorder: string;
-  innerBorder: string;
-  markColor: string;
-  accent: string;
-  onAccent: string;
-  highlight: string;
-  onHighlight: string;
-  shadow: string;
-  spacingMd: number;
-  spacingLg: number;
-  spacingXl: number;
-  radiusMd: number;
-  fontSizeSm: number;
-  fontSizeMd: number;
-  fontSizeLg: number;
-  fontWeightSemibold: '700';
-  cellSize: number;
-};
+function hexLuminance(hex: string): number {
+  const h = hex.replace('#', '').slice(0, 6);
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+export function buildTheme(colors: ThemeColors): Theme {
+  const { roles, regions } = colors;
+  const isDark = hexLuminance(roles.background) < 0.5;
+  return {
+    isDark,
+    background: roles.background,
+    text: roles.text,
+    textSecondary: roles.textSecondary,
+    surface: roles.surface,
+    border: roles.border,
+    puzzleBorder: roles.puzzleBorder,
+    puzzleInnerBorder: roles.puzzleInnerBorder,
+    blue: roles.blue,
+    red: roles.red,
+    green: roles.green,
+    yellow: roles.yellow,
+    regionColors: [
+      regions.red, regions.green, regions.yellow, regions.blue,
+      regions.magenta, regions.cyan,
+      regions.redBright, regions.greenBright, regions.yellowBright,
+      regions.blueBright, regions.magentaBright, regions.cyanBright,
+    ],
+    regionColorAlpha: isDark ? 0.25 : 0.15,
+    ...tokens,
+  };
+}
 
 export function useTheme(): Theme {
   const systemScheme = useColorScheme();
-  const themePref = useUserStore(s => s.settings.theme);
+  const themePref = useSettingsStore(s => s.settings.theme);
+  const palette = useSettingsStore(s => s.settings.palette);
 
-  if (themePref === 'light') return light;
-  if (themePref === 'dark') return dark;
-  return systemScheme === 'dark' ? dark : light;
+  const isDark =
+    themePref === 'dark' ? true
+    : themePref === 'light' ? false
+    : systemScheme === 'dark';
+
+  const group = PALETTES[palette] ?? PALETTES.original;
+  return buildTheme(isDark ? group.dark : group.light);
 }
-
-const tokens = {
-  spacingMd: 12,
-  spacingLg: 16,
-  spacingXl: 24,
-  radiusMd: 12,
-  fontSizeSm: 14,
-  fontSizeMd: 16,
-  fontSizeLg: 18,
-  fontWeightSemibold: '600' as const,
-  cellSize: 32,
-};
-
-const light: Theme = {
-  isDark: false,
-  bg: '#FFFFFF',
-  card: '#FFFFFF',
-  text: '#060607',
-  textSecondary: '#4E5058',
-  regionBorder: '#060607',
-  innerBorder: '#828282',
-  markColor: '#B52C21',
-  accent: '#5865F2',
-  onAccent: '#FFFFFF',
-  highlight: '#EBEBEB',
-  onHighlight: '#4E5058',
-  shadow: '#EBEDEF',
-  ...tokens,
-};
-
-const dark: Theme = {
-  isDark: true,
-  bg: '#1C1D23',
-  card: '#212229',
-  text: '#EBEDEF',
-  textSecondary: '#C7C8CE',
-  regionBorder: '#EBEDEF',
-  innerBorder: '#838488',
-  markColor: '#F57970',
-  accent: '#5865F2',
-  onAccent: '#FFFFFF',
-  highlight: '#2E3038',
-  onHighlight: '#C7C8CE',
-  shadow: '#131318',
-  ...tokens,
-};

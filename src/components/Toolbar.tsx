@@ -1,35 +1,29 @@
 import React from 'react';
-import { Alert, View, Pressable, StyleSheet } from 'react-native';
-import {
-  Undo2,
-  Redo2,
-  Minimize2,
-  Trash2,
-  Lightbulb,
-  Pencil,
-  Eraser,
-} from 'lucide-react-native';
-import { usePuzzleStore } from '../store';
-import { hapticMedium } from '../utils/haptics';
-import { useUserStore } from '../stores/userStore';
-import type { TapMode } from '../types/state';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { ActivityIndicator, Alert, View, Pressable, StyleSheet } from 'react-native';
+import Undo2 from 'lucide-react-native/dist/cjs/icons/undo-2';
+import Redo2 from 'lucide-react-native/dist/cjs/icons/redo-2';
+import Minimize2 from 'lucide-react-native/dist/cjs/icons/minimize-2';
+import Trash2 from 'lucide-react-native/dist/cjs/icons/trash-2';
+import Lightbulb from 'lucide-react-native/dist/cjs/icons/lightbulb';
+import Pencil from 'lucide-react-native/dist/cjs/icons/pencil';
+import Eraser from 'lucide-react-native/dist/cjs/icons/eraser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePuzzleStore } from '../stores/puzzleStore';
+import { useSettingsStore } from '../stores/settingsStore';
+import { useTheme } from '../hooks/useTheme';
+import { Haptics } from 'react-native-nitro-haptics';
+import type { TapMode, Theme, ToolbarProps } from '../types';
 
 const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   cycle: Pencil,
   erase: Eraser,
 };
 
-type Props = {
-  isZoomed: boolean;
-  onZoomReset: () => void;
-};
-
-export function Toolbar({ isZoomed, onZoomReset }: Props) {
+export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const hapticsEnabled = useUserStore(s => s.settings.haptics);
+  const insets = useSafeAreaInsets();
+  const hapticsEnabled = useSettingsStore(s => s.settings.haptics);
   const undo = usePuzzleStore(s => s.undo);
   const redo = usePuzzleStore(s => s.redo);
   const clearBoard = usePuzzleStore(s => s.clearBoard);
@@ -39,98 +33,113 @@ export function Toolbar({ isZoomed, onZoomReset }: Props) {
   const showHint = usePuzzleStore(s => s.showHint);
   const hasGhosts = usePuzzleStore(s => s.hintGhosts.size > 0);
   const hasHints = usePuzzleStore(s => (s.puzzle?.hints.length ?? 0) > 0);
+  const hintsLoading = usePuzzleStore(s => s.hintsLoading);
   const canUndo = usePuzzleStore(s => s.moveLog.length > 0);
   const canRedo = usePuzzleStore(s => s.redoStack.length > 0);
   const hasContent = usePuzzleStore(s => s.cells.some(c => c !== 0));
+
   const undoDisabled = !canUndo || completed;
   const redoDisabled = !canRedo || completed;
   const clearDisabled = !hasContent || completed;
-  const zoomDisabled = !isZoomed;
-  const hintDisabled = completed || !hasHints;
+  const hintDisabled = completed || hintsLoading;
 
-  const insets = useSafeAreaInsets();
+  const TapModeIcon = TAP_MODE_ICONS[tapMode];
+
+  function press(action: () => void) {
+    if (hapticsEnabled) Haptics.impact('medium');
+    action();
+  }
+
+  function handleHint() {
+    if (hasHints) {
+      press(showHint);
+    } else {
+      Alert.alert('Hints Unavailable', 'Hints could not be loaded. Check your connection and try again.');
+    }
+  }
+
+  function handleClear() {
+    press(() => Alert.alert('Clear Board', 'Are you sure you want to clear the board?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Clear', style: 'destructive', onPress: clearBoard },
+    ]));
+  }
 
   return (
-    <View style={[styles.toolbar, { bottom: 16 + insets.bottom }]}>
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          onZoomReset();
-        }}
-        disabled={zoomDisabled}
-        style={[styles.button, zoomDisabled && styles.disabled]}
-      >
-        <Minimize2 size={24} color={theme.text} />
-      </Pressable>
+    // bottom offset intentionally overlaps the safe area by 12 pt for visual grounding.
+    <View style={[styles.toolbar, { bottom: insets.bottom - 12 }]}>
+      <View style={styles.toolbarWrapper}>
+        <Pressable
+          onPress={() => press(onZoomReset)}
+          disabled={!isZoomed}
+          style={[styles.button, !isZoomed && styles.buttonDisabled]}
+        >
+          <Minimize2
+            size={26}
+            color={theme.text}
+          />
+        </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          showHint();
-        }}
-        disabled={hintDisabled}
-        style={[
-          styles.button,
-          hasGhosts && { backgroundColor: theme.accent },
-          hintDisabled && styles.disabled,
-        ]}
-      >
-        <Lightbulb size={24} color={theme.text} />
-      </Pressable>
+        <Pressable
+          onPress={handleHint}
+          disabled={hintDisabled}
+          style={[
+            styles.button,
+            hasGhosts && styles.buttonAccent,
+            (hintDisabled || !hasHints) && styles.buttonDisabled,
+          ]}
+        >
+          {hintsLoading ? (
+            <ActivityIndicator size="small" color={theme.text} />
+          ) : (
+            <Lightbulb size={26} color={theme.text} />
+          )}
+        </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          cycleTapMode();
-        }}
-        disabled={completed}
-        style={[styles.button, completed && styles.disabled]}
-      >
-        {React.createElement(TAP_MODE_ICONS[tapMode], {
-          size: 24,
-          color: theme.text,
-        })}
-      </Pressable>
+        <Pressable
+          onPress={() => press(cycleTapMode)}
+          disabled={completed}
+          style={[styles.button, completed && styles.buttonDisabled]}
+        >
+          <TapModeIcon
+            size={26}
+            color={theme.text}
+          />
+        </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          undo();
-        }}
-        disabled={undoDisabled}
-        style={[styles.button, undoDisabled && styles.disabled]}
-      >
-        <Undo2 size={24} color={theme.text} />
-      </Pressable>
+        <Pressable
+          onPress={() => press(undo)}
+          disabled={undoDisabled}
+          style={[styles.button, undoDisabled && styles.buttonDisabled]}
+        >
+          <Undo2
+            size={26}
+            color={theme.text}
+          />
+        </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          redo();
-        }}
-        disabled={redoDisabled}
-        style={[styles.button, redoDisabled && styles.disabled]}
-      >
-        <Redo2 size={24} color={theme.text} />
-      </Pressable>
+        <Pressable
+          onPress={() => press(redo)}
+          disabled={redoDisabled}
+          style={[styles.button, redoDisabled && styles.buttonDisabled]}
+        >
+          <Redo2
+            size={26}
+            color={theme.text}
+          />
+        </Pressable>
 
-      <Pressable
-        onPress={() => {
-          if (hapticsEnabled) hapticMedium();
-          Alert.alert(
-            'Clear Board',
-            'Are you sure you want to clear the board?',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Clear', style: 'destructive', onPress: clearBoard },
-            ],
-          );
-        }}
-        disabled={clearDisabled}
-        style={[styles.button, clearDisabled && styles.disabled]}
-      >
-        <Trash2 size={24} color={theme.text} />
-      </Pressable>
+        <Pressable
+          onPress={handleClear}
+          disabled={clearDisabled}
+          style={[styles.button, clearDisabled && styles.buttonDisabled]}
+        >
+          <Trash2
+            size={26}
+            color={theme.text}
+          />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -139,25 +148,40 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     toolbar: {
       position: 'absolute',
-      left: 0,
-      right: 0,
+      left: theme.spacingLg,
+      right: theme.spacingLg,
       flexDirection: 'row',
       justifyContent: 'center',
-      gap: 8,
+    },
+    toolbarWrapper: {
+      gap: 4,
+      flexDirection: 'row',
+      padding: 4,
+      flex: 1,
+      maxWidth: 412,
+      borderRadius: 100,
+      backgroundColor: theme.surface,
+      shadowOffset: { width: 0, height: 4 },
+      shadowColor: '#25292E',
+      shadowOpacity: 0.1,
+      shadowRadius: 24,
+      elevation: 8,
+      zIndex: 0,
     },
     button: {
-      width: 48,
       height: 48,
-      borderRadius: 24,
+      maxWidth: 64,
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
-      elevation: 8,
-      opacity: 0.97,
-      backgroundColor: theme.card,
-      shadowColor: theme.shadow,
+      borderRadius: 100,
+      zIndex: 100,
+      backgroundColor: theme.surface,
     },
-    disabled: { opacity: 0.3 },
+    buttonAccent: {
+      backgroundColor: theme.border,
+    },
+    buttonDisabled: {
+      opacity: 0.4,
+    },
   });

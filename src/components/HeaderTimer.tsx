@@ -1,34 +1,55 @@
 import React, { useEffect } from 'react';
-import { Text, StyleSheet } from 'react-native';
-import { usePuzzleStore } from '../store';
-import { useUserStore } from '../stores/userStore';
-import { formatTime } from '../utils/formatTime';
-import { useTheme, type Theme } from '../hooks/useTheme';
+import { AppState, StyleSheet } from 'react-native';
+import { Text } from './Text';
+import { usePuzzleStore } from '../stores/puzzleStore';
+import { useTheme } from '../hooks/useTheme';
+import { formatElapsedTime } from '../utils/time';
+import type { Theme } from '../types';
 
 export function HeaderTimer() {
   const timeMs = usePuzzleStore(s => s.timeMs);
   const completed = usePuzzleStore(s => s.completed);
-  const showTimer = useUserStore(s => s.settings.showTimer);
   const theme = useTheme();
   const styles = createStyles(theme);
 
   useEffect(() => {
-    if (completed || !showTimer) return;
-    const id = setInterval(() => usePuzzleStore.getState().tick(), 1000);
-    return () => clearInterval(id);
-  }, [completed, showTimer]);
+    if (completed) return;
+    // `let last` corrects for interval drift by measuring real elapsed time each tick.
+    // Imperative getState() avoids a stale closure over the tick function reference.
+    let last = Date.now();
+    let active = true;
+    const id = setInterval(() => {
+      if (!active) return;
+      const now = Date.now();
+      usePuzzleStore.getState().tick(now - last);
+      last = now;
+    }, 1000);
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        last = Date.now();
+        active = true;
+      } else {
+        active = false;
+      }
+    });
+    return () => {
+      clearInterval(id);
+      sub.remove();
+    };
+  }, [completed]);
 
-  if (!showTimer) return null;
-
-  return <Text style={styles.timer}>{formatTime(timeMs)}</Text>;
+  return (
+    <Text style={styles.timer}>{formatElapsedTime(timeMs)}</Text>
+  );
 }
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     timer: {
-      fontSize: theme.fontSizeSm,
       fontVariant: ['tabular-nums'],
-      fontWeight: 600,
+      fontWeight: '600',
+      fontSize: 17,
       color: theme.text,
+     
     },
   });

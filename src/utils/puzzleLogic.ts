@@ -1,6 +1,8 @@
-import type { CellValue, CellChange, UserSettings } from '../types/state';
-import type { Puzzle } from '../types/puzzle';
+import type { CellValue, CellChange, UserSettings, Puzzle } from '../types';
 
+// Returns the empty cells in a zone only when that zone already has exactly
+// `requiredStars` stars — meaning every remaining empty cell can be auto-marked
+// as excluded. Returns [] when the zone isn't yet full (nothing to auto-mark).
 function collectZoneMarks(
   cells: CellValue[],
   zoneIndices: number[],
@@ -56,14 +58,9 @@ export function computeAutoXForStar(
 
   if (settings.autoXRegions) {
     const region = puzzle.regions[starRow][starCol];
-    const regionIndices: number[] = [];
-    for (let r = 0; r < boardSize; r++) {
-      for (let c = 0; c < boardSize; c++) {
-        if (puzzle.regions[r][c] === region)
-          regionIndices.push(r * boardSize + c);
-      }
-    }
-    marks.push(...collectZoneMarks(cells, regionIndices, puzzle.stars));
+    marks.push(
+      ...collectZoneMarks(cells, puzzle.regionCells[region], puzzle.stars),
+    );
   }
 
   return marks;
@@ -133,12 +130,14 @@ export function computeErrors(
   puzzle: Puzzle,
 ): Set<number> {
   const errors = new Set<number>();
-
+  // Collect star positions once so adjacency and zone checks both iterate only
+  // over starred cells — O(stars²) for adjacency, O(stars) for zone counting.
   const starIndices: number[] = [];
   for (let i = 0; i < cells.length; i++) {
     if (cells[i] === 1) starIndices.push(i);
   }
 
+  // Adjacency: any two touching stars are both errors.
   for (let i = 0; i < starIndices.length; i++) {
     for (let j = i + 1; j < starIndices.length; j++) {
       const ri = Math.floor(starIndices[i] / boardSize);
@@ -152,44 +151,33 @@ export function computeErrors(
     }
   }
 
-  for (let r = 0; r < boardSize; r++) {
-    const rowStars: number[] = [];
-    for (let c = 0; c < boardSize; c++) {
-      const idx = r * boardSize + c;
-      if (cells[idx] === 1) rowStars.push(idx);
-    }
-    if (rowStars.length > puzzle.stars) {
-      for (const idx of rowStars) errors.add(idx);
-    }
-  }
-
-  for (let c = 0; c < boardSize; c++) {
-    const colStars: number[] = [];
-    for (let r = 0; r < boardSize; r++) {
-      const idx = r * boardSize + c;
-      if (cells[idx] === 1) colStars.push(idx);
-    }
-    if (colStars.length > puzzle.stars) {
-      for (const idx of colStars) errors.add(idx);
-    }
-  }
-
+  // Row, column, and region overcount in one pass over starIndices.
+  const rows = new Map<number, number[]>();
+  const cols = new Map<number, number[]>();
   const regionMap = new Map<number, number[]>();
-  for (let r = 0; r < boardSize; r++) {
-    for (let c = 0; c < boardSize; c++) {
-      const idx = r * boardSize + c;
-      if (cells[idx] === 1) {
-        const region = puzzle.regions[r][c];
-        if (!regionMap.has(region)) regionMap.set(region, []);
-        regionMap.get(region)!.push(idx);
+  for (const idx of starIndices) {
+    const r = Math.floor(idx / boardSize);
+    const c = idx % boardSize;
+    let arr = rows.get(r);
+    if (arr) arr.push(idx);
+    else rows.set(r, [idx]);
+    arr = cols.get(c);
+    if (arr) arr.push(idx);
+    else cols.set(c, [idx]);
+    arr = regionMap.get(puzzle.regions[r][c]);
+    if (arr) arr.push(idx);
+    else regionMap.set(puzzle.regions[r][c], [idx]);
+  }
+  const flagZone = (map: Map<number, number[]>) => {
+    for (const zone of map.values()) {
+      if (zone.length > puzzle.stars) {
+        for (const idx of zone) errors.add(idx);
       }
     }
-  }
-  for (const regionStars of regionMap.values()) {
-    if (regionStars.length > puzzle.stars) {
-      for (const idx of regionStars) errors.add(idx);
-    }
-  }
+  };
+  flagZone(rows);
+  flagZone(cols);
+  flagZone(regionMap);
 
   return errors;
 }
@@ -199,14 +187,12 @@ export function checkWin(
   boardSize: number,
   puzzle: Puzzle,
 ): boolean {
-  const solution = puzzle.solution;
+  const { solutionSet, solution } = puzzle;
   let starCount = 0;
   for (let i = 0; i < cells.length; i++) {
     if (cells[i] === 1) {
       starCount++;
-      const r = Math.floor(i / boardSize);
-      const c = i % boardSize;
-      if (!solution.some(([sr, sc]) => sr === r && sc === c)) return false;
+      if (!solutionSet.has(i)) return false;
     }
   }
   return starCount === solution.length;

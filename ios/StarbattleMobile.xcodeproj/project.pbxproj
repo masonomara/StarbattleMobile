@@ -7,11 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0C80B921A6F3F58F76C31292 /* libPods-StarbattleMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-StarbattleMobile.a */; };
+		03DD2BB95E8E45C492CDE083 /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F765FE911B484490BBE785DA /* BootSplash.storyboard */; };
+		11EBF75179204C9E8A7FB096 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 675D8FBAFBB74ED0BE491D9D /* Colors.xcassets */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		48CC074B91584BABA82B22BD /* BricolageGrotesque-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		8179B8D3979465D293FBEEC0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		9DB2D5742FC65F40006DB240 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5732FC65F40006DB240 /* AppIcon.icon */; };
+		9DB2D57B2FC65F62006DB240 /* AppIcon-original.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5762FC65F62006DB240 /* AppIcon-original.icon */; };
+		9DB2D57C2FC65F62006DB240 /* AppIcon-rosePine.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5782FC65F62006DB240 /* AppIcon-rosePine.icon */; };
+		9DB2D57D2FC65F62006DB240 /* AppIcon-seoul256.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5792FC65F62006DB240 /* AppIcon-seoul256.icon */; };
+		9DB2D57E2FC65F62006DB240 /* AppIcon-gruvbox.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5752FC65F62006DB240 /* AppIcon-gruvbox.icon */; };
+		9DB2D57F2FC65F62006DB240 /* AppIcon-primer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5772FC65F62006DB240 /* AppIcon-primer.icon */; };
+		9DB2D5802FC65F62006DB240 /* AppIcon-tokyoNight.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D57A2FC65F62006DB240 /* AppIcon-tokyoNight.icon */; };
+		A8CAB1CE2D6F4F5A88215494 /* Karla-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EA7850AD4E604866A21311CB /* Karla-Variable.ttf */; };
+		C10ABB28B40D19C36B43D964 /* libPods-StarbattleMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,12 +29,23 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = StarbattleMobile/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = StarbattleMobile/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = StarbattleMobile/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		3B4392A12AC88292D35C810B /* Pods-StarbattleMobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.debug.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.debug.xcconfig"; sourceTree = "<group>"; };
-		5709B34CF0A7D63546082F79 /* Pods-StarbattleMobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.release.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.release.xcconfig"; sourceTree = "<group>"; };
-		5DCACB8F33CDC322A6C60F78 /* libPods-StarbattleMobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-StarbattleMobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2374ABD2F16982C478070F16 /* Pods-StarbattleMobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.debug.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.debug.xcconfig"; sourceTree = "<group>"; };
+		3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "BricolageGrotesque-Variable.ttf"; path = "../assets/fonts/BricolageGrotesque-Variable.ttf"; sourceTree = "<group>"; };
+		675D8FBAFBB74ED0BE491D9D /* Colors.xcassets */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = folder.assetcatalog; name = Colors.xcassets; path = StarbattleMobile/Colors.xcassets; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = StarbattleMobile/AppDelegate.swift; sourceTree = "<group>"; };
-		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = StarbattleMobile/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		773607658C213B2CF388C76D /* Pods-StarbattleMobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.release.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.release.xcconfig"; sourceTree = "<group>"; };
+		9DB2D5732FC65F40006DB240 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		9DB2D5752FC65F62006DB240 /* AppIcon-gruvbox.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-gruvbox.icon"; sourceTree = "<group>"; };
+		9DB2D5762FC65F62006DB240 /* AppIcon-original.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-original.icon"; sourceTree = "<group>"; };
+		9DB2D5772FC65F62006DB240 /* AppIcon-primer.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-primer.icon"; sourceTree = "<group>"; };
+		9DB2D5782FC65F62006DB240 /* AppIcon-rosePine.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-rosePine.icon"; sourceTree = "<group>"; };
+		9DB2D5792FC65F62006DB240 /* AppIcon-seoul256.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-seoul256.icon"; sourceTree = "<group>"; };
+		9DB2D57A2FC65F62006DB240 /* AppIcon-tokyoNight.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-tokyoNight.icon"; sourceTree = "<group>"; };
+		A4F8E1C42B456789ABCDEF12 /* StarbattleMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = StarbattleMobile.entitlements; path = StarbattleMobile/StarbattleMobile.entitlements; sourceTree = "<group>"; };
+		E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-StarbattleMobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA7850AD4E604866A21311CB /* Karla-Variable.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Karla-Variable.ttf"; path = "../assets/fonts/Karla-Variable.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F765FE911B484490BBE785DA /* BootSplash.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = BootSplash.storyboard; path = StarbattleMobile/BootSplash.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,7 +53,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C80B921A6F3F58F76C31292 /* libPods-StarbattleMobile.a in Frameworks */,
+				C10ABB28B40D19C36B43D964 /* libPods-StarbattleMobile.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,8 +66,17 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
-				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				A4F8E1C42B456789ABCDEF12 /* StarbattleMobile.entitlements */,
+				9DB2D5732FC65F40006DB240 /* AppIcon.icon */,
+				9DB2D5752FC65F62006DB240 /* AppIcon-gruvbox.icon */,
+				9DB2D5762FC65F62006DB240 /* AppIcon-original.icon */,
+				9DB2D5772FC65F62006DB240 /* AppIcon-primer.icon */,
+				9DB2D5782FC65F62006DB240 /* AppIcon-rosePine.icon */,
+				9DB2D5792FC65F62006DB240 /* AppIcon-seoul256.icon */,
+				9DB2D57A2FC65F62006DB240 /* AppIcon-tokyoNight.icon */,
+				F765FE911B484490BBE785DA /* BootSplash.storyboard */,
+				675D8FBAFBB74ED0BE491D9D /* Colors.xcassets */,
 			);
 			name = StarbattleMobile;
 			sourceTree = "<group>";
@@ -55,7 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5DCACB8F33CDC322A6C60F78 /* libPods-StarbattleMobile.a */,
+				E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -75,6 +105,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				B1A9BBC04A1B4DF4BF7403D5 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -89,11 +120,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		B1A9BBC04A1B4DF4BF7403D5 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */,
+				EA7850AD4E604866A21311CB /* Karla-Variable.ttf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				3B4392A12AC88292D35C810B /* Pods-StarbattleMobile.debug.xcconfig */,
-				5709B34CF0A7D63546082F79 /* Pods-StarbattleMobile.release.xcconfig */,
+				2374ABD2F16982C478070F16 /* Pods-StarbattleMobile.debug.xcconfig */,
+				773607658C213B2CF388C76D /* Pods-StarbattleMobile.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -105,13 +145,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "StarbattleMobile" */;
 			buildPhases = (
-				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
+				A10C3C0B8B961555B4A1CE49 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
-				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				9396F34E2B133D58C9628B4A /* [CP] Embed Pods Frameworks */,
+				03311652B9F119025C822FF2 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -128,7 +168,8 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1210;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1120;
@@ -158,9 +199,19 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				9DB2D57B2FC65F62006DB240 /* AppIcon-original.icon in Resources */,
+				9DB2D57C2FC65F62006DB240 /* AppIcon-rosePine.icon in Resources */,
+				9DB2D57D2FC65F62006DB240 /* AppIcon-seoul256.icon in Resources */,
+				9DB2D57E2FC65F62006DB240 /* AppIcon-gruvbox.icon in Resources */,
+				9DB2D57F2FC65F62006DB240 /* AppIcon-primer.icon in Resources */,
+				9DB2D5802FC65F62006DB240 /* AppIcon-tokyoNight.icon in Resources */,
 				8179B8D3979465D293FBEEC0 /* PrivacyInfo.xcprivacy in Resources */,
+				48CC074B91584BABA82B22BD /* BricolageGrotesque-Variable.ttf in Resources */,
+				A8CAB1CE2D6F4F5A88215494 /* Karla-Variable.ttf in Resources */,
+				9DB2D5742FC65F40006DB240 /* AppIcon.icon in Resources */,
+				03DD2BB95E8E45C492CDE083 /* BootSplash.storyboard in Resources */,
+				11EBF75179204C9E8A7FB096 /* Colors.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -183,7 +234,24 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n";
 		};
-		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
+		03311652B9F119025C822FF2 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		9396F34E2B133D58C9628B4A /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -200,7 +268,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
+		A10C3C0B8B961555B4A1CE49 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -222,23 +290,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -255,12 +306,12 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-StarbattleMobile.debug.xcconfig */;
+			baseConfigurationReference = 2374ABD2F16982C478070F16 /* Pods-StarbattleMobile.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = StarbattleMobile/StarbattleMobile.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = RG656A2892;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = StarbattleMobile/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -286,12 +337,12 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-StarbattleMobile.release.xcconfig */;
+			baseConfigurationReference = 773607658C213B2CF388C76D /* Pods-StarbattleMobile.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = StarbattleMobile/StarbattleMobile.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = RG656A2892;
 				INFOPLIST_FILE = StarbattleMobile/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -344,8 +395,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = RG656A2892;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -389,6 +442,7 @@
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				USE_HERMES = true;
@@ -426,8 +480,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEVELOPMENT_TEAM = RG656A2892;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -463,6 +519,8 @@
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;

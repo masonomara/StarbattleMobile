@@ -1,0 +1,1439 @@
+import type { ThemeName, ThemeColors, PaletteVariants } from '../types';
+
+export const tokens = {
+  spacingMd: 12,
+  spacingLg: 16,
+  spacingXl: 24,
+  radiusMd: 12,
+  fontSizeSubhead: 15,
+  fontSizeCallout: 16,
+  fontSizeBody: 17,
+  fontWeightSemibold: '600' as const,
+  cellSize: 36,
+};
+
+// DEBT: This file contains ~1000 lines of commented-out palette definitions.
+// Commented-out code is high noise for maintainers and can cause confusion
+// about which palettes are active. Options:
+//   1. Delete them — git history preserves them if ever needed.
+//   2. Move to a separate palettes.candidates.ts file.
+// The active palettes are: original, primer, gruvbox, rosePine, seoul256, tokyoNight.
+// All others are candidates pending design review (see ThemeName in types.ts).
+
+// ─── ORIGINAL ────────────────────────────────────────────────────────────────────
+
+const originalDark: ThemeColors = {
+  roles: {
+    text: '#F0F6FC',
+    textSecondary: '#9198A1',
+    background: '#0D1117',
+    surface: '#151B23',
+    border: '#3D444D',
+    puzzleBorder: '#F0F6FC',
+    puzzleInnerBorder: '#3D444D',
+    blue: '#4493F8',
+    red: '#F85149',
+    green: '#3FB950',
+    yellow: '#D29922',
+  },
+  regions: {
+    red: '#F85149',
+    green: '#3FB950',
+    yellow: '#D29922',
+    blue: '#4493F8',
+    magenta: '#AB7DF8',
+    cyan: '#39C5CF',
+    redBright: '#f07178',
+    greenBright: '#aad94c',
+    yellowBright: '#ffb454',
+    blueBright: '#59c2ff',
+    magentaBright: '#d2a6ff',
+    cyanBright: '#95e6cb',
+  },
+};
+
+const originalLight: ThemeColors = {
+  roles: {
+    text: '#1F2328',
+    textSecondary: '#59636E',
+    background: '#fff',
+    surface: '#fff',
+    border: '#D1D9E0',
+    puzzleBorder: '#1F2328',
+    puzzleInnerBorder: '#59636E',
+    blue: '#0969DA',
+    red: '#D1242F',
+    green: '#1A7F37',
+    yellow: '#9A6700',
+  },
+  regions: {
+    red: '#D1242F',
+    green: '#1A7F37',
+    yellow: '#9A6700',
+    blue: '#0969DA',
+    magenta: '#BF3989',
+    cyan: '#1B7C83',
+    redBright: '#f07171',
+    greenBright: '#86b300',
+    yellowBright: '#f2ae49',
+    blueBright: '#399ee6',
+    magentaBright: '#a37acc',
+    cyanBright: '#4cbf99',
+  },
+};
+
+// ─── CANDIDATE PALETTES (commented out, pending design review) ────────────────
+
+// ─── AYU ─────────────────────────────────────────────────────────────────────────
+
+// const ayuDark: ThemeColors = {
+//   roles: {
+//     text: '#bfbdb6',
+//     textSecondary: '#bfbdb699',
+//     background: '#0b0e14',
+//     surface: '#bfbdb60d',
+//     border: '#bfbdb638',
+//     puzzleBorder: '#bfbdb6',
+//     puzzleInnerBorder: '#bfbdb638',
+//     blue: '#53bdfa',
+//     red: '#ea6c73',
+//     green: '#7fd962',
+//     yellow: '#f9af4f',
+//   },
+//   regions: {
+//     red: '#ea6c73',
+//     green: '#7fd962',
+//     yellow: '#f9af4f',
+//     blue: '#53bdfa',
+//     magenta: '#cda1fa',
+//     cyan: '#90e1c6',
+//     redBright: '#f07178',
+//     greenBright: '#aad94c',
+//     yellowBright: '#ffb454',
+//     blueBright: '#59c2ff',
+//     magentaBright: '#d2a6ff',
+//     cyanBright: '#95e6cb',
+//   },
+// };
+
+// const ayuLight: ThemeColors = {
+//   roles: {
+//     text: '#5c6166',
+//     textSecondary: '#5c6166b3',
+//     background: '#f8f9fa',
+//     surface: '#f8f9fa',
+//     border: '#5c61662e',
+//     puzzleBorder: '#5c6166',
+//     puzzleInnerBorder: '#5c6166b3',
+//     blue: '#3199e1',
+//     red: '#ea6c6d',
+//     green: '#6cbf43',
+//     yellow: '#eca944',
+//   },
+//   regions: {
+//     red: '#ea6c6d',
+//     green: '#6cbf43',
+//     yellow: '#eca944',
+//     blue: '#3199e1',
+//     magenta: '#9e75c7',
+//     cyan: '#46ba94',
+//     redBright: '#f07171',
+//     greenBright: '#86b300',
+//     yellowBright: '#f2ae49',
+//     blueBright: '#399ee6',
+//     magentaBright: '#a37acc',
+//     cyanBright: '#4cbf99',
+//   },
+// };
+
+// ─── CATPPUCCIN ──────────────────────────────────────────────────────────────────
+
+// const catppuccinMocha: ThemeColors = {
+//   roles: {
+//     text: '#cdd6f4',
+//     textSecondary: '#cdd6f499',
+//     background: '#1e1e2e',
+//     surface: '#cdd6f40d',
+//     border: '#cdd6f438',
+//     puzzleBorder: '#cdd6f4',
+//     puzzleInnerBorder: '#cdd6f438',
+//     blue: '#89b4fa',
+//     red: '#f38ba8',
+//     green: '#a6e3a1',
+//     yellow: '#f9e2af',
+//   },
+//   regions: {
+//     red: '#f38ba8',
+//     green: '#a6e3a1',
+//     yellow: '#f9e2af',
+//     blue: '#89b4fa',
+//     magenta: '#f5c2e7',
+//     cyan: '#94e2d5',
+//     redBright: '#f37799',
+//     greenBright: '#89d88b',
+//     yellowBright: '#ebd391',
+//     blueBright: '#74a8fc',
+//     magentaBright: '#f2aede',
+//     cyanBright: '#6bd7ca',
+//   },
+// };
+
+// const catppuccinLatte: ThemeColors = {
+//   roles: {
+//     text: '#4c4f69',
+//     textSecondary: '#4c4f6999',
+//     background: '#eff1f5',
+//     surface: '#4c4f690d',
+//     border: '#4c4f6938',
+//     puzzleBorder: '#4c4f69',
+//     puzzleInnerBorder: '#4c4f6938',
+//     blue: '#1e66f5',
+//     red: '#d20f39',
+//     green: '#40a02b',
+//     yellow: '#df8e1d',
+//   },
+//   regions: {
+//     red: '#d20f39',
+//     green: '#40a02b',
+//     yellow: '#df8e1d',
+//     blue: '#1e66f5',
+//     magenta: '#ea76cb',
+//     cyan: '#179299',
+//     redBright: '#de293e',
+//     greenBright: '#49af3d',
+//     yellowBright: '#eea02d',
+//     blueBright: '#456eff',
+//     magentaBright: '#fe85d8',
+//     cyanBright: '#2d9fa8',
+//   },
+// };
+
+// ─── EVERFOREST ──────────────────────────────────────────────────────────────────
+
+// const everforestDark: ThemeColors = {
+//   roles: {
+//     text: '#d3c6aa',
+//     textSecondary: '#d3c6aa99',
+//     background: '#2d353b',
+//     surface: '#d3c6aa0d',
+//     border: '#d3c6aa38',
+//     puzzleBorder: '#d3c6aa',
+//     puzzleInnerBorder: '#d3c6aa38',
+//     blue: '#7fbbb3',
+//     red: '#e67e80',
+//     green: '#a7c080',
+//     yellow: '#dbbc7f',
+//   },
+//   regions: {
+//     red: '#e67e80',
+//     green: '#a7c080',
+//     yellow: '#dbbc7f',
+//     blue: '#7fbbb3',
+//     magenta: '#d699b6',
+//     cyan: '#83c092',
+//     redBright: '#e67e80',
+//     greenBright: '#a7c080',
+//     yellowBright: '#dbbc7f',
+//     blueBright: '#7fbbb3',
+//     magentaBright: '#d699b6',
+//     cyanBright: '#83c092',
+//   },
+// };
+
+// const everforestLight: ThemeColors = {
+//   roles: {
+//     text: '#5c6a72',
+//     textSecondary: '#5c6a72b3',
+//     background: '#fdf6e3',
+//     surface: '#fdf6e3',
+//     border: '#5c6a722e',
+//     puzzleBorder: '#5c6a72',
+//     puzzleInnerBorder: '#5c6a72b3',
+//     blue: '#3a94c5',
+//     red: '#f85552',
+//     green: '#8da101',
+//     yellow: '#dfa000',
+//   },
+//   regions: {
+//     red: '#f85552',
+//     green: '#8da101',
+//     yellow: '#dfa000',
+//     blue: '#3a94c5',
+//     magenta: '#df69ba',
+//     cyan: '#35a77c',
+//     redBright: '#f85552',
+//     greenBright: '#8da101',
+//     yellowBright: '#dfa000',
+//     blueBright: '#3a94c5',
+//     magentaBright: '#df69ba',
+//     cyanBright: '#35a77c',
+//   },
+// };
+
+// ─── GITHUB ──────────────────────────────────────────────────────────────────────
+
+const primerDark: ThemeColors = {
+  roles: {
+    text: '#e6edf3',
+    textSecondary: '#9499A1',
+    background: '#010409',
+    surface: '#242630',
+    border: '#474953',
+    puzzleBorder: '#e6edf3',
+    puzzleInnerBorder: '#9499A1',
+    blue: '#58a6ff',
+    red: '#ff7b72',
+    green: '#3fb950',
+    yellow: '#d29922',
+  },
+  regions: {
+    red: '#ff7b72',
+    green: '#3fb950',
+    yellow: '#d29922',
+    blue: '#58a6ff',
+    magenta: '#bc8cff',
+    cyan: '#39c5cf',
+    redBright: '#ffa198',
+    greenBright: '#56d364',
+    yellowBright: '#e3b341',
+    blueBright: '#79c0ff',
+    magentaBright: '#d2a8ff',
+    cyanBright: '#56d4dd',
+  },
+};
+
+const primerLight: ThemeColors = {
+  roles: {
+    text: '#1f2328',
+    textSecondary: '#5F6267',
+    background: '#f6f8fa',
+    surface: '#f6f8fa',
+    border: '#CFD2D4',
+    puzzleBorder: '#1f2328',
+    puzzleInnerBorder: '#5F6267',
+    blue: '#0969da',
+    red: '#cf222e',
+    green: '#116329',
+    yellow: '#4d2d00',
+  },
+  regions: {
+    red: '#cf222e',
+    green: '#116329',
+    yellow: '#4d2d00',
+    blue: '#0969da',
+    magenta: '#8250df',
+    cyan: '#1b7c83',
+    redBright: '#a40e26',
+    greenBright: '#1a7f37',
+    yellowBright: '#633c01',
+    blueBright: '#218bff',
+    magentaBright: '#a475f9',
+    cyanBright: '#3192aa',
+  },
+};
+
+// ─── GRUVBOX ─────────────────────────────────────────────────────────────────────
+
+const gruvboxDark: ThemeColors = {
+  roles: {
+    text: '#ebdbb2',
+    textSecondary: '#9D937B',
+    background: '#282828',
+    surface: '#32312F',
+    border: '#534F46',
+    puzzleBorder: '#ebdbb2',
+    puzzleInnerBorder: '#9D937B',
+    blue: '#458588',
+    red: '#cc241d',
+    green: '#98971a',
+    yellow: '#d79921',
+  },
+  regions: {
+    red: '#cc241d',
+    green: '#98971a',
+    yellow: '#d79921',
+    blue: '#458588',
+    magenta: '#b16286',
+    cyan: '#689d6a',
+    redBright: '#fb4934',
+    greenBright: '#b8bb26',
+    yellowBright: '#fabd2f',
+    blueBright: '#83a598',
+    magentaBright: '#d3869b',
+    cyanBright: '#8ec07c',
+  },
+};
+
+const gruvboxLight: ThemeColors = {
+  roles: {
+    text: '#3c3836',
+    textSecondary: '#756F61',
+    background: '#fbf1c7',
+    surface: '#fbf1c7',
+    border: '#D9D0AD',
+    puzzleBorder: '#3c3836',
+    puzzleInnerBorder: '#756F61',
+    blue: '#458588',
+    red: '#cc241d',
+    green: '#98971a',
+    yellow: '#d79921',
+  },
+  regions: {
+    red: '#cc241d',
+    green: '#98971a',
+    yellow: '#d79921',
+    blue: '#458588',
+    magenta: '#b16286',
+    cyan: '#689d6a',
+    redBright: '#9d0006',
+    greenBright: '#79740e',
+    yellowBright: '#b57614',
+    blueBright: '#076678',
+    magentaBright: '#8f3f71',
+    cyanBright: '#427b58',
+  },
+};
+
+// ─── ICEBERG ─────────────────────────────────────────────────────────────────────
+
+// const icebergDark: ThemeColors = {
+//   roles: {
+//     text: '#c6c8d1',
+//     textSecondary: '#c6c8d199',
+//     background: '#161821',
+//     surface: '#c6c8d10d',
+//     border: '#c6c8d138',
+//     puzzleBorder: '#c6c8d1',
+//     puzzleInnerBorder: '#c6c8d138',
+//     blue: '#84a0c6',
+//     red: '#e27878',
+//     green: '#b4be82',
+//     yellow: '#e2a478',
+//   },
+//   regions: {
+//     red: '#e27878',
+//     green: '#b4be82',
+//     yellow: '#e2a478',
+//     blue: '#84a0c6',
+//     magenta: '#a093c7',
+//     cyan: '#89b8c2',
+//     redBright: '#e98989',
+//     greenBright: '#c0ca8e',
+//     yellowBright: '#e9b189',
+//     blueBright: '#91acd1',
+//     magentaBright: '#ada0d3',
+//     cyanBright: '#95c4ce',
+//   },
+// };
+
+// const icebergLight: ThemeColors = {
+//   roles: {
+//     text: '#33374c',
+//     textSecondary: '#33374cb3',
+//     background: '#e8e9ec',
+//     surface: '#e8e9ec',
+//     border: '#33374c2e',
+//     puzzleBorder: '#33374c',
+//     puzzleInnerBorder: '#33374cb3',
+//     blue: '#2d539e',
+//     red: '#cc517a',
+//     green: '#668e3d',
+//     yellow: '#c57339',
+//   },
+//   regions: {
+//     red: '#cc517a',
+//     green: '#668e3d',
+//     yellow: '#c57339',
+//     blue: '#2d539e',
+//     magenta: '#7759b4',
+//     cyan: '#3f83a6',
+//     redBright: '#cc3768',
+//     greenBright: '#598030',
+//     yellowBright: '#b6662d',
+//     blueBright: '#22478e',
+//     magentaBright: '#6845ad',
+//     cyanBright: '#327698',
+//   },
+// };
+
+// ─── NIGHT OWL ───────────────────────────────────────────────────────────────────
+
+// const nightOwlDark: ThemeColors = {
+//   roles: {
+//     text: '#cccccc',
+//     textSecondary: '#cccccc99',
+//     background: '#011627',
+//     surface: '#cccccc0d',
+//     border: '#cccccc38',
+//     puzzleBorder: '#cccccc',
+//     puzzleInnerBorder: '#cccccc38',
+//     blue: '#82aaff',
+//     red: '#ef5350',
+//     green: '#22da6e',
+//     yellow: '#c5e478',
+//   },
+//   regions: {
+//     red: '#ef5350',
+//     green: '#22da6e',
+//     yellow: '#c5e478',
+//     blue: '#82aaff',
+//     magenta: '#c792ea',
+//     cyan: '#21c7a8',
+//     redBright: '#ef5350',
+//     greenBright: '#22da6e',
+//     yellowBright: '#ffeb95',
+//     blueBright: '#82aaff',
+//     magentaBright: '#c792ea',
+//     cyanBright: '#7fdbca',
+//   },
+// };
+
+// const nightOwlLight: ThemeColors = {
+//   roles: {
+//     text: '#403f53',
+//     textSecondary: '#403f53b3',
+//     background: '#f6f6f6',
+//     surface: '#f6f6f6',
+//     border: '#403f532e',
+//     puzzleBorder: '#403f53',
+//     puzzleInnerBorder: '#403f53b3',
+//     blue: '#288ed7',
+//     red: '#de3d3b',
+//     green: '#08916a',
+//     yellow: '#e0af02',
+//   },
+//   regions: {
+//     red: '#de3d3b',
+//     green: '#08916a',
+//     yellow: '#e0af02',
+//     blue: '#288ed7',
+//     magenta: '#d6438a',
+//     cyan: '#2aa298',
+//     redBright: '#de3d3b',
+//     greenBright: '#08916a',
+//     yellowBright: '#daaa01',
+//     blueBright: '#288ed7',
+//     magentaBright: '#d6438a',
+//     cyanBright: '#2aa298',
+//   },
+// };
+
+// ─── NIGHTFOX ────────────────────────────────────────────────────────────────────
+
+// const nightfoxDefault: ThemeColors = {
+//   roles: {
+//     text: '#cdcecf',
+//     textSecondary: '#cdcecf99',
+//     background: '#192330',
+//     surface: '#cdcecf0d',
+//     border: '#cdcecf38',
+//     puzzleBorder: '#cdcecf',
+//     puzzleInnerBorder: '#cdcecf38',
+//     blue: '#719cd6',
+//     red: '#c94f6d',
+//     green: '#81b29a',
+//     yellow: '#dbc074',
+//   },
+//   regions: {
+//     red: '#c94f6d',
+//     green: '#81b29a',
+//     yellow: '#dbc074',
+//     blue: '#719cd6',
+//     magenta: '#9d79d6',
+//     cyan: '#63cdcf',
+//     redBright: '#d16983',
+//     greenBright: '#8ebaa4',
+//     yellowBright: '#e0c989',
+//     blueBright: '#86abdc',
+//     magentaBright: '#baa1e2',
+//     cyanBright: '#7ad5d6',
+//   },
+// };
+
+// const nightfoxDayfox: ThemeColors = {
+//   roles: {
+//     text: '#3d2b5a',
+//     textSecondary: '#3d2b5a99',
+//     background: '#f6f2ee',
+//     surface: '#3d2b5a0d',
+//     border: '#3d2b5a38',
+//     puzzleBorder: '#3d2b5a',
+//     puzzleInnerBorder: '#3d2b5a38',
+//     blue: '#2848a9',
+//     red: '#a5222f',
+//     green: '#396847',
+//     yellow: '#ac5402',
+//   },
+//   regions: {
+//     red: '#a5222f',
+//     green: '#396847',
+//     yellow: '#ac5402',
+//     blue: '#2848a9',
+//     magenta: '#6e33ce',
+//     cyan: '#287980',
+//     redBright: '#b3434e',
+//     greenBright: '#577f63',
+//     yellowBright: '#b86e28',
+//     blueBright: '#4863b6',
+//     magentaBright: '#8452d5',
+//     cyanBright: '#488d93',
+//   },
+// };
+
+// ─── ONE ─────────────────────────────────────────────────────────────────────────
+
+// const oneDark: ThemeColors = {
+//   roles: {
+//     text: '#abb2bf',
+//     textSecondary: '#abb2bf99',
+//     background: '#282c34',
+//     surface: '#abb2bf0d',
+//     border: '#abb2bf38',
+//     puzzleBorder: '#abb2bf',
+//     puzzleInnerBorder: '#abb2bf38',
+//     blue: '#61afef',
+//     red: '#e06c75',
+//     green: '#98c379',
+//     yellow: '#d19a66',
+//   },
+//   regions: {
+//     red: '#e06c75',
+//     green: '#98c379',
+//     yellow: '#d19a66',
+//     blue: '#61afef',
+//     magenta: '#c678dd',
+//     cyan: '#56b6c2',
+//     redBright: '#e06c75',
+//     greenBright: '#98c379',
+//     yellowBright: '#d19a66',
+//     blueBright: '#61afef',
+//     magentaBright: '#c678dd',
+//     cyanBright: '#56b6c2',
+//   },
+// };
+
+// const oneLight: ThemeColors = {
+//   roles: {
+//     text: '#2a2b33',
+//     textSecondary: '#2a2b33b3',
+//     background: '#f8f8f8',
+//     surface: '#f8f8f8',
+//     border: '#2a2b332e',
+//     puzzleBorder: '#2a2b33',
+//     puzzleInnerBorder: '#2a2b33b3',
+//     blue: '#2f5af3',
+//     red: '#de3d35',
+//     green: '#3e953a',
+//     yellow: '#d2b67b',
+//   },
+//   regions: {
+//     red: '#de3d35',
+//     green: '#3e953a',
+//     yellow: '#d2b67b',
+//     blue: '#2f5af3',
+//     magenta: '#a00095',
+//     cyan: '#3e953a',
+//     redBright: '#de3d35',
+//     greenBright: '#3e953a',
+//     yellowBright: '#d2b67b',
+//     blueBright: '#2f5af3',
+//     magentaBright: '#a00095',
+//     cyanBright: '#3e953a',
+//   },
+// };
+
+// ─── ONE HALF ────────────────────────────────────────────────────────────────────
+
+// const oneHalfDark: ThemeColors = {
+//   roles: {
+//     text: '#dcdfe4',
+//     textSecondary: '#dcdfe499',
+//     background: '#282c34',
+//     surface: '#dcdfe40d',
+//     border: '#dcdfe438',
+//     puzzleBorder: '#dcdfe4',
+//     puzzleInnerBorder: '#dcdfe438',
+//     blue: '#61afef',
+//     red: '#e06c75',
+//     green: '#98c379',
+//     yellow: '#e5c07b',
+//   },
+//   regions: {
+//     red: '#e06c75',
+//     green: '#98c379',
+//     yellow: '#e5c07b',
+//     blue: '#61afef',
+//     magenta: '#c678dd',
+//     cyan: '#56b6c2',
+//     redBright: '#e06c75',
+//     greenBright: '#98c379',
+//     yellowBright: '#e5c07b',
+//     blueBright: '#61afef',
+//     magentaBright: '#c678dd',
+//     cyanBright: '#56b6c2',
+//   },
+// };
+
+// const oneHalfLight: ThemeColors = {
+//   roles: {
+//     text: '#383a42',
+//     textSecondary: '#383a42b3',
+//     background: '#fafafa',
+//     surface: '#fafafa',
+//     border: '#383a422e',
+//     puzzleBorder: '#383a42',
+//     puzzleInnerBorder: '#383a42b3',
+//     blue: '#0184bc',
+//     red: '#e45649',
+//     green: '#50a14f',
+//     yellow: '#c18401',
+//   },
+//   regions: {
+//     red: '#e45649',
+//     green: '#50a14f',
+//     yellow: '#c18401',
+//     blue: '#0184bc',
+//     magenta: '#a626a4',
+//     cyan: '#0997b3',
+//     redBright: '#e06c75',
+//     greenBright: '#98c379',
+//     yellowBright: '#e5c07b',
+//     blueBright: '#61afef',
+//     magentaBright: '#c678dd',
+//     cyanBright: '#56b6c2',
+//   },
+// };
+
+// ─── ROSE PINE ───────────────────────────────────────────────────────────────────
+
+const rosePineDefault: ThemeColors = {
+  roles: {
+    text: '#e0def4',
+    textSecondary: '#9391A5',
+    background: '#1f1d2e',
+    surface: '#292738',
+    border: '#494759',
+    puzzleBorder: '#e0def4',
+    puzzleInnerBorder: '#9391A5',
+    blue: '#9ccfd8',
+    red: '#eb6f92',
+    green: '#31748f',
+    yellow: '#f6c177',
+  },
+  regions: {
+    red: '#eb6f92',
+    green: '#31748f',
+    yellow: '#f6c177',
+    blue: '#9ccfd8',
+    magenta: '#c4a7e7',
+    cyan: '#ebbcba',
+    redBright: '#eb6f92',
+    greenBright: '#31748f',
+    yellowBright: '#f6c177',
+    blueBright: '#9ccfd8',
+    magentaBright: '#c4a7e7',
+    cyanBright: '#ebbcba',
+  },
+};
+
+const rosePineDawn: ThemeColors = {
+  roles: {
+    text: '#575279',
+    textSecondary: '#9A95AA',
+    background: '#fffaf3',
+    surface: '#fffaf3',
+    border: '#DAD5D8',
+    puzzleBorder: '#575279',
+    puzzleInnerBorder: '#9A95AA',
+    blue: '#56949f',
+    red: '#b4637a',
+    green: '#286983',
+    yellow: '#ea9d34',
+  },
+  regions: {
+    red: '#b4637a',
+    green: '#286983',
+    yellow: '#ea9d34',
+    blue: '#56949f',
+    magenta: '#907aa9',
+    cyan: '#d7827e',
+    redBright: '#b4637a',
+    greenBright: '#286983',
+    yellowBright: '#ea9d34',
+    blueBright: '#56949f',
+    magentaBright: '#907aa9',
+    cyanBright: '#d7827e',
+  },
+};
+
+// ─── SEOUL256 ────────────────────────────────────────────────────────────────────
+
+const seoul256Dark: ThemeColors = {
+  roles: {
+    text: '#d0d0d0',
+    textSecondary: '#949494',
+    background: '#3a3a3a',
+    surface: '#424242',
+    border: '#5B5B5B',
+    puzzleBorder: '#d0d0d0',
+    puzzleInnerBorder: '#949494',
+    blue: '#85add4',
+    red: '#d68787',
+    green: '#5f865f',
+    yellow: '#d8af5f',
+  },
+  regions: {
+    red: '#d68787',
+    green: '#5f865f',
+    yellow: '#d8af5f',
+    blue: '#85add4',
+    magenta: '#d7afaf',
+    cyan: '#87afaf',
+    redBright: '#d75f87',
+    greenBright: '#87af87',
+    yellowBright: '#ffd787',
+    blueBright: '#add4fb',
+    magentaBright: '#ffafaf',
+    cyanBright: '#87d7d7',
+  },
+};
+
+const seoul256Light: ThemeColors = {
+  roles: {
+    text: '#4e4e4e',
+    textSecondary: '#787878',
+    background: '#dadada',
+    surface: '#dadada',
+    border: '#C1C1C1',
+    puzzleBorder: '#4e4e4e',
+    puzzleInnerBorder: '#787878',
+    blue: '#5f87ae',
+    red: '#af5f5f',
+    green: '#5f885f',
+    yellow: '#af8760',
+  },
+  regions: {
+    red: '#af5f5f',
+    green: '#5f885f',
+    yellow: '#af8760',
+    blue: '#5f87ae',
+    magenta: '#875f87',
+    cyan: '#5f8787',
+    redBright: '#870100',
+    greenBright: '#005f00',
+    yellowBright: '#d8865f',
+    blueBright: '#0087af',
+    magentaBright: '#87025f',
+    cyanBright: '#008787',
+  },
+};
+
+// ─── SOLARIZED ───────────────────────────────────────────────────────────────────
+
+// const solarizedDark: ThemeColors = {
+//   roles: {
+//     text: '#839496',
+//     textSecondary: '#83949699',
+//     background: '#002b36',
+//     surface: '#8394960d',
+//     border: '#83949638',
+//     puzzleBorder: '#839496',
+//     puzzleInnerBorder: '#83949638',
+//     blue: '#268bd2',
+//     red: '#dc322f',
+//     green: '#859900',
+//     yellow: '#b58900',
+//   },
+//   regions: {
+//     red: '#dc322f',
+//     green: '#859900',
+//     yellow: '#b58900',
+//     blue: '#268bd2',
+//     magenta: '#d33682',
+//     cyan: '#2aa198',
+//     redBright: '#cb4b16',
+//     greenBright: '#586e75',
+//     yellowBright: '#657b83',
+//     blueBright: '#839496',
+//     magentaBright: '#6c71c4',
+//     cyanBright: '#93a1a1',
+//   },
+// };
+
+// const solarizedLight: ThemeColors = {
+//   roles: {
+//     text: '#657b83',
+//     textSecondary: '#657b83b3',
+//     background: '#fdf6e3',
+//     surface: '#fdf6e3',
+//     border: '#657b832e',
+//     puzzleBorder: '#657b83',
+//     puzzleInnerBorder: '#657b83b3',
+//     blue: '#268bd2',
+//     red: '#dc322f',
+//     green: '#859900',
+//     yellow: '#b58900',
+//   },
+//   regions: {
+//     red: '#dc322f',
+//     green: '#859900',
+//     yellow: '#b58900',
+//     blue: '#268bd2',
+//     magenta: '#d33682',
+//     cyan: '#2aa198',
+//     redBright: '#cb4b16',
+//     greenBright: '#586e75',
+//     yellowBright: '#657b83',
+//     blueBright: '#839496',
+//     magentaBright: '#6c71c4',
+//     cyanBright: '#93a1a1',
+//   },
+// };
+
+// ─── TOKYO NIGHT ─────────────────────────────────────────────────────────────────
+
+const tokyoNightDefault: ThemeColors = {
+  roles: {
+    text: '#c0caf5',
+    textSecondary: '#7E84A2',
+    background: '#1a1b26',
+    surface: '#222431',
+    border: '#3E4153',
+    puzzleBorder: '#c0caf5',
+    puzzleInnerBorder: '#7E84A2',
+    blue: '#7aa2f7',
+    red: '#f7768e',
+    green: '#9ece6a',
+    yellow: '#e0af68',
+  },
+  regions: {
+    red: '#f7768e',
+    green: '#9ece6a',
+    yellow: '#e0af68',
+    blue: '#7aa2f7',
+    magenta: '#bb9af7',
+    cyan: '#7dcfff',
+    redBright: '#f7768e',
+    greenBright: '#9ece6a',
+    yellowBright: '#e0af68',
+    blueBright: '#7aa2f7',
+    magentaBright: '#bb9af7',
+    cyanBright: '#7dcfff',
+  },
+};
+
+const tokyoNightDay: ThemeColors = {
+  roles: {
+    text: '#3760bf',
+    textSecondary: '#7B94CF',
+    background: '#e1e2e7',
+    surface: '#e1e2e7',
+    border: '#BCC5DE',
+    puzzleBorder: '#3760bf',
+    puzzleInnerBorder: '#7B94CF',
+    blue: '#2e7de9',
+    red: '#f52a65',
+    green: '#587539',
+    yellow: '#8c6c3e',
+  },
+  regions: {
+    red: '#f52a65',
+    green: '#587539',
+    yellow: '#8c6c3e',
+    blue: '#2e7de9',
+    magenta: '#9854f1',
+    cyan: '#007197',
+    redBright: '#f52a65',
+    greenBright: '#587539',
+    yellowBright: '#8c6c3e',
+    blueBright: '#2e7de9',
+    magentaBright: '#9854f1',
+    cyanBright: '#007197',
+  },
+};
+
+// ─── ZENBONES FORESTBONES ────────────────────────────────────────────────────────
+
+// const zenbonesForestbonesDark: ThemeColors = {
+//   roles: {
+//     text: '#e7dcc4',
+//     textSecondary: '#e7dcc499',
+//     background: '#2c343a',
+//     surface: '#e7dcc40d',
+//     border: '#e7dcc438',
+//     puzzleBorder: '#e7dcc4',
+//     puzzleInnerBorder: '#e7dcc438',
+//     blue: '#7fbcb4',
+//     red: '#e67c7f',
+//     green: '#a9c181',
+//     yellow: '#ddbd7f',
+//   },
+//   regions: {
+//     red: '#e67c7f',
+//     green: '#a9c181',
+//     yellow: '#ddbd7f',
+//     blue: '#7fbcb4',
+//     magenta: '#d69ab7',
+//     cyan: '#83c193',
+//     redBright: '#ed9294',
+//     greenBright: '#b0ce7b',
+//     yellowBright: '#edc77a',
+//     blueBright: '#7ac9c0',
+//     magentaBright: '#e5a7c4',
+//     cyanBright: '#7dd093',
+//   },
+// };
+
+// const zenbonesForestbonesLight: ThemeColors = {
+//   roles: {
+//     text: '#4f5b62',
+//     textSecondary: '#4f5b62b3',
+//     background: '#faf3e1',
+//     surface: '#faf3e1',
+//     border: '#4f5b622e',
+//     puzzleBorder: '#4f5b62',
+//     puzzleInnerBorder: '#4f5b62b3',
+//     blue: '#3a94c4',
+//     red: '#f85550',
+//     green: '#8da200',
+//     yellow: '#dea000',
+//   },
+//   regions: {
+//     red: '#f85550',
+//     green: '#8da200',
+//     yellow: '#dea000',
+//     blue: '#3a94c4',
+//     magenta: '#df69ba',
+//     cyan: '#36a87e',
+//     redBright: '#e6271c',
+//     greenBright: '#758700',
+//     yellowBright: '#b98500',
+//     blueBright: '#297ca6',
+//     magentaBright: '#ca43a3',
+//     cyanBright: '#258c67',
+//   },
+// };
+
+// ─── ZENBONES NEOBONES ───────────────────────────────────────────────────────────
+
+// const zenbonesNeobonesDark: ThemeColors = {
+//   roles: {
+//     text: '#c6d5cf',
+//     textSecondary: '#c6d5cf99',
+//     background: '#0f191f',
+//     surface: '#c6d5cf0d',
+//     border: '#c6d5cf38',
+//     puzzleBorder: '#c6d5cf',
+//     puzzleInnerBorder: '#c6d5cf38',
+//     blue: '#8190d4',
+//     red: '#de6e7c',
+//     green: '#90ff6b',
+//     yellow: '#b77e64',
+//   },
+//   regions: {
+//     red: '#de6e7c',
+//     green: '#90ff6b',
+//     yellow: '#b77e64',
+//     blue: '#8190d4',
+//     magenta: '#b279a7',
+//     cyan: '#66a5ad',
+//     redBright: '#e8838f',
+//     greenBright: '#a0ff85',
+//     yellowBright: '#d68c67',
+//     blueBright: '#92a0e2',
+//     magentaBright: '#cf86c1',
+//     cyanBright: '#65b8c1',
+//   },
+// };
+
+// const zenbonesNeobonesLight: ThemeColors = {
+//   roles: {
+//     text: '#202e18',
+//     textSecondary: '#202e18b3',
+//     background: '#e5ede6',
+//     surface: '#e5ede6',
+//     border: '#202e182e',
+//     puzzleBorder: '#202e18',
+//     puzzleInnerBorder: '#202e18b3',
+//     blue: '#286486',
+//     red: '#a8334c',
+//     green: '#567a30',
+//     yellow: '#944927',
+//   },
+//   regions: {
+//     red: '#a8334c',
+//     green: '#567a30',
+//     yellow: '#944927',
+//     blue: '#286486',
+//     magenta: '#88507d',
+//     cyan: '#3b8992',
+//     redBright: '#94253e',
+//     greenBright: '#3f5a22',
+//     yellowBright: '#803d1c',
+//     blueBright: '#1d5573',
+//     magentaBright: '#7b3b70',
+//     cyanBright: '#2b747c',
+//   },
+// };
+
+// ─── ZENBONES ROSEBONES ──────────────────────────────────────────────────────────
+
+// const zenbonesRosebonesDark: ThemeColors = {
+//   roles: {
+//     text: '#e1d4d4',
+//     textSecondary: '#e1d4d499',
+//     background: '#1a1825',
+//     surface: '#e1d4d40d',
+//     border: '#e1d4d438',
+//     puzzleBorder: '#e1d4d4',
+//     puzzleInnerBorder: '#e1d4d438',
+//     blue: '#9ccfd8',
+//     red: '#eb7193',
+//     green: '#317490',
+//     yellow: '#f6c074',
+//   },
+//   regions: {
+//     red: '#eb7193',
+//     green: '#317490',
+//     yellow: '#f6c074',
+//     blue: '#9ccfd8',
+//     magenta: '#c4a7e7',
+//     cyan: '#9ccfd8',
+//     redBright: '#f289a4',
+//     greenBright: '#358daf',
+//     yellowBright: '#f9ca8e',
+//     blueBright: '#94dae6',
+//     magentaBright: '#ceb3ef',
+//     cyanBright: '#94dae6',
+//   },
+// };
+
+// const zenbonesRosebonesLight: ThemeColors = {
+//   roles: {
+//     text: '#724341',
+//     textSecondary: '#724341b3',
+//     background: '#fbf6f0',
+//     surface: '#fbf6f0',
+//     border: '#7243412e',
+//     puzzleBorder: '#724341',
+//     puzzleInnerBorder: '#724341b3',
+//     blue: '#5795a0',
+//     red: '#b5637a',
+//     green: '#286a84',
+//     yellow: '#ec9d33',
+//   },
+//   regions: {
+//     red: '#b5637a',
+//     green: '#286a84',
+//     yellow: '#ec9d33',
+//     blue: '#5795a0',
+//     magenta: '#917ba9',
+//     cyan: '#5795a0',
+//     redBright: '#a54a66',
+//     greenBright: '#1c5970',
+//     yellowBright: '#c68223',
+//     blueBright: '#407d88',
+//     magentaBright: '#855aac',
+//     cyanBright: '#407d88',
+//   },
+// };
+
+// ─── ZENBONES SEOULBONES ─────────────────────────────────────────────────────────
+
+// const zenbonesSeoulbonesDark: ThemeColors = {
+//   roles: {
+//     text: '#dddddd',
+//     textSecondary: '#dddddd99',
+//     background: '#4b4b4b',
+//     surface: '#dddddd0d',
+//     border: '#dddddd38',
+//     puzzleBorder: '#dddddd',
+//     puzzleInnerBorder: '#dddddd38',
+//     blue: '#97bdde',
+//     red: '#e388a3',
+//     green: '#98bd99',
+//     yellow: '#ffdf9b',
+//   },
+//   regions: {
+//     red: '#e388a3',
+//     green: '#98bd99',
+//     yellow: '#ffdf9b',
+//     blue: '#97bdde',
+//     magenta: '#a5a6c5',
+//     cyan: '#6fbdbe',
+//     redBright: '#eb99b1',
+//     greenBright: '#8fcd92',
+//     yellowBright: '#ffe5b3',
+//     blueBright: '#a2c8e9',
+//     magentaBright: '#b2b3da',
+//     cyanBright: '#6bcacb',
+//   },
+// };
+
+// const zenbonesSeoulbonesLight: ThemeColors = {
+//   roles: {
+//     text: '#555555',
+//     textSecondary: '#555555b3',
+//     background: '#e2e2e2',
+//     surface: '#e2e2e2',
+//     border: '#5555552e',
+//     puzzleBorder: '#555555',
+//     puzzleInnerBorder: '#555555b3',
+//     blue: '#0084a3',
+//     red: '#dc5284',
+//     green: '#628562',
+//     yellow: '#c48562',
+//   },
+//   regions: {
+//     red: '#dc5284',
+//     green: '#628562',
+//     yellow: '#c48562',
+//     blue: '#0084a3',
+//     magenta: '#896788',
+//     cyan: '#008586',
+//     redBright: '#be3c6d',
+//     greenBright: '#487249',
+//     yellowBright: '#a76b48',
+//     blueBright: '#006f89',
+//     magentaBright: '#7f4c7e',
+//     cyanBright: '#006f70',
+//   },
+// };
+
+// ─── ZENBONES TOKYOBONES ─────────────────────────────────────────────────────────
+
+// const zenbonesTokyobonesDark: ThemeColors = {
+//   roles: {
+//     text: '#c0caf5',
+//     textSecondary: '#c0caf599',
+//     background: '#1a1b26',
+//     surface: '#c0caf50d',
+//     border: '#c0caf538',
+//     puzzleBorder: '#c0caf5',
+//     puzzleInnerBorder: '#c0caf538',
+//     blue: '#7ba2f7',
+//     red: '#f77890',
+//     green: '#74dbcb',
+//     yellow: '#e1b068',
+//   },
+//   regions: {
+//     red: '#f77890',
+//     green: '#74dbcb',
+//     yellow: '#e1b068',
+//     blue: '#7ba2f7',
+//     magenta: '#bb9bf7',
+//     cyan: '#2bc4de',
+//     redBright: '#f98ea0',
+//     greenBright: '#6de5d3',
+//     yellowBright: '#f2ba64',
+//     blueBright: '#90affa',
+//     magentaBright: '#c6acfa',
+//     cyanBright: '#74dbcb',
+//   },
+// };
+
+// const zenbonesTokyobonesLight: ThemeColors = {
+//   roles: {
+//     text: '#333a57',
+//     textSecondary: '#333a57b3',
+//     background: '#d6d7dc',
+//     surface: '#d6d7dc',
+//     border: '#333a572e',
+//     puzzleBorder: '#333a57',
+//     puzzleInnerBorder: '#333a57b3',
+//     blue: '#34548c',
+//     red: '#8b4351',
+//     green: '#34645d',
+//     yellow: '#8f5e14',
+//   },
+//   regions: {
+//     red: '#8b4351',
+//     green: '#34645d',
+//     yellow: '#8f5e14',
+//     blue: '#34548c',
+//     magenta: '#5a4a79',
+//     cyan: '#176775',
+//     redBright: '#7e3242',
+//     greenBright: '#26554f',
+//     yellowBright: '#794e0d',
+//     blueBright: '#26467a',
+//     magentaBright: '#503875',
+//     cyanBright: '#34645d',
+//   },
+// };
+
+// ─── ZENBONES ZENWRITTEN ─────────────────────────────────────────────────────────
+
+// const zenbonesZenwrittenDark: ThemeColors = {
+//   roles: {
+//     text: '#bbbbbb',
+//     textSecondary: '#bbbbbb99',
+//     background: '#191919',
+//     surface: '#bbbbbb0d',
+//     border: '#bbbbbb38',
+//     puzzleBorder: '#bbbbbb',
+//     puzzleInnerBorder: '#bbbbbb38',
+//     blue: '#6099c0',
+//     red: '#de6e7c',
+//     green: '#819b69',
+//     yellow: '#b77e64',
+//   },
+//   regions: {
+//     red: '#de6e7c',
+//     green: '#819b69',
+//     yellow: '#b77e64',
+//     blue: '#6099c0',
+//     magenta: '#b279a7',
+//     cyan: '#66a5ad',
+//     redBright: '#e8838f',
+//     greenBright: '#8bae68',
+//     yellowBright: '#d68c67',
+//     blueBright: '#61abda',
+//     magentaBright: '#cf86c1',
+//     cyanBright: '#65b8c1',
+//   },
+// };
+
+// const zenbonesZenwrittenLight: ThemeColors = {
+//   roles: {
+//     text: '#353535',
+//     textSecondary: '#353535b3',
+//     background: '#eeeeee',
+//     surface: '#eeeeee',
+//     border: '#3535352e',
+//     puzzleBorder: '#353535',
+//     puzzleInnerBorder: '#353535b3',
+//     blue: '#286486',
+//     red: '#a8334c',
+//     green: '#4f6c31',
+//     yellow: '#944927',
+//   },
+//   regions: {
+//     red: '#a8334c',
+//     green: '#4f6c31',
+//     yellow: '#944927',
+//     blue: '#286486',
+//     magenta: '#88507d',
+//     cyan: '#3b8992',
+//     redBright: '#94253e',
+//     greenBright: '#3f5a22',
+//     yellowBright: '#803d1c',
+//     blueBright: '#1d5573',
+//     magentaBright: '#7b3b70',
+//     cyanBright: '#2b747c',
+//   },
+// };
+
+// ─── Exports ───────────────────────────────────────────────────────────────────
+
+export const PALETTES: Record<ThemeName, PaletteVariants> = {
+  original: {
+    label: 'Original',
+    dark: originalDark,
+    light: originalLight,
+  },
+  // ayu: {
+  //   label: 'Ayu',
+  //   dark: ayuDark,
+  //   light: ayuLight,
+  // },
+  // catppuccin: {
+  //   label: 'Catppuccin',
+  //   dark: catppuccinMocha,
+  //   light: catppuccinLatte,
+  // },
+  // everforest: {
+  //   label: 'Everforest',
+  //   dark: everforestDark,
+  //   light: everforestLight,
+  // },
+  seoul256: {
+    label: 'Seoul256',
+    dark: seoul256Dark,
+    light: seoul256Light,
+  },
+  primer: {
+    label: 'Primer',
+    dark: primerDark,
+    light: primerLight,
+  },
+
+  // iceberg: {
+  //   label: 'Iceberg',
+  //   dark: icebergDark,
+  //   light: icebergLight,
+  // },
+  // nightOwl: {
+  //   label: 'Night Owl',
+  //   dark: nightOwlDark,
+  //   light: nightOwlLight,
+  // },
+  // nightfox: {
+  //   label: 'Nightfox',
+  //   dark: nightfoxDefault,
+  //   light: nightfoxDayfox,
+  // },
+  // one: {
+  //   label: 'One',
+  //   dark: oneDark,
+  //   light: oneLight,
+  // },
+  // oneHalf: {
+  //   label: 'One Half',
+  //   dark: oneHalfDark,
+  //   light: oneHalfLight,
+  // },
+  rosePine: {
+    label: 'Rosé Pine',
+    dark: rosePineDefault,
+    light: rosePineDawn,
+  },
+  gruvbox: {
+    label: 'Gruvbox',
+    dark: gruvboxDark,
+    light: gruvboxLight,
+  },
+  // solarized: {
+  //   label: 'Solarized',
+  //   dark: solarizedDark,
+  //   light: solarizedLight,
+  // },
+  tokyoNight: {
+    label: 'Tokyo Night',
+    dark: tokyoNightDefault,
+    light: tokyoNightDay,
+  },
+
+  // zenbonesForestbones: {
+  //   label: 'Zenbones Forestbones',
+  //   dark: zenbonesForestbonesDark,
+  //   light: zenbonesForestbonesLight,
+  // },
+  // zenbonesNeobones: {
+  //   label: 'Zenbones Neobones',
+  //   dark: zenbonesNeobonesDark,
+  //   light: zenbonesNeobonesLight,
+  // },
+  // zenbonesRosebones: {
+  //   label: 'Zenbones Rosebones',
+  //   dark: zenbonesRosebonesDark,
+  //   light: zenbonesRosebonesLight,
+  // },
+  // zenbonesSeoulbones: {
+  //   label: 'Zenbones Seoulbones',
+  //   dark: zenbonesSeoulbonesDark,
+  //   light: zenbonesSeoulbonesLight,
+  // },
+  // zenbonesTokyobones: {
+  //   label: 'Zenbones Tokyobones',
+  //   dark: zenbonesTokyobonesDark,
+  //   light: zenbonesTokyobonesLight,
+  // },
+  // zenbonesZenwritten: {
+  //   label: 'Zenbones Zenwritten',
+  //   dark: zenbonesZenwrittenDark,
+  //   light: zenbonesZenwrittenLight,
+  // },
+};
+
+export const PALETTE_NAMES = Object.keys(PALETTES) as ThemeName[];

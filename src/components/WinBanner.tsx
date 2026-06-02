@@ -1,13 +1,20 @@
+// NOTE: fontWeight values (900, 700, 600) are numeric here, while the rest of
+// the codebase uses string literals ('900', '600'). StyleSheet.create accepts
+// both on newer React Native, but numeric fontWeight can produce TS errors in
+// strict mode. Prefer string literals for consistency.
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Text, Pressable, StyleSheet } from 'react-native';
+import { Animated, Pressable, StyleSheet } from 'react-native';
+import { Text } from './Text';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { usePuzzleStore } from '../store';
-import { useUserStore } from '../stores/userStore';
-import { formatTime } from '../utils/formatTime';
-import { getActiveStreak } from '../utils/streakDate';
-import { useTheme, type Theme } from '../hooks/useTheme';
-import type { StreakType } from '../types/state';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { usePuzzleStore } from '../stores/puzzleStore';
+import { recordStreak } from '../utils/progress';
+import { STREAK_LABELS, STREAK_UNIT } from '../utils/streakDate';
+import { formatElapsedTime } from '../utils/time';
+
+import { useTheme } from '../hooks/useTheme';
+import type { Theme, RootStackParamList, WinBannerProps } from '../types';
 
 export function WinBanner({
   packId,
@@ -15,23 +22,15 @@ export function WinBanner({
   packName,
   isLastPuzzle,
   streakType,
-}: {
-  packId: string;
-  puzzleIndex: number;
-  packName: string;
-  isLastPuzzle: boolean;
-  streakType?: StreakType;
-}) {
+  streakCount = 0,
+}: WinBannerProps) {
   const completed = usePuzzleStore(s => s.completed);
+  const loadedAsCompleted = usePuzzleStore(s => s.loadedAsCompleted);
   const timeMs = usePuzzleStore(s => s.timeMs);
-  const streak = useUserStore(s => {
-    if (!streakType) return 0;
-    const found = s.streaks.find(st => st.type === streakType);
-    return found ? getActiveStreak(found, streakType) : 0;
-  });
   const theme = useTheme();
   const styles = createStyles(theme);
-  const navigation = useNavigation<any>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [bannerHeight, setBannerHeight] = useState(0);
   const bannerTranslateY = useRef(new Animated.Value(0)).current;
@@ -41,51 +40,45 @@ export function WinBanner({
   };
 
   useEffect(() => {
-    if (completed && streakType) {
-      useUserStore.getState().recordStreak(streakType);
-    }
-  }, [completed, streakType]);
+    if (!completed || !streakType || loadedAsCompleted) return;
+    recordStreak(streakType);
+  }, [completed, streakType, loadedAsCompleted]);
 
   useEffect(() => {
     if (!bannerHeight) return;
+    bannerTranslateY.setValue(bannerHeight);
     if (completed) {
-      bannerTranslateY.setValue(bannerHeight);
       Animated.spring(bannerTranslateY, {
         toValue: 0,
         damping: 30,
         stiffness: 300,
         useNativeDriver: true,
       }).start();
-    } else {
-      bannerTranslateY.setValue(bannerHeight);
     }
   }, [completed, bannerHeight, bannerTranslateY]);
 
   if (!completed) return null;
 
   const info = streakType
-    ? `${streakType.charAt(0).toUpperCase() + streakType.slice(1)} Challenge`
+    ? `${STREAK_LABELS[streakType]} Special`
     : `${packName} #${puzzleIndex + 1}`;
 
-  const headline = streakType
-    ? `Streak: ${streak}`
-    : `Solved in ${formatTime(timeMs)}`;
+  const buttonLabel = streakType
+    ? 'Back to Home'
+    : isLastPuzzle
+    ? `Back to ${packName || 'Pack'}`
+    : 'Next Puzzle';
 
-  const handlePress = () => {
+  function handlePress() {
     if (streakType || isLastPuzzle) {
       navigation.goBack();
     } else {
       navigation.replace('Puzzle', { packId, puzzleIndex: puzzleIndex + 1 });
     }
-  };
-
-  const buttonLabel = streakType
-    ? 'Back to Home'
-    : isLastPuzzle
-      ? `Back to ${packName || 'Pack'}`
-      : 'Next Puzzle';
+  }
 
   return (
+    // Hidden until bannerHeight is measured so the spring starts from the correct off-screen position.
     <Animated.View
       onLayout={onLayout}
       style={[
@@ -94,11 +87,17 @@ export function WinBanner({
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      <Text style={styles.winInfo}>{info}</Text>
-      <Text style={styles.winText}>{headline}</Text>
-      {streakType && (
-        <Text style={styles.winTime}>Solved in {formatTime(timeMs)}</Text>
-      )}
+      <Text style={styles.winInfo}>{info} {streakType && (
+        <Text style={styles.winInfo}>
+          {/* streakType! non-null assertion: safe here because the wrapping
+            `{streakType && ...}` already guards against null/undefined, but
+            TypeScript can't narrow through JSX text. Could rewrite as
+            `{streakType ? STREAK_UNIT[streakType] : ''}` to avoid the assertion. */}
+        {streakCount > 0 ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak` : ``}
+        </Text>
+      )}</Text>
+      <Text style={styles.winText}>{`Solved in ${formatElapsedTime(timeMs)}`}</Text>
+
       <Pressable onPress={handlePress} style={styles.winButton}>
         <Text style={styles.winButtonText}>{buttonLabel}</Text>
       </Pressable>
@@ -110,6 +109,7 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     winBanner: {
       position: 'absolute',
+      // bottom: -56 lets the banner slide up from below the viewport without leaving a gap at the screen edge.
       bottom: -56,
       left: 0,
       right: 0,
@@ -119,46 +119,43 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       borderTopLeftRadius: 40,
       borderTopRightRadius: 40,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.03,
-      shadowRadius: 4,
-      elevation: 2,
-      backgroundColor: theme.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowColor: '#25292E',
+      shadowOpacity: 0.24,
+      shadowRadius: 24,
+      elevation: 8,
+      backgroundColor: theme.surface,
     },
     winText: {
-      fontSize: 31,
-      lineHeight: 39,
-      fontWeight: theme.fontWeightSemibold,
-      letterSpacing: -0.2,
       color: theme.text,
+      lineHeight: 36,
+      fontSize: 33,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: 900,
+
+      letterSpacing: -0.33,
     },
     winInfo: {
-      fontSize: 16,
-      lineHeight: 20,
-      fontWeight: theme.fontWeightSemibold,
-      letterSpacing: -0.1,
       color: theme.text,
-    },
-    winTime: {
-      fontSize: 16,
-      lineHeight: 20,
-      fontWeight: theme.fontWeightSemibold,
-      letterSpacing: -0.1,
-      color: theme.text,
-      marginTop: 4,
+      fontSize: 17,
+      lineHeight: 22,
+      fontWeight: 600,
+      marginBottom: 7,
     },
     winButton: {
-      height: 40,
+      height: 56,
       width: '100%',
       borderRadius: 120,
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: theme.spacingXl,
-      backgroundColor: theme.onAccent,
+
+      backgroundColor: theme.text,
     },
     winButtonText: {
-      fontSize: theme.fontSizeMd,
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
+      fontSize: 19,
+      fontWeight: 700,
+      color: theme.background,
     },
   });
+

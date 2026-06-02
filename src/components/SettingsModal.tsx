@@ -1,159 +1,73 @@
-import React from 'react';
-import { Modal, View, Text, StyleSheet, Pressable, Switch } from 'react-native';
-import { X } from 'lucide-react-native';
-import { Header } from './Header';
-import { useUserStore } from '../stores/userStore';
-import { useTheme, type Theme } from '../hooks/useTheme';
-import type { UserSettings } from '../types/state';
+import React, { useState } from 'react';
+import { Modal, View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { Text } from './Text';
+import X from 'lucide-react-native/dist/cjs/icons/x';
+import { Linking } from 'react-native';
+import { useSettingsStore } from '../stores/settingsStore';
+import { useTheme } from '../hooks/useTheme';
+import { AccountSection } from './settings/AccountSection';
+import { SubscriptionSection } from './settings/SubscriptionSection';
+import { GameplaySection } from './settings/GameplaySection';
+import { AppearanceSection } from './settings/AppearanceSection';
+import { PRIVACY_POLICY_URL, TERMS_URL, CREDITS_URL } from '../config';
+import type { Theme } from '../types';
 
-type Props = {
-  visible: boolean;
-  onClose: () => void;
-};
-
-const THEME_OPTIONS: { label: string; value: UserSettings['theme'] }[] = [
-  { label: 'System', value: 'system' },
-  { label: 'Light', value: 'light' },
-  { label: 'Dark', value: 'dark' },
-];
-
-function ToggleRow({
-  label,
-  value,
-  onToggle,
-  styles,
-  theme,
-}: {
-  label: string;
-  value: boolean;
-  onToggle: (v: boolean) => void;
-  styles: any;
-  theme: Theme;
-}) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ false: theme.innerBorder, true: theme.accent }}
-        thumbColor="#FFFFFF"
-      />
-    </View>
-  );
-}
-
-export function SettingsModal({ visible, onClose }: Props) {
+// Visibility is driven by Zustand so any screen can open this modal without prop drilling.
+export function SettingsModal() {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const settings = useUserStore(s => s.settings);
-  const updateSettings = useUserStore(s => s.updateSettings);
+  const settingsModalVisible = useSettingsStore(s => s.settingsModalVisible);
+  const closeSettings = useSettingsStore(s => s.closeSettings);
+
+  const [scrolled, setScrolled] = useState(false);
 
   return (
     <Modal
-      visible={visible}
+      visible={settingsModalVisible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onRequestClose={closeSettings}
     >
       <View style={styles.container}>
-        <Header
-          absolute={false}
-          center={<Text style={styles.title}>Star Battle</Text>}
-          right={
-            <Pressable onPress={onClose} hitSlop={8}>
+        <View style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}>
+          <View style={styles.modalHeaderSide} />
+          <View style={styles.modalHeaderCenter}>
+            <Text style={styles.title}>Settings</Text>
+          </View>
+          <View style={styles.modalHeaderSide}>
+            <Pressable onPress={closeSettings} hitSlop={8}>
               <X size={24} color={theme.text} />
             </Pressable>
-          }
-        />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Gameplay</Text>
-          <View style={styles.menuWrapper}>
-            <ToggleRow
-              label="Auto-X Neighbors"
-              value={settings.autoXNeighbors}
-              onToggle={v => updateSettings({ autoXNeighbors: v })}
-              styles={styles}
-              theme={theme}
-            />
-            <ToggleRow
-              label="Auto-X Rows & Columns"
-              value={settings.autoXRowsCols}
-              onToggle={v => updateSettings({ autoXRowsCols: v })}
-              styles={styles}
-              theme={theme}
-            />
-            <ToggleRow
-              label="Auto-X Regions"
-              value={settings.autoXRegions}
-              onToggle={v => updateSettings({ autoXRegions: v })}
-              styles={styles}
-              theme={theme}
-            />
-            <ToggleRow
-              label="Highlight Errors"
-              value={settings.highlightErrors}
-              onToggle={v => updateSettings({ highlightErrors: v })}
-              styles={styles}
-              theme={theme}
-            />
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>General</Text>
-          <ToggleRow
-            label="Show Timer"
-            value={settings.showTimer}
-            onToggle={v => updateSettings({ showTimer: v })}
-            styles={styles}
-            theme={theme}
-          />
-          <ToggleRow
-            label="Hide Toolbar"
-            value={settings.hideToolbar}
-            onToggle={v => updateSettings({ hideToolbar: v })}
-            styles={styles}
-            theme={theme}
-          />
-          <ToggleRow
-            label="Haptics"
-            value={settings.haptics}
-            onToggle={v => updateSettings({ haptics: v })}
-            styles={styles}
-            theme={theme}
-          />
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>Theme</Text>
-            <View style={styles.themeButtons}>
-              {THEME_OPTIONS.map(opt => {
-                const active = settings.theme === opt.value;
-                return (
-                  <Pressable
-                    key={opt.value}
-                    onPress={() => updateSettings({ theme: opt.value })}
-                    style={
-                      active
-                        ? styles.themeButtonActive
-                        : styles.themeButtonInactive
-                    }
-                  >
-                    <Text
-                      style={
-                        active
-                          ? styles.themeButtonTextActive
-                          : styles.themeButtonTextInactive
-                      }
-                    >
-                      {opt.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+        <ScrollView
+          onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <AccountSection />
+          <SubscriptionSection />
+          <GameplaySection />
+          <AppearanceSection />
+
+          <View style={styles.legalSection}>
+            <View style={styles.legalLinks}>
+              <Pressable onPress={() => Linking.openURL(TERMS_URL).catch(() => {})} hitSlop={8}>
+                <Text style={styles.legalLinkText}>Terms of Use</Text>
+              </Pressable>
+              <Text style={styles.legalSep}>·</Text>
+              <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} hitSlop={8}>
+                <Text style={styles.legalLinkText}>Privacy Policy</Text>
+              </Pressable>
+              <Text style={styles.legalSep}>·</Text>
+              <Pressable onPress={() => Linking.openURL(CREDITS_URL).catch(() => {})} hitSlop={8}>
+                <Text style={styles.legalLinkText}>Credits</Text>
+              </Pressable>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -161,71 +75,36 @@ export function SettingsModal({ visible, onClose }: Props) {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      paddingHorizontal: 0,
-      paddingTop: theme.spacingXl,
-      backgroundColor: theme.highlight,
-    },
-    title: {
-      fontSize: theme.fontSizeLg,
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
-    },
-    section: {
-      marginBottom: theme.spacingXl,
-    },
-    sectionTitle: {
-      fontSize: 13,
-      lineHeight: 17,
-      fontWeight: theme.fontWeightSemibold,
-      marginBottom: 10,
-      color: theme.textSecondary,
-    },
-    row: {
+    container: { flex: 1, backgroundColor: theme.background },
+    modalHeader: {
+      height: 48,
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
- 
-      minHeight: 60,
-      paddingVertical: 12,
-      paddingHorizontal: 12,
+      paddingHorizontal: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: 'transparent',
     },
-    rowLabel: {
-      fontSize: 15,
-      lineHeight: 20,
+    modalHeaderBorder: { borderBottomColor: theme.border },
+    modalHeaderSide: { width: 44, alignItems: 'center', justifyContent: 'center' },
+    modalHeaderCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    title: {
       color: theme.text,
-      fontWeight: 600,
+      fontSize: 25,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
     },
-    themeButtons: {
+    scrollContent: {
+      paddingHorizontal: 16,
+      paddingBottom: theme.spacingXl,
+    },
+    legalSection: { marginTop: 40 },
+    legalLinks: {
       flexDirection: 'row',
-      gap: theme.spacingMd,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: theme.spacingLg,
+      gap: 6,
     },
-    themeButtonActive: {
-      paddingHorizontal: theme.spacingLg,
-      paddingVertical: theme.spacingMd,
-      borderRadius: theme.radiusMd,
-      backgroundColor: theme.accent,
-    },
-    themeButtonInactive: {
-      paddingHorizontal: theme.spacingLg,
-      paddingVertical: theme.spacingMd,
-      borderRadius: theme.radiusMd,
-      backgroundColor: theme.innerBorder,
-    },
-    themeButtonTextActive: {
-      fontSize: theme.fontSizeSm,
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.onAccent,
-    },
-    themeButtonTextInactive: {
-      fontSize: theme.fontSizeSm,
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
-    },
-    menuWrapper: {
-      backgroundColor: theme.card,
-
-      borderRadius: 16,
-    },
+    legalLinkText: { fontSize: 13, color: theme.textSecondary },
+    legalSep: { fontSize: theme.fontSizeSubhead, color: theme.textSecondary },
   });
