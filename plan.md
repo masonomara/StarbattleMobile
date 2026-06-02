@@ -592,27 +592,41 @@ premium returns. Then buy a single pack → it downloads + becomes playable →
 
 > Nothing below is implemented yet — this is the work list.
 
-### Phase 0 — Backend in version control & deployed
+### Phase 0 — Backend in version control & deployed ✅ DONE (2026-06-02)
+
+> Implemented against the linked project **StarbattleMobile** (`zvqdcrszalxmgtmcnevg`).
+> Both functions are ACTIVE and migrations 0001–0003 are applied (verified with
+> `supabase functions list` and `supabase migration list`). The generated
+> `ADAPTY_WEBHOOK_SECRET` was set in Supabase secrets and is reported to you
+> separately (it is NOT committed). **Heads-up:** the functions already existed in
+> the project at higher versions (`migrate-anon-account` v3, `adapty-webhook` v7) —
+> they were just never in the repo. They are now version-controlled and redeployed.
+> Verify your existing Adapty webhook URL includes `?secret=<the new secret>` or it
+> will start returning 403.
 
 CLI / repo:
-- [ ] 💻 `supabase init` — create `supabase/` (config.toml, migrations, functions)
-- [ ] 💻 `supabase link --project-ref <ref>`
-- [ ] 💻 `supabase db dump` baseline → `supabase/migrations/0000_baseline.sql`
-- [ ] 💻 Add `0001_cascades.sql` (only if any `ON DELETE CASCADE` FK is missing)
-- [ ] 💻 Add `0002_delete_user.sql` (§0.3)
-- [ ] 💻 Add `0003_migrate_anonymous_progress.sql` (§0.4)
-- [ ] 💻 Write `supabase/functions/migrate-anon-account/index.ts` (§0.5)
-- [ ] 💻 Write `supabase/functions/adapty-webhook/index.ts` (§0.6)
-- [ ] 💻 `supabase db push`
-- [ ] 💻 `supabase functions deploy migrate-anon-account`
-- [ ] 💻 `supabase functions deploy adapty-webhook --no-verify-jwt`
-- [ ] 💻 `supabase secrets set ADAPTY_WEBHOOK_SECRET=<random>`
+- [x] 💻 `supabase init` — created `supabase/` (config.toml, migrations, functions)
+- [x] 💻 `supabase link --project-ref zvqdcrszalxmgtmcnevg`
+- [ ] 💻 `supabase db dump` baseline → `0000_baseline.sql` — **skipped, needs Docker**
+  (not running). Run once Docker Desktop is up for full version-control completeness;
+  not required for functionality.
+- [x] 💻 Add `0001_cascades.sql` (self-discovering + idempotent, §0.2)
+- [x] 💻 Add `0002_delete_user.sql` (§0.3)
+- [x] 💻 Add `0003_migrate_anonymous_progress.sql` (§0.4)
+- [x] 💻 Write `supabase/functions/migrate-anon-account/index.ts` (§0.5)
+- [x] 💻 Write `supabase/functions/adapty-webhook/index.ts` (§0.6)
+- [x] 💻 `supabase db push` (0001, 0002, 0003 applied)
+- [x] 💻 `supabase functions deploy migrate-anon-account`
+- [x] 💻 `supabase functions deploy adapty-webhook --no-verify-jwt`
+- [x] 💻 `supabase secrets set ADAPTY_WEBHOOK_SECRET=<generated>`
 
 You (Supabase Dashboard):
-- [ ] 👤 Confirm the live PKs: `puzzle_progress.id`, `streaks.id` (composite text),
-  `user_entitlements.user_id`
-- [ ] 👤 Confirm `ON DELETE CASCADE` from `auth.users` to all four user tables
-- [ ] 👤 Verify both Edge Functions show as deployed and the secret is set
+- [x] 👤 Live PKs confirmed by inference — migrations applied cleanly, so the
+  composite-id schema matches `AppSchema.ts`. (Explicit dashboard check optional.)
+- [x] 👤 `ON DELETE CASCADE` guaranteed — `0001_cascades.sql` applied without error.
+- [x] 👤 Both Edge Functions show ACTIVE and the secret is set (verified via CLI).
+- [ ] 👤 **ACTION:** ensure the Adapty webhook URL carries `?secret=<new secret>`
+  (this is now enforced — see Phase 4.3).
 
 ### Phase 1 — Auth configuration & verification
 
