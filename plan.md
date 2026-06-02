@@ -311,8 +311,10 @@ setup + testing**.
 
 - **Enable anonymous sign-ins:** Authentication → Providers → *Anonymous* → ON.
   (Without this, `signInAnonymously()` fails at launch and nothing loads.)
-- **Apple provider:** add the Services ID, Team ID, Key ID, and the `.p8` auth
-  key. Native iOS sign-in via `signInWithIdToken` validates against this.
+- **Apple provider:** enable it and add the app bundle id
+  `com.omaratechnologydesign.starbattle` to **Client IDs**. Native iOS
+  `signInWithIdToken` validates the identity token's audience against that. Leave
+  the Secret Key blank — it's only for the web OAuth flow, which this app doesn't use.
 - **Google provider:** register **both** client IDs (`GOOGLE_WEB_CLIENT_ID` is the
   audience for the ID token; the iOS client ID is also accepted). Add both to
   "Authorized Client IDs".
@@ -328,10 +330,10 @@ setup + testing**.
 
 ### 1.2 Apple Developer
 
-- The `com.apple.developer.applesignin` entitlement is already present.
-- In the Apple Developer portal: enable **Sign in with Apple** on the App ID,
-  create the **Services ID** + **Sign in with Apple key (.p8)**, and set the
-  return URL to your Supabase callback (`https://<ref>.supabase.co/auth/v1/callback`).
+- The `com.apple.developer.applesignin` entitlement is already present, which is
+  all the Apple-side setup native sign-in needs. **No Services ID, `.p8` sign-in
+  key, or return URL is required** — those belong to the web OAuth flow, which this
+  iOS-native app does not use.
 - Because you offer Google sign-in, **Sign in with Apple is mandatory** for App
   Store approval (Guideline 4.8) — it's wired, just confirm it works on device.
 
@@ -656,16 +658,12 @@ Supabase Auth (applied via config push):
 
 You (Supabase Dashboard → Authentication) — still require real secrets, cannot be pushed:
 - [ ] 👤 Providers → **Apple**: enable + add bundle id `com.omaratechnologydesign.starbattle`
-  as an authorized client id (native sign-in; Services ID/secret only needed for web flow)
+  to Client IDs; leave Secret Key blank (native sign-in — no web flow needed)
 - [ ] 👤 Providers → **Google**: enable + add web client id and the iOS client id
-  (`...09ejigbp1khjkk1p1dmd5kafitptkfvu`) to "Authorized Client IDs"; enable skip-nonce
+  (`...09ejigbp1khjkk1p1dmd5kafitptkfvu`) to "Authorized Client IDs"; enable skip-nonce;
+  leave Client Secret blank
 - [ ] 👤 Emails → **configure custom SMTP** (Resend/Postmark/SES) — required, no credentials in repo
 - [ ] 👤 Emails → confirm signup / recovery / email-change templates point at the redirect
-
-You (Apple Developer) — only needed if you add the web OAuth flow; native sign-in
-works without it once the provider is enabled with the bundle id:
-- [ ] 👤 Confirm **Sign in with Apple** capability on the App ID (entitlement already present)
-- [ ] 👤 (Web flow only) Create the **Services ID** + **Sign in with Apple key (.p8)** + return URL
 
 You (Google Cloud Console):
 - [x] 💻 iOS client reversed-id matches `Info.plist` (verified in repo)
