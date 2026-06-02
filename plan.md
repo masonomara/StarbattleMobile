@@ -628,31 +628,48 @@ You (Supabase Dashboard):
 - [ ] 👤 **ACTION:** ensure the Adapty webhook URL carries `?secret=<new secret>`
   (this is now enforced — see Phase 4.3).
 
-### Phase 1 — Auth configuration & verification
+### Phase 1 — Auth configuration & verification — code done; dashboard items prepared (2026-06-02)
 
-You (Supabase Dashboard → Authentication):
-- [ ] 👤 Providers → **Anonymous** = ON
-- [ ] 👤 Providers → **Apple**: add Services ID, Team ID, Key ID, `.p8` key
-- [ ] 👤 Providers → **Google**: add `GOOGLE_WEB_CLIENT_ID` + iOS client ID to
-  "Authorized Client IDs"
-- [ ] 👤 URL Configuration → add redirect `starbattle://reset-password` (+ site
-  scheme `starbattle://`)
-- [ ] 👤 Emails → **configure custom SMTP** (Resend/Postmark/SES) — required
-- [ ] 👤 Emails → confirm signup / recovery / email-change templates point at the
-  redirect
+> Code DONE: `handleDeepLink` now handles both the implicit-grant fragment AND the
+> `token_hash`/`verifyOtp` recovery flow (`src/stores/authStore.ts`); the Google iOS
+> client id was verified to match `Info.plist`.
+>
+> Config APPLIED: `supabase config push` was run against the linked project
+> (`zvqdcrszalxmgtmcnevg`) and **"Remote Auth config is up to date"** is confirmed.
+> A pre-push dry-run caught that the remote already had MFA-TOTP enabled and
+> `otp_length = 8` / `max_frequency = 1m`; `config.toml` was aligned to those so the
+> push did **not** regress them. The only fields pushed were `site_url` and
+> `additional_redirect_urls`. The **Apple + Google provider blocks were skipped**
+> by the CLI because their secret env vars are unset — so providers were NOT
+> changed and still require dashboard setup with real secrets.
 
-You (Apple Developer):
-- [ ] 👤 Enable **Sign in with Apple** on the App ID
-- [ ] 👤 Create the **Services ID** + **Sign in with Apple key (.p8)**
-- [ ] 👤 Set return URL to `https://<ref>.supabase.co/auth/v1/callback`
+CLI / repo:
+- [x] 💻 `handleDeepLink` supports both fragment tokens and `token_hash` + `verifyOtp` (§1.3)
+- [x] 💻 Verified `GOOGLE_IOS_CLIENT_ID` matches the `Info.plist` reversed-client scheme
+- [x] 💻 Captured intended auth config in `supabase/config.toml`
+- [x] 💻 `supabase config push` applied → site_url + redirect URLs live; MFA/OTP preserved
+
+Supabase Auth (applied via config push):
+- [x] ✅ **Anonymous sign-ins** = ON (confirmed `enable_anonymous_sign_ins = true` on remote)
+- [x] ✅ **Redirect URL** `starbattle://reset-password` (+ `starbattle://`, site URL) live
+- [x] ✅ **Email confirmation** = ON (confirmed on remote)
+
+You (Supabase Dashboard → Authentication) — still require real secrets, cannot be pushed:
+- [ ] 👤 Providers → **Apple**: enable + add bundle id `com.omaratechnologydesign.starbattle`
+  as an authorized client id (native sign-in; Services ID/secret only needed for web flow)
+- [ ] 👤 Providers → **Google**: enable + add web client id and the iOS client id
+  (`...09ejigbp1khjkk1p1dmd5kafitptkfvu`) to "Authorized Client IDs"; enable skip-nonce
+- [ ] 👤 Emails → **configure custom SMTP** (Resend/Postmark/SES) — required, no credentials in repo
+- [ ] 👤 Emails → confirm signup / recovery / email-change templates point at the redirect
+
+You (Apple Developer) — only needed if you add the web OAuth flow; native sign-in
+works without it once the provider is enabled with the bundle id:
+- [ ] 👤 Confirm **Sign in with Apple** capability on the App ID (entitlement already present)
+- [ ] 👤 (Web flow only) Create the **Services ID** + **Sign in with Apple key (.p8)** + return URL
 
 You (Google Cloud Console):
-- [ ] 👤 Confirm the **Web** OAuth client (`GOOGLE_WEB_CLIENT_ID`) exists
-- [ ] 👤 Confirm the **iOS** OAuth client (bundle `com.omaratechnologydesign.starbattle`)
-  exists and its reversed-client ID matches the one in `Info.plist`
-
-CLI / repo (only if testing reveals the token_hash template):
-- [ ] 💻 Add the `verifyOtp` / `token_hash` fallback to `handleDeepLink` (§1.3)
+- [x] 💻 iOS client reversed-id matches `Info.plist` (verified in repo)
+- [ ] 👤 Confirm the **Web** + **iOS** OAuth clients still exist and are not deleted/restricted
 
 ### Phase 2 — Website legal pages
 

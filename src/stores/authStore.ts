@@ -230,14 +230,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Supabase embeds the link type as a query param OR fragment param depending
     // on the flow. Checking the full URL string catches both cases.
     if (!url.includes('type=recovery') && !url.includes('type=signup') && !url.includes('type=email_change')) return;
+
     const hashIdx = url.indexOf('#');
-    if (hashIdx < 0) return;
-    const params = parseUrlFragment(url.slice(hashIdx + 1));
-    if (params.access_token && params.refresh_token) {
+    const fragment = hashIdx >= 0 ? parseUrlFragment(url.slice(hashIdx + 1)) : {};
+    if (fragment.access_token && fragment.refresh_token) {
       await supabase.auth.setSession({
-        access_token: params.access_token,
-        refresh_token: params.refresh_token,
+        access_token: fragment.access_token,
+        refresh_token: fragment.refresh_token,
       });
+      return;
+    }
+
+    // token_hash flow: some Supabase email templates deep-link with
+    // ?token_hash=...&type=recovery instead of an implicit-grant fragment.
+    const queryStart = url.indexOf('?');
+    const queryEnd = hashIdx >= 0 ? hashIdx : url.length;
+    const query =
+      queryStart >= 0 ? parseUrlFragment(url.slice(queryStart + 1, queryEnd)) : {};
+    const tokenHash = query.token_hash ?? fragment.token_hash;
+    const otpType = query.type ?? fragment.type;
+    if (
+      tokenHash &&
+      (otpType === 'recovery' || otpType === 'signup' || otpType === 'email_change')
+    ) {
+      await supabase.auth.verifyOtp({ type: otpType, token_hash: tokenHash });
     }
   },
 
