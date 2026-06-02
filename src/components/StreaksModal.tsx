@@ -64,7 +64,7 @@ export function StreaksModal() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const userId = useAuthStore(s => s.user?.id);
-  const streaks = useStreakRows(userId);
+  const { streaks } = useStreakRows(userId);
 
   const [scrolled, setScrolled] = useState(false);
   const archiveCounts: Record<StreakType, number> = {

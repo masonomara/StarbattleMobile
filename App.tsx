@@ -47,27 +47,42 @@ export default function App() {
     const authReady = useAuthStore.getState().initialize();
 
     // Warm streak + pack caches before HomeScreen mounts.
-    // Gate the splash on streak packs (3s max) so HomeScreen renders
-    // fully populated on reveal.
+    // Gate the splash on streak packs so HomeScreen renders fully populated on reveal.
     const streakReady = authReady.then(() =>
       Promise.all([
         getStreakPack('daily'),
         getStreakPack('weekly'),
         getStreakPack('monthly'),
-      ])
+      ]),
     );
     streakReady.then(() => startupTimer.log('streak packs resolved'));
-    let packsWon = false;
+
+    // packCatalogReady resolves when the packs table has data we can trust:
+    //   - Warm start: db.watch fires immediately with local data → non-empty → resolve.
+    //   - Cold start: db.watch fires first with an empty local DB, then again
+    //     after PowerSync syncs. We resolve on the re-emission (firstWatchFired
+    //     guard) so we don't unblock on a stale empty result.
+    // The 8s timeout is the safety ceiling for offline or genuinely empty catalogs.
+    let packCatalogResolve!: () => void;
+    const packCatalogReady = new Promise<void>(r => {
+      packCatalogResolve = r;
+    });
+    let firstPackWatchFired = false;
+
+    let allReady = false;
     Promise.race([
-      streakReady.then(() => { packsWon = true; }),
-      new Promise<void>(resolve => setTimeout(resolve, 3000)),
+      Promise.all([streakReady, packCatalogReady]).then(() => {
+        allReady = true;
+      }),
+      new Promise<void>(resolve => setTimeout(resolve, 8000)),
     ])
       .catch(() => {})
       .then(() => {
-        startupTimer.log(`splash hiding — ${packsWon ? 'packs ready' : '3s timeout fired'}`);
+        startupTimer.log(
+          `splash hiding — ${allReady ? 'all ready' : '8s timeout fired'}`,
+        );
         BootSplash.hide({ fade: true }).catch(() => {});
       });
-
 
     useSettingsStore.getState().initialize();
     startupTimer.log('settings store initialized');
@@ -82,7 +97,17 @@ export default function App() {
       'SELECT id FROM packs WHERE published = 1 LIMIT 1',
       [],
       {
-        onResult: async () => {
+        onResult: async result => {
+          const hasData = (result.rows?._array ?? []).length > 0;
+          if (hasData || firstPackWatchFired) {
+            // Resolve on the first non-empty emission (warm start) or on any
+            // re-emission after the first (cold start: first was empty local
+            // data, this one is post-sync). Either way the catalog is now as
+            // populated as it's going to be at launch time.
+            packCatalogResolve();
+          }
+          firstPackWatchFired = true;
+
           await useEntitlementsStore.getState().loadPackCatalog();
           const { packCatalog, entitlements } = useEntitlementsStore.getState();
           runTieredPrefetch(packCatalog, entitlements);

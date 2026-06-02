@@ -78,7 +78,7 @@ export function PuzzleScreen({
   const openSettings = useSettingsStore(s => s.openSettings);
 
   const userId = useAuthStore(s => s.user?.id);
-  const streakRows = useStreakRows(userId);
+  const { streaks: streakRows } = useStreakRows(userId);
   const streakRow = streakType ? streakRows.find(s => s.type === streakType) : undefined;
   const streakCount = streakRow ? getActiveStreak(streakRow, streakType!) : 0;
 

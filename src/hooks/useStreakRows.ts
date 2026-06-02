@@ -28,16 +28,21 @@ function rowsToStreaks(rows: StreakRow[]): Streak[] {
 // empty-flash window while the watcher initialises. If PowerSync's watch API
 // adds a synchronous initial-result option in future, the getAll() can be removed.
 //
-export function useStreakRows(userId: string | undefined): Streak[] {
+export function useStreakRows(
+  userId: string | undefined,
+): { streaks: Streak[]; isLoading: boolean } {
   const [streaks, setStreaks] = useState<Streak[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!userId) return;
 
     // Initial load so there's no empty flash before the watcher fires.
-    db.getAll<StreakRow>(STREAKS_QUERY, [userId]).then(rows =>
-      setStreaks(rowsToStreaks(rows)),
-    );
+    // isLoading clears once this resolves — the live watch never resets it.
+    db.getAll<StreakRow>(STREAKS_QUERY, [userId])
+      .then(rows => setStreaks(rowsToStreaks(rows)))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
 
     const controller = new AbortController();
     db.watch(
@@ -52,5 +57,5 @@ export function useStreakRows(userId: string | undefined): Streak[] {
     return () => controller.abort();
   }, [userId]);
 
-  return streaks;
+  return { streaks, isLoading };
 }

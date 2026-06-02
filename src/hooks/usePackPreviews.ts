@@ -16,11 +16,13 @@ import type { PackCatalogItem, Puzzle } from '../types';
 // would be more robust.
 export function usePackPreviews(
   packCatalog: PackCatalogItem[],
-): Record<string, Puzzle> {
+): { packPreviews: Record<string, Puzzle>; isLoading: boolean } {
   const [packPreviews, setPackPreviews] = useState<Record<string, Puzzle>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
 
     async function load() {
       const results: Record<string, Puzzle> = {};
@@ -48,7 +50,10 @@ export function usePackPreviews(
           }
         }),
       );
-      if (!cancelled) setPackPreviews(results);
+      if (!cancelled) {
+        setPackPreviews(results);
+        setIsLoading(false);
+      }
     }
 
     load();
@@ -57,5 +62,5 @@ export function usePackPreviews(
     };
   }, [packCatalog]);
 
-  return packPreviews;
+  return { packPreviews, isLoading };
 }

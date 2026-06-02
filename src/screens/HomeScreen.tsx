@@ -28,6 +28,7 @@ import {
 } from '../utils/streakDate';
 import { useAuthStore } from '../stores/authStore';
 import { startupTimer } from '../utils/startupTimer';
+import { FauxSplash } from '../components/FauxSplash';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { PackCard } from '../components/PackCard';
 import { useProductPrice } from '../hooks/useProductPrice';
@@ -130,17 +131,45 @@ export function HomeScreen({
   }, [packCatalog]);
 
   // Thumbnail puzzle previews for every pack (today's for streaks, first puzzle for library).
-  const packPreviews = usePackPreviews(packCatalog);
+  const { packPreviews, isLoading: isPackPreviewsLoading } = usePackPreviews(packCatalog);
 
   // Completion state: today's streak puzzle IDs and solved counts per library pack.
   // Reloads on screen focus so numbers update after the user solves a puzzle.
-  const { completedPuzzleIds, completedPerPack } = useCompletionData(
+  const { completedPuzzleIds, completedPerPack, isLoading: isProgressLoading } = useCompletionData(
     packCatalog,
     userId,
   );
 
   // Live streak rows from PowerSync — updates reactively as data syncs.
-  const streaks = useStreakRows(userId);
+  const { streaks, isLoading: isStreaksLoading } = useStreakRows(userId);
+
+  // Faux splash: keeps a visual match to the native bootsplash visible until
+  // all critical data is ready, preventing a flash of empty/unloaded UI.
+  // Starts true so the overlay is present from the very first render.
+  const [fauxSplashVisible, setFauxSplashVisible] = useState(true);
+
+  useEffect(() => {
+    const allLoaded =
+      packCatalog.length > 0 &&
+      !isPackPreviewsLoading &&
+      !isStreaksLoading &&
+      !isProgressLoading;
+    if (allLoaded) setFauxSplashVisible(false);
+  }, [packCatalog.length, isPackPreviewsLoading, isStreaksLoading, isProgressLoading]);
+
+  useEffect(() => {
+    // Safety ceiling: dismiss the faux splash after 10 s regardless of load state.
+    //
+    // Tradeoff: the App-level gate already consumed up to 8 s (streak packs +
+    // pack catalog). The faux splash primarily covers library-pack preview
+    // downloads that couldn't be warmed before HomeScreen mounted. On a slow
+    // cold-cache connection those can still lag. 10 s gives a generous window
+    // before accepting a partially-loaded screen — the alternative (hanging
+    // indefinitely while downloads stall) is a worse user experience than
+    // revealing skeleton cards.
+    const timer = setTimeout(() => setFauxSplashVisible(false), 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -168,6 +197,8 @@ export function HomeScreen({
           </CircleButton>
         </View>
       </View>
+
+      <FauxSplash visible={fauxSplashVisible} />
 
       <ScrollView
         onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
