@@ -26,21 +26,14 @@ interface AdaptyEvent {
   access_level_id: string | null;
 }
 
+// Postgres column types: is_premium boolean, owned_pack_ids text[]. supabase-js
+// returns/accepts these as native JS boolean and array (not the 1/0 + JSON-string
+// representation PowerSync syncs down to the client's SQLite).
 interface EntitlementRow {
   user_id: string;
-  is_premium: number;
+  is_premium: boolean;
   premium_purchased_at: string | null;
-  owned_pack_ids: string | null;
-}
-
-function parseOwned(value: string | null): string[] {
-  if (!value) return [];
-  try {
-    const parsed: unknown = JSON.parse(value);
-    return Array.isArray(parsed) ? (parsed as string[]) : [];
-  } catch {
-    return [];
-  }
+  owned_pack_ids: string[] | null;
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -50,6 +43,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const event = (await req.json()) as AdaptyEvent;
+  console.log(
+    `[adapty-webhook] ${event.event_type} user=${event.customer_user_id} product=${event.vendor_product_id}`,
+  );
+
   const userId = event.customer_user_id;
   if (!userId) {
     return new Response(JSON.stringify({ ok: true, skipped: 'anonymous' }), { status: 200 });
@@ -61,8 +58,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     .eq('user_id', userId)
     .maybeSingle<EntitlementRow>();
 
-  const owned = parseOwned(row?.owned_pack_ids ?? null);
-  let isPremium = row?.is_premium === 1;
+  const owned: string[] = row && Array.isArray(row.owned_pack_ids) ? row.owned_pack_ids : [];
+  let isPremium = row?.is_premium === true;
 
   const vendorProductId = event.vendor_product_id ?? '';
   const grantsPremium =
@@ -85,14 +82,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const { error } = await admin.from('user_entitlements').upsert(
     {
       user_id: userId,
-      is_premium: isPremium ? 1 : 0,
-      owned_pack_ids: JSON.stringify(owned),
+      is_premium: isPremium,
+      owned_pack_ids: owned,
       premium_purchased_at: premiumPurchasedAt,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' },
   );
   if (error) {
+    console.error('[adapty-webhook] upsert failed:', error);
     return new Response(JSON.stringify(error), { status: 500 });
   }
 
