@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppState, Linking } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -15,14 +15,12 @@ import { ADAPTY_SDK_KEY } from './src/config';
 import { getStreakPack } from './src/packs';
 import { prefetchAllCatalog } from './src/packs/prefetch';
 import { supabase } from './src/supabase';
-import BootSplash from 'react-native-bootsplash';
-import type { PackCatalogItem, Entitlements } from './src/types';
+import { FauxSplash } from './src/components/FauxSplash';
+import { useSplashStore } from './src/stores/splashStore';
+import type { PackCatalogItem } from './src/types';
 
-function runTieredPrefetch(
-  catalog: PackCatalogItem[],
-  entitlements: Entitlements,
-): void {
-  prefetchAllCatalog(catalog, entitlements).catch(() => {});
+function runTieredPrefetch(catalog: PackCatalogItem[]): void {
+  prefetchAllCatalog(catalog).catch(() => {});
 }
 
 export default function App() {
@@ -31,6 +29,8 @@ export default function App() {
   }, []);
 
   const theme = useTheme();
+  const homeReady = useSplashStore(s => s.homeReady);
+  const [splashVisible, setSplashVisible] = useState(true);
 
   useEffect(() => {
     startupTimer.log('setup effect start');
@@ -46,43 +46,24 @@ export default function App() {
     startupTimer.log('auth initialize called');
     const authReady = useAuthStore.getState().initialize();
 
-    // Warm streak + pack caches before HomeScreen mounts.
-    // Gate the splash on streak packs so HomeScreen renders fully populated on reveal.
-    const streakReady = authReady.then(() =>
-      Promise.all([
-        getStreakPack('daily'),
-        getStreakPack('weekly'),
-        getStreakPack('monthly'),
-      ]),
+    // Warm streak packs so HomeScreen's previews are cached when it mounts.
+    authReady
+      .then(() =>
+        Promise.all([
+          getStreakPack('daily'),
+          getStreakPack('weekly'),
+          getStreakPack('monthly'),
+        ]),
+      )
+      .then(() => startupTimer.log('streak packs resolved'))
+      .catch(() => {});
+
+    // Safety ceiling: reveal the app after 10s even if first-screen data stalls.
+    // The native splash and its JS twin (FauxSplash) stay up until homeReady.
+    const splashSafetyTimer = setTimeout(
+      () => useSplashStore.getState().markHomeReady(),
+      10000,
     );
-    streakReady.then(() => startupTimer.log('streak packs resolved'));
-
-    // packCatalogReady resolves when the packs table has data we can trust:
-    //   - Warm start: db.watch fires immediately with local data → non-empty → resolve.
-    //   - Cold start: db.watch fires first with an empty local DB, then again
-    //     after PowerSync syncs. We resolve on the re-emission (firstWatchFired
-    //     guard) so we don't unblock on a stale empty result.
-    // The 8s timeout is the safety ceiling for offline or genuinely empty catalogs.
-    let packCatalogResolve!: () => void;
-    const packCatalogReady = new Promise<void>(r => {
-      packCatalogResolve = r;
-    });
-    let firstPackWatchFired = false;
-
-    let allReady = false;
-    Promise.race([
-      Promise.all([streakReady, packCatalogReady]).then(() => {
-        allReady = true;
-      }),
-      new Promise<void>(resolve => setTimeout(resolve, 8000)),
-    ])
-      .catch(() => {})
-      .then(() => {
-        startupTimer.log(
-          `splash hiding — ${allReady ? 'all ready' : '8s timeout fired'}`,
-        );
-        BootSplash.hide({ fade: true }).catch(() => {});
-      });
 
     useSettingsStore.getState().initialize();
     startupTimer.log('settings store initialized');
@@ -97,20 +78,10 @@ export default function App() {
       'SELECT id FROM packs WHERE published = 1 LIMIT 1',
       [],
       {
-        onResult: async result => {
-          const hasData = (result.rows?._array ?? []).length > 0;
-          if (hasData || firstPackWatchFired) {
-            // Resolve on the first non-empty emission (warm start) or on any
-            // re-emission after the first (cold start: first was empty local
-            // data, this one is post-sync). Either way the catalog is now as
-            // populated as it's going to be at launch time.
-            packCatalogResolve();
-          }
-          firstPackWatchFired = true;
-
+        onResult: async () => {
           await useEntitlementsStore.getState().loadPackCatalog();
-          const { packCatalog, entitlements } = useEntitlementsStore.getState();
-          runTieredPrefetch(packCatalog, entitlements);
+          const { packCatalog } = useEntitlementsStore.getState();
+          runTieredPrefetch(packCatalog);
         },
       },
       { signal: watchController.signal },
@@ -149,7 +120,7 @@ export default function App() {
           id => !prevState.entitlements.ownedPackIds.includes(id),
         );
         if (becamePremium || newOwnedPacks.length > 0) {
-          runTieredPrefetch(packCatalog, state.entitlements);
+          runTieredPrefetch(packCatalog);
         }
       },
     );
@@ -160,8 +131,8 @@ export default function App() {
     const appStateSub = AppState.addEventListener('change', async nextState => {
       if (nextState === 'active') {
         await supabase.auth.refreshSession();
-        const { packCatalog, entitlements } = useEntitlementsStore.getState();
-        runTieredPrefetch(packCatalog, entitlements);
+        const { packCatalog } = useEntitlementsStore.getState();
+        runTieredPrefetch(packCatalog);
       }
     });
 
@@ -172,6 +143,7 @@ export default function App() {
     });
 
     return () => {
+      clearTimeout(splashSafetyTimer);
       authUnsub();
       entitlementsUnsub();
       watchController.abort();
@@ -190,6 +162,9 @@ export default function App() {
       <SafeAreaProvider>
         <Navigation />
       </SafeAreaProvider>
+      {splashVisible && (
+        <FauxSplash ready={homeReady} onHidden={() => setSplashVisible(false)} />
+      )}
     </GestureHandlerRootView>
   );
 }

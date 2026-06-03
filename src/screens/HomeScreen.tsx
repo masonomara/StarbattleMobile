@@ -28,7 +28,7 @@ import {
 } from '../utils/streakDate';
 import { useAuthStore } from '../stores/authStore';
 import { startupTimer } from '../utils/startupTimer';
-import { FauxSplash } from '../components/FauxSplash';
+import { useSplashStore } from '../stores/splashStore';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { PackCard } from '../components/PackCard';
 import { useProductPrice } from '../hooks/useProductPrice';
@@ -37,6 +37,7 @@ import type {
   PackCatalogItem,
   Puzzle,
   RootStackParamList,
+  StreakType,
 } from '../types';
 import { SCREEN_HEADER_HEIGHT } from '../layout';
 
@@ -86,7 +87,7 @@ function PaidPackRow({
 function getStreakLabel(
   isCompleted: boolean,
   streakCount: number,
-  type: string,
+  type: StreakType,
   packName: string,
 ): string {
   if (isCompleted && streakCount > 0)
@@ -143,31 +144,32 @@ export function HomeScreen({
   // Live streak rows from PowerSync — updates reactively as data syncs.
   const { streaks, isLoading: isStreaksLoading } = useStreakRows(userId);
 
-  // Faux splash: keeps a visual match to the native bootsplash visible until
-  // all critical data is ready, preventing a flash of empty/unloaded UI.
-  // Starts true so the overlay is present from the very first render.
-  const [fauxSplashVisible, setFauxSplashVisible] = useState(true);
-
+  // Signal the App-level FauxSplash to reveal once all first-screen data is
+  // ready. The overlay lives above the navigator (App.tsx) so it covers the
+  // navigator's async native mount without a white flash.
   useEffect(() => {
     const allLoaded =
       packCatalog.length > 0 &&
       !isPackPreviewsLoading &&
       !isStreaksLoading &&
       !isProgressLoading;
-    if (allLoaded) setFauxSplashVisible(false);
+    if (!allLoaded) return;
+    // Reveal only once the screen has stayed loaded for a beat. The pack catalog
+    // grows as PowerSync syncs, which reloads previews; revealing on the first
+    // transient "loaded" pops late packs in after the splash lifts (layout shift).
+    // Any dep change re-runs this effect and resets the timer.
+    const timer = setTimeout(() => {
+      useSplashStore.getState().markHomeReady();
+    }, 400);
+    return () => clearTimeout(timer);
   }, [packCatalog.length, isPackPreviewsLoading, isStreaksLoading, isProgressLoading]);
 
   useEffect(() => {
-    // Safety ceiling: dismiss the faux splash after 10 s regardless of load state.
-    //
-    // Tradeoff: the App-level gate already consumed up to 8 s (streak packs +
-    // pack catalog). The faux splash primarily covers library-pack preview
-    // downloads that couldn't be warmed before HomeScreen mounted. On a slow
-    // cold-cache connection those can still lag. 10 s gives a generous window
-    // before accepting a partially-loaded screen — the alternative (hanging
-    // indefinitely while downloads stall) is a worse user experience than
-    // revealing skeleton cards.
-    const timer = setTimeout(() => setFauxSplashVisible(false), 10000);
+    // Safety ceiling: reveal after 10 s regardless of load state so a stalled
+    // download can't hang the splash indefinitely.
+    const timer = setTimeout(() => {
+      useSplashStore.getState().markHomeReady();
+    }, 10000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -198,7 +200,6 @@ export function HomeScreen({
         </View>
       </View>
 
-      <FauxSplash visible={fauxSplashVisible} />
 
       <ScrollView
         onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
