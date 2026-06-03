@@ -15,6 +15,96 @@
 
 ---
 
+## Status snapshot (2026-06-03)
+
+**Code & infra: all implementable work is done. `tsc` is at 0 errors. Nothing is
+committed — all changes sit in the working tree.**
+
+| Phase | Code/infra | What's left (you) |
+|-------|-----------|-------------------|
+| 0 — Backend | ✅ Done + **deployed to prod** (migrations applied, both edge functions ACTIVE, webhook secret set) | Verify Adapty webhook URL carries the secret (Phase 4) |
+| 1 — Auth | ✅ Code done; config.toml pushed (anonymous, redirects, email confirm) | **Supabase dashboard:** enable Apple + Google providers; **custom SMTP** |
+| 2 — Website | ✅ Privacy + Terms written, build passes | **Deploy** (push to your GitHub→Vercel); set App Store URL later |
+| 3 — Splash | ✅ Done — white flash + layout shift fixed, diagnostics stripped | Nothing (rebuild bakes in the cleanup) |
+| 4 — Payments | ✅ Code done (`.p8` untracked, prefetch tidy) | **App Store Connect** IAPs; **Adapty** products/paywall/webhook; **rotate `.p8`**; create 3 test packs |
+| 5 — Native cfg | ✅ Done (export-compliance, Android deep link + `applicationId`, privacy manifest verified) | Build-number bumps; 1024 icon; (Android-only) release keystore + OAuth SHA |
+
+**The one true launch-blocker left:** Supabase **custom SMTP** (built-in mailer is
+rate-limited, so email confirm / password reset won't work for testers). Everything
+else for a first TestFlight build is either done or a store/dashboard step below.
+
+---
+
+## 📋 What you need to do (by console)
+
+**🔴 Supabase Dashboard → Auth** (the real blocker)
+- **Configure custom SMTP** — without it, email confirmation & password reset silently fail for testers. *This is the #1 thing.*
+- Enable **Apple** provider (add bundle id `com.omaratechnologydesign.starbattle` to Client IDs).
+- Enable **Google** provider (add web + iOS client IDs to Authorized Client IDs).
+
+**🔴 App Store Connect**
+- Create IAPs: `sb_premium_599` (non-consumable) + one `starbattle_pack_<id>` per pack.
+- Create a Sandbox tester.
+- Bump the **build number** before each upload; confirm the 1024 marketing icon.
+- Privacy labels, age rating, screenshots.
+
+**🔴 Adapty Dashboard**
+- Add the App Store products; set the `premium` access level; build the `main_paywall`.
+- Point the webhook at `https://zvqdcrszalxmgtmcnevg.supabase.co/functions/v1/adapty-webhook?secret=6c546e1c0860af43b73763e8f64d228866586f4e51fd1f43`.
+- Upload the App Store API `.p8`.
+
+**🟡 Security / housekeeping**
+- **Rotate** the App Store `.p8` key (it was in git history; I untracked it but history remains).
+- **Deploy the website** (push the `starbattlefree-website` repo to your GitHub→Vercel). *(The app code is already committed on `testflight`.)*
+
+**🟡 Test packs** — generate 3 with your tool (e.g. 8×8 Expert $1.99, 10×10 Challenge $2.99, 14×14 Marathon $3.99) → upload JSON+hints to the `packs` bucket → run the catalog `INSERT` (SQL in §4.4) → match the App Store product ids.
+
+### 🧪 What needs testing (on a physical device)
+**Auth flows** (after SMTP is set):
+- Anon progress → sign up with email → confirm via link → still signed in, data intact
+- Anon → Google → progress merges; same for Apple
+- Email sign-in to an existing account (keep-best merge, no dup rows)
+- Forgot password (cold + warm deep link) → reset → sign in
+- Sign out → back to anon; Delete account → gone server-side
+- Offline sign-in → blocked with a clear message (not data loss)
+
+**Payments (sandbox):**
+- Buy premium → all packs unlock → `user_entitlements.is_premium` flips via webhook → reinstall → Restore → premium returns
+- Buy a single pack → downloads + playable → `owned_pack_ids` updated → persists after reinstall
+
+**Splash / launch:** confirm on a clean **Release** build (delete app first) — no flash, no layout shift.
+
+**Plus** the 10-step manual pass already in `TESTFLIGHT_LAUNCH.md`.
+
+### Suggested order
+1. Supabase **SMTP** + providers → run the **auth test matrix**.
+2. App Store Connect IAPs + Adapty + webhook → create test packs → **sandbox purchase tests**.
+3. Website deploy; rotate `.p8`.
+4. Bump build number → archive **Release** → upload to TestFlight → add testers.
+
+---
+
+## Session commit log (branch `testflight`)
+
+This session's work, in order (most recent last). All on the `testflight` branch;
+nothing pushed.
+
+| Commit | What |
+|--------|------|
+| `2aff5cf` | feat(backend): Supabase migrations + both edge functions deployed (Phase 0) |
+| `932809f` | Supabase auth config pushed — anonymous on, redirect URLs, email confirmation; `authStore` deep-link handling (Phase 1) |
+| `b78d649` / `d22ef33` | docs: `research.md` + `plan.md` |
+| `ea5f4ad` | fix: PowerSync connector fatal-upload error logging scope (type fix) |
+| `1133721` | chore(native): iOS export-compliance key, Android `starbattle://` deep link + `applicationId` rename, untrack App Store `.p8` |
+| `f1ed996` | fix(splash): `@objc` bootsplash fix + `useHideAnimation` — white flash & layout shift resolved |
+| _(this commit)_ | docs: plan status snapshot + this commit log |
+
+**Not committed here:** the website (Privacy/Terms pages) lives in the separate
+`starbattlefree-website` repo — deploy it from there. The App Store `.p8` is untracked
+but remains in git history; **rotate it**.
+
+---
+
 ## Phase 0 — Put the backend in version control and deploy it (P0, do first)
 
 **Problem:** No `supabase/` directory exists. `authStore.ts` calls
@@ -669,24 +759,53 @@ You (Google Cloud Console):
 - [x] 💻 iOS client reversed-id matches `Info.plist` (verified in repo)
 - [ ] 👤 Confirm the **Web** + **iOS** OAuth clients still exist and are not deleted/restricted
 
-### Phase 2 — Website legal pages
+### Phase 2 — Website legal pages — code done; deploy is yours (2026-06-02)
 
 CLI / repo (`~/Documents/starbattlefree-website`):
-- [ ] 💻 Fill `app/privacy-policy/page.tsx` from `docs/privacy-policy.md`
-- [ ] 💻 Fill `app/terms-and-conditions/page.tsx` from `docs/terms-of-use.md`
-- [ ] 💻 Set `APP_STORE_URL` in `app/page.tsx` (after listing exists — can defer)
-- [ ] 💻 `npm run build`, commit, push
+- [x] 💻 Filled `app/privacy-policy/page.tsx` from `docs/privacy-policy.md` (full content + tables)
+- [x] 💻 Filled `app/terms-and-conditions/page.tsx` from `docs/terms-of-use.md` (titled "Terms of Use")
+- [x] 💻 Added table styles to `app/globals.css` (`.prose-body` had no table rules)
+- [x] 💻 `npm run build` — passes, all 11 static pages generated incl. both legal routes
+- [ ] 💻 Set `APP_STORE_URL` in `app/page.tsx` — deferred until the listing exists
+- [ ] 👤 **Deploy:** this local clone has **no git remote** — push to your GitHub/Vercel
+  pipeline (the site deploys from a repo not wired to this clone). Working-tree changes
+  are staged for you; not committed (the repo has other uncommitted work).
 
 You (Vercel):
-- [ ] 👤 Confirm auto-deploy succeeded and the 3 URLs resolve to real content
+- [ ] 👤 Confirm deploy succeeded and the 3 URLs resolve to the real content
 
-### Phase 3 — Splash screen parity
+### Phase 3 — Splash screen parity ✅ code done (2026-06-02)
+
+> The source image had been moved to `assets/splashlogo.png`; the generate command
+> was run against that path. The regen also exposed that `FauxSplash` still
+> `require`d the old root `../../splashlogo.png` (now missing) — fixed to
+> `../../assets/splashlogo.png`, which would otherwise have broken the bundle.
 
 CLI / repo:
-- [ ] 💻 Run `npx react-native-bootsplash generate splashlogo.png --background=000000
-  --logo-width=320 --assets-output=assets/bootsplash` (§3.1)
-- [ ] 💻 `cd ios && pod install`
-- [ ] 💻 Pin `FauxSplash.tsx` logo width to match `--logo-width` (§3.2)
+- [x] 💻 `npx react-native-bootsplash generate assets/splashlogo.png --platforms=android,ios
+  --background=000000 --logo-width=320 --assets-output=assets/bootsplash` — native bg now
+  black, logo is `splashlogo.png` (320×151); old `-cfef86` assets removed by the CLI
+- [x] 💻 Fixed `FauxSplash.tsx` require path → `../../assets/splashlogo.png` and pinned the
+  logo to exactly `320×151`pt (the native `BootSplashLogo` asset's dimensions, aspect-fit) so
+  the native → faux handoff is pixel-identical with no resize/position shift
+- [x] 💻 Fixed the **white flash** before the faux splash. **Root cause:** the generated
+  `AppDelegate.swift` declared `func customizeRootView(_:)` **without `@objc`**; the superclass
+  satisfies that protocol method with a default impl invisible to Swift, so the method was never
+  registered with the ObjC runtime and RN's `[delegate customizeRootView:]` never reached it —
+  meaning **`RNBootSplash.initWithStoryboard(...)` never ran and the native splash was never
+  held.** The "splash" was only ever the JS twin, with an unbridged ~50ms white gap at launch.
+  Fix: mark it `@objc` (no `override`/`super` — Swift can't see the base method). Confirmed via
+  `BootSplash.isVisible()===true`. Splash architecture: `FauxSplash` is a `BootSplash.useHideAnimation()`
+  JS twin (pixel-matched via `manifest.json` + `logo.png`), rendered above the navigator in
+  `App.tsx`; the hook hides the native splash only after the twin lays out, then cross-fades.
+  Reveal gated on `splashStore.homeReady`. Also: `AppDelegate` sets window + rootVC.view + rootView
+  backgrounds black (defensive); manual `BootSplash.hide()` + 8s race removed from `App.tsx`.
+- [x] 💻 Fixed the post-splash **layout shift**: `markHomeReady` now waits for the screen to stay
+  loaded for 400ms (debounced) before revealing, so late-syncing packs don't pop in after the
+  splash lifts. Native `AppDelegate` change needs a **clean rebuild + app delete**.
+- [ ] 💻 `pod install` — **not needed** (asset-catalog regen only; no CocoaPods change)
+- [ ] 👤 Android note: the wide logo exceeds Android's 192dp splash limit, so Android shows
+  the black background only (no logo). Fine for iOS-first TestFlight; revisit for Android.
 
 Test:
 - [ ] 🧪 Cold-launch Release on device: no color change, no logo resize at handoff
@@ -711,10 +830,13 @@ You (Adapty Dashboard):
   enable purchase/access events
 - [ ] 👤 Confirm the webhook `event_type` strings match those handled in §0.6
 
-CLI / repo:
-- [ ] 💻 `git rm --cached docs/SubscriptionKey_5M2LWM6WJA.p8`; add `docs/*.p8` to
-  `.gitignore`; commit
-- [ ] 💻 Tidy `prefetchAllCatalog` call-site in `App.tsx` (drop 2nd arg, §4.5)
+CLI / repo (DONE 2026-06-02):
+- [x] 💻 `git rm --cached docs/SubscriptionKey_5M2LWM6WJA.p8` (still on disk for Adapty
+  upload); added `*.p8` to `.gitignore` (`git check-ignore` confirms)
+- [ ] 👤 **Rotate the key** — `git rm --cached` does not purge it from git *history*. Since
+  it was already committed, revoke the old App Store Connect API key and issue a new one.
+- [x] 💻 Tidied `prefetchAllCatalog` call-site in `App.tsx` (dropped 2nd arg + unused
+  `Entitlements` import; fixed the `Expected 1 arguments, but got 2` typecheck error, §4.5)
 
 You (puzzle generator) + Supabase:
 - [ ] 👤 Generate the 3 pack JSONs (+ hints) in the required shape (§4.4)
@@ -727,6 +849,44 @@ Test (sandbox):
   reinstall → Restore → premium returns
 - [ ] 🧪 Buy a single pack → downloads + playable → `owned_pack_ids` updated →
   reinstall → Restore/sync → still owned
+
+### Phase 5 — Native configuration audit (2026-06-02)
+
+Already correct (no action): `PrivacyInfo.xcprivacy` is complete and in the build
+target (required-reason APIs + collected data types, non-tracking); ATS secure
+(`NSAllowsArbitraryLoads=false`); Sign in with Apple entitlement; AppIcon set;
+Android `INTERNET` permission; `allowBackup=false`.
+
+Done this session:
+- [x] 💻 iOS: added `ITSAppUsesNonExemptEncryption = false` to `Info.plist` — removes
+  the "Missing Compliance" prompt on every TestFlight upload (app uses only standard
+  HTTPS/TLS, which is export-exempt). Validated with `plutil -lint`.
+- [x] 💻 Android: added the `starbattle://` deep-link intent-filter to
+  `AndroidManifest.xml` (VIEW + DEFAULT + BROWSABLE) so password-reset deep links open
+  the app on Android, mirroring the iOS URL scheme. Validated as well-formed XML.
+- [x] 💻 Android: renamed `applicationId` **and** `namespace` from the default
+  `com.starbattlemobile` to `com.omaratechnologydesign.starbattle` (matches the iOS bundle):
+  updated `build.gradle`, moved the Kotlin source to
+  `java/com/omaratechnologydesign/starbattle/`, and updated both `package` declarations.
+  `AndroidManifest` uses relative `.MainActivity`/`.MainApplication`, so it needed no change.
+  No stray `com.starbattlemobile` references remain. (Run a clean Android build to regenerate
+  `BuildConfig`/`R` under the new namespace.)
+- [x] 💻 Fixed the 5 remaining pre-existing typecheck errors (out-of-plan): `Connector.ts`
+  now tracks `lastOp` for fatal-error logging (was referencing the loop var `op` out of
+  scope); `HomeScreen.getStreakLabel` takes `StreakType` instead of `string`. **`tsc` is now
+  at 0 errors.**
+
+You (iOS, App Store Connect / Xcode):
+- [ ] 👤 Increment `CURRENT_PROJECT_VERSION` (build number) on **every** TestFlight upload
+  (currently `1`; `MARKETING_VERSION` is `1.0`).
+- [ ] 👤 Confirm the `AppIcon` set includes the 1024×1024 App Store marketing icon.
+
+You (Android — lower priority, iOS-first; not needed for TestFlight):
+- [ ] 👤 Register the Android OAuth client for the new package
+  `com.omaratechnologydesign.starbattle` + the release keystore's **SHA-1/SHA-256** in Google
+  Cloud Console (the `applicationId` rename above is done; this is the coordinated half).
+- [ ] 👤 Create a real **release keystore** + signing config (release currently signs with
+  the debug keystore).
 
 ### Final verification & ship
 
