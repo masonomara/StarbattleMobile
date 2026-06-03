@@ -471,7 +471,7 @@ You already have the content in the app repo: `docs/privacy-policy.md` and
 export const dynamic = 'force-static';
 export const metadata = {
   title: 'Privacy Policy',
-  alternates: { canonical: 'https://starbattlefree.app/privacy-policy' },
+  alternates: { canonical: 'https://starbattlefree.com/privacy-policy' },
 };
 
 export default function PrivacyPolicy() {

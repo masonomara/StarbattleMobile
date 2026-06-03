@@ -122,9 +122,9 @@ These are not in the repo and you must confirm them in the Supabase dashboard:
 
 ---
 
-## 3. Goal 2 — Website (starbattlefree.app)
+## 3. Goal 2 — Website (starbattlefree.com)
 
-The location is `~/Documents/starbattlefree-website` and it is a separate git repo. Next.js App Router and Tailwind v4. It is statically exported by `output: 'export'` to `./out` and deployed on Vercel at `starbattlefree.app`.
+The location is `~/Documents/starbattlefree-website` and it is a separate git repo. Next.js App Router and Tailwind v4. It is statically exported by `output: 'export'` to `./out` and deployed on Vercel at `starbattlefree.com`.
 
 The routes that exist and are built in `out/`:
 - `/` the homepage and linktree. The icon and the store badges and the footer links.
@@ -133,9 +133,9 @@ The routes that exist and are built in `out/`:
 - `/credits`
 
 The app links to these exact URLs in `src/config.ts`:
-- `PRIVACY_POLICY_URL = https://starbattlefree.app/privacy-policy`
-- `TERMS_URL = https://starbattlefree.app/terms-and-conditions`
-- `CREDITS_URL = https://starbattlefree.app/credits`
+- `PRIVACY_POLICY_URL = https://starbattlefree.com/privacy-policy`
+- `TERMS_URL = https://starbattlefree.com/terms-and-conditions`
+- `CREDITS_URL = https://starbattlefree.com/credits`
 
 These show in the paywall and per the original SettingsModal in the legal section. The routes match the config and that is good.
 
