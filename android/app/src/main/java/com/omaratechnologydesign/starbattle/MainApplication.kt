@@ -1,4 +1,4 @@
-package com.starbattlemobile
+package com.omaratechnologydesign.starbattle
 
 import android.app.Application
 import com.facebook.react.PackageList

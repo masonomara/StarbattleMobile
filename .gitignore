@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Signing / API keys — never commit
+*.p8
+
 # OSX
 #
 .DS_Store
