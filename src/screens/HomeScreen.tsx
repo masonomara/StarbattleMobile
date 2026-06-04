@@ -164,15 +164,6 @@ export function HomeScreen({
     return () => clearTimeout(timer);
   }, [packCatalog.length, isPackPreviewsLoading, isStreaksLoading, isProgressLoading]);
 
-  useEffect(() => {
-    // Safety ceiling: reveal after 10 s regardless of load state so a stalled
-    // download can't hang the splash indefinitely.
-    const timer = setTimeout(() => {
-      useSplashStore.getState().markHomeReady();
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <View style={styles.container}>
       {/* Floating header — shows a bottom border once the user has scrolled */}
