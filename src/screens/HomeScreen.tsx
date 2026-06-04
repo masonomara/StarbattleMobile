@@ -139,14 +139,16 @@ export function HomeScreen({
   }, [packCatalog]);
 
   // Thumbnail puzzle previews for every pack (today's for streaks, first puzzle for library).
-  const { packPreviews, isLoading: isPackPreviewsLoading } = usePackPreviews(packCatalog);
+  const { packPreviews, isLoading: isPackPreviewsLoading } =
+    usePackPreviews(packCatalog);
 
   // Completion state: today's streak puzzle IDs and solved counts per library pack.
   // Reloads on screen focus so numbers update after the user solves a puzzle.
-  const { completedPuzzleIds, completedPerPack, isLoading: isProgressLoading } = useCompletionData(
-    packCatalog,
-    userId,
-  );
+  const {
+    completedPuzzleIds,
+    completedPerPack,
+    isLoading: isProgressLoading,
+  } = useCompletionData(packCatalog, userId);
 
   // Live streak rows from PowerSync — updates reactively as data syncs.
   const { streaks, isLoading: isStreaksLoading } = useStreakRows(userId);
@@ -174,7 +176,12 @@ export function HomeScreen({
     // way streak cards and completion counts are populated before reveal, never
     // popped in after. Then hold a beat in case the in-flight sync is still
     // appending packs. Any dep change re-runs this effect and resets the timer.
-    if (!userId || packCatalog.length === 0 || !previewsLoaded || !userDataLoaded)
+    if (
+      !userId ||
+      packCatalog.length === 0 ||
+      !previewsLoaded ||
+      !userDataLoaded
+    )
       return;
     const timer = setTimeout(() => {
       useSplashStore.getState().markHomeReady();
@@ -215,7 +222,6 @@ export function HomeScreen({
           </CircleButton>
         </View>
       </View>
-
 
       <ScrollView
         onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
@@ -380,11 +386,11 @@ const createStyles = (
     },
     appTitle: {
       fontSize: 25,
+      letterSpacing: -0.25,
       lineHeight: 28,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       color: theme.text,
-      letterSpacing: -0.42,
     },
     headerRight: {
       flexDirection: 'row',
@@ -422,7 +428,7 @@ const createStyles = (
       fontSize: 33,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
-      letterSpacing: -0.42,
+      letterSpacing: -0.33,
       textTransform: 'capitalize',
       marginTop: 16,
     },
@@ -453,7 +459,7 @@ const createStyles = (
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       color: theme.text,
-      letterSpacing: -0.33,
+      letterSpacing: -0.25,
     },
     packPrice: {
       fontSize: theme.fontSizeCallout,

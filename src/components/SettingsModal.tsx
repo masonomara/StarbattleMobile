@@ -29,7 +29,9 @@ export function SettingsModal() {
       onRequestClose={closeSettings}
     >
       <View style={styles.container}>
-        <View style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}>
+        <View
+          style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}
+        >
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
             <Text style={styles.title}>Settings</Text>
@@ -54,15 +56,26 @@ export function SettingsModal() {
 
           <View style={styles.legalSection}>
             <View style={styles.legalLinks}>
-              <Pressable onPress={() => Linking.openURL(TERMS_URL).catch(() => {})} hitSlop={8}>
+              <Pressable
+                onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
+                hitSlop={8}
+              >
                 <Text style={styles.legalLinkText}>Terms of Use</Text>
               </Pressable>
               <Text style={styles.legalSep}>·</Text>
-              <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} hitSlop={8}>
+              <Pressable
+                onPress={() =>
+                  Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})
+                }
+                hitSlop={8}
+              >
                 <Text style={styles.legalLinkText}>Privacy Policy</Text>
               </Pressable>
               <Text style={styles.legalSep}>·</Text>
-              <Pressable onPress={() => Linking.openURL(CREDITS_URL).catch(() => {})} hitSlop={8}>
+              <Pressable
+                onPress={() => Linking.openURL(CREDITS_URL).catch(() => {})}
+                hitSlop={8}
+              >
                 <Text style={styles.legalLinkText}>Credits</Text>
               </Pressable>
             </View>
@@ -85,13 +98,23 @@ const createStyles = (theme: Theme) =>
       borderBottomColor: 'transparent',
     },
     modalHeaderBorder: { borderBottomColor: theme.border },
-    modalHeaderSide: { width: 44, alignItems: 'center', justifyContent: 'center' },
-    modalHeaderCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    modalHeaderSide: {
+      width: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalHeaderCenter: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     title: {
       color: theme.text,
       fontSize: 25,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
+      letterSpacing: -0.25,
+      lineHeight: 28,
     },
     scrollContent: {
       paddingHorizontal: 16,

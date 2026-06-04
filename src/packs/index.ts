@@ -45,8 +45,12 @@ export async function prefetchHintsFile(packId: string): Promise<void> {
   let remoteEtag: string | undefined;
   try {
     remoteEtag = await fetchPackEtag(key);
-    if (alreadyOnDisk && remoteEtag && remoteEtag === getCachedEtag(key)) return;
+    if (alreadyOnDisk && remoteEtag && remoteEtag === getCachedEtag(key)) {
+      __DEV__ && console.log(`[SB:HINTS] prefetch ${key}: up-to-date`);
+      return;
+    }
   } catch {
+    __DEV__ && console.log(`[SB:HINTS] prefetch ${key}: skipped (no etag / offline)`);
     return;
   }
 
@@ -55,6 +59,7 @@ export async function prefetchHintsFile(packId: string): Promise<void> {
     text = await fetchFromSupabase(key);
     validateHintsText(text);
   } catch {
+    __DEV__ && console.log(`[SB:HINTS] prefetch ${key}: skipped (download failed — file in bucket?)`);
     return;
   }
 
@@ -68,6 +73,7 @@ export async function prefetchHintsFile(packId: string): Promise<void> {
 
   warmHintsCache(packId, (JSON.parse(text) as HintsFile).hints);
   if (remoteEtag) setCachedEtag(key, remoteEtag);
+  __DEV__ && console.log(`[SB:HINTS] prefetch ${key}: persisted`);
 }
 
 export async function getPuzzlesForPack(

@@ -1,11 +1,21 @@
 import React from 'react';
-import { View, Pressable, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import {
+  View,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+} from 'react-native';
 import { Text } from '../Text';
 import { useAuthStore } from '../../stores/authStore';
 import { useEntitlements } from '../../hooks/useEntitlements';
 import { useProductPrice } from '../../hooks/useProductPrice';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
-import { purchasePremium, restorePurchases, PREMIUM_PRODUCT_ID } from '../../utils/payments';
+import {
+  purchasePremium,
+  restorePurchases,
+  PREMIUM_PRODUCT_ID,
+} from '../../utils/payments';
 import { useTheme } from '../../hooks/useTheme';
 import type { Theme } from '../../types';
 
@@ -20,7 +30,9 @@ export function SubscriptionSection() {
 
   if (isAnonymous) return null;
 
-  const ownedPacks = packCatalog.filter(p => entitlements.ownedPackIds.includes(p.id));
+  const ownedPacks = packCatalog.filter(p =>
+    entitlements.ownedPackIds.includes(p.id),
+  );
 
   return (
     <View style={styles.section}>
@@ -51,7 +63,9 @@ export function SubscriptionSection() {
         onPress={() => {
           let wasPremium = false;
           withLoading(
-            async () => { wasPremium = await restorePurchases(); },
+            async () => {
+              wasPremium = await restorePurchases();
+            },
             () =>
               Alert.alert(
                 'Purchases Restored',
@@ -70,7 +84,9 @@ export function SubscriptionSection() {
         <>
           <Text style={styles.subLabel}>Owned Packs</Text>
           {ownedPacks.map(p => (
-            <Text key={p.id} style={styles.ownedPackName}>{p.name}</Text>
+            <Text key={p.id} style={styles.ownedPackName}>
+              {p.name}
+            </Text>
           ))}
         </>
       )}
@@ -88,6 +104,7 @@ const createStyles = (theme: Theme) =>
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       marginBottom: 14,
+      letterSpacing: -0.2,
     },
     premiumBadge: {
       alignSelf: 'flex-start',

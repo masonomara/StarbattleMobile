@@ -29,7 +29,9 @@ export function ToggleRow({
         borderColor: theme.border,
       }}
     >
-      <Text style={{ fontSize: 17, fontWeight: '600', color: theme.text }}>{label}</Text>
+      <Text style={{ fontSize: 17, fontWeight: '600', color: theme.text }}>
+        {label}
+      </Text>
       <Switch
         value={value}
         onValueChange={onToggle}
@@ -53,17 +55,26 @@ export function GameplaySection() {
         first
         label="Auto-X Neighbors"
         value={settings.autoXNeighbors}
-        onToggle={v => { updateSettings({ autoXNeighbors: v }); recomputeAutoMarks(); }}
+        onToggle={v => {
+          updateSettings({ autoXNeighbors: v });
+          recomputeAutoMarks();
+        }}
       />
       <ToggleRow
         label="Auto-X Rows & Columns"
         value={settings.autoXRowsCols}
-        onToggle={v => { updateSettings({ autoXRowsCols: v }); recomputeAutoMarks(); }}
+        onToggle={v => {
+          updateSettings({ autoXRowsCols: v });
+          recomputeAutoMarks();
+        }}
       />
       <ToggleRow
         label="Auto-X Regions"
         value={settings.autoXRegions}
-        onToggle={v => { updateSettings({ autoXRegions: v }); recomputeAutoMarks(); }}
+        onToggle={v => {
+          updateSettings({ autoXRegions: v });
+          recomputeAutoMarks();
+        }}
       />
       <ToggleRow
         label="Highlight Errors"
@@ -88,6 +99,7 @@ const createStyles = (theme: Theme) =>
       lineHeight: 22,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
+      letterSpacing: -0.2,
       marginBottom: 14,
     },
   });

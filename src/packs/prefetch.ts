@@ -16,8 +16,11 @@ export async function prefetchAllCatalog(catalog: PackCatalogItem[]): Promise<vo
     .map(p => {
       if (hasPackAccess(p.id)) {
         // Hints ride the same prefetch as the pack — disk-cached for offline.
-        prefetchHintsFile(p.id).catch(() => {});
-        return prefetchPackFile(p.id, p.storagePath!).catch(() => {});
+        // Awaited (not fire-and-forget) so the cycle actually completes them.
+        return Promise.all([
+          prefetchHintsFile(p.id).catch(() => {}),
+          prefetchPackFile(p.id, p.storagePath!).catch(() => {}),
+        ]).then(() => {});
       }
       return cachePackPreview(p.id, p.storagePath!).catch(() => {});
     });

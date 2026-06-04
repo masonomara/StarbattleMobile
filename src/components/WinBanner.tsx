@@ -87,16 +87,23 @@ export function WinBanner({
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      <Text style={styles.winInfo}>{info} {streakType && (
-        <Text style={styles.winInfo}>
-          {/* streakType! non-null assertion: safe here because the wrapping
+      <Text style={styles.winInfo}>
+        {info}{' '}
+        {streakType && (
+          <Text style={styles.winInfo}>
+            {/* streakType! non-null assertion: safe here because the wrapping
             `{streakType && ...}` already guards against null/undefined, but
             TypeScript can't narrow through JSX text. Could rewrite as
             `{streakType ? STREAK_UNIT[streakType] : ''}` to avoid the assertion. */}
-        {streakCount > 0 ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak` : ``}
-        </Text>
-      )}</Text>
-      <Text style={styles.winText}>{`Solved in ${formatElapsedTime(timeMs)}`}</Text>
+            {streakCount > 0
+              ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak`
+              : ``}
+          </Text>
+        )}
+      </Text>
+      <Text style={styles.winText}>{`Solved in ${formatElapsedTime(
+        timeMs,
+      )}`}</Text>
 
       <Pressable onPress={handlePress} style={styles.winButton}>
         <Text style={styles.winButtonText}>{buttonLabel}</Text>
@@ -132,7 +139,6 @@ const createStyles = (theme: Theme) =>
       fontSize: 33,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: 900,
-
       letterSpacing: -0.33,
     },
     winInfo: {
@@ -158,4 +164,3 @@ const createStyles = (theme: Theme) =>
       color: theme.background,
     },
   });
-
