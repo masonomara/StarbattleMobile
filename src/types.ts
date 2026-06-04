@@ -147,6 +147,13 @@ export type HintStep = {
   marks: Coord[]; // cells that can be ruled out (should be marked)
 };
 
+// Shape of "{packId}-hints.json" in Storage. hints[i] is the deduction chain
+// for puzzles[i] in the slim pack.
+export type HintsFile = {
+  version: number;
+  hints: HintStep[][];
+};
+
 export type RawPuzzle = {
   sbn: string;
   solution: Coord[];

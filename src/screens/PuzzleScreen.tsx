@@ -61,6 +61,7 @@ export function PuzzleScreen({
     isLastPuzzle = true,
     streakType,
     puzzleIndexInPack = 0,
+    effectivePackId,
   } = packData ?? {};
 
   const theme = useTheme();
@@ -173,15 +174,22 @@ export function PuzzleScreen({
     }
   }, [packData, rawPuzzle, puzzleId, loadPuzzle, navigation]);
 
-  // Load hints after the puzzle is ready. Runs independently of pack loading
-  // so a slow hint fetch doesn't block puzzle rendering.
+  // Hints load from the disk-cached "{packId}-hints.json". setHints([]) on
+  // failure clears hintsLoading so the toolbar spinner never hangs.
   useEffect(() => {
-    if (!isReady || !packData) return;
-    const { effectivePackId, puzzleIndexInPack: idx } = packData;
+    if (!isReady || !effectivePackId) return;
+    let cancelled = false;
     loadPackHints(effectivePackId)
-      .then(allHints => setHints(allHints[idx] ?? []))
-      .catch(() => setHints([]));
-  }, [isReady, packData, setHints]);
+      .then(all => {
+        if (!cancelled) setHints(all[puzzleIndexInPack] ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setHints([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isReady, effectivePackId, puzzleIndexInPack, setHints]);
 
   // Save progress when the user navigates away. The `finally` ensures the
   // navigation action always dispatches even if the save fails.

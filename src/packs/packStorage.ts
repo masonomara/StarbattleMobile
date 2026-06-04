@@ -1,6 +1,6 @@
 import { NativeModules } from 'react-native';
 import type * as RNFSType from 'react-native-fs';
-import type { Pack } from '../types';
+import type { Pack, HintsFile } from '../types';
 
 export function getRNFS(): typeof RNFSType | null {
   if (!NativeModules.RNFSManager) return null;
@@ -31,4 +31,8 @@ export function encodeForDisk(text: string): string {
 
 export function decodeFromDisk(text: string): Pack {
   return JSON.parse(text) as Pack;
+}
+
+export function decodeHintsFromDisk(text: string): HintsFile {
+  return JSON.parse(text) as HintsFile;
 }

@@ -13,7 +13,7 @@ import { PowerSyncContext } from '@powersync/react-native';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
-import { getStreakPack } from './src/packs';
+import { getStreakPack, loadPackHints } from './src/packs';
 import { prefetchAllCatalog } from './src/packs/prefetch';
 import { supabase } from './src/supabase';
 import { FauxSplash } from './src/components/FauxSplash';
@@ -54,6 +54,9 @@ export default function App() {
           getStreakPack('daily'),
           getStreakPack('weekly'),
           getStreakPack('monthly'),
+          loadPackHints('daily').catch(() => []),
+          loadPackHints('weekly').catch(() => []),
+          loadPackHints('monthly').catch(() => []),
         ]),
       )
       .then(() => startupTimer.log('streak packs resolved'))

@@ -1,8 +1,9 @@
-import type { RawPuzzle, Pack, StreakType, HintStep } from '../types';
+import type { RawPuzzle, Pack, StreakType, HintStep, HintsFile } from '../types';
 import { getRNFS, assertSafeKey, encodeForDisk } from './packStorage';
 import {
   fetchFromSupabase,
   validatePackText,
+  validateHintsText,
   fetchPackEtag,
   getCachedEtag,
   setCachedEtag,
@@ -12,6 +13,8 @@ import {
   loadPackHints as _loadPackHints,
   warmPackCache,
   hasPackCacheEntry,
+  warmHintsCache,
+  hasHintsCacheEntry,
 } from './packCache';
 
 const PREVIEW_PUZZLE_COUNT = 1;
@@ -20,10 +23,51 @@ export function loadPackHints(packId: string): Promise<HintStep[][]> {
   return _loadPackHints(packId);
 }
 
-export function prefetchHintsFile(packId: string): Promise<void> {
-  return _loadPackHints(packId)
-    .then(() => {})
-    .catch(() => {});
+// ETag-aware background prefetch of "{packId}-hints.json" to disk; mirrors
+// prefetchPackFile.
+export async function prefetchHintsFile(packId: string): Promise<void> {
+  assertSafeKey(packId);
+  const key = `${packId}-hints.json`;
+  const rnfs = getRNFS();
+
+  let alreadyOnDisk = false;
+  if (rnfs) {
+    try {
+      await rnfs.stat(`${rnfs.DocumentDirectoryPath}/packs/${key}`);
+      alreadyOnDisk = true;
+    } catch {
+      // not on disk
+    }
+  } else if (hasHintsCacheEntry(packId)) {
+    return;
+  }
+
+  let remoteEtag: string | undefined;
+  try {
+    remoteEtag = await fetchPackEtag(key);
+    if (alreadyOnDisk && remoteEtag && remoteEtag === getCachedEtag(key)) return;
+  } catch {
+    return;
+  }
+
+  let text: string;
+  try {
+    text = await fetchFromSupabase(key);
+    validateHintsText(text);
+  } catch {
+    return;
+  }
+
+  if (rnfs) {
+    const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+    await rnfs.mkdir(packDir).catch(() => {});
+    await rnfs
+      .writeFile(`${packDir}/${key}`, encodeForDisk(text), 'utf8')
+      .catch(() => {});
+  }
+
+  warmHintsCache(packId, (JSON.parse(text) as HintsFile).hints);
+  if (remoteEtag) setCachedEtag(key, remoteEtag);
 }
 
 export async function getPuzzlesForPack(
