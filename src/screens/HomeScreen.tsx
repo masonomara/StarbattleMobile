@@ -28,6 +28,7 @@ import {
 } from '../utils/streakDate';
 import { useAuthStore } from '../stores/authStore';
 import { startupTimer } from '../utils/startupTimer';
+import { useStatus } from '@powersync/react-native';
 import { useSplashStore } from '../stores/splashStore';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { PackCard } from '../components/PackCard';
@@ -110,6 +111,12 @@ export function HomeScreen({
 
   const [scrolled, setScrolled] = useState(false);
 
+  // Reactive PowerSync status. Offline (sync service unreachable) means the
+  // local catalog is final, which lets the splash reveal without risking a
+  // layout shift from a late-arriving pack.
+  const status = useStatus();
+  const isOffline = !status.connected && !!status.dataFlowStatus?.downloadError;
+
   useEffect(() => {
     startupTimer.log('HomeScreen first mount');
   }, []);
@@ -144,25 +151,43 @@ export function HomeScreen({
   // Live streak rows from PowerSync — updates reactively as data syncs.
   const { streaks, isLoading: isStreaksLoading } = useStreakRows(userId);
 
-  // Signal the App-level FauxSplash to reveal once all first-screen data is
-  // ready. The overlay lives above the navigator (App.tsx) so it covers the
-  // navigator's async native mount without a white flash.
+  // Signal the App-level FauxSplash to reveal once first-screen data is ready.
+  // The overlay lives above the navigator (App.tsx) so it covers the navigator's
+  // async native mount without a white flash. App.tsx owns the 10s safety ceiling.
   useEffect(() => {
-    const allLoaded =
-      packCatalog.length > 0 &&
-      !isPackPreviewsLoading &&
-      !isStreaksLoading &&
-      !isProgressLoading;
-    if (!allLoaded) return;
-    // Reveal only once the screen has stayed loaded for a beat. The pack catalog
-    // grows as PowerSync syncs, which reloads previews; revealing on the first
-    // transient "loaded" pops late packs in after the splash lifts (layout shift).
-    // Any dep change re-runs this effect and resets the timer.
+    const previewsLoaded = !isPackPreviewsLoading;
+    const userDataLoaded = !isStreaksLoading && !isProgressLoading;
+
+    if (isOffline) {
+      // Offline: the sync service is unreachable, so the local catalog is final —
+      // no late pack can arrive to shift the layout. Reveal the instant local
+      // data has settled; no debounce, no fixed timer. Streaks/progress are
+      // user-scoped and empty until sign-in, and a cold offline launch can't sign
+      // in (anonymous auth needs the network), so only wait on them when a user
+      // actually exists.
+      const offlineReady = previewsLoaded && (!userId || userDataLoaded);
+      if (offlineReady) useSplashStore.getState().markHomeReady();
+      return;
+    }
+
+    // Online: a user always resolves (anonymous sign-in), so wait for it — that
+    // way streak cards and completion counts are populated before reveal, never
+    // popped in after. Then hold a beat in case the in-flight sync is still
+    // appending packs. Any dep change re-runs this effect and resets the timer.
+    if (!userId || packCatalog.length === 0 || !previewsLoaded || !userDataLoaded)
+      return;
     const timer = setTimeout(() => {
       useSplashStore.getState().markHomeReady();
     }, 400);
     return () => clearTimeout(timer);
-  }, [packCatalog.length, isPackPreviewsLoading, isStreaksLoading, isProgressLoading]);
+  }, [
+    packCatalog.length,
+    isPackPreviewsLoading,
+    isStreaksLoading,
+    isProgressLoading,
+    isOffline,
+    userId,
+  ]);
 
   return (
     <View style={styles.container}>

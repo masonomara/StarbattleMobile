@@ -9,6 +9,7 @@ import { useSettingsStore } from './src/stores/settingsStore';
 import { useEntitlementsStore } from './src/stores/entitlementsStore';
 import { startupTimer } from './src/utils/startupTimer';
 import { db } from './src/powersync/AppSchema';
+import { PowerSyncContext } from '@powersync/react-native';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
@@ -71,32 +72,6 @@ export default function App() {
     // Open local SQLite immediately — fetchCredentials() retries once auth resolves
     db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
     startupTimer.log('powersync db.connect called');
-
-    // Offline fast-path: PowerSync emits a downloadError the moment it can't
-    // reach the sync service (no network). Rather than hold the splash for the
-    // full 10s safety ceiling above, bail out shortly after we know we're
-    // offline. Local SQLite data (if any) loads near-instantly, so a brief
-    // grace lets HomeScreen's data-ready reveal win first when there's cached
-    // data — avoiding a pop-in — then this caps the wait for the cold-offline
-    // case (fresh install, no network) at ~1.2s instead of 10s.
-    let offlineRevealTimer: ReturnType<typeof setTimeout> | undefined;
-    const disposeStatusListener = db.registerListener({
-      statusChanged: status => {
-        const offline =
-          !status.connected && !!status.dataFlowStatus?.downloadError;
-        if (
-          offline &&
-          offlineRevealTimer === undefined &&
-          !useSplashStore.getState().homeReady
-        ) {
-          startupTimer.log('powersync offline detected — scheduling reveal');
-          offlineRevealTimer = setTimeout(
-            () => useSplashStore.getState().markHomeReady(),
-            1200,
-          );
-        }
-      },
-    });
 
     const watchController = new AbortController();
 
@@ -170,8 +145,6 @@ export default function App() {
 
     return () => {
       clearTimeout(splashSafetyTimer);
-      if (offlineRevealTimer) clearTimeout(offlineRevealTimer);
-      disposeStatusListener();
       authUnsub();
       entitlementsUnsub();
       watchController.abort();
@@ -187,12 +160,14 @@ export default function App() {
         backgroundColor: theme.background,
       }}
     >
-      <SafeAreaProvider>
-        <Navigation />
-      </SafeAreaProvider>
-      {splashVisible && (
-        <FauxSplash ready={homeReady} onHidden={() => setSplashVisible(false)} />
-      )}
+      <PowerSyncContext.Provider value={db}>
+        <SafeAreaProvider>
+          <Navigation />
+        </SafeAreaProvider>
+        {splashVisible && (
+          <FauxSplash ready={homeReady} onHidden={() => setSplashVisible(false)} />
+        )}
+      </PowerSyncContext.Provider>
     </GestureHandlerRootView>
   );
 }
