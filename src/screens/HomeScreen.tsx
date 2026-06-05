@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   TextStyle,
+  ActivityIndicator,
 } from 'react-native';
 import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -93,10 +94,10 @@ function getStreakLabel(
 ): string {
   if (isCompleted && streakCount > 0)
     return `${streakCount} ${STREAK_UNIT[type]} streak`;
-  if (isCompleted) return 'Completed';
+  if (isCompleted) return `${streakCount} ${STREAK_UNIT[type]} streak`;
   if (streakCount > 0)
     return `Continue your ${streakCount} ${STREAK_UNIT[type]} streak`;
-  return `Start your ${packName} streak`;
+  return `Play the ${packName}`;
 }
 
 export function HomeScreen({
@@ -110,6 +111,10 @@ export function HomeScreen({
   const { packCatalog, hasPackAccess } = useEntitlements();
 
   const [scrolled, setScrolled] = useState(false);
+  // Gate the content until first-screen data is ready (set alongside the splash
+  // reveal). Without this, arriving from the tutorial — where the splash was
+  // already lifted — would show a half-loaded list, then pop in (layout shift).
+  const [revealed, setRevealed] = useState(false);
 
   // Reactive PowerSync status. Offline (sync service unreachable) means the
   // local catalog is final, which lets the splash reveal without risking a
@@ -119,6 +124,12 @@ export function HomeScreen({
 
   useEffect(() => {
     startupTimer.log('HomeScreen first mount');
+  }, []);
+
+  // Safety: never spin forever if first-screen data stalls.
+  useEffect(() => {
+    const t = setTimeout(() => setRevealed(true), 10000);
+    return () => clearTimeout(t);
   }, []);
 
   // Categorize packs in a single pass rather than three separate filter calls.
@@ -168,7 +179,10 @@ export function HomeScreen({
       // in (anonymous auth needs the network), so only wait on them when a user
       // actually exists.
       const offlineReady = previewsLoaded && (!userId || userDataLoaded);
-      if (offlineReady) useSplashStore.getState().markHomeReady();
+      if (offlineReady) {
+        useSplashStore.getState().markHomeReady();
+        setRevealed(true);
+      }
       return;
     }
 
@@ -185,6 +199,7 @@ export function HomeScreen({
       return;
     const timer = setTimeout(() => {
       useSplashStore.getState().markHomeReady();
+      setRevealed(true);
     }, 400);
     return () => clearTimeout(timer);
   }, [
@@ -195,6 +210,14 @@ export function HomeScreen({
     isOffline,
     userId,
   ]);
+
+  if (!revealed) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={theme.blue} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -278,10 +301,15 @@ export function HomeScreen({
                   <View style={styles.streakMetaRow}>
                     {isCompleted && (
                       <View style={styles.streakCheckCircle}>
-                        <Check size={17} color={theme.green} strokeWidth={3} />
+                        <Check size={10} color={theme.green} strokeWidth={4} />
                       </View>
                     )}
-                    <Text style={styles.streakMeta}>
+                    <Text
+                      style={[
+                        styles.streakMeta,
+                        isCompleted && { color: theme.text },
+                      ]}
+                    >
                       {getStreakLabel(
                         isCompleted,
                         streakCount,
@@ -364,6 +392,12 @@ const createStyles = (
       flex: 1,
       backgroundColor: theme.background,
     },
+    loading: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.background,
+    },
     header: {
       position: 'absolute',
       top: 0,
@@ -394,7 +428,7 @@ const createStyles = (
     },
     headerRight: {
       flexDirection: 'row',
-      gap: 8,
+      gap: 12,
     },
     streakSection: {
       paddingTop: 24,
@@ -435,7 +469,7 @@ const createStyles = (
     streakMetaRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 7,
+      gap: 9,
     },
     streakMeta: {
       color: theme.text,
@@ -445,12 +479,15 @@ const createStyles = (
       marginTop: 7,
     },
     streakCheckCircle: {
-      width: 22,
-      height: 22,
+      width: 17,
+      height: 17,
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: 7,
+      borderWidth: 1.5,
+      paddingTop: 1,
+      borderColor: theme.green,
     },
     sectionLabel: {
       lineHeight: 28,

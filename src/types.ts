@@ -13,6 +13,7 @@ export type RootStackParamList = {
     | { packId: string; puzzleIndex: number }
     | { packId: string; archiveKey?: string };
   ArchivePack: { type: StreakType };
+  Tutorial: undefined;
 };
 
 declare global {
@@ -80,6 +81,7 @@ export type PackCardProps = {
 export type ToolbarProps = {
   isZoomed: boolean;
   onZoomReset: () => void;
+  hintDisabledMessage?: string;
 };
 
 export type WinBannerProps = {
@@ -89,6 +91,7 @@ export type WinBannerProps = {
   isLastPuzzle: boolean;
   streakType?: StreakType;
   streakCount?: number;
+  tutorial?: boolean;
 };
 
 // STATE
@@ -118,6 +121,7 @@ export type UserSettings = {
   theme: 'system' | 'light' | 'dark';
   palette: ThemeName;
   haptics: boolean;
+  tutorialSeen: boolean;
 };
 
 export type CellChange = {

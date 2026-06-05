@@ -135,7 +135,7 @@ export function AccountSection() {
       <Text style={styles.sectionTitle}>
         {isAnonymous
           ? authTab === 'signin'
-            ? 'Log in'
+            ? 'Sign in'
             : 'Sign up'
           : 'Account'}
       </Text>
@@ -154,7 +154,7 @@ export function AccountSection() {
           )}
 
           {emailMode === null && (
-            <View style={{ gap: 12, marginTop: 4 }}>
+            <View style={{ gap: 12 }}>
               <Pressable
                 style={[styles.secondaryButton, loading && styles.disabled]}
                 onPress={() => {
@@ -167,7 +167,7 @@ export function AccountSection() {
                   <AtSign size={18} color={theme.text} />
                   <Text style={styles.secondaryButtonText}>
                     {authTab === 'signin'
-                      ? 'Log in with Email'
+                      ? 'Sign in with Email'
                       : 'Sign up with Email'}
                   </Text>
                 </View>
@@ -184,7 +184,7 @@ export function AccountSection() {
                     <GoogleIcon size={18} />
                     <Text style={styles.secondaryButtonText}>
                       {authTab === 'signin'
-                        ? 'Log in with Google'
+                        ? 'Sign in with Google'
                         : 'Sign up with Google'}
                     </Text>
                   </View>
@@ -203,7 +203,7 @@ export function AccountSection() {
                       <AppleIcon size={18} color={theme.text} />
                       <Text style={styles.secondaryButtonText}>
                         {authTab === 'signin'
-                          ? 'Log in with Apple'
+                          ? 'Sign in with Apple'
                           : 'Sign up with Apple'}
                       </Text>
                     </View>
@@ -219,20 +219,17 @@ export function AccountSection() {
                 <Text style={styles.linkText}>
                   {authTab === 'signin'
                     ? 'Create an account'
-                    : 'Already have an account? Log in'}
+                    : 'Already have an account? Sign in'}
                 </Text>
               </Pressable>
             </View>
           )}
 
           {(emailMode === 'signup' || emailMode === 'signin') && (
-            <View>
-              <Text style={styles.formTitle}>
-                {emailMode === 'signup' ? 'Create Account' : 'Sign In'}
-              </Text>
+            <View style={{ gap: 12 }}>
+              <Text style={styles.inputLabel}>Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Email"
                 placeholderTextColor={theme.textSecondary}
                 value={email}
                 onChangeText={setEmail}
@@ -240,9 +237,9 @@ export function AccountSection() {
                 keyboardType="email-address"
                 autoComplete="email"
               />
+              <Text style={styles.inputLabel}>Password</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Password"
                 placeholderTextColor={theme.textSecondary}
                 value={password}
                 onChangeText={setPassword}
@@ -293,14 +290,14 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text style={styles.linkText}>Cancel</Text>
+                <Text style={styles.linkTextDanger}>Cancel</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'forgot-password' && (
-            <View>
-              <Text style={styles.formTitle}>Reset Password</Text>
+            <View style={{ gap: 12 }}>
+              <Text style={styles.inputLabel}>Reset Password</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -410,7 +407,7 @@ export function AccountSection() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    section: { marginTop: 40 },
+    section: { marginTop: 16 },
     sectionTitle: {
       fontSize: 20,
       color: theme.text,
@@ -445,14 +442,17 @@ const createStyles = (theme: Theme) =>
     },
     primaryButton: {
       height: 52,
-      borderRadius: theme.radiusMd,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: theme.background,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.blue,
+      backgroundColor: theme.text,
+      marginTop: 8,
     },
     primaryButtonText: {
-      fontSize: theme.fontSizeCallout,
-      fontWeight: theme.fontWeightSemibold,
+      fontSize: 17,
+      fontWeight: '700',
       color: theme.background,
     },
     secondaryButton: {
@@ -460,18 +460,44 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       borderRadius: 8,
       borderWidth: 2,
-      borderColor: theme.text,
+      borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.background,
     },
     secondaryButtonText: { fontSize: 17, fontWeight: '700', color: theme.text },
-    buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    linkButton: { alignItems: 'center', paddingVertical: theme.spacingMd },
-    linkText: { fontSize: theme.fontSizeSubhead, color: theme.text },
+    buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    linkButton: {
+      height: 52,
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.background,
+      paddingVertical: theme.spacingMd,
+    },
+    linkText: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    linkTextDanger: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: theme.red,
+    },
     formTitle: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
+      color: theme.text,
+    },
+    inputLabel: {
+      fontSize: 15,
+      lineHeight: 20,
+      marginBottom: -4,
+      fontWeight: '500',
       color: theme.text,
     },
     input: {
@@ -483,6 +509,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.surface,
       color: theme.text,
       fontSize: theme.fontSizeCallout,
+      marginBottom: 12,
     },
     destructiveButton: {
       height: 52,

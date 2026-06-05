@@ -90,10 +90,12 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
     modalHeader: {
-      height: 48,
+      height: 80,
+      paddingTop: 24,
+      paddingBottom: 12,
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 14,
+      paddingHorizontal: 16,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: 'transparent',
     },

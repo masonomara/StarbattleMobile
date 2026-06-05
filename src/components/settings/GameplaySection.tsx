@@ -32,11 +32,14 @@ export function ToggleRow({
       <Text style={{ fontSize: 17, fontWeight: '600', color: theme.text }}>
         {label}
       </Text>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ true: theme.blue, false: theme.border }}
-      />
+      <View>
+        <Switch
+          value={value}
+          onValueChange={onToggle}
+          trackColor={{ true: theme.blue, false: theme.border }}
+          ios_backgroundColor={theme.border}
+        />
+      </View>
     </View>
   );
 }

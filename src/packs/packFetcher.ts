@@ -136,17 +136,14 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${key}`;
     try {
       const raw = await rnfs.readFile(localPath, 'utf8');
-      __DEV__ && console.log(`[SB:HINTS] ${key}: disk hit`);
       return decodeHintsFromDisk(raw).hints;
     } catch {
       // not on disk yet — fall through to network
     }
-    __DEV__ && console.log(`[SB:HINTS] ${key}: disk miss — fetching`);
     const text = await fetchFromSupabase(key);
     validateHintsText(text);
     await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
     await rnfs.writeFile(localPath, encodeForDisk(text), 'utf8').catch(() => {});
-    __DEV__ && console.log(`[SB:HINTS] ${key}: written to disk`);
     return (JSON.parse(text) as HintsFile).hints;
   }
   const text = await fetchFromSupabase(key);

@@ -36,14 +36,7 @@ import {
   STREAK_TYPES,
   STREAK_LABELS,
 } from '../utils/streakDate';
-import type {
-  Theme,
-  StreakType,
-  Puzzle,
-  RootStackParamList,
-} from '../types';
-
-const STREAK_TILE_COLORS = ['#8FD6AE', '#81D0E7', '#D3C2FA'];
+import type { Theme, StreakType, Puzzle, RootStackParamList } from '../types';
 
 const ARCHIVE_NAMES: Record<StreakType, string> = {
   daily: 'Daily Specials',
@@ -112,7 +105,9 @@ export function StreaksModal() {
       onRequestClose={closeStreaks}
     >
       <View style={styles.container}>
-        <View style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}>
+        <View
+          style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}
+        >
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
             <Text style={styles.headerTitle}>Streaks</Text>
@@ -130,17 +125,11 @@ export function StreaksModal() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.streakGrid}>
-            {STREAK_TYPES.map((type, i) => {
+            {STREAK_TYPES.map(type => {
               const found = streaks.find(s => s.type === type);
               const count = found ? getActiveStreak(found, type) : 0;
               return (
-                <View
-                  key={type}
-                  style={[
-                    styles.streakTile,
-                    { backgroundColor: STREAK_TILE_COLORS[i] },
-                  ]}
-                >
+                <View key={type} style={[styles.streakTile]}>
                   <Text style={styles.streakCount}>{count}</Text>
                   <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
                 </View>
@@ -183,7 +172,11 @@ export function StreaksModal() {
                 }}
                 right={
                   locked ? (
-                    <Lock size={19} color={theme.textSecondary} strokeWidth={2.5}/>
+                    <Lock
+                      size={19}
+                      color={theme.textSecondary}
+                      strokeWidth={2.5}
+                    />
                   ) : undefined
                 }
                 theme={theme}
@@ -201,18 +194,21 @@ const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      paddingTop: theme.spacingXl,
+
       backgroundColor: theme.background,
     },
     scrollContent: {
       paddingHorizontal: theme.spacingXl,
       paddingBottom: theme.spacingXl,
+      backgroundColor: theme.background,
     },
     modalHeader: {
-      height: 48,
+      height: 80,
+      paddingTop: 24,
+      paddingBottom: 12,
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 14,
+      paddingHorizontal: 16,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: 'transparent',
     },
@@ -230,26 +226,26 @@ const createStyles = (theme: Theme) => {
       justifyContent: 'center',
     },
     headerTitle: {
-      fontSize: theme.fontSizeBody,
-      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
+      fontSize: 25,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
+      letterSpacing: -0.25,
+      lineHeight: 28,
     },
     streakGrid: {
       flexDirection: 'row',
       gap: theme.spacingMd,
-      marginBottom: theme.spacingXl,
-      marginTop: theme.spacingLg,
+      marginTop: 16,
     },
     streakTile: {
       flex: 1,
-      borderRadius: theme.radiusMd,
-      padding: theme.spacingLg,
+      padding: 16,
       alignItems: 'center',
-      shadowOffset: { width: 0, height: 4 },
-      shadowColor: '#25292E',
-      shadowOpacity: 0.1,
-      shadowRadius: 24,
-      elevation: 8,
+      backgroundColor: theme.background,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 4,
     },
     streakCount: {
       lineHeight: 36,
@@ -269,6 +265,8 @@ const createStyles = (theme: Theme) => {
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       marginBottom: 14,
+      letterSpacing: -0.2,
+      marginTop: 32,
     },
   });
 };

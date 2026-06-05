@@ -88,5 +88,5 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       height: 28,
       width: 28,
-    }
+    },
   });

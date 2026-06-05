@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   NavigationContainer,
   DarkTheme,
@@ -15,6 +15,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
+import { hasSeenTutorial } from './stores/settingsStore';
 import type { RootStackParamList } from './types';
 // type-only: pulls in global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.
@@ -73,10 +74,24 @@ function WrappedArchivePack(
   );
 }
 
+function WrappedTutorial(
+  props: NativeStackScreenProps<RootStackParamList, 'Tutorial'>,
+) {
+  const theme = useTheme();
+  return (
+    <ErrorBoundary theme={theme}>
+      <PuzzleScreen {...props} />
+    </ErrorBoundary>
+  );
+}
+
 export function Navigation() {
   const theme = useTheme();
   const bgColor = theme.background;
   const baseNavTheme = theme.isDark ? DarkTheme : DefaultTheme;
+  const [initialRouteName] = useState<keyof RootStackParamList>(() =>
+    hasSeenTutorial() ? 'Home' : 'Tutorial',
+  );
   const navTheme = {
     ...baseNavTheme,
     colors: { ...baseNavTheme.colors, background: bgColor },
@@ -84,6 +99,7 @@ export function Navigation() {
   return (
     <NavigationContainer theme={navTheme}>
       <Stack.Navigator
+        initialRouteName={initialRouteName}
         screenOptions={{
           headerShown: false,
           statusBarStyle: theme.isDark ? 'light' : 'dark',
@@ -94,6 +110,7 @@ export function Navigation() {
         <Stack.Screen name="Library" component={WrappedLibrary} />
         <Stack.Screen name="Puzzle" component={WrappedPuzzle} />
         <Stack.Screen name="ArchivePack" component={WrappedArchivePack} />
+        <Stack.Screen name="Tutorial" component={WrappedTutorial} />
       </Stack.Navigator>
       <SettingsModal />
       <ResetPasswordModal />

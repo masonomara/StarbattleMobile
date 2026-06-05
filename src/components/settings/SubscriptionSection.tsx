@@ -96,14 +96,14 @@ export function SubscriptionSection() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    section: { marginTop: 40 },
+    section: { marginTop: 40, gap: 12 },
     sectionTitle: {
       fontSize: 20,
       color: theme.text,
       lineHeight: 22,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
-      marginBottom: 14,
+      marginBottom: 6,
       letterSpacing: -0.2,
     },
     premiumBadge: {
@@ -120,21 +120,24 @@ const createStyles = (theme: Theme) =>
     },
     primaryButton: {
       height: 52,
-      borderRadius: theme.radiusMd,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: theme.background,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.blue,
+      backgroundColor: theme.text,
     },
     primaryButtonText: {
-      fontSize: theme.fontSizeCallout,
-      fontWeight: theme.fontWeightSemibold,
+      fontSize: 17,
+      fontWeight: '700',
       color: theme.background,
     },
     secondaryButton: {
       height: 52,
+      flex: 1,
       borderRadius: 8,
       borderWidth: 2,
-      borderColor: theme.text,
+      borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.background,

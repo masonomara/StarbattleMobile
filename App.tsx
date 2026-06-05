@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Navigation } from './src/navigation';
 import { useTheme } from './src/hooks/useTheme';
 import { useAuthStore } from './src/stores/authStore';
-import { useSettingsStore } from './src/stores/settingsStore';
+import { useSettingsStore, hasSeenTutorial } from './src/stores/settingsStore';
 import { useEntitlementsStore } from './src/stores/entitlementsStore';
 import { startupTimer } from './src/utils/startupTimer';
 import { db } from './src/powersync/AppSchema';
@@ -35,6 +35,10 @@ export default function App() {
 
   useEffect(() => {
     startupTimer.log('setup effect start');
+
+    // First launch lands on the tutorial (no synced data needed) — lift the
+    // splash immediately instead of waiting on first sync; prefetch runs below.
+    if (!hasSeenTutorial()) useSplashStore.getState().markHomeReady();
 
     adapty.activate(ADAPTY_SDK_KEY).catch(() => {
       // Swallow "already activated" error on Fast Refresh in dev

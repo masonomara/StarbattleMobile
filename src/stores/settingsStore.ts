@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   theme: 'system',
   palette: 'original',
   haptics: true,
+  tutorialSeen: false,
 };
 
 function getSettings(): UserSettings {
@@ -39,6 +40,11 @@ function saveSettings(update: Partial<UserSettings>): void {
   storage.set(SETTINGS_KEY, JSON.stringify({ ...current, ...update }));
 }
 
+// Synchronous read for the initial-route decision; MMKV reads are sync.
+export function hasSeenTutorial(): boolean {
+  return getSettings().tutorialSeen;
+}
+
 type SettingsState = {
   settings: UserSettings;
   settingsModalVisible: boolean;
@@ -46,6 +52,7 @@ type SettingsState = {
   updateSettings: (update: Partial<UserSettings>) => void;
   openSettings: () => void;
   closeSettings: () => void;
+  completeTutorial: () => void;
 };
 
 export const useSettingsStore = create<SettingsState>(set => ({
@@ -68,5 +75,10 @@ export const useSettingsStore = create<SettingsState>(set => ({
   updateSettings: update => {
     saveSettings(update);
     set(state => ({ settings: { ...state.settings, ...update } }));
+  },
+
+  completeTutorial: () => {
+    saveSettings({ tutorialSeen: true });
+    set(state => ({ settings: { ...state.settings, tutorialSeen: true } }));
   },
 }));
