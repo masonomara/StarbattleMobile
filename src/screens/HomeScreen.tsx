@@ -219,6 +219,11 @@ export function HomeScreen({
               style={styles.streakRow}
               horizontal
               showsHorizontalScrollIndicator={false}
+              // Snap each streak card to the left edge as it pauses.
+              // Interval = card width (260 thumb + 32 padding = 292) + 12 gap.
+              snapToInterval={304}
+              snapToAlignment="start"
+              decelerationRate="fast"
               contentContainerStyle={{
                 paddingRight: 16,
                 paddingLeft: 16,
