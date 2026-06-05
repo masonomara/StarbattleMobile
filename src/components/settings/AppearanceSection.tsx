@@ -6,7 +6,6 @@ import {
   useColorScheme,
   StyleSheet,
 } from 'react-native';
-import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { Text } from '../Text';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useTheme } from '../../hooks/useTheme';
@@ -91,32 +90,30 @@ export function AppearanceSection() {
         />
         <View style={styles.themeRow}>
           <Text style={styles.rowLabel}>Theme</Text>
-          <SegmentedControl
-            values={THEME_OPTIONS.map(o => o.label)}
-            selectedIndex={THEME_OPTIONS.findIndex(
-              o => o.value === settings.theme,
-            )}
-            onChange={e =>
-              updateSettings({
-                theme: THEME_OPTIONS[e.nativeEvent.selectedSegmentIndex].value,
-              })
-            }
-            style={styles.themeSegment}
-            tintColor="#FFFFFF"
-            backgroundColor={theme.border}
-            fontStyle={{
-              color: isCurrentlyDark ? theme.background : theme.text,
-              fontSize: 15,
-              fontWeight: '700',
-              fontFamily: 'Karla',
-            }}
-            activeFontStyle={{
-              color: isCurrentlyDark ? theme.background : theme.text,
-              fontSize: 15,
-              fontWeight: '700',
-              fontFamily: 'Karla',
-            }}
-          />
+          <View style={styles.themeButtons}>
+            {THEME_OPTIONS.map(option => {
+              const active = settings.theme === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => updateSettings({ theme: option.value })}
+                  style={[
+                    styles.themeButton,
+                    active && styles.themeButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.themeButtonLabel,
+                      active && styles.themeButtonLabelActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       </View>
 
@@ -180,10 +177,29 @@ const createStyles = (theme: Theme) =>
       borderColor: theme.border,
     },
     rowLabel: { fontSize: 17, fontWeight: '600', color: theme.text },
-    themeSegment: {
-      width: 195,
+    themeButtons: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    themeButton: {
+      paddingHorizontal: 14,
       height: 32,
-      borderRadius: 18,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.border,
+    },
+    themeButtonActive: {
+      backgroundColor: theme.blue,
+    },
+    themeButtonLabel: {
+      fontSize: 15,
+      fontWeight: '700',
+      fontFamily: 'Karla',
+      color: theme.text,
+    },
+    themeButtonLabelActive: {
+      color: theme.background,
     },
     swatchGrid: { gap: 12 },
     swatchRow: { flexDirection: 'row', gap: 12 },

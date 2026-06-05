@@ -390,18 +390,23 @@ export function AccountSection() {
         </>
       ) : (
         <>
-          <View style={styles.infoRow}>
+          <View style={[styles.infoRow, styles.infoRowFirst]}>
             <Text style={styles.infoLabel}>Email</Text>
-            <Text style={styles.infoValue}>
+            <Text style={styles.infoValue} numberOfLines={1}>
               {user?.email ?? 'Sign-in with provider'}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Account Type</Text>
+            <Text style={styles.infoValue}>
+              {entitlements.isPremium ? 'Premium' : 'Free'}
             </Text>
           </View>
 
           <View style={styles.accountActions}>
             {entitlements.isPremium ? (
-              <View style={styles.premiumBadge}>
-                <Text style={styles.premiumBadgeText}>Premium</Text>
-              </View>
+              <></>
             ) : (
               <Pressable
                 style={[styles.primaryButton, loading && styles.disabled]}
@@ -498,18 +503,22 @@ const createStyles = (theme: Theme) =>
     infoRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      paddingVertical: theme.spacingMd,
-      paddingHorizontal: theme.spacingLg,
-      borderRadius: theme.radiusMd,
-      backgroundColor: theme.surface,
+      alignItems: 'center',
+      minHeight: 56,
+      borderTopWidth: 1,
+      borderColor: theme.border,
     },
-    infoLabel: { fontSize: theme.fontSizeCallout, color: theme.textSecondary },
+    infoRowFirst: {
+      borderTopWidth: 0,
+    },
+    infoLabel: { fontSize: 17, fontWeight: '600', color: theme.text },
     infoValue: {
-      fontSize: theme.fontSizeCallout,
-      color: theme.text,
-      fontWeight: theme.fontWeightSemibold,
-      maxWidth: '60%',
+      fontSize: 17,
+      color: theme.textSecondary,
+      fontWeight: '600',
+      maxWidth: 240,
       textAlign: 'right',
+      overflow: 'hidden',
     },
     primaryButton: {
       height: 52,
@@ -537,7 +546,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background,
     },
     secondaryButtonText: { fontSize: 17, fontWeight: '700', color: theme.text },
-    accountActions: { gap: 12, marginTop: 8 },
+    accountActions: { gap: 12, marginTop: 14 },
     premiumBadge: {
       alignSelf: 'flex-start',
       paddingHorizontal: theme.spacingLg,
@@ -604,13 +613,16 @@ const createStyles = (theme: Theme) =>
     },
     destructiveButton: {
       height: 52,
-      borderRadius: theme.radiusMd,
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
     },
     destructiveButtonText: {
-      fontSize: theme.fontSizeCallout,
+      fontSize: 17,
       fontWeight: theme.fontWeightSemibold,
       color: theme.red,
     },
@@ -639,5 +651,6 @@ const createStyles = (theme: Theme) =>
       fontSize: theme.fontSizeSubhead,
       color: theme.red,
       textAlign: 'center',
+      marginTop: 18,
     },
   });

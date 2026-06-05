@@ -12,8 +12,8 @@ import type { PulseBoxProps } from '../types';
 
 // The box is a solid baseColor View, so its View opacity reads directly as the
 // base color's opacity: pulse between 67% and 33%.
-const MAX_OPACITY = 0.67;
-const MIN_OPACITY = 0.33;
+const MAX_OPACITY = 0.9;
+const MIN_OPACITY = 0.45;
 const PULSE_MS = 850;
 
 function startPulse(opacity: SharedValue<number>) {

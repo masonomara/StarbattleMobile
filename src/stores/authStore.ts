@@ -214,7 +214,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try { await adapty.identify(session.user.id); } catch {}
       }
       if (event === 'SIGNED_OUT') {
-        await adapty.logout();
+        try { await adapty.logout(); } catch {}
       }
     });
     authSubscription = subscription;
