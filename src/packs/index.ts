@@ -92,6 +92,44 @@ export async function getPuzzlesForPack(
   }
 }
 
+// True if the pack file is already available locally (in-memory cache or on
+// disk) — without triggering a network fetch. Used to decide whether the slim
+// preview exists before reaching for it, so we never pay a doomed round-trip.
+async function hasLocalPack(key: string): Promise<boolean> {
+  if (hasPackCacheEntry(key)) return true;
+  const rnfs = getRNFS();
+  if (!rnfs) return false;
+  try {
+    await rnfs.stat(`${rnfs.DocumentDirectoryPath}/packs/${key}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Loads just the first puzzle for a library pack's home thumbnail. Prefers the
+// slim "{packId}_preview.json" (one puzzle) so we don't download/parse the full
+// pack — which matters most for unpurchased paid packs, where loadPack() would
+// otherwise pull the entire pack down. The slim file is a local-only artifact
+// (cachePackPreview writes it; it 404s on the network), so we only read it when
+// it already exists locally, and fall back to the full pack otherwise.
+export async function getPackPreview(
+  packId: string,
+  storagePath?: string,
+): Promise<RawPuzzle | null> {
+  const previewKey = `${packId}_preview.json`;
+  if (await hasLocalPack(previewKey)) {
+    try {
+      const preview = await loadPack(previewKey);
+      if (preview.puzzles.length) return preview.puzzles[0];
+    } catch {
+      // Slim preview unreadable — fall back to the full pack below.
+    }
+  }
+  const puzzles = await getPuzzlesForPack(packId, storagePath);
+  return puzzles?.[0] ?? null;
+}
+
 export async function getStreakPack(type: StreakType): Promise<Pack | null> {
   try {
     return await loadPack(`${type}.json`);
