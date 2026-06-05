@@ -137,7 +137,7 @@ export function StreaksModal() {
             })}
           </View>
 
-          <Text style={styles.sectionTitle}>Puzzle Archive</Text>
+          <Text style={styles.sectionTitle}>Archived Specials</Text>
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
@@ -148,14 +148,14 @@ export function StreaksModal() {
               <PackCard
                 key={type}
                 name={ARCHIVE_NAMES[type]}
-                meta={isEmpty ? 'Coming soon' : `${count} puzzles`}
+                meta={isEmpty ? 'Coming soon' : `${count} specials`}
                 preview={preview}
                 disabled={isEmpty}
                 onPress={() => {
                   if (locked) {
                     Alert.alert(
                       'Premium Feature',
-                      'Upgrade to Premium to access past puzzles.',
+                      'Upgrade to Premium to access past specials.',
                       [
                         { text: 'Not Now', style: 'cancel' },
                         {

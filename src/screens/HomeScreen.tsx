@@ -25,6 +25,7 @@ import {
   getActiveStreak,
   STREAK_TYPES,
   STREAK_UNIT,
+  STREAK_LABELS,
 } from '../utils/streakDate';
 import { useAuthStore } from '../stores/authStore';
 import { startupTimer } from '../utils/startupTimer';
@@ -90,19 +91,18 @@ function PaidPackRow({
 }
 
 // Returns the subtitle shown beneath each streak card based on whether the
-// user completed today's puzzle and their current streak length.
+// user completed today's special and their current streak length.
 function getStreakLabel(
   isCompleted: boolean,
   streakCount: number,
   type: StreakType,
-  packName: string,
 ): string {
   if (isCompleted && streakCount > 0)
     return `${streakCount} ${STREAK_UNIT[type]} streak`;
   if (isCompleted) return `${streakCount} ${STREAK_UNIT[type]} streak`;
   if (streakCount > 0)
     return `Continue your ${streakCount} ${STREAK_UNIT[type]} streak`;
-  return `Play the ${packName}`;
+  return `Play the ${STREAK_LABELS[type]} Special`;
 }
 
 export function HomeScreen({
@@ -265,7 +265,9 @@ export function HomeScreen({
                           theme={theme}
                           coloredRegions={coloredRegions}
                         />
-                        <Text style={styles.streakLabel}>{pack.name}</Text>
+                        <Text style={styles.streakLabel}>
+                          {`${STREAK_LABELS[type]} Special`}
+                        </Text>
                         <View style={styles.streakMetaRow}>
                           {isCompleted && (
                             <View style={styles.streakCheckCircle}>
@@ -282,12 +284,7 @@ export function HomeScreen({
                               isCompleted && { color: theme.text },
                             ]}
                           >
-                            {getStreakLabel(
-                              isCompleted,
-                              streakCount,
-                              type,
-                              pack.name,
-                            )}
+                            {getStreakLabel(isCompleted, streakCount, type)}
                           </Text>
                         </View>
                       </Pressable>

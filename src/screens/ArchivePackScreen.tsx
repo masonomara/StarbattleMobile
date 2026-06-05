@@ -115,7 +115,7 @@ export function ArchivePackScreen({
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
         <Text style={styles.headerTitle}>
-          Past {STREAK_LABELS[type]} Puzzles
+          Past {STREAK_LABELS[type]} Specials
         </Text>
         <View style={styles.headerSpacer} />
       </View>
