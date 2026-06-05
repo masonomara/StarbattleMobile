@@ -205,9 +205,10 @@ const createStyles = (theme: Theme) =>
       borderColor: theme.border,
     },
     swatchLabel: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '600',
       color: theme.text,
       paddingTop: 10,
+      marginBottom: -4,
     },
   });

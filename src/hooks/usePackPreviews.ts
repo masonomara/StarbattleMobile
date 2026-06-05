@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStreakPack, getPuzzlesForPack } from '../packs';
+import { getStreakPack, getPackPreview } from '../packs';
 import { getCurrentKey, getPuzzleIndex } from '../utils/streakDate';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import type { PackCatalogItem, Puzzle } from '../types';
@@ -38,12 +38,12 @@ export function usePackPreviews(
                 `${pack.id}:${getCurrentKey(pack.type)}`,
               );
             } else {
-              const rawPuzzles = await getPuzzlesForPack(
+              const previewPuzzle = await getPackPreview(
                 pack.id,
                 pack.storagePath,
               );
-              if (!rawPuzzles?.length) return;
-              results[pack.id] = parsePuzzle(rawPuzzles[0], `${pack.id}:0`);
+              if (!previewPuzzle) return;
+              results[pack.id] = parsePuzzle(previewPuzzle, `${pack.id}:0`);
             }
           } catch {
             // skip this pack, keep others
