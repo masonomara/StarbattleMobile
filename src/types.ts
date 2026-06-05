@@ -114,6 +114,7 @@ export type StreakType = 'daily' | 'weekly' | 'monthly';
 export type Streak = {
   type: StreakType;
   current: number;
+  best: number;
   lastCompletedKey: string;
 };
 

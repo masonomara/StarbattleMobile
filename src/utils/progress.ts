@@ -152,6 +152,7 @@ export async function loadAllCompletionData(): Promise<Set<string>> {
 export async function saveStreak(
   type: string,
   currentCount: number,
+  bestCount: number,
   lastCompletedKey: string,
 ): Promise<void> {
   const userId = useAuthStore.getState().user?.id;
@@ -163,15 +164,16 @@ export async function saveStreak(
   await upsertById(
     'streaks',
     id,
-    `INSERT INTO streaks (id, user_id, type, current_count, last_completed_key, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, userId, type, currentCount, lastCompletedKey, now],
+    `INSERT INTO streaks (id, user_id, type, current_count, best_count, last_completed_key, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [id, userId, type, currentCount, bestCount, lastCompletedKey, now],
     `UPDATE streaks SET
        current_count = ?,
+       best_count = ?,
        last_completed_key = ?,
        updated_at = ?
      WHERE id = ?`,
-    [currentCount, lastCompletedKey, now, id],
+    [currentCount, bestCount, lastCompletedKey, now, id],
   );
 }
 
@@ -185,14 +187,16 @@ export async function loadStreaks(): Promise<Streak[]> {
   const rows = await db.getAll<{
     type: string;
     current_count: number;
+    best_count: number;
     last_completed_key: string;
   }>(
-    'SELECT type, current_count, last_completed_key FROM streaks WHERE user_id = ?',
+    'SELECT type, current_count, best_count, last_completed_key FROM streaks WHERE user_id = ?',
     [userId],
   );
   return rows.map(r => ({
     type: r.type as StreakType,
     current: r.current_count,
+    best: r.best_count,
     lastCompletedKey: r.last_completed_key,
   }));
 }
@@ -206,9 +210,10 @@ export async function recordStreak(type: StreakType): Promise<void> {
   const existing = await db.getOptional<{
     id: string;
     current_count: number;
+    best_count: number;
     last_completed_key: string;
   }>(
-    'SELECT id, current_count, last_completed_key FROM streaks WHERE user_id = ? AND type = ?',
+    'SELECT id, current_count, best_count, last_completed_key FROM streaks WHERE user_id = ? AND type = ?',
     [userId, type],
   );
 
@@ -222,6 +227,7 @@ export async function recordStreak(type: StreakType): Promise<void> {
   const prevKey = getPreviousKey(type);
   const newCount =
     existing?.last_completed_key === prevKey ? existing.current_count + 1 : 1;
+  const bestCount = Math.max(existing?.best_count ?? 0, newCount);
 
-  await saveStreak(type, newCount, currentKey);
+  await saveStreak(type, newCount, bestCount, currentKey);
 }

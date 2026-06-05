@@ -35,13 +35,14 @@ import {
   archiveKeyToDate,
   STREAK_TYPES,
   STREAK_LABELS,
+  STREAK_UNIT,
 } from '../utils/streakDate';
 import type { Theme, StreakType, Puzzle, RootStackParamList } from '../types';
 
 const ARCHIVE_NAMES: Record<StreakType, string> = {
-  daily: 'Daily Specials',
-  weekly: 'Weekly Specials',
-  monthly: 'Monthly Specials',
+  daily: 'Daily Special',
+  weekly: 'Weekly Special',
+  monthly: 'Monthly Special',
 };
 
 export function StreaksModal() {
@@ -127,11 +128,25 @@ export function StreaksModal() {
           <View style={styles.streakGrid}>
             {STREAK_TYPES.map(type => {
               const found = streaks.find(s => s.type === type);
-              const count = found ? getActiveStreak(found, type) : 0;
+              const current = found ? getActiveStreak(found, type) : 0;
+              const best = found ? found.best : 0;
+              const unit = (n: number) =>
+                n === 1 ? STREAK_UNIT[type] : `${STREAK_UNIT[type]}s`;
               return (
                 <View key={type} style={[styles.streakTile]}>
-                  <Text style={styles.streakCount}>{count}</Text>
                   <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                  <View style={styles.streakStatRow}>
+                    <Text style={styles.streakStatLabel}>Best</Text>
+                    <Text style={styles.streakStatValue}>
+                      {best} {unit(best)}
+                    </Text>
+                  </View>
+                  <View style={styles.streakStatRow}>
+                    <Text style={styles.streakStatLabel}>Current</Text>
+                    <Text style={styles.streakStatValue}>
+                      {current} {unit(current)}
+                    </Text>
+                  </View>
                 </View>
               );
             })}
@@ -240,23 +255,33 @@ const createStyles = (theme: Theme) => {
     },
     streakTile: {
       flex: 1,
-      padding: 16,
-      alignItems: 'center',
+      padding: 14,
       backgroundColor: theme.background,
       borderWidth: 1,
       borderColor: theme.border,
       borderRadius: 4,
     },
-    streakCount: {
-      lineHeight: 36,
-      fontSize: 33,
-      fontWeight: '900',
-      color: theme.blue,
-    },
     streakLabel: {
       fontSize: theme.fontSizeSubhead,
+      fontWeight: '700',
+      color: theme.text,
+      marginBottom: 10,
+    },
+    streakStatRow: {
+      marginTop: 8,
+    },
+    streakStatLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
       color: theme.textSecondary,
-      marginTop: 4,
+    },
+    streakStatValue: {
+      fontSize: 16,
+      fontWeight: '900',
+      color: theme.blue,
+      marginTop: 1,
     },
     sectionTitle: {
       fontSize: 20,
