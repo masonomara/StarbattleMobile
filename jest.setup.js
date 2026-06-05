@@ -74,8 +74,10 @@ jest.mock('react-native-reanimated', () => {
     useAnimatedStyle: () => ({}),
     withSpring: v => v,
     withTiming: v => v,
+    withRepeat: v => v,
     cancelAnimation: () => {},
     runOnJS: fn => fn,
+    Easing: { ease: v => v, inOut: f => f },
   };
 });
 
@@ -119,10 +121,7 @@ jest.mock('react-native-mmkv', () => ({
 
 // Adapty: every method is a no-op that resolves (App calls adapty.activate().catch).
 jest.mock('react-native-adapty', () => ({
-  adapty: new Proxy(
-    {},
-    { get: () => jest.fn().mockResolvedValue(undefined) },
-  ),
+  adapty: new Proxy({}, { get: () => jest.fn().mockResolvedValue(undefined) }),
 }));
 
 // Haptics: any method is a no-op.
@@ -130,7 +129,7 @@ jest.mock('react-native-nitro-haptics', () => ({
   Haptics: new Proxy({}, { get: () => jest.fn() }),
 }));
 
-// BootSplash: skip the native handoff; expose the hide-animation shape FauxSplash reads.
+// BootSplash: no-op the native splash; App calls hide() on mount.
 jest.mock('react-native-bootsplash', () => ({
   __esModule: true,
   default: {

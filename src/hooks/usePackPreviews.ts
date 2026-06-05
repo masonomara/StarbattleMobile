@@ -50,8 +50,12 @@ export function usePackPreviews(
           }
         }),
       );
+      // Commit every preview in one update so the cards reveal together as a
+      // single coordinated drop-in, rather than popping in one-by-one out of
+      // sync with each other and their pulse animations. Merge into prev so a
+      // catalog re-sync doesn't flash already-loaded cards back to skeletons.
       if (!cancelled) {
-        setPackPreviews(results);
+        setPackPreviews(prev => ({ ...prev, ...results }));
         setIsLoading(false);
       }
     }

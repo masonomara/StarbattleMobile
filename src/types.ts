@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 
 // NAVIGATION
 // All app-wide types are centralised here per CLAUDE.md. Keep it that way —
@@ -76,6 +77,18 @@ export type PackCardProps = {
   theme: Theme;
   coloredRegions: boolean;
   disabled?: boolean;
+};
+
+export type PulseBoxProps = {
+  width: number;
+  height: number;
+  radius?: number;
+  baseColor: string;
+  style?: StyleProp<ViewStyle>;
+};
+
+export type PackCardSkeletonProps = {
+  theme: Theme;
 };
 
 export type ToolbarProps = {
