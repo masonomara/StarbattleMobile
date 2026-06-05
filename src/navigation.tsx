@@ -6,6 +6,7 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import BootSplash from 'react-native-bootsplash';
 import { HomeScreen } from './screens/HomeScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
@@ -96,8 +97,17 @@ export function Navigation() {
     ...baseNavTheme,
     colors: { ...baseNavTheme.colors, background: bgColor },
   };
+  // Hide the native bootsplash only after the navigator's first screen is
+  // mounted, then wait one frame so the themed content has actually painted —
+  // fading the splash any earlier reveals an unpainted frame (white flash).
+  const onReady = () => {
+    requestAnimationFrame(() => {
+      BootSplash.hide({ fade: true }).catch(() => {});
+    });
+  };
+
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} onReady={onReady}>
       <Stack.Navigator
         initialRouteName={initialRouteName}
         screenOptions={{

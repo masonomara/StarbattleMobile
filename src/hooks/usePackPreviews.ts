@@ -16,13 +16,11 @@ import type { PackCatalogItem, Puzzle } from '../types';
 // would be more robust.
 export function usePackPreviews(
   packCatalog: PackCatalogItem[],
-): { packPreviews: Record<string, Puzzle>; isLoading: boolean } {
+): { packPreviews: Record<string, Puzzle> } {
   const [packPreviews, setPackPreviews] = useState<Record<string, Puzzle>>({});
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
 
     async function load() {
       const results: Record<string, Puzzle> = {};
@@ -56,7 +54,6 @@ export function usePackPreviews(
       // catalog re-sync doesn't flash already-loaded cards back to skeletons.
       if (!cancelled) {
         setPackPreviews(prev => ({ ...prev, ...results }));
-        setIsLoading(false);
       }
     }
 
@@ -66,5 +63,5 @@ export function usePackPreviews(
     };
   }, [packCatalog]);
 
-  return { packPreviews, isLoading };
+  return { packPreviews };
 }

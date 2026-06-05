@@ -129,15 +129,10 @@ jest.mock('react-native-nitro-haptics', () => ({
   Haptics: new Proxy({}, { get: () => jest.fn() }),
 }));
 
-// BootSplash: no-op the native splash; App calls hide() on mount.
+// BootSplash: no-op the native splash; navigation hides it in onReady.
 jest.mock('react-native-bootsplash', () => ({
   __esModule: true,
   default: {
     hide: jest.fn().mockResolvedValue(undefined),
-    show: jest.fn().mockResolvedValue(undefined),
-    useHideAnimation: () => ({
-      container: { style: {} },
-      logo: { source: 0 },
-    }),
   },
 }));

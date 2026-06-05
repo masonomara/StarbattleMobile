@@ -16,7 +16,6 @@ import { ADAPTY_SDK_KEY } from './src/config';
 import { getStreakPack } from './src/packs';
 import { prefetchAllCatalog } from './src/packs/prefetch';
 import { supabase } from './src/supabase';
-import BootSplash from 'react-native-bootsplash';
 import type { PackCatalogItem } from './src/types';
 
 function runTieredPrefetch(catalog: PackCatalogItem[]): void {
@@ -33,10 +32,9 @@ export default function App() {
   useEffect(() => {
     startupTimer.log('setup effect start');
 
-    // Hide the native bootsplash now that the JS bundle is up and the navigator
-    // is mounting. App and HomeScreen both paint a themed background, so the
-    // handoff has no white flash — and nothing holds the UI behind an overlay.
-    BootSplash.hide({ fade: true }).catch(() => {});
+    // Note: the native bootsplash is hidden in navigation.tsx's onReady, once the
+    // first screen has actually painted — hiding here (on App mount) faded the
+    // splash into an unpainted frame and caused a white flash on the handoff.
 
     adapty.activate(ADAPTY_SDK_KEY).catch(() => {
       // Swallow "already activated" error on Fast Refresh in dev
