@@ -30,7 +30,6 @@ import {
 import { useAuthStore } from '../stores/authStore';
 import { startupTimer } from '../utils/startupTimer';
 import { useStatus } from '@powersync/react-native';
-import { useSplashStore } from '../stores/splashStore';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { PackCard } from '../components/PackCard';
 import { useProductPrice } from '../hooks/useProductPrice';
@@ -111,13 +110,12 @@ export function HomeScreen({
   const { packCatalog, hasPackAccess } = useEntitlements();
 
   const [scrolled, setScrolled] = useState(false);
-  // Gate the content until first-screen data is ready (set alongside the splash
-  // reveal). Without this, arriving from the tutorial — where the splash was
-  // already lifted — would show a half-loaded list, then pop in (layout shift).
+  // Gate the content until first-screen data is ready. Without this the list
+  // would render half-loaded and then pop in as packs arrive (layout shift).
   const [revealed, setRevealed] = useState(false);
 
   // Reactive PowerSync status. Offline (sync service unreachable) means the
-  // local catalog is final, which lets the splash reveal without risking a
+  // local catalog is final, which lets the screen reveal without risking a
   // layout shift from a late-arriving pack.
   const status = useStatus();
   const isOffline = !status.connected && !!status.dataFlowStatus?.downloadError;
@@ -164,9 +162,9 @@ export function HomeScreen({
   // Live streak rows from PowerSync — updates reactively as data syncs.
   const { streaks, isLoading: isStreaksLoading } = useStreakRows(userId);
 
-  // Signal the App-level FauxSplash to reveal once first-screen data is ready.
-  // The overlay lives above the navigator (App.tsx) so it covers the navigator's
-  // async native mount without a white flash. App.tsx owns the 10s safety ceiling.
+  // Reveal the screen once first-screen data is ready, so the list renders
+  // populated rather than half-loaded then popping in. The 10s timeout above is
+  // the safety ceiling if data stalls.
   useEffect(() => {
     const previewsLoaded = !isPackPreviewsLoading;
     const userDataLoaded = !isStreaksLoading && !isProgressLoading;
@@ -180,7 +178,6 @@ export function HomeScreen({
       // actually exists.
       const offlineReady = previewsLoaded && (!userId || userDataLoaded);
       if (offlineReady) {
-        useSplashStore.getState().markHomeReady();
         setRevealed(true);
       }
       return;
@@ -198,7 +195,6 @@ export function HomeScreen({
     )
       return;
     const timer = setTimeout(() => {
-      useSplashStore.getState().markHomeReady();
       setRevealed(true);
     }, 400);
     return () => clearTimeout(timer);

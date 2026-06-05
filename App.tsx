@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { AppState, Linking } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Navigation } from './src/navigation';
 import { useTheme } from './src/hooks/useTheme';
 import { useAuthStore } from './src/stores/authStore';
-import { useSettingsStore, hasSeenTutorial } from './src/stores/settingsStore';
+import { useSettingsStore } from './src/stores/settingsStore';
 import { useEntitlementsStore } from './src/stores/entitlementsStore';
 import { startupTimer } from './src/utils/startupTimer';
 import { db } from './src/powersync/AppSchema';
@@ -16,8 +16,7 @@ import { ADAPTY_SDK_KEY } from './src/config';
 import { getStreakPack, loadPackHints } from './src/packs';
 import { prefetchAllCatalog } from './src/packs/prefetch';
 import { supabase } from './src/supabase';
-import { FauxSplash } from './src/components/FauxSplash';
-import { useSplashStore } from './src/stores/splashStore';
+import BootSplash from 'react-native-bootsplash';
 import type { PackCatalogItem } from './src/types';
 
 function runTieredPrefetch(catalog: PackCatalogItem[]): void {
@@ -30,15 +29,14 @@ export default function App() {
   }, []);
 
   const theme = useTheme();
-  const homeReady = useSplashStore(s => s.homeReady);
-  const [splashVisible, setSplashVisible] = useState(true);
 
   useEffect(() => {
     startupTimer.log('setup effect start');
 
-    // First launch lands on the tutorial (no synced data needed) — lift the
-    // splash immediately instead of waiting on first sync; prefetch runs below.
-    if (!hasSeenTutorial()) useSplashStore.getState().markHomeReady();
+    // Hide the native bootsplash now that the JS bundle is up and the navigator
+    // is mounting. App and HomeScreen both paint a themed background, so the
+    // handoff has no white flash — and nothing holds the UI behind an overlay.
+    BootSplash.hide({ fade: true }).catch(() => {});
 
     adapty.activate(ADAPTY_SDK_KEY).catch(() => {
       // Swallow "already activated" error on Fast Refresh in dev
@@ -65,13 +63,6 @@ export default function App() {
       )
       .then(() => startupTimer.log('streak packs resolved'))
       .catch(() => {});
-
-    // Safety ceiling: reveal the app after 10s even if first-screen data stalls.
-    // The native splash and its JS twin (FauxSplash) stay up until homeReady.
-    const splashSafetyTimer = setTimeout(
-      () => useSplashStore.getState().markHomeReady(),
-      10000,
-    );
 
     useSettingsStore.getState().initialize();
     startupTimer.log('settings store initialized');
@@ -151,7 +142,6 @@ export default function App() {
     });
 
     return () => {
-      clearTimeout(splashSafetyTimer);
       authUnsub();
       entitlementsUnsub();
       watchController.abort();
@@ -171,9 +161,6 @@ export default function App() {
         <SafeAreaProvider>
           <Navigation />
         </SafeAreaProvider>
-        {splashVisible && (
-          <FauxSplash ready={homeReady} onHidden={() => setSplashVisible(false)} />
-        )}
       </PowerSyncContext.Provider>
     </GestureHandlerRootView>
   );

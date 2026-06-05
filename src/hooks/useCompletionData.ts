@@ -18,7 +18,7 @@ const COMPLETED_QUERY =
 //   completedPuzzleIds — streak puzzle IDs completed today, keyed as "packId:dateKey"
 //   completedPerPack   — solved count per library pack
 //
-// isLoading reflects only the query; the splash-reveal gate owns the
+// isLoading reflects only the query; the screen-reveal gate owns the
 // no-signed-in-user policy.
 export function useCompletionData(
   packCatalog: PackCatalogItem[],

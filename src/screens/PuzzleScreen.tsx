@@ -60,7 +60,13 @@ export function PuzzleScreen({
 
   // Resolves route params into a fully loaded PackData object (null while
   // loading). Skipped for the tutorial — it has no pack to resolve.
-  const packData = usePackData(packId, puzzleIndex, archiveKey, navigation, isTutorial);
+  const packData = usePackData(
+    packId,
+    puzzleIndex,
+    archiveKey,
+    navigation,
+    isTutorial,
+  );
 
   const {
     rawPuzzle,
@@ -72,7 +78,7 @@ export function PuzzleScreen({
     effectivePackId,
   } = packData ?? {};
 
-  const gridSize = isTutorial ? TUTORIAL_PUZZLE.size : (packData?.gridSize ?? 0);
+  const gridSize = isTutorial ? TUTORIAL_PUZZLE.size : packData?.gridSize ?? 0;
 
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -91,7 +97,9 @@ export function PuzzleScreen({
 
   const userId = useAuthStore(s => s.user?.id);
   const { streaks: streakRows } = useStreakRows(userId);
-  const streakRow = streakType ? streakRows.find(s => s.type === streakType) : undefined;
+  const streakRow = streakType
+    ? streakRows.find(s => s.type === streakType)
+    : undefined;
   const streakCount = streakRow ? getActiveStreak(streakRow, streakType!) : 0;
 
   const [isReady, setIsReady] = useState(false);
@@ -274,7 +282,9 @@ export function PuzzleScreen({
         }
         center={
           isTutorial ? (
-            <Text style={styles.tutorialText}>{tutorialMessage(cells, puzzle)}</Text>
+            <Text style={styles.tutorialText}>
+              {tutorialMessage(cells, puzzle)}
+            </Text>
           ) : (
             // Timer always shows when alwaysShowTimer is on; otherwise fades with header.
             <Animated.View
@@ -286,7 +296,11 @@ export function PuzzleScreen({
         }
         right={
           isTutorial ? (
-            <Pressable onPress={finishTutorial} hitSlop={12}>
+            <Pressable
+              onPress={finishTutorial}
+              hitSlop={12}
+              style={styles.skipButton}
+            >
               <Text style={styles.skip}>Skip</Text>
             </Pressable>
           ) : (
@@ -365,6 +379,29 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       alignItems: 'center',
     },
-    tutorialText: { color: theme.text, fontSize: 17, fontWeight: '600' },
-    skip: { color: theme.textSecondary, fontSize: 17, fontWeight: '600' },
+    tutorialText: {
+      color: theme.text,
+      fontSize: 17,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    skip: {
+      color: theme.text,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    skipButton: {
+      backgroundColor: theme.surface,
+      width: 48,
+      height: 48,
+      borderRadius: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+      display: 'flex',
+      shadowOffset: { width: 0, height: 4 },
+      shadowColor: '#000000',
+      shadowOpacity: 0.1,
+      shadowRadius: 24,
+      elevation: 8,
+    },
   });

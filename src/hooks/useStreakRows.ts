@@ -24,7 +24,7 @@ function rowsToStreaks(rows: readonly StreakRow[]): Streak[] {
 // rows, so unrelated writes don't churn consumers.
 //
 // isLoading reflects only the query itself. Callers that care about the
-// no-signed-in-user state (e.g. the splash-reveal gate) handle it explicitly
+// no-signed-in-user state (e.g. the screen-reveal gate) handle it explicitly
 // rather than having that policy baked into this hook.
 export function useStreakRows(
   userId: string | undefined,

@@ -12,8 +12,8 @@ test('renders correctly', async () => {
     tree = ReactTestRenderer.create(<App />);
   });
   // Flush pending async effects (e.g. preview loading) inside act, then unmount
-  // so App's setup-effect cleanup runs — clearing the splash safety timer and
-  // removing the AppState/Linking listeners that otherwise leak past the test.
+  // so App's setup-effect cleanup runs — removing the AppState/Linking listeners
+  // and store subscriptions that otherwise leak past the test.
   await ReactTestRenderer.act(async () => {});
   await ReactTestRenderer.act(() => {
     tree.unmount();
