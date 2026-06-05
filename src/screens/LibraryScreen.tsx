@@ -87,30 +87,31 @@ const PuzzleCell = React.memo(function PuzzleCell({
           coloredRegions={coloredRegions}
         />
       )}
-      <View style={styles.puzzleCellOverlay}>
+
+      <View
+        style={[
+          styles.puzzleNumber,
+          status === 'completed'
+            ? styles.puzzleNumberCompleted
+            : status === 'locked'
+            ? styles.puzzleNumberLocked
+            : styles.puzzleNumberActive,
+        ]}
+      >
         {status !== 'active' && (
-          <View style={styles.puzzleIcon}>
+          <View>
             {status === 'completed' ? (
-              <Check size={28} color={theme.blue} />
+              <View style={styles.puzzleIconCompleted}>
+                <Check size={8} color={theme.green} strokeWidth={4} />
+              </View>
             ) : (
-              <Lock size={28} color={theme.textSecondary} />
+              <View style={styles.puzzleIconLocked}>
+                <Lock size={14} color={theme.text} />
+              </View>
             )}
           </View>
         )}
-      </View>
-      <View>
-        <Text
-          style={[
-            styles.puzzleNumber,
-            status === 'completed'
-              ? styles.puzzleNumberCompleted
-              : status === 'locked'
-              ? styles.puzzleNumberLocked
-              : styles.puzzleNumberActive,
-          ]}
-        >
-          {index + 1}
-        </Text>
+        <Text style={styles.puzzleNumberText}>Puzzle {index + 1}</Text>
       </View>
     </Pressable>
   );
@@ -124,7 +125,7 @@ export function LibraryScreen({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const cellSize = Math.floor((width - 2 * 32 - NUM_COLS * 12) / NUM_COLS);
+  const cellSize = Math.floor((width - 2 * 16 - NUM_COLS * 12) / NUM_COLS);
   const styles = useMemo(
     () => createStyles(theme, cellSize, insets),
     [theme, cellSize, insets],
@@ -328,7 +329,7 @@ const createStyles = (
     },
     scroll: { flex: 1 },
     gridContent: {
-      paddingHorizontal: 32,
+      paddingHorizontal: 16,
       paddingTop: SCREEN_HEADER_HEIGHT + insets.top + 24,
       paddingBottom: insets.bottom,
       rowGap: 12,
@@ -340,9 +341,8 @@ const createStyles = (
     puzzleCell: {
       height: cellSize,
       width: cellSize,
-      margin: 8,
-
-      backgroundColor: theme.textSecondary,
+      marginHorizontal: 8,
+      marginBottom: 29,
     },
     puzzleCellOverlay: {
       position: 'absolute',
@@ -353,17 +353,24 @@ const createStyles = (
       alignItems: 'center',
       justifyContent: 'center',
     },
-    puzzleIcon: {
-      position: 'absolute',
-      opacity: 0.6,
-    },
     puzzleNumber: {
-      fontSize: 17,
-      fontWeight: '700',
+      paddingTop: 7,
       textAlign: 'center',
-      lineHeight: 22,
+      paddingBottom: 7,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: 5,
+      marginLeft: -5,
     },
-    puzzleNumberCompleted: { color: theme.blue },
+    puzzleNumberText: {
+      fontSize: 15,
+      lineHeight: 20,
+      fontWeight: '600',
+      color: theme.text,
+    },
+    puzzleNumberCompleted: { color: theme.text },
     puzzleNumberActive: {
       color: theme.text,
     },
@@ -375,6 +382,24 @@ const createStyles = (
       fontSize: 17,
       fontWeight: '600',
       color: theme.text,
+    },
+    puzzleIconCompleted: {
+      width: 15,
+      height: 15,
+      borderRadius: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.25,
+      borderColor: theme.green,
+    },
+    puzzleIconLocked: {
+      width: 15,
+      height: 15,
+      borderRadius: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.25,
+      borderColor: theme.background,
     },
   });
 };
