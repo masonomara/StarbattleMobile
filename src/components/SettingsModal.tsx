@@ -6,7 +6,6 @@ import { Linking } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../hooks/useTheme';
 import { AccountSection } from './settings/AccountSection';
-import { SubscriptionSection } from './settings/SubscriptionSection';
 import { GameplaySection } from './settings/GameplaySection';
 import { AppearanceSection } from './settings/AppearanceSection';
 import { PRIVACY_POLICY_URL, TERMS_URL, CREDITS_URL } from '../config';
@@ -50,7 +49,6 @@ export function SettingsModal() {
           keyboardShouldPersistTaps="handled"
         >
           <AccountSection />
-          <SubscriptionSection />
           <GameplaySection />
           <AppearanceSection />
 

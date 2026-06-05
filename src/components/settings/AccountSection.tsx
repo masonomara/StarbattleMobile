@@ -12,8 +12,15 @@ import AtSign from 'lucide-react-native/dist/cjs/icons/at-sign';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '../Text';
 import { useAuthStore } from '../../stores/authStore';
+import { useEntitlements } from '../../hooks/useEntitlements';
+import { useProductPrice } from '../../hooks/useProductPrice';
 import { useTheme } from '../../hooks/useTheme';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
+import {
+  purchasePremium,
+  restorePurchases,
+  PREMIUM_PRODUCT_ID,
+} from '../../utils/payments';
 import type { Theme } from '../../types';
 
 type EmailMode =
@@ -72,6 +79,9 @@ export function AccountSection() {
   const signOut = useAuthStore(s => s.signOut);
   const deleteAccount = useAuthStore(s => s.deleteAccount);
 
+  const { entitlements, packCatalog } = useEntitlements();
+  const premiumPrice = useProductPrice(PREMIUM_PRODUCT_ID);
+
   const { loading, error, setError, run: withLoading } = useAsyncAction();
 
   const [emailMode, setEmailMode] = useState<EmailMode>(null);
@@ -129,6 +139,10 @@ export function AccountSection() {
       ],
     );
   }
+
+  const ownedPacks = packCatalog.filter(p =>
+    entitlements.ownedPackIds.includes(p.id),
+  );
 
   return (
     <View style={styles.section}>
@@ -383,20 +397,77 @@ export function AccountSection() {
             </Text>
           </View>
 
-          <Pressable
-            style={[styles.secondaryButton, loading && styles.disabled]}
-            onPress={() => withLoading(signOut)}
-            disabled={loading}
-          >
-            <Text style={styles.secondaryButtonText}>Sign Out</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.destructiveButton, loading && styles.disabled]}
-            onPress={confirmDeleteAccount}
-            disabled={loading}
-          >
-            <Text style={styles.destructiveButtonText}>Delete Account</Text>
-          </Pressable>
+          <View style={styles.accountActions}>
+            {entitlements.isPremium ? (
+              <View style={styles.premiumBadge}>
+                <Text style={styles.premiumBadgeText}>Premium</Text>
+              </View>
+            ) : (
+              <Pressable
+                style={[styles.primaryButton, loading && styles.disabled]}
+                onPress={() => withLoading(purchasePremium)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color={theme.background} />
+                ) : (
+                  <Text style={styles.primaryButtonText}>
+                    {premiumPrice
+                      ? `Buy Premium · ${premiumPrice}`
+                      : 'Buy Premium'}
+                  </Text>
+                )}
+              </Pressable>
+            )}
+
+            <Pressable
+              style={[styles.secondaryButton, loading && styles.disabled]}
+              onPress={() => {
+                let wasPremium = false;
+                withLoading(
+                  async () => {
+                    wasPremium = await restorePurchases();
+                  },
+                  () =>
+                    Alert.alert(
+                      'Purchases Restored',
+                      wasPremium
+                        ? 'Your premium access has been restored.'
+                        : 'No previous purchases were found on this account.',
+                    ),
+                );
+              }}
+              disabled={loading}
+            >
+              <Text style={styles.secondaryButtonText}>Restore Purchases</Text>
+            </Pressable>
+
+            {ownedPacks.length > 0 && (
+              <>
+                <Text style={styles.subLabel}>Owned Packs</Text>
+                {ownedPacks.map(p => (
+                  <Text key={p.id} style={styles.ownedPackName}>
+                    {p.name}
+                  </Text>
+                ))}
+              </>
+            )}
+
+            <Pressable
+              style={[styles.secondaryButton, loading && styles.disabled]}
+              onPress={() => withLoading(signOut)}
+              disabled={loading}
+            >
+              <Text style={styles.secondaryButtonText}>Sign Out</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.destructiveButton, loading && styles.disabled]}
+              onPress={confirmDeleteAccount}
+              disabled={loading}
+            >
+              <Text style={styles.destructiveButtonText}>Delete Account</Text>
+            </Pressable>
+          </View>
 
           {error && <Text style={styles.error}>{error}</Text>}
         </>
@@ -466,6 +537,26 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background,
     },
     secondaryButtonText: { fontSize: 17, fontWeight: '700', color: theme.text },
+    accountActions: { gap: 12, marginTop: 8 },
+    premiumBadge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: theme.spacingLg,
+      paddingVertical: theme.spacingMd,
+      borderRadius: theme.radiusMd,
+      backgroundColor: theme.blue,
+      marginTop: 8,
+    },
+    premiumBadgeText: {
+      fontSize: theme.fontSizeSubhead,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.background,
+    },
+    subLabel: {
+      fontSize: theme.fontSizeSubhead,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.textSecondary,
+    },
+    ownedPackName: { fontSize: theme.fontSizeCallout, color: theme.text },
     buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     linkButton: {
       height: 52,
