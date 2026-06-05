@@ -185,8 +185,8 @@ export function HomeScreen({
 
     // Online: a user always resolves (anonymous sign-in), so wait for it — that
     // way streak cards and completion counts are populated before reveal, never
-    // popped in after. Then hold a beat in case the in-flight sync is still
-    // appending packs. Any dep change re-runs this effect and resets the timer.
+    // popped in after. Reveal as soon as that data has settled; any dep change
+    // re-runs this effect, so a late-arriving pack just updates the live list.
     if (
       !userId ||
       packCatalog.length === 0 ||
@@ -194,10 +194,7 @@ export function HomeScreen({
       !userDataLoaded
     )
       return;
-    const timer = setTimeout(() => {
-      setRevealed(true);
-    }, 400);
-    return () => clearTimeout(timer);
+    setRevealed(true);
   }, [
     packCatalog.length,
     isPackPreviewsLoading,

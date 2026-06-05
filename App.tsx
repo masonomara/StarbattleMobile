@@ -13,7 +13,7 @@ import { PowerSyncContext } from '@powersync/react-native';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/config';
-import { getStreakPack, loadPackHints } from './src/packs';
+import { getStreakPack } from './src/packs';
 import { prefetchAllCatalog } from './src/packs/prefetch';
 import { supabase } from './src/supabase';
 import BootSplash from 'react-native-bootsplash';
@@ -49,16 +49,16 @@ export default function App() {
     startupTimer.log('auth initialize called');
     const authReady = useAuthStore.getState().initialize();
 
-    // Warm streak packs so HomeScreen's previews are cached when it mounts.
+    // Warm streak pack data so HomeScreen's previews are cached when it mounts.
+    // Hints are intentionally NOT warmed here — they're only needed when a puzzle
+    // opens, and PuzzleScreen loads them itself (sharing this cache), so warming
+    // them at launch is pure startup cost for data the home screen never uses.
     authReady
       .then(() =>
         Promise.all([
           getStreakPack('daily'),
           getStreakPack('weekly'),
           getStreakPack('monthly'),
-          loadPackHints('daily').catch(() => []),
-          loadPackHints('weekly').catch(() => []),
-          loadPackHints('monthly').catch(() => []),
         ]),
       )
       .then(() => startupTimer.log('streak packs resolved'))
