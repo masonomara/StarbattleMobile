@@ -241,12 +241,9 @@ export type RegionColors = {
   blue: string;
   magenta: string;
   cyan: string;
-  redBright: string;
-  greenBright: string;
-  yellowBright: string;
-  blueBright: string;
-  magentaBright: string;
-  cyanBright: string;
+  orange: string;
+  purple: string;
+  teal: string;
 };
 
 export type ThemeColors = {

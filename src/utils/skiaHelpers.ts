@@ -5,7 +5,7 @@ export function buildRegionFillPaths(
   size: number,
   cs: number,
   offset = 0,
-  numColors = 6,
+  numColors = 9,
 ) {
   const builders = new Map<number, ReturnType<typeof Skia.PathBuilder.Make>>();
   for (let row = 0; row < size; row++) {

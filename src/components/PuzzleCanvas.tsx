@@ -38,7 +38,7 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
   const regionColors = theme.regionColors;
 
   // regionColors.length is intentionally omitted from deps: buildTheme always
-  // constructs regionColors from exactly 6 fixed color slots, so its length is
+  // constructs regionColors from a fixed set of color slots, so its length is
   // invariant across palettes and theme switches. Paths encode geometry only.
   const regionFillPaths = useMemo(
     () => buildRegionFillPaths(regions, size, cs, bw),
