@@ -20,12 +20,14 @@ export function usePackData(
   puzzleIndex: number | undefined,
   archiveKey: string | undefined,
   navigation: { goBack: () => void },
+  skip = false,
 ): PackData | null {
   const [packData, setPackData] = useState<PackData | null>(null);
   const packCatalog = useEntitlementsStore(s => s.packCatalog);
 
   useEffect(() => {
     setPackData(null);
+    if (skip) return;
 
     const meta = packCatalog.find(p => p.id === packId);
     const streakType = meta?.type;
@@ -90,7 +92,7 @@ export function usePackData(
         })
         .catch(() => navigation.goBack());
     }
-  }, [packId, puzzleIndex, archiveKey, navigation, packCatalog]);
+  }, [packId, puzzleIndex, archiveKey, navigation, packCatalog, skip]);
 
   return packData;
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Alert, View, Pressable, StyleSheet } from 'react-native';
+import { Alert, View, Pressable, StyleSheet } from 'react-native';
 import Undo2 from 'lucide-react-native/dist/cjs/icons/undo-2';
 import Redo2 from 'lucide-react-native/dist/cjs/icons/redo-2';
 import Minimize2 from 'lucide-react-native/dist/cjs/icons/minimize-2';
@@ -19,7 +19,7 @@ const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   erase: Eraser,
 };
 
-export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
+export function Toolbar({ isZoomed, onZoomReset, hintDisabledMessage }: ToolbarProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
@@ -41,7 +41,6 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
   const undoDisabled = !canUndo || completed;
   const redoDisabled = !canRedo || completed;
   const clearDisabled = !hasContent || completed;
-  const hintDisabled = completed || hintsLoading;
 
   const TapModeIcon = TAP_MODE_ICONS[tapMode];
 
@@ -51,6 +50,14 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
   }
 
   function handleHint() {
+    if (hintDisabledMessage) {
+      Alert.alert('Hints', hintDisabledMessage);
+      return;
+    }
+    if (hintsLoading) {
+      Alert.alert('Hints', 'Hints are loading.');
+      return;
+    }
     if (hasHints) {
       press(showHint);
     } else {
@@ -82,18 +89,15 @@ export function Toolbar({ isZoomed, onZoomReset }: ToolbarProps) {
 
         <Pressable
           onPress={handleHint}
-          disabled={hintDisabled}
+          disabled={completed}
           style={[
             styles.button,
             hasGhosts && styles.buttonAccent,
-            (hintDisabled || !hasHints) && styles.buttonDisabled,
+            (completed || hintsLoading || !hasHints || !!hintDisabledMessage) &&
+              styles.buttonDisabled,
           ]}
         >
-          {hintsLoading ? (
-            <ActivityIndicator size="small" color={theme.text} />
-          ) : (
-            <Lightbulb size={26} color={theme.text} />
-          )}
+          <Lightbulb size={26} color={theme.text} />
         </Pressable>
 
         <Pressable

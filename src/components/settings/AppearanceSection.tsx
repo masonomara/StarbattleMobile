@@ -1,14 +1,47 @@
 import React from 'react';
-import { View, Pressable, useColorScheme, StyleSheet } from 'react-native';
-import SegmentedControl from '@react-native-segmented-control/segmented-control';
+import {
+  View,
+  Pressable,
+  Image,
+  useColorScheme,
+  StyleSheet,
+} from 'react-native';
 import { Text } from '../Text';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { useTheme, buildTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../hooks/useTheme';
 import { PALETTES, PALETTE_NAMES } from '../../themes/palettes';
-import { rgba } from '../../themes/ansi';
 import { ToggleRow } from './GameplaySection';
-import { PalettePreview } from './PalettePreview';
 import type { Theme, UserSettings } from '../../types';
+
+const PALETTE_ICONS: Record<
+  string,
+  { light: ReturnType<typeof require>; dark: ReturnType<typeof require> }
+> = {
+  original: {
+    light: require('../../../assets/icons/original-light.png'),
+    dark: require('../../../assets/icons/original-dark.png'),
+  },
+  primer: {
+    light: require('../../../assets/icons/primer-light.png'),
+    dark: require('../../../assets/icons/primer-dark.png'),
+  },
+  gruvbox: {
+    light: require('../../../assets/icons/gruvbox-light.png'),
+    dark: require('../../../assets/icons/gruvbox-dark.png'),
+  },
+  rosePine: {
+    light: require('../../../assets/icons/rosePine-light.png'),
+    dark: require('../../../assets/icons/rosePine-dark.png'),
+  },
+  seoul256: {
+    light: require('../../../assets/icons/seoul256-light.png'),
+    dark: require('../../../assets/icons/seoul256-dark.png'),
+  },
+  tokyoNight: {
+    light: require('../../../assets/icons/tokyoNight-light.png'),
+    dark: require('../../../assets/icons/tokyoNight-dark.png'),
+  },
+};
 
 const THEME_OPTIONS: { label: string; value: UserSettings['theme'] }[] = [
   { label: 'System', value: 'system' },
@@ -57,18 +90,30 @@ export function AppearanceSection() {
         />
         <View style={styles.themeRow}>
           <Text style={styles.rowLabel}>Theme</Text>
-          <SegmentedControl
-            values={THEME_OPTIONS.map(o => o.label)}
-            selectedIndex={THEME_OPTIONS.findIndex(o => o.value === settings.theme)}
-            onChange={e =>
-              updateSettings({ theme: THEME_OPTIONS[e.nativeEvent.selectedSegmentIndex].value })
-            }
-            style={styles.themeSegment}
-            tintColor={theme.blue}
-            backgroundColor={theme.background}
-            fontStyle={{ color: theme.text, fontSize: 15, fontWeight: '600' }}
-            activeFontStyle={{ color: theme.background, fontSize: 15, fontWeight: '600' }}
-          />
+          <View style={styles.themeButtons}>
+            {THEME_OPTIONS.map(option => {
+              const active = settings.theme === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => updateSettings({ theme: option.value })}
+                  style={[
+                    styles.themeButton,
+                    active && styles.themeButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.themeButtonLabel,
+                      active && styles.themeButtonLabelActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       </View>
 
@@ -79,28 +124,22 @@ export function AppearanceSection() {
             <View key={rowIdx} style={styles.swatchRow}>
               {row.map(name => {
                 const active = settings.palette === name;
-                const variant = isCurrentlyDark ? PALETTES[name].dark : PALETTES[name].light;
-                const paletteTheme = buildTheme(variant);
                 return (
                   <Pressable
                     key={name}
                     onPress={() => updateSettings({ palette: name })}
                     style={[
                       styles.swatchCard,
-                      { backgroundColor: paletteTheme.background },
-                      active && { borderColor: paletteTheme.text },
+                      active && { borderColor: theme.text },
                     ]}
                   >
-                    <PalettePreview
-                      paletteTheme={paletteTheme}
-                      coloredRegions={settings.coloredRegions}
+                    <Image
+                      source={
+                        PALETTE_ICONS[name][isCurrentlyDark ? 'dark' : 'light']
+                      }
+                      style={[styles.swatchImage]}
                     />
-                    <Text
-                      style={[
-                        styles.swatchLabel,
-                        { color: rgba(paletteTheme.text, 1) },
-                      ]}
-                    >
+                    <Text style={styles.swatchLabel}>
                       {PALETTES[name].label}
                     </Text>
                   </Pressable>
@@ -138,21 +177,54 @@ const createStyles = (theme: Theme) =>
       borderColor: theme.border,
     },
     rowLabel: { fontSize: 17, fontWeight: '600', color: theme.text },
-    themeSegment: { width: 240, height: 36 },
+    themeButtons: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    themeButton: {
+      paddingHorizontal: 14,
+      height: 32,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.border,
+    },
+    themeButtonActive: {
+      backgroundColor: theme.blue,
+    },
+    themeButtonLabel: {
+      fontSize: 15,
+      fontWeight: '700',
+      fontFamily: 'Karla',
+      color: theme.text,
+    },
+    themeButtonLabelActive: {
+      color: theme.background,
+    },
     swatchGrid: { gap: 12 },
     swatchRow: { flexDirection: 'row', gap: 12 },
     swatchCard: {
       flex: 1,
-      borderRadius: 4,
-      borderWidth: 1,
+      borderRadius: 8,
+      borderWidth: 2,
       borderColor: theme.border,
       overflow: 'hidden',
       alignItems: 'center',
-      padding: 8,
+      padding: 14,
+    },
+    swatchImage: {
+      width: '100%',
+      height: 'auto',
+      aspectRatio: 1,
+      borderRadius: 0,
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     swatchLabel: {
-      fontSize: 12,
-      fontWeight: theme.fontWeightSemibold,
-      paddingVertical: 6,
+      fontSize: 13,
+      fontWeight: '600',
+      color: theme.text,
+      paddingTop: 10,
+      marginBottom: -4,
     },
   });

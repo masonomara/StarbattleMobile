@@ -48,8 +48,10 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     // that will never succeed; the transaction is completed (consumed) without
     // retrying. Non-fatal errors (network, transient) re-throw so PowerSync
     // retries the whole transaction.
+    let lastOp: (typeof transaction.crud)[number] | undefined;
     try {
       for (const op of transaction.crud) {
+        lastOp = op;
         const table = supabase.from(op.table);
         let result: { error: { code?: string; message: string } | null };
 
@@ -74,10 +76,10 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     } catch (ex) {
       if (ex !== null && typeof ex === 'object' && isFatal(ex as { code?: string })) {
         const err = ex as { code?: string; message?: string };
-        // `op` here is the last processed operation — if the error came from
+        // lastOp is the last processed operation — if the error came from
         // transaction.complete() rather than an individual upsert, the logged
         // op details will be the last loop iteration, not the true failure site.
-        console.error(`[PowerSync] Fatal upload error (code=${err.code}) — discarded: ${err.message}`, op.table, op.op, op.id);
+        console.error(`[PowerSync] Fatal upload error (code=${err.code}) — discarded: ${err.message}`, lastOp?.table, lastOp?.op, lastOp?.id);
         await transaction.complete();
       } else {
         throw ex;

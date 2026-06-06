@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
 import { PALETTES, tokens } from '../themes/palettes';
@@ -48,6 +49,12 @@ export function useTheme(): Theme {
     : themePref === 'light' ? false
     : systemScheme === 'dark';
 
-  const group = PALETTES[palette] ?? PALETTES.original;
-  return buildTheme(isDark ? group.dark : group.light);
+  // Memoize on the only inputs that affect the result. Without this, useTheme
+  // returns a new Theme object every render, which changes the `theme` prop
+  // identity on every consumer and defeats React.memo on PuzzleThumbnail — so
+  // every Skia thumbnail reconciles on every render.
+  return useMemo(() => {
+    const group = PALETTES[palette] ?? PALETTES.original;
+    return buildTheme(isDark ? group.dark : group.light);
+  }, [isDark, palette]);
 }

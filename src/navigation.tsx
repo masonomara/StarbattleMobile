@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   NavigationContainer,
   DarkTheme,
@@ -6,6 +6,7 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import BootSplash from 'react-native-bootsplash';
 import { HomeScreen } from './screens/HomeScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
 import { PuzzleScreen } from './screens/PuzzleScreen';
@@ -15,6 +16,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './hooks/useTheme';
+import { hasSeenTutorial } from './stores/settingsStore';
 import type { RootStackParamList } from './types';
 // type-only: pulls in global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.
@@ -73,17 +75,41 @@ function WrappedArchivePack(
   );
 }
 
+function WrappedTutorial(
+  props: NativeStackScreenProps<RootStackParamList, 'Tutorial'>,
+) {
+  const theme = useTheme();
+  return (
+    <ErrorBoundary theme={theme}>
+      <PuzzleScreen {...props} />
+    </ErrorBoundary>
+  );
+}
+
 export function Navigation() {
   const theme = useTheme();
   const bgColor = theme.background;
   const baseNavTheme = theme.isDark ? DarkTheme : DefaultTheme;
+  const [initialRouteName] = useState<keyof RootStackParamList>(() =>
+    hasSeenTutorial() ? 'Home' : 'Tutorial',
+  );
   const navTheme = {
     ...baseNavTheme,
     colors: { ...baseNavTheme.colors, background: bgColor },
   };
+  // Hide the native bootsplash only after the navigator's first screen is
+  // mounted, then wait one frame so the themed content has actually painted —
+  // fading the splash any earlier reveals an unpainted frame (white flash).
+  const onReady = () => {
+    requestAnimationFrame(() => {
+      BootSplash.hide({ fade: true }).catch(() => {});
+    });
+  };
+
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} onReady={onReady}>
       <Stack.Navigator
+        initialRouteName={initialRouteName}
         screenOptions={{
           headerShown: false,
           statusBarStyle: theme.isDark ? 'light' : 'dark',
@@ -94,6 +120,7 @@ export function Navigation() {
         <Stack.Screen name="Library" component={WrappedLibrary} />
         <Stack.Screen name="Puzzle" component={WrappedPuzzle} />
         <Stack.Screen name="ArchivePack" component={WrappedArchivePack} />
+        <Stack.Screen name="Tutorial" component={WrappedTutorial} />
       </Stack.Navigator>
       <SettingsModal />
       <ResetPasswordModal />

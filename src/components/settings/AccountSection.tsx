@@ -12,8 +12,15 @@ import AtSign from 'lucide-react-native/dist/cjs/icons/at-sign';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '../Text';
 import { useAuthStore } from '../../stores/authStore';
+import { useEntitlements } from '../../hooks/useEntitlements';
+import { useProductPrice } from '../../hooks/useProductPrice';
 import { useTheme } from '../../hooks/useTheme';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
+import {
+  purchasePremium,
+  restorePurchases,
+  PREMIUM_PRODUCT_ID,
+} from '../../utils/payments';
 import type { Theme } from '../../types';
 
 type EmailMode =
@@ -27,10 +34,22 @@ type EmailMode =
 function GoogleIcon({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
-      <Path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-      <Path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-      <Path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
-      <Path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+      <Path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <Path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <Path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+        fill="#FBBC05"
+      />
+      <Path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
+      />
     </Svg>
   );
 }
@@ -59,6 +78,9 @@ export function AccountSection() {
   const requestPasswordReset = useAuthStore(s => s.requestPasswordReset);
   const signOut = useAuthStore(s => s.signOut);
   const deleteAccount = useAuthStore(s => s.deleteAccount);
+
+  const { entitlements, packCatalog } = useEntitlements();
+  const premiumPrice = useProductPrice(PREMIUM_PRODUCT_ID);
 
   const { loading, error, setError, run: withLoading } = useAsyncAction();
 
@@ -118,17 +140,26 @@ export function AccountSection() {
     );
   }
 
+  const ownedPacks = packCatalog.filter(p =>
+    entitlements.ownedPackIds.includes(p.id),
+  );
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>
-        {isAnonymous ? (authTab === 'signin' ? 'Log in' : 'Sign up') : 'Account'}
+        {isAnonymous
+          ? authTab === 'signin'
+            ? 'Sign in'
+            : 'Sign up'
+          : 'Account'}
       </Text>
 
       {isAnonymous ? (
         <>
           {authTab === 'signup' ? (
             <Text style={styles.sectionBody}>
-              Create an account to keep your progress, streaks, and purchases across devices.
+              Create an account to keep your progress, streaks, and purchases
+              across devices.
             </Text>
           ) : (
             <Text style={styles.sectionBody}>
@@ -137,16 +168,21 @@ export function AccountSection() {
           )}
 
           {emailMode === null && (
-            <View style={{ gap: 12, marginTop: 4 }}>
+            <View style={{ gap: 12 }}>
               <Pressable
                 style={[styles.secondaryButton, loading && styles.disabled]}
-                onPress={() => { setError(null); setEmailMode(authTab); }}
+                onPress={() => {
+                  setError(null);
+                  setEmailMode(authTab);
+                }}
                 disabled={loading}
               >
                 <View style={styles.buttonRow}>
                   <AtSign size={18} color={theme.text} />
                   <Text style={styles.secondaryButtonText}>
-                    {authTab === 'signin' ? 'Log in with Email' : 'Sign up with Email'}
+                    {authTab === 'signin'
+                      ? 'Sign in with Email'
+                      : 'Sign up with Email'}
                   </Text>
                 </View>
               </Pressable>
@@ -161,7 +197,9 @@ export function AccountSection() {
                   <View style={styles.buttonRow}>
                     <GoogleIcon size={18} />
                     <Text style={styles.secondaryButtonText}>
-                      {authTab === 'signin' ? 'Log in with Google' : 'Sign up with Google'}
+                      {authTab === 'signin'
+                        ? 'Sign in with Google'
+                        : 'Sign up with Google'}
                     </Text>
                   </View>
                 )}
@@ -178,7 +216,9 @@ export function AccountSection() {
                     <View style={styles.buttonRow}>
                       <AppleIcon size={18} color={theme.text} />
                       <Text style={styles.secondaryButtonText}>
-                        {authTab === 'signin' ? 'Log in with Apple' : 'Sign up with Apple'}
+                        {authTab === 'signin'
+                          ? 'Sign in with Apple'
+                          : 'Sign up with Apple'}
                       </Text>
                     </View>
                   )}
@@ -186,23 +226,24 @@ export function AccountSection() {
               )}
               <Pressable
                 style={styles.linkButton}
-                onPress={() => setAuthTab(authTab === 'signin' ? 'signup' : 'signin')}
+                onPress={() =>
+                  setAuthTab(authTab === 'signin' ? 'signup' : 'signin')
+                }
               >
                 <Text style={styles.linkText}>
-                  {authTab === 'signin' ? 'Create an account' : 'Already have an account? Log in'}
+                  {authTab === 'signin'
+                    ? 'Create an account'
+                    : 'Already have an account? Sign in'}
                 </Text>
               </Pressable>
             </View>
           )}
 
           {(emailMode === 'signup' || emailMode === 'signin') && (
-            <View>
-              <Text style={styles.formTitle}>
-                {emailMode === 'signup' ? 'Create Account' : 'Sign In'}
-              </Text>
+            <View style={{ gap: 12 }}>
+              <Text style={styles.inputLabel}>Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Email"
                 placeholderTextColor={theme.textSecondary}
                 value={email}
                 onChangeText={setEmail}
@@ -210,17 +251,24 @@ export function AccountSection() {
                 keyboardType="email-address"
                 autoComplete="email"
               />
+              <Text style={styles.inputLabel}>Password</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Password"
                 placeholderTextColor={theme.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                autoComplete={emailMode === 'signup' ? 'new-password' : 'password'}
+                autoComplete={
+                  emailMode === 'signup' ? 'new-password' : 'password'
+                }
               />
               {emailMode === 'signup' && (
-                <Text style={[styles.passwordHint, password.length >= 6 && styles.passwordHintMet]}>
+                <Text
+                  style={[
+                    styles.passwordHint,
+                    password.length >= 6 && styles.passwordHintMet,
+                  ]}
+                >
                   At least 6 characters
                 </Text>
               )}
@@ -240,7 +288,10 @@ export function AccountSection() {
               {emailMode === 'signin' && (
                 <Pressable
                   style={styles.linkButton}
-                  onPress={() => { setEmailMode('forgot-password'); setError(null); }}
+                  onPress={() => {
+                    setEmailMode('forgot-password');
+                    setError(null);
+                  }}
                   disabled={loading}
                 >
                   <Text style={styles.linkText}>Forgot Password?</Text>
@@ -248,16 +299,19 @@ export function AccountSection() {
               )}
               <Pressable
                 style={styles.linkButton}
-                onPress={() => { setEmailMode(null); setError(null); }}
+                onPress={() => {
+                  setEmailMode(null);
+                  setError(null);
+                }}
               >
-                <Text style={styles.linkText}>Cancel</Text>
+                <Text style={styles.linkTextDanger}>Cancel</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'forgot-password' && (
-            <View>
-              <Text style={styles.formTitle}>Reset Password</Text>
+            <View style={{ gap: 12 }}>
+              <Text style={styles.inputLabel}>Reset Password</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -281,7 +335,10 @@ export function AccountSection() {
               </Pressable>
               <Pressable
                 style={styles.linkButton}
-                onPress={() => { setEmailMode('signin'); setError(null); }}
+                onPress={() => {
+                  setEmailMode('signin');
+                  setError(null);
+                }}
               >
                 <Text style={styles.linkText}>Back to Sign In</Text>
               </Pressable>
@@ -297,7 +354,11 @@ export function AccountSection() {
               </Text>
               <Pressable
                 style={styles.primaryButton}
-                onPress={() => { setEmailMode(null); setEmail(''); setError(null); }}
+                onPress={() => {
+                  setEmailMode(null);
+                  setEmail('');
+                  setError(null);
+                }}
               >
                 <Text style={styles.primaryButtonText}>Done</Text>
               </Pressable>
@@ -309,12 +370,16 @@ export function AccountSection() {
               <Text style={styles.confirmEmailTitle}>Check your inbox</Text>
               <Text style={styles.confirmEmailBody}>
                 We sent a confirmation link to{' '}
-                <Text style={styles.confirmEmailAddress}>{email}</Text>.
-                Open it to finish creating your account.
+                <Text style={styles.confirmEmailAddress}>{email}</Text>. Open it
+                to finish creating your account.
               </Text>
               <Pressable
                 style={styles.primaryButton}
-                onPress={() => { setEmailMode(null); setEmail(''); setError(null); }}
+                onPress={() => {
+                  setEmailMode(null);
+                  setEmail('');
+                  setError(null);
+                }}
               >
                 <Text style={styles.primaryButtonText}>Done</Text>
               </Pressable>
@@ -325,25 +390,89 @@ export function AccountSection() {
         </>
       ) : (
         <>
-          <View style={styles.infoRow}>
+          <View style={[styles.infoRow, styles.infoRowFirst]}>
             <Text style={styles.infoLabel}>Email</Text>
-            <Text style={styles.infoValue}>{user?.email ?? 'Sign-in with provider'}</Text>
+            <Text style={styles.infoValue} numberOfLines={1}>
+              {user?.email ?? 'Sign-in with provider'}
+            </Text>
           </View>
 
-          <Pressable
-            style={[styles.secondaryButton, loading && styles.disabled]}
-            onPress={() => withLoading(signOut)}
-            disabled={loading}
-          >
-            <Text style={styles.secondaryButtonText}>Sign Out</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.destructiveButton, loading && styles.disabled]}
-            onPress={confirmDeleteAccount}
-            disabled={loading}
-          >
-            <Text style={styles.destructiveButtonText}>Delete Account</Text>
-          </Pressable>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Account Type</Text>
+            <Text style={styles.infoValue}>
+              {entitlements.isPremium ? 'Premium' : 'Free'}
+            </Text>
+          </View>
+
+          <View style={styles.accountActions}>
+            {entitlements.isPremium ? (
+              <></>
+            ) : (
+              <Pressable
+                style={[styles.primaryButton, loading && styles.disabled]}
+                onPress={() => withLoading(purchasePremium)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color={theme.background} />
+                ) : (
+                  <Text style={styles.primaryButtonText}>
+                    {premiumPrice
+                      ? `Buy Premium · ${premiumPrice}`
+                      : 'Buy Premium'}
+                  </Text>
+                )}
+              </Pressable>
+            )}
+
+            <Pressable
+              style={[styles.secondaryButton, loading && styles.disabled]}
+              onPress={() => {
+                let wasPremium = false;
+                withLoading(
+                  async () => {
+                    wasPremium = await restorePurchases();
+                  },
+                  () =>
+                    Alert.alert(
+                      'Purchases Restored',
+                      wasPremium
+                        ? 'Your premium access has been restored.'
+                        : 'No previous purchases were found on this account.',
+                    ),
+                );
+              }}
+              disabled={loading}
+            >
+              <Text style={styles.secondaryButtonText}>Restore Purchases</Text>
+            </Pressable>
+
+            {ownedPacks.length > 0 && (
+              <>
+                <Text style={styles.subLabel}>Owned Packs</Text>
+                {ownedPacks.map(p => (
+                  <Text key={p.id} style={styles.ownedPackName}>
+                    {p.name}
+                  </Text>
+                ))}
+              </>
+            )}
+
+            <Pressable
+              style={[styles.secondaryButton, loading && styles.disabled]}
+              onPress={() => withLoading(signOut)}
+              disabled={loading}
+            >
+              <Text style={styles.secondaryButtonText}>Sign Out</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.destructiveButton, loading && styles.disabled]}
+              onPress={confirmDeleteAccount}
+              disabled={loading}
+            >
+              <Text style={styles.destructiveButtonText}>Delete Account</Text>
+            </Pressable>
+          </View>
 
           {error && <Text style={styles.error}>{error}</Text>}
         </>
@@ -354,13 +483,14 @@ export function AccountSection() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    section: { marginTop: 40 },
+    section: { marginTop: 16 },
     sectionTitle: {
       fontSize: 20,
       color: theme.text,
       lineHeight: 22,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
+      letterSpacing: -0.2,
       marginBottom: 14,
     },
     sectionBody: {
@@ -373,29 +503,36 @@ const createStyles = (theme: Theme) =>
     infoRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      paddingVertical: theme.spacingMd,
-      paddingHorizontal: theme.spacingLg,
-      borderRadius: theme.radiusMd,
-      backgroundColor: theme.surface,
+      alignItems: 'center',
+      minHeight: 56,
+      borderTopWidth: 1,
+      borderColor: theme.border,
     },
-    infoLabel: { fontSize: theme.fontSizeCallout, color: theme.textSecondary },
+    infoRowFirst: {
+      borderTopWidth: 0,
+    },
+    infoLabel: { fontSize: 17, fontWeight: '600', color: theme.text },
     infoValue: {
-      fontSize: theme.fontSizeCallout,
-      color: theme.text,
-      fontWeight: theme.fontWeightSemibold,
-      maxWidth: '60%',
+      fontSize: 17,
+      color: theme.textSecondary,
+      fontWeight: '600',
+      maxWidth: 240,
       textAlign: 'right',
+      overflow: 'hidden',
     },
     primaryButton: {
       height: 52,
-      borderRadius: theme.radiusMd,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: theme.background,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.blue,
+      backgroundColor: theme.text,
+      marginTop: 8,
     },
     primaryButtonText: {
-      fontSize: theme.fontSizeCallout,
-      fontWeight: theme.fontWeightSemibold,
+      fontSize: 17,
+      fontWeight: '700',
       color: theme.background,
     },
     secondaryButton: {
@@ -403,18 +540,64 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       borderRadius: 8,
       borderWidth: 2,
-      borderColor: theme.text,
+      borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.background,
     },
     secondaryButtonText: { fontSize: 17, fontWeight: '700', color: theme.text },
-    buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    linkButton: { alignItems: 'center', paddingVertical: theme.spacingMd },
-    linkText: { fontSize: theme.fontSizeSubhead, color: theme.text },
+    accountActions: { gap: 12, marginTop: 14 },
+    premiumBadge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: theme.spacingLg,
+      paddingVertical: theme.spacingMd,
+      borderRadius: theme.radiusMd,
+      backgroundColor: theme.blue,
+      marginTop: 8,
+    },
+    premiumBadgeText: {
+      fontSize: theme.fontSizeSubhead,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.background,
+    },
+    subLabel: {
+      fontSize: theme.fontSizeSubhead,
+      fontWeight: theme.fontWeightSemibold,
+      color: theme.textSecondary,
+    },
+    ownedPackName: { fontSize: theme.fontSizeCallout, color: theme.text },
+    buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    linkButton: {
+      height: 52,
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.background,
+      paddingVertical: theme.spacingMd,
+    },
+    linkText: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    linkTextDanger: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: theme.red,
+    },
     formTitle: {
       fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
+      color: theme.text,
+    },
+    inputLabel: {
+      fontSize: 15,
+      lineHeight: 20,
+      marginBottom: -4,
+      fontWeight: '500',
       color: theme.text,
     },
     input: {
@@ -426,16 +609,20 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.surface,
       color: theme.text,
       fontSize: theme.fontSizeCallout,
+      marginBottom: 12,
     },
     destructiveButton: {
       height: 52,
-      borderRadius: theme.radiusMd,
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
     },
     destructiveButtonText: {
-      fontSize: theme.fontSizeCallout,
+      fontSize: 17,
       fontWeight: theme.fontWeightSemibold,
       color: theme.red,
     },
@@ -454,12 +641,16 @@ const createStyles = (theme: Theme) =>
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
-    passwordHint: { fontSize: theme.fontSizeSubhead, color: theme.textSecondary },
+    passwordHint: {
+      fontSize: theme.fontSizeSubhead,
+      color: theme.textSecondary,
+    },
     passwordHintMet: { color: theme.blue },
     disabled: { opacity: 0.6 },
     error: {
       fontSize: theme.fontSizeSubhead,
       color: theme.red,
       textAlign: 'center',
+      marginTop: 18,
     },
   });

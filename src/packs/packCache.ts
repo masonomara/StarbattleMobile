@@ -1,5 +1,5 @@
 import type { Pack, HintStep } from '../types';
-import { fetchPack, fetchFromSupabase } from './packFetcher';
+import { fetchPack, fetchHints } from './packFetcher';
 
 // In-memory cache keyed by local filename. Stores the in-flight or resolved
 // Promise so concurrent callers for the same key share one fetch.
@@ -10,10 +10,6 @@ import { fetchPack, fetchFromSupabase } from './packFetcher';
 // invalidated via warmPackCache() — currently only errors trigger eviction.
 // prefetchPackFile() handles ETag-based refresh; loadPack() does not.
 const packCache = new Map<string, Promise<Pack>>();
-
-// In-memory cache for hint arrays, keyed by packId (not filename).
-// Separate from packCache so evicting a stale pack doesn't discard hints.
-const hintsCache = new Map<string, Promise<HintStep[][]>>();
 
 export function warmPackCache(key: string, pack: Pack): void {
   packCache.set(key, Promise.resolve(pack));
@@ -31,50 +27,26 @@ export function loadPack(localKey: string, remoteKey?: string): Promise<Pack> {
   packCache.set(localKey, promise);
   // Evict on failure so the next call retries rather than re-throwing instantly.
   promise.catch(() => packCache.delete(localKey));
-  // Pre-warm the hints cache in parallel — preview packs have no hints file.
-  if (!localKey.includes('_preview')) {
-    const hintId = localKey.replace(/\.json$/, '');
-    __DEV__ &&
-      console.log(`[SB:HINTS] loadPack side-effect: loadPackHints(${hintId})`);
-    loadPackHints(hintId).catch(e =>
-      console.error(`[SB:HINTS] side-effect failed for ${hintId}:`, e),
-    );
-  }
   return promise;
 }
 
-async function fetchPackHints(packId: string): Promise<HintStep[][]> {
-  const storageKey = `${packId}-hints.json`;
-  __DEV__ && console.log(`[SB:HINTS] fetching ${storageKey}`);
-  try {
-    const text = await Promise.race([
-      fetchFromSupabase(storageKey),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('hints fetch timeout')), 10_000),
-      ),
-    ]);
-    const hints = (JSON.parse(text) as { hints: HintStep[][] }).hints;
-    __DEV__ &&
-      console.log(
-        `[SB:HINTS] ${packId}: ${(text.length / 1024).toFixed(1)} KB, ${
-          hints.length
-        } entries`,
-      );
-    return hints;
-  } catch (e) {
-    console.error(`[SB:HINTS] ${packId} fetch failed:`, e);
-    throw e;
-  }
+// Keyed by packId, separate from packCache so evicting a stale pack never
+// discards hints.
+const hintsCache = new Map<string, Promise<HintStep[][]>>();
+
+export function warmHintsCache(packId: string, hints: HintStep[][]): void {
+  hintsCache.set(packId, Promise.resolve(hints));
+}
+
+export function hasHintsCacheEntry(packId: string): boolean {
+  return hintsCache.has(packId);
 }
 
 export function loadPackHints(packId: string): Promise<HintStep[][]> {
   const cached = hintsCache.get(packId);
-  if (cached) {
-    __DEV__ && console.log(`[SB:HINTS] ${packId}: cache hit`);
-    return cached;
-  }
-  __DEV__ && console.log(`[SB:HINTS] ${packId}: cache miss — starting fetch`);
-  const promise = fetchPackHints(packId);
+  if (cached) return cached;
+
+  const promise = fetchHints(packId);
   hintsCache.set(packId, promise);
   promise.catch(() => hintsCache.delete(packId));
   return promise;

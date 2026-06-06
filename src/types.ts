@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 
 // NAVIGATION
 // All app-wide types are centralised here per CLAUDE.md. Keep it that way —
@@ -13,6 +14,7 @@ export type RootStackParamList = {
     | { packId: string; puzzleIndex: number }
     | { packId: string; archiveKey?: string };
   ArchivePack: { type: StreakType };
+  Tutorial: undefined;
 };
 
 declare global {
@@ -77,9 +79,22 @@ export type PackCardProps = {
   disabled?: boolean;
 };
 
+export type PulseBoxProps = {
+  width: number;
+  height: number;
+  radius?: number;
+  baseColor: string;
+  style?: StyleProp<ViewStyle>;
+};
+
+export type PackCardSkeletonProps = {
+  theme: Theme;
+};
+
 export type ToolbarProps = {
   isZoomed: boolean;
   onZoomReset: () => void;
+  hintDisabledMessage?: string;
 };
 
 export type WinBannerProps = {
@@ -89,6 +104,7 @@ export type WinBannerProps = {
   isLastPuzzle: boolean;
   streakType?: StreakType;
   streakCount?: number;
+  tutorial?: boolean;
 };
 
 // STATE
@@ -118,6 +134,7 @@ export type UserSettings = {
   theme: 'system' | 'light' | 'dark';
   palette: ThemeName;
   haptics: boolean;
+  tutorialSeen: boolean;
 };
 
 export type CellChange = {
@@ -145,6 +162,13 @@ export type HintStep = {
   level: number; // difficulty level of this deduction step (higher = harder)
   placements: Coord[]; // cells where a star should be placed
   marks: Coord[]; // cells that can be ruled out (should be marked)
+};
+
+// Shape of "{packId}-hints.json" in Storage. hints[i] is the deduction chain
+// for puzzles[i] in the slim pack.
+export type HintsFile = {
+  version: number;
+  hints: HintStep[][];
 };
 
 export type RawPuzzle = {

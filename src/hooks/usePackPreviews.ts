@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStreakPack, getPuzzlesForPack } from '../packs';
+import { getStreakPack, getPackPreview } from '../packs';
 import { getCurrentKey, getPuzzleIndex } from '../utils/streakDate';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import type { PackCatalogItem, Puzzle } from '../types';
@@ -16,13 +16,11 @@ import type { PackCatalogItem, Puzzle } from '../types';
 // would be more robust.
 export function usePackPreviews(
   packCatalog: PackCatalogItem[],
-): { packPreviews: Record<string, Puzzle>; isLoading: boolean } {
+): { packPreviews: Record<string, Puzzle> } {
   const [packPreviews, setPackPreviews] = useState<Record<string, Puzzle>>({});
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
 
     async function load() {
       const results: Record<string, Puzzle> = {};
@@ -38,21 +36,24 @@ export function usePackPreviews(
                 `${pack.id}:${getCurrentKey(pack.type)}`,
               );
             } else {
-              const rawPuzzles = await getPuzzlesForPack(
+              const previewPuzzle = await getPackPreview(
                 pack.id,
                 pack.storagePath,
               );
-              if (!rawPuzzles?.length) return;
-              results[pack.id] = parsePuzzle(rawPuzzles[0], `${pack.id}:0`);
+              if (!previewPuzzle) return;
+              results[pack.id] = parsePuzzle(previewPuzzle, `${pack.id}:0`);
             }
           } catch {
             // skip this pack, keep others
           }
         }),
       );
+      // Commit every preview in one update so the cards reveal together as a
+      // single coordinated drop-in, rather than popping in one-by-one out of
+      // sync with each other and their pulse animations. Merge into prev so a
+      // catalog re-sync doesn't flash already-loaded cards back to skeletons.
       if (!cancelled) {
-        setPackPreviews(results);
-        setIsLoading(false);
+        setPackPreviews(prev => ({ ...prev, ...results }));
       }
     }
 
@@ -62,5 +63,5 @@ export function usePackPreviews(
     };
   }, [packCatalog]);
 
-  return { packPreviews, isLoading };
+  return { packPreviews };
 }

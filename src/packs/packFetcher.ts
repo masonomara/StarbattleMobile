@@ -1,11 +1,12 @@
 import { supabase } from '../supabase';
 import { packMetaStorage } from '../mmkv';
-import type { Pack } from '../types';
+import type { Pack, HintStep, HintsFile } from '../types';
 import {
   getRNFS,
   assertSafeKey,
   encodeForDisk,
   decodeFromDisk,
+  decodeHintsFromDisk,
 } from './packStorage';
 
 // Packs below this version use a format that the parser no longer supports.
@@ -117,4 +118,35 @@ export async function fetchPack(
   return fetchFromSupabase(effectiveRemoteKey).then(
     text => JSON.parse(text) as Pack,
   );
+}
+
+export function validateHintsText(text: string): void {
+  const data = JSON.parse(text) as { hints?: HintStep[][] };
+  if (!Array.isArray(data.hints)) {
+    throw new Error('Invalid hints file: missing hints array');
+  }
+}
+
+// Disk-first read of "{packId}-hints.json"; mirrors fetchPack.
+export async function fetchHints(packId: string): Promise<HintStep[][]> {
+  assertSafeKey(packId);
+  const key = `${packId}-hints.json`;
+  const rnfs = getRNFS();
+  if (rnfs) {
+    const localPath = `${rnfs.DocumentDirectoryPath}/packs/${key}`;
+    try {
+      const raw = await rnfs.readFile(localPath, 'utf8');
+      return decodeHintsFromDisk(raw).hints;
+    } catch {
+      // not on disk yet — fall through to network
+    }
+    const text = await fetchFromSupabase(key);
+    validateHintsText(text);
+    await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
+    await rnfs.writeFile(localPath, encodeForDisk(text), 'utf8').catch(() => {});
+    return (JSON.parse(text) as HintsFile).hints;
+  }
+  const text = await fetchFromSupabase(key);
+  validateHintsText(text);
+  return (JSON.parse(text) as HintsFile).hints;
 }

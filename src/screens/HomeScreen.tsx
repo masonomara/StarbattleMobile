@@ -28,19 +28,24 @@ import {
 } from '../utils/streakDate';
 import { useAuthStore } from '../stores/authStore';
 import { startupTimer } from '../utils/startupTimer';
-import { FauxSplash } from '../components/FauxSplash';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
-import { PackCard } from '../components/PackCard';
+import { PackCard, PackCardSkeleton } from '../components/PackCard';
+import { PulseBox, PulseProvider } from '../components/Pulse';
 import { useProductPrice } from '../hooks/useProductPrice';
 import type {
   Theme,
   PackCatalogItem,
   Puzzle,
   RootStackParamList,
+  StreakType,
 } from '../types';
 import { SCREEN_HEADER_HEIGHT } from '../layout';
 
 const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
+
+// Placeholder library cards rendered before the catalog syncs, so the list has
+// a stable, populated-looking shape from first paint.
+const SKELETON_PACK_COUNT = 4;
 
 // PaidPackRow is its own component because useProductPrice is a hook — hooks
 // cannot be called conditionally, so this component wraps the per-pack call
@@ -63,6 +68,9 @@ function PaidPackRow({
   priceStyle: TextStyle;
 }) {
   const price = useProductPrice(`starbattle_pack_${pack.id}`);
+  // Drop the whole row in once the preview is ready; until then show the full
+  // skeleton (the price hook above still runs, so it's warm when the card lands).
+  if (!preview) return <PackCardSkeleton theme={theme} />;
   return (
     <PackCard
       name={pack.name}
@@ -86,15 +94,15 @@ function PaidPackRow({
 function getStreakLabel(
   isCompleted: boolean,
   streakCount: number,
-  type: string,
+  type: StreakType,
   packName: string,
 ): string {
   if (isCompleted && streakCount > 0)
     return `${streakCount} ${STREAK_UNIT[type]} streak`;
-  if (isCompleted) return 'Completed';
+  if (isCompleted) return `${streakCount} ${STREAK_UNIT[type]} streak`;
   if (streakCount > 0)
     return `Continue your ${streakCount} ${STREAK_UNIT[type]} streak`;
-  return `Start your ${packName} streak`;
+  return `Play the ${packName}`;
 }
 
 export function HomeScreen({
@@ -130,177 +138,179 @@ export function HomeScreen({
     return { streakPacks: streak, freePacks: free, paidPacks: paid };
   }, [packCatalog]);
 
-  // Thumbnail puzzle previews for every pack (today's for streaks, first puzzle for library).
-  const { packPreviews, isLoading: isPackPreviewsLoading } = usePackPreviews(packCatalog);
+  // Thumbnail puzzle previews for every pack (today's for streaks, first puzzle
+  // for library). The screen renders immediately; each card's thumbnail fills in
+  // as its preview resolves (PackCard shows a placeholder until then).
+  const { packPreviews } = usePackPreviews(packCatalog);
 
   // Completion state: today's streak puzzle IDs and solved counts per library pack.
   // Reloads on screen focus so numbers update after the user solves a puzzle.
-  const { completedPuzzleIds, completedPerPack, isLoading: isProgressLoading } = useCompletionData(
+  const { completedPuzzleIds, completedPerPack } = useCompletionData(
     packCatalog,
     userId,
   );
 
   // Live streak rows from PowerSync — updates reactively as data syncs.
-  const { streaks, isLoading: isStreaksLoading } = useStreakRows(userId);
+  const { streaks } = useStreakRows(userId);
 
-  // Faux splash: keeps a visual match to the native bootsplash visible until
-  // all critical data is ready, preventing a flash of empty/unloaded UI.
-  // Starts true so the overlay is present from the very first render.
-  const [fauxSplashVisible, setFauxSplashVisible] = useState(true);
-
-  useEffect(() => {
-    const allLoaded =
-      packCatalog.length > 0 &&
-      !isPackPreviewsLoading &&
-      !isStreaksLoading &&
-      !isProgressLoading;
-    if (allLoaded) setFauxSplashVisible(false);
-  }, [packCatalog.length, isPackPreviewsLoading, isStreaksLoading, isProgressLoading]);
-
-  useEffect(() => {
-    // Safety ceiling: dismiss the faux splash after 10 s regardless of load state.
-    //
-    // Tradeoff: the App-level gate already consumed up to 8 s (streak packs +
-    // pack catalog). The faux splash primarily covers library-pack preview
-    // downloads that couldn't be warmed before HomeScreen mounted. On a slow
-    // cold-cache connection those can still lag. 10 s gives a generous window
-    // before accepting a partially-loaded screen — the alternative (hanging
-    // indefinitely while downloads stall) is a worse user experience than
-    // revealing skeleton cards.
-    const timer = setTimeout(() => setFauxSplashVisible(false), 10000);
-    return () => clearTimeout(timer);
-  }, []);
+  // Fixed-size placeholder that reserves a streak card's exact footprint while
+  // its preview loads (or before the catalog arrives), so the carousel doesn't
+  // pop in and shove the library list down. Mirrors streakCard's thumb/label/
+  // meta heights and margins.
+  const renderStreakSkeleton = (key: string) => (
+    <View key={key} style={styles.streakCard}>
+      <PulseBox width={260} height={260} radius={5} baseColor={theme.border} />
+      <PulseBox
+        width={200}
+        height={36}
+        radius={5}
+        baseColor={theme.border}
+        style={styles.streakLabelSkeleton}
+      />
+      <PulseBox
+        width={110}
+        height={22}
+        radius={5}
+        baseColor={theme.border}
+        style={styles.streakMetaSkeleton}
+      />
+    </View>
+  );
 
   return (
-    <View style={styles.container}>
-      {/* Floating header — shows a bottom border once the user has scrolled */}
-      <View
-        style={[
-          styles.header,
-          { paddingTop: insets.top },
-          scrolled && styles.headerBorder,
-        ]}
-      >
-        <Text style={styles.appTitle}>Star Battle Free</Text>
-        <View style={styles.headerRight}>
-          <CircleButton
-            ghost
-            onPress={() => useStreaksStore.getState().openStreaks()}
-          >
-            <Flame size={26} strokeWidth={2} color={theme.text} />
-          </CircleButton>
-          <CircleButton
-            ghost
-            onPress={() => useSettingsStore.getState().openSettings()}
-          >
-            <User size={26} strokeWidth={2} color={theme.text} />
-          </CircleButton>
-        </View>
-      </View>
-
-      <FauxSplash visible={fauxSplashVisible} />
-
-      <ScrollView
-        onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
-        scrollEventThrottle={16}
-        contentContainerStyle={{
-          paddingTop: HEADER_HEIGHT + insets.top,
-          paddingBottom: insets.bottom,
-        }}
-      >
-        {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
-        <View style={styles.streakSection}>
-          <ScrollView
-            style={styles.streakRow}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingRight: 16,
-              paddingLeft: 16,
-              gap: 12,
-            }}
-          >
-            {streakPacks.map(pack => {
-              const type = pack.type!;
-              const preview = packPreviews[pack.id];
-              if (!preview) return null;
-
-              // puzzleId format matches keys stored by useCompletionData.
-              const puzzleId = `${pack.id}:${getCurrentKey(type)}`;
-              const isCompleted = completedPuzzleIds.has(puzzleId);
-              const found = streaks.find(s => s.type === type);
-              // getActiveStreak returns 0 if the streak wasn't maintained.
-              const streakCount = found ? getActiveStreak(found, type) : 0;
-
-              return (
-                <Pressable
-                  onPress={() =>
-                    navigation.navigate('Puzzle', { packId: pack.id })
-                  }
-                  key={pack.id}
-                  style={[
-                    styles.streakCard,
-                    // streakCardCompleted is intentionally empty — reserved for
-                    // future visual differentiation of completed cards.
-                    isCompleted && styles.streakCardCompleted,
-                  ]}
-                >
-                  <PuzzleThumbnail
-                    puzzle={preview}
-                    size={260}
-                    theme={theme}
-                    coloredRegions={coloredRegions}
-                  />
-                  <Text style={styles.streakLabel}>{pack.name}</Text>
-                  <View style={styles.streakMetaRow}>
-                    {isCompleted && (
-                      <View style={styles.streakCheckCircle}>
-                        <Check size={17} color={theme.green} strokeWidth={3} />
-                      </View>
-                    )}
-                    <Text style={styles.streakMeta}>
-                      {getStreakLabel(
-                        isCompleted,
-                        streakCount,
-                        type,
-                        pack.name,
-                      )}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+    <PulseProvider>
+      <View style={styles.container}>
+        {/* Floating header — shows a bottom border once the user has scrolled */}
+        <View
+          style={[
+            styles.header,
+            { paddingTop: insets.top },
+            scrolled && styles.headerBorder,
+          ]}
+        >
+          <Text style={styles.appTitle}>Star Battle Free</Text>
+          <View style={styles.headerRight}>
+            <CircleButton
+              ghost
+              onPress={() => useStreaksStore.getState().openStreaks()}
+            >
+              <Flame size={26} strokeWidth={2} color={theme.text} />
+            </CircleButton>
+            <CircleButton
+              ghost
+              onPress={() => useSettingsStore.getState().openSettings()}
+            >
+              <User size={26} strokeWidth={2} color={theme.text} />
+            </CircleButton>
+          </View>
         </View>
 
-        {/* Puzzle library: free packs, then purchasable packs */}
-        <View style={styles.packSection}>
-          <Text style={styles.sectionLabel}>Puzzle Library</Text>
+        <ScrollView
+          onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+          scrollEventThrottle={16}
+          contentContainerStyle={{
+            paddingTop: HEADER_HEIGHT + insets.top,
+            paddingBottom: insets.bottom,
+          }}
+        >
+          {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
+          <View style={styles.streakSection}>
+            <ScrollView
+              style={styles.streakRow}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              // Snap each streak card to the left edge as it pauses.
+              // Interval = card width (260 thumb + 32 padding = 292) + 12 gap.
+              snapToInterval={304}
+              snapToAlignment="start"
+              decelerationRate="fast"
+              contentContainerStyle={{
+                paddingRight: 16,
+                paddingLeft: 16,
+                gap: 12,
+              }}
+            >
+              {streakPacks.length === 0
+                ? STREAK_TYPES.map(type => renderStreakSkeleton(type))
+                : streakPacks.map(pack => {
+                    const type = pack.type!;
+                    const preview = packPreviews[pack.id];
+                    if (!preview) return renderStreakSkeleton(pack.id);
 
-          {freePacks.map(pack => (
-            <PackCard
-              key={pack.id}
-              name={pack.name}
-              meta={`${completedPerPack[pack.id] ?? 0}/${pack.puzzleCount}`}
-              preview={packPreviews[pack.id]}
-              onPress={() =>
-                navigation.navigate('Library', { packId: pack.id })
-              }
-              theme={theme}
-              coloredRegions={coloredRegions}
-            />
-          ))}
+                    // puzzleId format matches keys stored by useCompletionData.
+                    const puzzleId = `${pack.id}:${getCurrentKey(type)}`;
+                    const isCompleted = completedPuzzleIds.has(puzzleId);
+                    const found = streaks.find(s => s.type === type);
+                    // getActiveStreak returns 0 if the streak wasn't maintained.
+                    const streakCount = found
+                      ? getActiveStreak(found, type)
+                      : 0;
 
-          {paidPacks.map(pack => {
-            const completed = completedPerPack[pack.id] ?? 0;
+                    return (
+                      <Pressable
+                        onPress={() =>
+                          navigation.navigate('Puzzle', { packId: pack.id })
+                        }
+                        key={pack.id}
+                        style={[
+                          styles.streakCard,
+                          // streakCardCompleted is intentionally empty — reserved for
+                          // future visual differentiation of completed cards.
+                          isCompleted && styles.streakCardCompleted,
+                        ]}
+                      >
+                        <PuzzleThumbnail
+                          puzzle={preview}
+                          size={260}
+                          theme={theme}
+                          coloredRegions={coloredRegions}
+                        />
+                        <Text style={styles.streakLabel}>{pack.name}</Text>
+                        <View style={styles.streakMetaRow}>
+                          {isCompleted && (
+                            <View style={styles.streakCheckCircle}>
+                              <Check
+                                size={10}
+                                color={theme.green}
+                                strokeWidth={4}
+                              />
+                            </View>
+                          )}
+                          <Text
+                            style={[
+                              styles.streakMeta,
+                              isCompleted && { color: theme.text },
+                            ]}
+                          >
+                            {getStreakLabel(
+                              isCompleted,
+                              streakCount,
+                              type,
+                              pack.name,
+                            )}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+            </ScrollView>
+          </View>
 
-            // Purchased packs render identically to free packs.
-            if (hasPackAccess(pack.id)) {
-              return (
+          {/* Puzzle library: free packs, then purchasable packs */}
+          <View style={styles.packSection}>
+            <Text style={styles.sectionLabel}>Puzzle Library</Text>
+
+            {packCatalog.length === 0 &&
+              Array.from({ length: SKELETON_PACK_COUNT }, (_, i) => (
+                <PackCardSkeleton key={`pack-skeleton-${i}`} theme={theme} />
+              ))}
+
+            {freePacks.map(pack =>
+              packPreviews[pack.id] ? (
                 <PackCard
                   key={pack.id}
                   name={pack.name}
-                  meta={`${completed}/${pack.puzzleCount}`}
+                  meta={`${completedPerPack[pack.id] ?? 0}/${pack.puzzleCount}`}
                   preview={packPreviews[pack.id]}
                   onPress={() =>
                     navigation.navigate('Library', { packId: pack.id })
@@ -308,27 +318,52 @@ export function HomeScreen({
                   theme={theme}
                   coloredRegions={coloredRegions}
                 />
-              );
-            }
+              ) : (
+                <PackCardSkeleton key={pack.id} theme={theme} />
+              ),
+            )}
 
-            return (
-              <PaidPackRow
-                key={pack.id}
-                pack={pack}
-                completed={completed}
-                onPress={() =>
-                  navigation.navigate('Library', { packId: pack.id })
-                }
-                preview={packPreviews[pack.id]}
-                theme={theme}
-                coloredRegions={coloredRegions}
-                priceStyle={styles.packPrice}
-              />
-            );
-          })}
-        </View>
-      </ScrollView>
-    </View>
+            {paidPacks.map(pack => {
+              const completed = completedPerPack[pack.id] ?? 0;
+
+              // Purchased packs render identically to free packs.
+              if (hasPackAccess(pack.id)) {
+                return packPreviews[pack.id] ? (
+                  <PackCard
+                    key={pack.id}
+                    name={pack.name}
+                    meta={`${completed}/${pack.puzzleCount}`}
+                    preview={packPreviews[pack.id]}
+                    onPress={() =>
+                      navigation.navigate('Library', { packId: pack.id })
+                    }
+                    theme={theme}
+                    coloredRegions={coloredRegions}
+                  />
+                ) : (
+                  <PackCardSkeleton key={pack.id} theme={theme} />
+                );
+              }
+
+              return (
+                <PaidPackRow
+                  key={pack.id}
+                  pack={pack}
+                  completed={completed}
+                  onPress={() =>
+                    navigation.navigate('Library', { packId: pack.id })
+                  }
+                  preview={packPreviews[pack.id]}
+                  theme={theme}
+                  coloredRegions={coloredRegions}
+                  priceStyle={styles.packPrice}
+                />
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+    </PulseProvider>
   );
 }
 
@@ -363,15 +398,15 @@ const createStyles = (
     },
     appTitle: {
       fontSize: 25,
+      letterSpacing: -0.25,
       lineHeight: 28,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       color: theme.text,
-      letterSpacing: -0.42,
     },
     headerRight: {
       flexDirection: 'row',
-      gap: 8,
+      gap: 12,
     },
     streakSection: {
       paddingTop: 24,
@@ -399,20 +434,25 @@ const createStyles = (
     },
     // Intentionally empty — placeholder for future completed-card styling.
     streakCardCompleted: {},
+    // Position the shimmer label/meta bars to match the real card's streakLabel
+    // (marginTop 16) and streakMeta (marginTop 7); each bar's own size is passed
+    // to PulseBox, so a placeholder card is height-identical to a loaded one.
+    streakLabelSkeleton: { marginTop: 16 },
+    streakMetaSkeleton: { marginTop: 7 },
     streakLabel: {
       color: theme.text,
       lineHeight: 36,
       fontSize: 33,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
-      letterSpacing: -0.42,
+      letterSpacing: -0.33,
       textTransform: 'capitalize',
       marginTop: 16,
     },
     streakMetaRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 7,
+      gap: 9,
     },
     streakMeta: {
       color: theme.text,
@@ -422,12 +462,15 @@ const createStyles = (
       marginTop: 7,
     },
     streakCheckCircle: {
-      width: 22,
-      height: 22,
+      width: 17,
+      height: 17,
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: 7,
+      borderWidth: 1.5,
+      paddingTop: 1,
+      borderColor: theme.green,
     },
     sectionLabel: {
       lineHeight: 28,
@@ -436,7 +479,7 @@ const createStyles = (
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       color: theme.text,
-      letterSpacing: -0.33,
+      letterSpacing: -0.25,
     },
     packPrice: {
       fontSize: theme.fontSizeCallout,

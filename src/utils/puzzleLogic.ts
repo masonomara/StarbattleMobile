@@ -197,3 +197,40 @@ export function checkWin(
   }
   return starCount === solution.length;
 }
+
+// The highest-priority rule the board currently violates, or null — priority
+// adjacency → row → column → region. Used by the tutorial for its error line.
+export function getViolation(
+  cells: CellValue[],
+  boardSize: number,
+  puzzle: Puzzle,
+): 'adjacency' | 'row' | 'column' | 'region' | null {
+  const starIndices: number[] = [];
+  for (let i = 0; i < cells.length; i++) {
+    if (cells[i] === 1) starIndices.push(i);
+  }
+  for (let i = 0; i < starIndices.length; i++) {
+    for (let j = i + 1; j < starIndices.length; j++) {
+      const ri = Math.floor(starIndices[i] / boardSize);
+      const ci = starIndices[i] % boardSize;
+      const rj = Math.floor(starIndices[j] / boardSize);
+      const cj = starIndices[j] % boardSize;
+      if (Math.abs(ri - rj) <= 1 && Math.abs(ci - cj) <= 1) return 'adjacency';
+    }
+  }
+  const rows = new Array<number>(boardSize).fill(0);
+  const cols = new Array<number>(boardSize).fill(0);
+  const regions = new Map<number, number>();
+  for (const idx of starIndices) {
+    const r = Math.floor(idx / boardSize);
+    const c = idx % boardSize;
+    rows[r] += 1;
+    cols[c] += 1;
+    const reg = puzzle.regions[r][c];
+    regions.set(reg, (regions.get(reg) ?? 0) + 1);
+  }
+  if (rows.some(n => n > 1)) return 'row';
+  if (cols.some(n => n > 1)) return 'column';
+  for (const n of regions.values()) if (n > 1) return 'region';
+  return null;
+}

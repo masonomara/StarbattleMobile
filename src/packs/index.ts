@@ -1,8 +1,9 @@
-import type { RawPuzzle, Pack, StreakType, HintStep } from '../types';
+import type { RawPuzzle, Pack, StreakType, HintStep, HintsFile } from '../types';
 import { getRNFS, assertSafeKey, encodeForDisk } from './packStorage';
 import {
   fetchFromSupabase,
   validatePackText,
+  validateHintsText,
   fetchPackEtag,
   getCachedEtag,
   setCachedEtag,
@@ -12,6 +13,8 @@ import {
   loadPackHints as _loadPackHints,
   warmPackCache,
   hasPackCacheEntry,
+  warmHintsCache,
+  hasHintsCacheEntry,
 } from './packCache';
 
 const PREVIEW_PUZZLE_COUNT = 1;
@@ -20,10 +23,51 @@ export function loadPackHints(packId: string): Promise<HintStep[][]> {
   return _loadPackHints(packId);
 }
 
-export function prefetchHintsFile(packId: string): Promise<void> {
-  return _loadPackHints(packId)
-    .then(() => {})
-    .catch(() => {});
+// ETag-aware background prefetch of "{packId}-hints.json" to disk; mirrors
+// prefetchPackFile.
+export async function prefetchHintsFile(packId: string): Promise<void> {
+  assertSafeKey(packId);
+  const key = `${packId}-hints.json`;
+  const rnfs = getRNFS();
+
+  let alreadyOnDisk = false;
+  if (rnfs) {
+    try {
+      await rnfs.stat(`${rnfs.DocumentDirectoryPath}/packs/${key}`);
+      alreadyOnDisk = true;
+    } catch {
+      // not on disk
+    }
+  } else if (hasHintsCacheEntry(packId)) {
+    return;
+  }
+
+  let remoteEtag: string | undefined;
+  try {
+    remoteEtag = await fetchPackEtag(key);
+    if (alreadyOnDisk && remoteEtag && remoteEtag === getCachedEtag(key)) return;
+  } catch {
+    return;
+  }
+
+  let text: string;
+  try {
+    text = await fetchFromSupabase(key);
+    validateHintsText(text);
+  } catch {
+    return;
+  }
+
+  if (rnfs) {
+    const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+    await rnfs.mkdir(packDir).catch(() => {});
+    await rnfs
+      .writeFile(`${packDir}/${key}`, encodeForDisk(text), 'utf8')
+      .catch(() => {});
+  }
+
+  warmHintsCache(packId, (JSON.parse(text) as HintsFile).hints);
+  if (remoteEtag) setCachedEtag(key, remoteEtag);
 }
 
 export async function getPuzzlesForPack(
@@ -46,6 +90,44 @@ export async function getPuzzlesForPack(
     console.error('[SB:PACK] getPuzzlesForPack failed:', packId, e);
     return null;
   }
+}
+
+// True if the pack file is already available locally (in-memory cache or on
+// disk) — without triggering a network fetch. Used to decide whether the slim
+// preview exists before reaching for it, so we never pay a doomed round-trip.
+async function hasLocalPack(key: string): Promise<boolean> {
+  if (hasPackCacheEntry(key)) return true;
+  const rnfs = getRNFS();
+  if (!rnfs) return false;
+  try {
+    await rnfs.stat(`${rnfs.DocumentDirectoryPath}/packs/${key}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Loads just the first puzzle for a library pack's home thumbnail. Prefers the
+// slim "{packId}_preview.json" (one puzzle) so we don't download/parse the full
+// pack — which matters most for unpurchased paid packs, where loadPack() would
+// otherwise pull the entire pack down. The slim file is a local-only artifact
+// (cachePackPreview writes it; it 404s on the network), so we only read it when
+// it already exists locally, and fall back to the full pack otherwise.
+export async function getPackPreview(
+  packId: string,
+  storagePath?: string,
+): Promise<RawPuzzle | null> {
+  const previewKey = `${packId}_preview.json`;
+  if (await hasLocalPack(previewKey)) {
+    try {
+      const preview = await loadPack(previewKey);
+      if (preview.puzzles.length) return preview.puzzles[0];
+    } catch {
+      // Slim preview unreadable — fall back to the full pack below.
+    }
+  }
+  const puzzles = await getPuzzlesForPack(packId, storagePath);
+  return puzzles?.[0] ?? null;
 }
 
 export async function getStreakPack(type: StreakType): Promise<Pack | null> {

@@ -32,6 +32,8 @@ export async function saveProgress(
   timeMs: number,
   completed: boolean,
 ): Promise<void> {
+  // The tutorial reuses the puzzle store but must never persist.
+  if (puzzleId === 'tutorial') return;
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return;
 
@@ -67,6 +69,7 @@ export async function loadProgress(puzzleId: string): Promise<{
   timeMs: number;
   completed: boolean;
 } | null> {
+  if (puzzleId === 'tutorial') return null;
   const userId = useAuthStore.getState().user?.id;
   if (!userId) return null;
 

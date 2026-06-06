@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { db } from '../powersync/AppSchema';
+import { useQuery } from '@powersync/react-native';
 import type { Streak } from '../types';
 
 const STREAKS_QUERY =
@@ -11,7 +10,7 @@ type StreakRow = {
   last_completed_key: string;
 };
 
-function rowsToStreaks(rows: StreakRow[]): Streak[] {
+function rowsToStreaks(rows: readonly StreakRow[]): Streak[] {
   return rows.map(r => ({
     type: r.type as Streak['type'],
     current: r.current_count,
@@ -19,43 +18,26 @@ function rowsToStreaks(rows: StreakRow[]): Streak[] {
   }));
 }
 
-// Subscribes to the streaks table for the current user via PowerSync's live
-// query. Updates reactively as data syncs — no manual refresh needed.
+// Subscribes to the current user's streak rows via PowerSync's live query.
+// The rowComparator runs an incremental (differential) watch: it only re-emits
+// when the result set actually changes and preserves references for unchanged
+// rows, so unrelated writes don't churn consumers.
 //
-// NOTE: The initial db.getAll() fires immediately before db.watch() starts.
-// db.watch() typically also fires with initial results shortly after, causing
-// two renders on mount. This is intentional — the initial load eliminates the
-// empty-flash window while the watcher initialises. If PowerSync's watch API
-// adds a synchronous initial-result option in future, the getAll() can be removed.
-//
+// isLoading reflects only the query itself. Callers that care about the
+// no-signed-in-user state (e.g. the screen-reveal gate) handle it explicitly
+// rather than having that policy baked into this hook.
 export function useStreakRows(
   userId: string | undefined,
 ): { streaks: Streak[]; isLoading: boolean } {
-  const [streaks, setStreaks] = useState<Streak[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    // Initial load so there's no empty flash before the watcher fires.
-    // isLoading clears once this resolves — the live watch never resets it.
-    db.getAll<StreakRow>(STREAKS_QUERY, [userId])
-      .then(rows => setStreaks(rowsToStreaks(rows)))
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-
-    const controller = new AbortController();
-    db.watch(
-      STREAKS_QUERY,
-      [userId],
-      {
-        onResult: result =>
-          setStreaks(rowsToStreaks(result.rows?._array ?? [])),
+  const { data, isLoading } = useQuery<StreakRow>(
+    STREAKS_QUERY,
+    [userId ?? ''],
+    {
+      rowComparator: {
+        keyBy: r => r.type,
+        compareBy: r => `${r.current_count}:${r.last_completed_key}`,
       },
-      { signal: controller.signal },
-    );
-    return () => controller.abort();
-  }, [userId]);
-
-  return { streaks, isLoading };
+    },
+  );
+  return { streaks: rowsToStreaks(data), isLoading };
 }

@@ -14,6 +14,7 @@ import { STREAK_LABELS, STREAK_UNIT } from '../utils/streakDate';
 import { formatElapsedTime } from '../utils/time';
 
 import { useTheme } from '../hooks/useTheme';
+import { useSettingsStore } from '../stores/settingsStore';
 import type { Theme, RootStackParamList, WinBannerProps } from '../types';
 
 export function WinBanner({
@@ -23,8 +24,10 @@ export function WinBanner({
   isLastPuzzle,
   streakType,
   streakCount = 0,
+  tutorial = false,
 }: WinBannerProps) {
   const completed = usePuzzleStore(s => s.completed);
+  const completeTutorial = useSettingsStore(s => s.completeTutorial);
   const loadedAsCompleted = usePuzzleStore(s => s.loadedAsCompleted);
   const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
@@ -59,17 +62,30 @@ export function WinBanner({
 
   if (!completed) return null;
 
-  const info = streakType
+  const info = tutorial
+    ? 'Tutorial Complete'
+    : streakType
     ? `${STREAK_LABELS[streakType]} Special`
     : `${packName} #${puzzleIndex + 1}`;
 
-  const buttonLabel = streakType
+  const mainText = tutorial
+    ? 'You’re Ready!'
+    : `Solved in ${formatElapsedTime(timeMs)}`;
+
+  const buttonLabel = tutorial
+    ? 'Start playing'
+    : streakType
     ? 'Back to Home'
     : isLastPuzzle
     ? `Back to ${packName || 'Pack'}`
     : 'Next Puzzle';
 
   function handlePress() {
+    if (tutorial) {
+      completeTutorial();
+      navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+      return;
+    }
     if (streakType || isLastPuzzle) {
       navigation.goBack();
     } else {
@@ -87,16 +103,19 @@ export function WinBanner({
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      <Text style={styles.winInfo}>{info} {streakType && (
+      {!tutorial && (
         <Text style={styles.winInfo}>
-          {/* streakType! non-null assertion: safe here because the wrapping
-            `{streakType && ...}` already guards against null/undefined, but
-            TypeScript can't narrow through JSX text. Could rewrite as
-            `{streakType ? STREAK_UNIT[streakType] : ''}` to avoid the assertion. */}
-        {streakCount > 0 ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak` : ``}
+          {info}{' '}
+          {streakType && (
+            <Text style={styles.winInfo}>
+              {streakCount > 0
+                ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak`
+                : ``}
+            </Text>
+          )}
         </Text>
-      )}</Text>
-      <Text style={styles.winText}>{`Solved in ${formatElapsedTime(timeMs)}`}</Text>
+      )}
+      <Text style={styles.winText}>{mainText}</Text>
 
       <Pressable onPress={handlePress} style={styles.winButton}>
         <Text style={styles.winButtonText}>{buttonLabel}</Text>
@@ -132,7 +151,6 @@ const createStyles = (theme: Theme) =>
       fontSize: 33,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: 900,
-
       letterSpacing: -0.33,
     },
     winInfo: {
@@ -158,4 +176,3 @@ const createStyles = (theme: Theme) =>
       color: theme.background,
     },
   });
-

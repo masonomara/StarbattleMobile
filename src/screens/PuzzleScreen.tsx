@@ -5,7 +5,9 @@ import {
   Animated,
   ActivityIndicator,
   AppState,
+  Pressable,
 } from 'react-native';
+import { Text } from '../components/Text';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -28,6 +30,8 @@ import { useDrawGesture } from '../hooks/useDrawGesture';
 import { usePackData } from '../hooks/usePackData';
 import { useStreakRows } from '../hooks/useStreakRows';
 import { loadPackHints } from '../packs';
+import { TUTORIAL_PUZZLE } from '../tutorial/tutorialPuzzle';
+import { tutorialMessage } from '../tutorial/tutorialMessage';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import { saveProgress } from '../utils/progress';
 import { getActiveStreak } from '../utils/streakDate';
@@ -38,30 +42,43 @@ import type { Theme, RootStackParamList, DrawLayerHandle } from '../types';
 const HEADER_H = 48;
 const TOOLBAR_H = 80;
 
+// The 'Tutorial' route renders this same screen so the tutorial inherits zoom,
+// pan, haptics, the toolbar, and the win banner. All tutorial-only behavior is
+// gated behind `isTutorial`; the real 'Puzzle' path is unchanged.
 export function PuzzleScreen({
   route,
   navigation,
-}: NativeStackScreenProps<RootStackParamList, 'Puzzle'>) {
-  // params is a discriminated union (see RootStackParamList in types.ts).
-  // Narrowed with `'puzzleIndex' in params`: first variant = library pack,
-  // second variant = streak pack (current day or archive).
+}: NativeStackScreenProps<RootStackParamList, 'Puzzle' | 'Tutorial'>) {
+  const isTutorial = route.name === 'Tutorial';
+  // route.params is `PuzzleParams | undefined` (undefined for the tutorial route).
   const params = route.params;
-  const packId = params.packId;
-  const puzzleIndex = 'puzzleIndex' in params ? params.puzzleIndex : undefined;
-  const archiveKey = 'puzzleIndex' in params ? undefined : params.archiveKey;
+  const packId = params ? params.packId : '';
+  const puzzleIndex =
+    params && 'puzzleIndex' in params ? params.puzzleIndex : undefined;
+  const archiveKey =
+    params && !('puzzleIndex' in params) ? params.archiveKey : undefined;
 
-  // Resolves route params into a fully loaded PackData object (null while loading).
-  const packData = usePackData(packId, puzzleIndex, archiveKey, navigation);
+  // Resolves route params into a fully loaded PackData object (null while
+  // loading). Skipped for the tutorial — it has no pack to resolve.
+  const packData = usePackData(
+    packId,
+    puzzleIndex,
+    archiveKey,
+    navigation,
+    isTutorial,
+  );
 
   const {
     rawPuzzle,
     puzzleId = '',
-    gridSize = 0,
     packName = '',
     isLastPuzzle = true,
     streakType,
     puzzleIndexInPack = 0,
+    effectivePackId,
   } = packData ?? {};
+
+  const gridSize = isTutorial ? TUTORIAL_PUZZLE.size : packData?.gridSize ?? 0;
 
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -76,15 +93,23 @@ export function PuzzleScreen({
   const alwaysShowToolbar = useSettingsStore(s => s.settings.alwaysShowToolbar);
   const alwaysShowTimer = useSettingsStore(s => s.settings.alwaysShowTimer);
   const openSettings = useSettingsStore(s => s.openSettings);
+  const completeTutorial = useSettingsStore(s => s.completeTutorial);
 
   const userId = useAuthStore(s => s.user?.id);
   const { streaks: streakRows } = useStreakRows(userId);
-  const streakRow = streakType ? streakRows.find(s => s.type === streakType) : undefined;
+  const streakRow = streakType
+    ? streakRows.find(s => s.type === streakType)
+    : undefined;
   const streakCount = streakRow ? getActiveStreak(streakRow, streakType!) : 0;
 
   const [isReady, setIsReady] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const buttonOpacity = useRef(new Animated.Value(1)).current;
+
+  function finishTutorial() {
+    completeTutorial();
+    navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+  }
 
   // Fade header buttons and status bar in/out when the user hides the chrome.
   useEffect(() => {
@@ -155,14 +180,14 @@ export function PuzzleScreen({
     Gesture.Race(drawGesture, Gesture.Exclusive(panGesture, tapGesture)),
   );
 
-  // Parse the raw puzzle SBN and load it into the store. `isReady` gates
-  // rendering so nothing shows until the store has a valid puzzle object.
-  // NOTE: loadPuzzle is async (it loads saved progress) but we don't await it
-  // here before calling setIsReady. The puzzle renders with an empty board first
-  // then cells update when progress arrives — an intentional optimistic render.
-  // If this causes a visible flash of empty→loaded state, await loadPuzzle
-  // before setIsReady and add a loading guard inside the store's loadPuzzle.
+  // Load the puzzle into the store. Tutorial loads its fixed puzzle; the real
+  // path parses the resolved pack puzzle once packData is ready.
   useEffect(() => {
+    if (isTutorial) {
+      loadPuzzle(TUTORIAL_PUZZLE);
+      setIsReady(true);
+      return;
+    }
     if (!packData || !rawPuzzle) return;
     try {
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
@@ -171,20 +196,28 @@ export function PuzzleScreen({
     } catch {
       navigation.goBack();
     }
-  }, [packData, rawPuzzle, puzzleId, loadPuzzle, navigation]);
+  }, [isTutorial, packData, rawPuzzle, puzzleId, loadPuzzle, navigation]);
 
-  // Load hints after the puzzle is ready. Runs independently of pack loading
-  // so a slow hint fetch doesn't block puzzle rendering.
+  // Hints load from the disk-cached "{packId}-hints.json" (real packs only).
+  // setHints([]) on failure clears hintsLoading so the toolbar spinner never hangs.
   useEffect(() => {
-    if (!isReady || !packData) return;
-    const { effectivePackId, puzzleIndexInPack: idx } = packData;
+    if (isTutorial || !isReady || !effectivePackId) return;
+    let cancelled = false;
     loadPackHints(effectivePackId)
-      .then(allHints => setHints(allHints[idx] ?? []))
-      .catch(() => setHints([]));
-  }, [isReady, packData, setHints]);
+      .then(all => {
+        if (!cancelled) setHints(all[puzzleIndexInPack] ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setHints([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isTutorial, isReady, effectivePackId, puzzleIndexInPack, setHints]);
 
   // Save progress when the user navigates away. The `finally` ensures the
-  // navigation action always dispatches even if the save fails.
+  // navigation action always dispatches even if the save fails. saveProgress
+  // no-ops for the tutorial id, so the tutorial writes nothing.
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', e => {
       e.preventDefault();
@@ -236,32 +269,50 @@ export function PuzzleScreen({
     <View style={styles.container}>
       <Header
         left={
-          <Animated.View
-            style={{ opacity: buttonOpacity }}
-            pointerEvents={headerVisible ? 'auto' : 'none'}
-          >
-            <CircleButton onPress={() => navigation.goBack()}>
-              <ChevronLeft size={26} color={theme.text} />
-            </CircleButton>
-          </Animated.View>
+          isTutorial ? undefined : (
+            <Animated.View
+              style={{ opacity: buttonOpacity }}
+              pointerEvents={headerVisible ? 'auto' : 'none'}
+            >
+              <CircleButton onPress={() => navigation.goBack()}>
+                <ChevronLeft size={26} color={theme.text} />
+              </CircleButton>
+            </Animated.View>
+          )
         }
         center={
-          // Timer always shows when alwaysShowTimer is on; otherwise fades with header.
-          <Animated.View
-            style={{ opacity: alwaysShowTimer ? 1 : buttonOpacity }}
-          >
-            <HeaderTimer />
-          </Animated.View>
+          isTutorial ? (
+            <Text style={styles.tutorialText}>
+              {tutorialMessage(cells, puzzle)}
+            </Text>
+          ) : (
+            // Timer always shows when alwaysShowTimer is on; otherwise fades with header.
+            <Animated.View
+              style={{ opacity: alwaysShowTimer ? 1 : buttonOpacity }}
+            >
+              <HeaderTimer />
+            </Animated.View>
+          )
         }
         right={
-          <Animated.View
-            style={{ opacity: buttonOpacity }}
-            pointerEvents={headerVisible ? 'auto' : 'none'}
-          >
-            <CircleButton onPress={openSettings}>
-              <Ellipsis size={20} color={theme.text} />
-            </CircleButton>
-          </Animated.View>
+          isTutorial ? (
+            <Pressable
+              onPress={finishTutorial}
+              hitSlop={12}
+              style={styles.skipButton}
+            >
+              <Text style={styles.skip}>Skip</Text>
+            </Pressable>
+          ) : (
+            <Animated.View
+              style={{ opacity: buttonOpacity }}
+              pointerEvents={headerVisible ? 'auto' : 'none'}
+            >
+              <CircleButton onPress={openSettings}>
+                <Ellipsis size={20} color={theme.text} />
+              </CircleButton>
+            </Animated.View>
+          )
         }
       />
       <GestureDetector gesture={gesture}>
@@ -293,7 +344,13 @@ export function PuzzleScreen({
         style={{ opacity: alwaysShowToolbar ? 1 : buttonOpacity }}
         pointerEvents={alwaysShowToolbar || headerVisible ? 'auto' : 'none'}
       >
-        <Toolbar isZoomed={isZoomed} onZoomReset={handleZoomReset} />
+        <Toolbar
+          isZoomed={isZoomed}
+          onZoomReset={handleZoomReset}
+          hintDisabledMessage={
+            isTutorial ? 'Hints not available for the tutorial' : undefined
+          }
+        />
       </Animated.View>
       <WinBanner
         packId={packId}
@@ -302,6 +359,7 @@ export function PuzzleScreen({
         isLastPuzzle={isLastPuzzle}
         streakType={streakType}
         streakCount={streakCount}
+        tutorial={isTutorial}
       />
     </View>
   );
@@ -320,5 +378,30 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    tutorialText: {
+      color: theme.text,
+      fontSize: 17,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    skip: {
+      color: theme.text,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    skipButton: {
+      backgroundColor: theme.surface,
+      width: 48,
+      height: 48,
+      borderRadius: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+      display: 'flex',
+      shadowOffset: { width: 0, height: 4 },
+      shadowColor: '#000000',
+      shadowOpacity: 0.1,
+      shadowRadius: 24,
+      elevation: 8,
     },
   });
