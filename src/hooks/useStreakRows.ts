@@ -2,11 +2,12 @@ import { useQuery } from '@powersync/react-native';
 import type { Streak } from '../types';
 
 const STREAKS_QUERY =
-  'SELECT type, current_count, last_completed_key FROM streaks WHERE user_id = ?';
+  'SELECT type, current_count, best_count, last_completed_key FROM streaks WHERE user_id = ?';
 
 type StreakRow = {
   type: string;
   current_count: number;
+  best_count: number;
   last_completed_key: string;
 };
 
@@ -14,6 +15,7 @@ function rowsToStreaks(rows: readonly StreakRow[]): Streak[] {
   return rows.map(r => ({
     type: r.type as Streak['type'],
     current: r.current_count,
+    best: r.best_count,
     lastCompletedKey: r.last_completed_key,
   }));
 }
@@ -35,7 +37,8 @@ export function useStreakRows(
     {
       rowComparator: {
         keyBy: r => r.type,
-        compareBy: r => `${r.current_count}:${r.last_completed_key}`,
+        compareBy: r =>
+          `${r.current_count}:${r.best_count}:${r.last_completed_key}`,
       },
     },
   );

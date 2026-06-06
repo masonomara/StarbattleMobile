@@ -114,6 +114,7 @@ export type StreakType = 'daily' | 'weekly' | 'monthly';
 export type Streak = {
   type: StreakType;
   current: number;
+  best: number;
   lastCompletedKey: string;
 };
 
@@ -240,12 +241,9 @@ export type RegionColors = {
   blue: string;
   magenta: string;
   cyan: string;
-  redBright: string;
-  greenBright: string;
-  yellowBright: string;
-  blueBright: string;
-  magentaBright: string;
-  cyanBright: string;
+  orange: string;
+  purple: string;
+  teal: string;
 };
 
 export type ThemeColors = {

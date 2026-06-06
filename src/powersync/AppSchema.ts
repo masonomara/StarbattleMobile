@@ -43,6 +43,7 @@ const streaks = new Table(
     user_id: column.text,
     type: column.text,
     current_count: column.integer,
+    best_count: column.integer,
     last_completed_key: column.text,
     updated_at: column.text,
   },

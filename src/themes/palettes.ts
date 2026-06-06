@@ -43,12 +43,9 @@ const originalDark: ThemeColors = {
     blue: '#4493F8',
     magenta: '#AB7DF8',
     cyan: '#39C5CF',
-    redBright: '#f07178',
-    greenBright: '#aad94c',
-    yellowBright: '#ffb454',
-    blueBright: '#59c2ff',
-    magentaBright: '#d2a6ff',
-    cyanBright: '#95e6cb',
+    orange: '#F0883E', // added
+    purple: '#A371F7', // added
+    teal: '#3FCBA8', // added
   },
 };
 
@@ -73,12 +70,9 @@ const originalLight: ThemeColors = {
     blue: '#0969DA',
     magenta: '#BF3989',
     cyan: '#1B7C83',
-    redBright: '#f07171',
-    greenBright: '#86b300',
-    yellowBright: '#f2ae49',
-    blueBright: '#399ee6',
-    magentaBright: '#a37acc',
-    cyanBright: '#4cbf99',
+    orange: '#BC4C00', // added
+    purple: '#8250DF', // added
+    teal: '#197A66', // added
   },
 };
 
@@ -293,12 +287,9 @@ const primerDark: ThemeColors = {
     blue: '#58a6ff',
     magenta: '#bc8cff',
     cyan: '#39c5cf',
-    redBright: '#ffa198',
-    greenBright: '#56d364',
-    yellowBright: '#e3b341',
-    blueBright: '#79c0ff',
-    magentaBright: '#d2a8ff',
-    cyanBright: '#56d4dd',
+    orange: '#ffa657', // added
+    purple: '#a375ff', // added
+    teal: '#45d0ae', // added
   },
 };
 
@@ -323,12 +314,9 @@ const primerLight: ThemeColors = {
     blue: '#0969da',
     magenta: '#8250df',
     cyan: '#1b7c83',
-    redBright: '#a40e26',
-    greenBright: '#1a7f37',
-    yellowBright: '#633c01',
-    blueBright: '#218bff',
-    magentaBright: '#a475f9',
-    cyanBright: '#3192aa',
+    orange: '#bc4c00', // added
+    purple: '#6e40c9', // added
+    teal: '#117964', // added
   },
 };
 
@@ -355,12 +343,9 @@ const gruvboxDark: ThemeColors = {
     blue: '#458588',
     magenta: '#b16286',
     cyan: '#689d6a',
-    redBright: '#fb4934',
-    greenBright: '#b8bb26',
-    yellowBright: '#fabd2f',
-    blueBright: '#83a598',
-    magentaBright: '#d3869b',
-    cyanBright: '#8ec07c',
+    orange: '#d65d0e', // added
+    purple: '#8458a3', // added
+    teal: '#5a9d8b', // added
   },
 };
 
@@ -385,12 +370,9 @@ const gruvboxLight: ThemeColors = {
     blue: '#458588',
     magenta: '#b16286',
     cyan: '#689d6a',
-    redBright: '#9d0006',
-    greenBright: '#79740e',
-    yellowBright: '#b57614',
-    blueBright: '#076678',
-    magentaBright: '#8f3f71',
-    cyanBright: '#427b58',
+    orange: '#d65d0e', // added
+    purple: '#8458a3', // added
+    teal: '#5a9d8b', // added
   },
 };
 
@@ -727,12 +709,9 @@ const rosePineDefault: ThemeColors = {
     blue: '#9ccfd8',
     magenta: '#c4a7e7',
     cyan: '#ebbcba',
-    redBright: '#eb6f92',
-    greenBright: '#31748f',
-    yellowBright: '#f6c177',
-    blueBright: '#9ccfd8',
-    magentaBright: '#c4a7e7',
-    cyanBright: '#ebbcba',
+    orange: '#efa07a', // added
+    purple: '#ae8ce3', // added
+    teal: '#7bc9ad', // added
   },
 };
 
@@ -757,12 +736,9 @@ const rosePineDawn: ThemeColors = {
     blue: '#56949f',
     magenta: '#907aa9',
     cyan: '#d7827e',
-    redBright: '#b4637a',
-    greenBright: '#286983',
-    yellowBright: '#ea9d34',
-    blueBright: '#56949f',
-    magentaBright: '#907aa9',
-    cyanBright: '#d7827e',
+    orange: '#ca784e', // added
+    purple: '#8b6bb0', // added
+    teal: '#519b83', // added
   },
 };
 
@@ -789,12 +765,9 @@ const seoul256Dark: ThemeColors = {
     blue: '#85add4',
     magenta: '#d7afaf',
     cyan: '#87afaf',
-    redBright: '#d75f87',
-    greenBright: '#87af87',
-    yellowBright: '#ffd787',
-    blueBright: '#add4fb',
-    magentaBright: '#ffafaf',
-    cyanBright: '#87d7d7',
+    orange: '#d5996e', // added
+    purple: '#afa0d4', // added
+    teal: '#6fa08d', // added
   },
 };
 
@@ -819,12 +792,9 @@ const seoul256Light: ThemeColors = {
     blue: '#5f87ae',
     magenta: '#875f87',
     cyan: '#5f8787',
-    redBright: '#870100',
-    greenBright: '#005f00',
-    yellowBright: '#d8865f',
-    blueBright: '#0087af',
-    magentaBright: '#87025f',
-    cyanBright: '#008787',
+    orange: '#af7350', // added
+    purple: '#6f5f9e', // added
+    teal: '#5f9878', // added
   },
 };
 
@@ -913,12 +883,9 @@ const tokyoNightDefault: ThemeColors = {
     blue: '#7aa2f7',
     magenta: '#bb9af7',
     cyan: '#7dcfff',
-    redBright: '#f7768e',
-    greenBright: '#9ece6a',
-    yellowBright: '#e0af68',
-    blueBright: '#7aa2f7',
-    magentaBright: '#bb9af7',
-    cyanBright: '#7dcfff',
+    orange: '#ff9e64', // added
+    purple: '#9d7cd8', // added
+    teal: '#73daca', // added
   },
 };
 
@@ -943,12 +910,9 @@ const tokyoNightDay: ThemeColors = {
     blue: '#2e7de9',
     magenta: '#9854f1',
     cyan: '#007197',
-    redBright: '#f52a65',
-    greenBright: '#587539',
-    yellowBright: '#8c6c3e',
-    blueBright: '#2e7de9',
-    magentaBright: '#9854f1',
-    cyanBright: '#007197',
+    orange: '#b15c00', // added
+    purple: '#7847bd', // added
+    teal: '#118c74', // added
   },
 };
 

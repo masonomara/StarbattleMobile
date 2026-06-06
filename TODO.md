@@ -1,0 +1,11 @@
+- Rewrie teh esupport and privacy policies
+- Make sur ethe forgot password flow is working
+- Dial in the hints so they laod a bit quicker
+- make sur ethe puzzles laod as quickly as possible
+- tutorial UI could be a bit better
+- make the app laod int he backgorudn when doing the tutorial
+- add paid packs to test hwo they work
+- test on android
+- make sure the colored regions are colored and distrubted a bit better
+- title the puzzle packs better
+- add the number of stars somehwere on the puzzle screen

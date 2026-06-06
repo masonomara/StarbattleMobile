@@ -35,13 +35,14 @@ import {
   archiveKeyToDate,
   STREAK_TYPES,
   STREAK_LABELS,
+  STREAK_UNIT,
 } from '../utils/streakDate';
 import type { Theme, StreakType, Puzzle, RootStackParamList } from '../types';
 
 const ARCHIVE_NAMES: Record<StreakType, string> = {
-  daily: 'Daily Specials',
-  weekly: 'Weekly Specials',
-  monthly: 'Monthly Specials',
+  daily: 'Daily Special',
+  weekly: 'Weekly Special',
+  monthly: 'Monthly Special',
 };
 
 export function StreaksModal() {
@@ -127,17 +128,31 @@ export function StreaksModal() {
           <View style={styles.streakGrid}>
             {STREAK_TYPES.map(type => {
               const found = streaks.find(s => s.type === type);
-              const count = found ? getActiveStreak(found, type) : 0;
+              const current = found ? getActiveStreak(found, type) : 0;
+              const best = found ? found.best : 0;
+              const unit = (n: number) =>
+                n === 1 ? STREAK_UNIT[type] : `${STREAK_UNIT[type]}s`;
               return (
                 <View key={type} style={[styles.streakTile]}>
-                  <Text style={styles.streakCount}>{count}</Text>
                   <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                  <View style={styles.streakStatRow}>
+                    <Text style={styles.streakStatLabel}>Best</Text>
+                    <Text style={styles.streakStatValue}>
+                      {best} {unit(best)}
+                    </Text>
+                  </View>
+                  <View style={styles.streakStatRow}>
+                    <Text style={styles.streakStatLabel}>Current</Text>
+                    <Text style={styles.streakStatValue}>
+                      {current} {unit(current)}
+                    </Text>
+                  </View>
                 </View>
               );
             })}
           </View>
 
-          <Text style={styles.sectionTitle}>Puzzle Archive</Text>
+          <Text style={styles.sectionTitle}>Archived Specials</Text>
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
@@ -148,14 +163,14 @@ export function StreaksModal() {
               <PackCard
                 key={type}
                 name={ARCHIVE_NAMES[type]}
-                meta={isEmpty ? 'Coming soon' : `${count} puzzles`}
+                meta={isEmpty ? 'Coming soon' : `${count} specials`}
                 preview={preview}
                 disabled={isEmpty}
                 onPress={() => {
                   if (locked) {
                     Alert.alert(
                       'Premium Feature',
-                      'Upgrade to Premium to access past puzzles.',
+                      'Upgrade to Premium to access past specials.',
                       [
                         { text: 'Not Now', style: 'cancel' },
                         {
@@ -240,23 +255,35 @@ const createStyles = (theme: Theme) => {
     },
     streakTile: {
       flex: 1,
-      padding: 16,
-      alignItems: 'center',
+      padding: 14,
       backgroundColor: theme.background,
       borderWidth: 1,
       borderColor: theme.border,
       borderRadius: 4,
     },
-    streakCount: {
-      lineHeight: 36,
-      fontSize: 33,
-      fontWeight: '900',
-      color: theme.blue,
-    },
     streakLabel: {
-      fontSize: theme.fontSizeSubhead,
+      fontSize: 18,
+      color: theme.text,
+      lineHeight: 20,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
+      letterSpacing: -0.2,
+    },
+    streakStatRow: {
+      marginTop: 8,
+    },
+    streakStatLabel: {
+      fontSize: 15,
+      lineHeight: 20,
+
+      fontWeight: '500',
       color: theme.textSecondary,
-      marginTop: 4,
+    },
+    streakStatValue: {
+      fontSize: 17,
+      fontWeight: '600',
+      color: theme.text,
+      marginTop: 1,
     },
     sectionTitle: {
       fontSize: 20,
