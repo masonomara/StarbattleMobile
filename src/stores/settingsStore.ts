@@ -4,6 +4,7 @@
 // This keeps the persistence layer as an implementation detail of the store.
 import { create } from 'zustand';
 import { settingsStorage as storage } from '../mmkv';
+import { applyThemeAppIcon } from '../utils/appIcon';
 import type { UserSettings } from '../types';
 
 const SETTINGS_KEY = 'settings';
@@ -64,7 +65,12 @@ export const useSettingsStore = create<SettingsState>(set => ({
   // Synchronous — getSettings() reads from MMKV which is always available
   // on the JS thread without async I/O. Call once during app startup.
   initialize: () => {
-    set({ settings: getSettings() });
+    const settings = getSettings();
+    set({ settings });
+    // Reconcile the app icon with the persisted palette on launch. applyThemeAppIcon
+    // is a no-op when the icon already matches, so on a normal launch this does
+    // nothing (no system alert); it only corrects drift (e.g. after a reinstall).
+    applyThemeAppIcon(settings.palette);
   },
 
   openSettings: () => set({ settingsModalVisible: true }),
@@ -75,6 +81,12 @@ export const useSettingsStore = create<SettingsState>(set => ({
   updateSettings: update => {
     saveSettings(update);
     set(state => ({ settings: { ...state.settings, ...update } }));
+    // When the color palette changes, swap the iOS app icon to match.
+    // Fire-and-forget and self-guarded (iOS-only, no-op if unchanged) — it never
+    // throws, so a failed icon swap can't break the settings write above.
+    if (update.palette !== undefined) {
+      applyThemeAppIcon(update.palette);
+    }
   },
 
   completeTutorial: () => {

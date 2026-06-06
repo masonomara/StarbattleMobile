@@ -272,6 +272,18 @@ export type PaletteVariants = {
   light: ThemeColors;
 };
 
+// APP ICON
+// The alternate iOS app-icon names declared in Info.plist (CFBundleAlternateIcons),
+// matching the `.icon` files in ios/. `null` means the primary icon (AppIcon),
+// which is the "original" theme's artwork.
+export type AppIconName =
+  | 'AppIcon-gruvbox'
+  | 'AppIcon-primer'
+  | 'AppIcon-rosePine'
+  | 'AppIcon-seoul256'
+  | 'AppIcon-tokyoNight'
+  | null;
+
 // DEBT: Theme mixes semantic color roles with design tokens (spacing, radius,
 // font sizes). These are different concerns — colors should come from the
 // palette; tokens are layout constants that never change per-theme. Consider
