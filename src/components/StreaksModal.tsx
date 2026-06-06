@@ -262,25 +262,27 @@ const createStyles = (theme: Theme) => {
       borderRadius: 4,
     },
     streakLabel: {
-      fontSize: theme.fontSizeSubhead,
-      fontWeight: '700',
+      fontSize: 18,
       color: theme.text,
-      marginBottom: 10,
+      lineHeight: 20,
+      fontFamily: 'Bricolage Grotesque',
+      fontWeight: '900',
+      letterSpacing: -0.2,
     },
     streakStatRow: {
       marginTop: 8,
     },
     streakStatLabel: {
-      fontSize: 11,
-      fontWeight: '700',
-      letterSpacing: 0.3,
-      textTransform: 'uppercase',
+      fontSize: 15,
+      lineHeight: 20,
+
+      fontWeight: '500',
       color: theme.textSecondary,
     },
     streakStatValue: {
-      fontSize: 16,
-      fontWeight: '900',
-      color: theme.blue,
+      fontSize: 17,
+      fontWeight: '600',
+      color: theme.text,
       marginTop: 1,
     },
     sectionTitle: {

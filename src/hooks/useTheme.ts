@@ -31,8 +31,7 @@ export function buildTheme(colors: ThemeColors): Theme {
     regionColors: [
       regions.red, regions.green, regions.yellow, regions.blue,
       regions.magenta, regions.cyan,
-      regions.redBright, regions.greenBright, regions.yellowBright,
-      regions.blueBright, regions.magentaBright, regions.cyanBright,
+      regions.orange, regions.purple, regions.teal,
     ],
     regionColorAlpha: isDark ? 0.25 : 0.15,
     ...tokens,
