@@ -12,6 +12,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		48CC074B91584BABA82B22BD /* BricolageGrotesque-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3C6AFE3BA05348B98B1A3DAF /* BricolageGrotesque-Variable.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
+		7A11C0DE0000000000000002 /* AppIconModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 7A11C0DE0000000000000001 /* AppIconModule.m */; };
 		8179B8D3979465D293FBEEC0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		9DB2D5742FC65F40006DB240 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5732FC65F40006DB240 /* AppIcon.icon */; };
 		9DB2D57B2FC65F62006DB240 /* AppIcon-original.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5762FC65F62006DB240 /* AppIcon-original.icon */; };
@@ -34,6 +35,7 @@
 		675D8FBAFBB74ED0BE491D9D /* Colors.xcassets */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = folder.assetcatalog; name = Colors.xcassets; path = StarbattleMobile/Colors.xcassets; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = StarbattleMobile/AppDelegate.swift; sourceTree = "<group>"; };
 		773607658C213B2CF388C76D /* Pods-StarbattleMobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.release.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.release.xcconfig"; sourceTree = "<group>"; };
+		7A11C0DE0000000000000001 /* AppIconModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppIconModule.m; path = StarbattleMobile/AppIconModule.m; sourceTree = "<group>"; };
 		9DB2D5732FC65F40006DB240 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		9DB2D5752FC65F62006DB240 /* AppIcon-gruvbox.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-gruvbox.icon"; sourceTree = "<group>"; };
 		9DB2D5762FC65F62006DB240 /* AppIcon-original.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "AppIcon-original.icon"; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 			children = (
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
+				7A11C0DE0000000000000001 /* AppIconModule.m */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
 				A4F8E1C42B456789ABCDEF12 /* StarbattleMobile.entitlements */,
@@ -242,13 +245,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -263,13 +262,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -306,6 +301,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				7A11C0DE0000000000000002 /* AppIconModule.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

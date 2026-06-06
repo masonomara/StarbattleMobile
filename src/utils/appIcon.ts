@@ -1,6 +1,5 @@
-import { Platform } from 'react-native';
-import { changeIcon, getIcon } from 'react-native-change-icon';
-import type { AppIconName, ThemeName } from '../types';
+import { NativeModules, Platform } from 'react-native';
+import type { AppIconName, AppIconNativeModule, ThemeName } from '../types';
 
 // Maps the user's selected color palette to an alternate iOS app-icon name.
 //
@@ -21,9 +20,12 @@ const PALETTE_TO_ICON: Record<ThemeName, AppIconName> = {
   tokyoNight: 'AppIcon-tokyoNight',
 };
 
-// react-native-change-icon represents the primary (non-alternate) icon as the
-// sentinel string "Default" in both getIcon() and changeIcon().
+// Our native module represents the primary (non-alternate) icon as the sentinel
+// string "Default" in both getIcon() and setIcon().
 const PRIMARY_ICON = 'Default';
+
+// Resolved once. Undefined on Android or any build where the module isn't linked.
+const nativeModule = NativeModules.AppIconModule as AppIconNativeModule | undefined;
 
 export function iconNameForPalette(palette: ThemeName): AppIconName {
   return PALETTE_TO_ICON[palette] ?? null;
@@ -34,21 +36,21 @@ export function iconNameForPalette(palette: ThemeName): AppIconName {
 //
 // Only calls the native setter when the icon actually needs to change. This
 // matters because iOS shows a system alert ("You have changed the icon for…")
-// every time setAlternateIconName runs, and the native module rejects redundant
-// calls anyway. We compare against the current icon first to avoid both.
+// every time setAlternateIconName runs. The native side also no-ops redundant
+// calls, but we short-circuit here too to avoid the round-trip.
 export async function applyThemeAppIcon(palette: ThemeName): Promise<void> {
-  if (Platform.OS !== 'ios') return;
+  if (Platform.OS !== 'ios' || !nativeModule) return;
 
   try {
     const target = iconNameForPalette(palette);
     // getIcon() resolves to the alternate name, or "Default" for the primary icon.
-    const current = await getIcon();
+    const current = await nativeModule.getIcon();
     const currentNormalized = current === PRIMARY_ICON ? null : current;
 
     if (currentNormalized === target) return;
 
-    // changeIcon(undefined) / changeIcon("Default") resets to the primary icon.
-    await changeIcon(target ?? PRIMARY_ICON);
+    // setIcon("Default") resets to the primary icon.
+    await nativeModule.setIcon(target ?? PRIMARY_ICON);
   } catch {
     // Swallow: unsupported device, "icon already used" race, or native error.
     // Theme selection must succeed regardless of the icon swap.

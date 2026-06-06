@@ -12,8 +12,17 @@ appearance is handled automatically by the OS — we do **not** ship separate
   light/dark/tinted `fill-specializations`, so the OS swaps appearance on its own.
 - `ios/StarbattleMobile/Info.plist` declares the 6 base alternates under
   `CFBundleIcons → CFBundleAlternateIcons`, with `CFBundlePrimaryIcon = AppIcon`.
-- Runtime switching uses [`react-native-change-icon`](https://www.npmjs.com/package/react-native-change-icon)
-  (`changeIcon` / `getIcon`), which call `UIApplication.setAlternateIconName`.
+- Runtime switching uses a small **in-app-target native module**,
+  `ios/StarbattleMobile/AppIconModule.m` (`getIcon` / `setIcon` /
+  `supportsAlternateIcons`), wrapping `UIApplication.setAlternateIconName`.
+  - We deliberately do **not** use `react-native-change-icon`: it ships a codegen
+    TurboModule spec that does not get registered into this app's New Architecture
+    module-provider map (`RCTModuleProviders.mm`), so `NativeModules.ChangeIcon`
+    resolves to `null` under RN 0.84 bridgeless. A plain `RCT_EXPORT_MODULE` class
+    compiled into the app target is auto-discovered via the bridgeless legacy
+    module interop, avoiding that problem.
+  - `setIcon` retries on transient `EAGAIN` (POSIX 35) from the icon-change alert
+    subsystem, which can briefly fail when called close to launch.
 - `src/utils/appIcon.ts` maps a palette → icon name and exposes
   `applyThemeAppIcon(palette)`. It is iOS-only, fire-and-forget, never throws, and
   only calls the native setter when the icon actually needs to change.
@@ -38,22 +47,28 @@ would duplicate it. (`AppIcon-original.icon` and its Info.plist entry are kept s
 the set of declared alternates matches the shipped `.icon` files, but the mapping
 never selects it.)
 
-## Manual steps required (cannot be done/verified in this environment)
+## Verification status
 
-1. **Install pods** — the new dependency is autolinked but the pod is not yet
-   installed:
-   ```sh
-   cd ios && pod install
-   ```
-2. **Rebuild the app** (clean build recommended after Info.plist + icon changes):
-   ```sh
-   npm run ios
-   ```
-3. **Device/simulator test** — verify on a real device or simulator that:
-   - Selecting each palette in Settings → Color Theme swaps the home-screen icon.
-   - Selecting `original` resets to the primary icon.
-   - Light/dark appearance follows the system automatically.
-   - The icon reflects the saved palette on a fresh launch.
+Verified programmatically (simulator + on-device build):
+
+- The native module loads and registers — `NativeModules.AppIconModule` is non-null
+  and its methods are invoked with the correct icon names (`supportsAlternateIcons`
+  returns `YES`).
+- The 6 alternates are compiled into `Assets.car` under names that match
+  `Info.plist`, so `setAlternateIconName` has real targets to switch to.
+
+> **Note on the simulator:** the iOS Simulator cannot complete
+> `setAlternateIconName` — it lacks the system UI bundle that presents the
+> "You changed the icon" alert, so the call fails with `LSIconAlertManager`
+> `EAGAIN`/`EIO` errors that originate in Apple's simulator code, not ours. The
+> final visual swap must be confirmed on a physical device.
+
+**Final check (physical device):** in Settings → Color Theme, switch palettes and
+confirm:
+- The home-screen icon changes per palette (iOS shows its change-icon alert).
+- Selecting `original` resets to the primary icon.
+- Light/dark appearance follows the system automatically.
+- The icon reflects the saved palette on a fresh launch.
 
 ## Known behavior
 

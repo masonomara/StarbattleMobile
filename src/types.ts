@@ -284,6 +284,15 @@ export type AppIconName =
   | 'AppIcon-tokyoNight'
   | null;
 
+// The in-app-target native module (ios/StarbattleMobile/AppIconModule.m) that
+// wraps UIApplication's alternate-icon API. Resolved from NativeModules; may be
+// undefined on platforms/builds where it isn't linked (e.g. Android).
+export interface AppIconNativeModule {
+  getIcon(): Promise<string>;
+  setIcon(iconName: string): Promise<string>;
+  supportsAlternateIcons(): Promise<boolean>;
+}
+
 // DEBT: Theme mixes semantic color roles with design tokens (spacing, radius,
 // font sizes). These are different concerns — colors should come from the
 // palette; tokens are layout constants that never change per-theme. Consider
