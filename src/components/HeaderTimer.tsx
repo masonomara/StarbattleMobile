@@ -9,8 +9,9 @@ import type { Theme } from '../types';
 export function HeaderTimer() {
   const timeMs = usePuzzleStore(s => s.timeMs);
   const completed = usePuzzleStore(s => s.completed);
+  const stars = usePuzzleStore(s => s.puzzle?.stars);
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   useEffect(() => {
     if (completed) return;
@@ -39,7 +40,10 @@ export function HeaderTimer() {
   }, [completed]);
 
   return (
-    <Text style={styles.timer}>{formatElapsedTime(timeMs)}</Text>
+    <Text style={styles.timer}>
+      {stars != null ? `${stars} ${stars === 1 ? 'star' : 'stars'} - ` : ''}
+      {formatElapsedTime(timeMs)}
+    </Text>
   );
 }
 
@@ -50,6 +54,5 @@ const createStyles = (theme: Theme) =>
       fontWeight: '600',
       fontSize: 17,
       color: theme.text,
-     
     },
   });

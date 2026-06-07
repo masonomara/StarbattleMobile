@@ -16,7 +16,6 @@
 
 ## UX
 - [ ] Improve the tutorial UI
-- [ ] Show the star count somewhere on the puzzle screen
 
 ## Monetization
 - [ ] Add paid packs to test how they work
