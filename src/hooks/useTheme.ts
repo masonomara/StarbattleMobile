@@ -29,11 +29,17 @@ export function buildTheme(colors: ThemeColors): Theme {
     green: roles.green,
     yellow: roles.yellow,
     regionColors: [
-      regions.red, regions.green, regions.yellow, regions.blue,
-      regions.magenta, regions.cyan,
-      regions.orange, regions.purple, regions.teal,
+      regions.red,
+      regions.green,
+      regions.yellow,
+      regions.blue,
+      regions.magenta,
+      regions.cyan,
+      regions.orange,
+      regions.purple,
+      regions.teal,
     ],
-    regionColorAlpha: isDark ? 0.25 : 0.15,
+    regionColorAlpha: isDark ? 0.4 : 0.4,
     ...tokens,
   };
 }
@@ -44,9 +50,11 @@ export function useTheme(): Theme {
   const palette = useSettingsStore(s => s.settings.palette);
 
   const isDark =
-    themePref === 'dark' ? true
-    : themePref === 'light' ? false
-    : systemScheme === 'dark';
+    themePref === 'dark'
+      ? true
+      : themePref === 'light'
+      ? false
+      : systemScheme === 'dark';
 
   // Memoize on the only inputs that affect the result. Without this, useTheme
   // returns a new Theme object every render, which changes the `theme` prop
