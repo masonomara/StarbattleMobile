@@ -11,7 +11,7 @@ export function HeaderTimer() {
   const completed = usePuzzleStore(s => s.completed);
   const stars = usePuzzleStore(s => s.puzzle?.stars);
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   useEffect(() => {
     if (completed) return;
