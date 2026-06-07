@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   TextStyle,
+  useWindowDimensions,
 } from 'react-native';
 import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -47,6 +48,8 @@ const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 // Placeholder library cards rendered before the catalog syncs, so the list has
 // a stable, populated-looking shape from first paint.
 const SKELETON_PACK_COUNT = 4;
+// Streak card thumbnail width as a fraction of the viewport (RN has no vw unit).
+const STREAK_CARD_FRACTION = 0.6;
 
 // PaidPackRow is its own component because useProductPrice is a hook — hooks
 // cannot be called conditionally, so this component wraps the per-pack call
@@ -109,6 +112,8 @@ export function HomeScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
   const theme = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const streakCardSize = windowWidth * STREAK_CARD_FRACTION;
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets);
   const userId = useAuthStore(s => s.user?.id);
@@ -159,9 +164,14 @@ export function HomeScreen({
   // meta heights and margins.
   const renderStreakSkeleton = (key: string) => (
     <View key={key} style={styles.streakCard}>
-      <PulseBox width={260} height={260} radius={5} baseColor={theme.border} />
       <PulseBox
-        width={200}
+        width={streakCardSize}
+        height={streakCardSize}
+        radius={5}
+        baseColor={theme.border}
+      />
+      <PulseBox
+        width={120}
         height={36}
         radius={5}
         baseColor={theme.border}
@@ -261,7 +271,7 @@ export function HomeScreen({
                       >
                         <PuzzleThumbnail
                           puzzle={preview}
-                          size={260}
+                          size={streakCardSize}
                           theme={theme}
                           coloredRegions={coloredRegions}
                         />
@@ -422,12 +432,7 @@ const createStyles = (
       marginBottom: 32,
     },
     streakCard: {
-      borderRadius: 4,
-      padding: 16,
-      gap: 0,
       justifyContent: 'flex-start',
-      borderWidth: 1,
-      borderColor: theme.border,
     },
     // Intentionally empty — placeholder for future completed-card styling.
     streakCardCompleted: {},
@@ -438,8 +443,8 @@ const createStyles = (
     streakMetaSkeleton: { marginTop: 7 },
     streakLabel: {
       color: theme.text,
-      lineHeight: 36,
-      fontSize: 33,
+      lineHeight: 30,
+      fontSize: 24,
       fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
       letterSpacing: -0.33,

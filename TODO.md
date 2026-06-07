@@ -1,25 +1,25 @@
 # TODO
 
-## Content & legal
-- [ ] Rewrite the support and privacy policies
-- [ ] Title the puzzle packs better
-- [ ] Add Spanish versioning
-
-## Auth
+## Before sending to testers
 - [ ] Verify the forgot-password flow works end to end
-
-## Performance
-- [ ] Speed up hint loading
-- [ ] Make puzzles load as quickly as possible
 - [ ] Load the app in the background while the tutorial is running
-- [ ] Offline still took a really long time to load
-
-## UX
+- [ ] Fix slow offline load
 - [ ] Improve the tutorial UI
 
-## Monetization
+## While people are testing (parallel work)
+
+### Performance (incremental, non-blocking)
+- [ ] Speed up hint loading
+- [ ] Make puzzles load as quickly as possible
+
+### Content & legal (needed for store submission, not the test build)
+- [ ] Rewrite the support and privacy policies
+- [ ] Title the puzzle packs better — ⏳ wait for tester reactions to current names first
+- [ ] Add Spanish versioning
+
+### Monetization (don't gate test builds on payments)
 - [ ] Add paid packs to test how they work
 - [ ] Add prices for Latin America and Europe
 
-## QA
+### Android
 - [ ] Test on Android
