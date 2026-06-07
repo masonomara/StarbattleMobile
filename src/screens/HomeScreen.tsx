@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import Check from 'lucide-react-native/dist/cjs/icons/check';
 import Flame from 'lucide-react-native/dist/cjs/icons/flame';
 import User from 'lucide-react-native/dist/cjs/icons/user';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,17 +19,16 @@ import { useTheme } from '../hooks/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { usePackPreviews } from '../hooks/usePackPreviews';
 import { useCompletionData } from '../hooks/useCompletionData';
-import { useStreakRows } from '../hooks/useStreakRows';
 import {
   getCurrentKey,
-  getActiveStreak,
+  getStreakCells,
   STREAK_TYPES,
-  STREAK_UNIT,
   STREAK_LABELS,
 } from '../utils/streakDate';
 import { useAuthStore } from '../stores/authStore';
 import { startupTimer } from '../utils/startupTimer';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
+import { StreakProgressRow } from '../components/StreakProgressRow';
 import { PackCard, PackCardSkeleton } from '../components/PackCard';
 import { PulseBox, PulseProvider } from '../components/Pulse';
 import { useProductPrice } from '../hooks/useProductPrice';
@@ -50,6 +48,10 @@ const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 const SKELETON_PACK_COUNT = 4;
 // Streak card thumbnail width as a fraction of the viewport (RN has no vw unit).
 const STREAK_CARD_FRACTION = 0.6;
+// Horizontal gap between streak cards (matches the carousel's contentContainer gap).
+const STREAK_CARD_GAP = 20;
+// Left inset of the streak carousel from the screen edge.
+const STREAK_ROW_PADDING = 20;
 
 // PaidPackRow is its own component because useProductPrice is a hook — hooks
 // cannot be called conditionally, so this component wraps the per-pack call
@@ -93,20 +95,14 @@ function PaidPackRow({
   );
 }
 
-// Returns the subtitle shown beneath each streak card based on whether the
-// user completed today's special and their current streak length.
-function getStreakLabel(
-  isCompleted: boolean,
-  streakCount: number,
-  type: StreakType,
-): string {
-  if (isCompleted && streakCount > 0)
-    return `${streakCount} ${STREAK_UNIT[type]} streak`;
-  if (isCompleted) return `${streakCount} ${STREAK_UNIT[type]} streak`;
-  if (streakCount > 0)
-    return `Continue your ${streakCount} ${STREAK_UNIT[type]} streak`;
-  return `Play the ${STREAK_LABELS[type]} Special`;
-}
+// Star rating of each special, shown as the streak card's static subtitle (the
+// progress row below it conveys streak state, so the subtitle just describes the
+// puzzle and never changes with completion).
+const STREAK_STAR_COUNT: Record<StreakType, number> = {
+  daily: 4,
+  weekly: 5,
+  monthly: 6,
+};
 
 export function HomeScreen({
   navigation,
@@ -150,13 +146,8 @@ export function HomeScreen({
 
   // Completion state: today's streak puzzle IDs and solved counts per library pack.
   // Reloads on screen focus so numbers update after the user solves a puzzle.
-  const { completedPuzzleIds, completedPerPack } = useCompletionData(
-    packCatalog,
-    userId,
-  );
-
-  // Live streak rows from PowerSync — updates reactively as data syncs.
-  const { streaks } = useStreakRows(userId);
+  const { completedPuzzleIds, completedPerPack, completedStreakKeys } =
+    useCompletionData(packCatalog, userId);
 
   // Fixed-size placeholder that reserves a streak card's exact footprint while
   // its preview loads (or before the catalog arrives), so the carousel doesn't
@@ -230,14 +221,21 @@ export function HomeScreen({
               horizontal
               showsHorizontalScrollIndicator={false}
               // Snap each streak card to the left edge as it pauses.
-              // Interval = card width (260 thumb + 32 padding = 292) + 12 gap.
-              snapToInterval={304}
+              // Interval = card (thumbnail) width + the gap between cards, both
+              // derived from the viewport so snapping stays aligned on every device.
+              snapToInterval={streakCardSize + STREAK_CARD_GAP}
               snapToAlignment="start"
               decelerationRate="fast"
               contentContainerStyle={{
-                paddingRight: 16,
-                paddingLeft: 16,
-                gap: 12,
+                paddingLeft: STREAK_ROW_PADDING,
+                // Trailing space sized so the last card can snap all the way to
+                // the start (same left inset as every other card) without
+                // clamping early: viewport − card − left inset.
+                paddingRight: Math.max(
+                  STREAK_ROW_PADDING,
+                  windowWidth - streakCardSize - STREAK_ROW_PADDING,
+                ),
+                gap: STREAK_CARD_GAP,
               }}
             >
               {streakPacks.length === 0
@@ -250,11 +248,6 @@ export function HomeScreen({
                     // puzzleId format matches keys stored by useCompletionData.
                     const puzzleId = `${pack.id}:${getCurrentKey(type)}`;
                     const isCompleted = completedPuzzleIds.has(puzzleId);
-                    const found = streaks.find(s => s.type === type);
-                    // getActiveStreak returns 0 if the streak wasn't maintained.
-                    const streakCount = found
-                      ? getActiveStreak(found, type)
-                      : 0;
 
                     return (
                       <Pressable
@@ -278,25 +271,14 @@ export function HomeScreen({
                         <Text style={styles.streakLabel}>
                           {`${STREAK_LABELS[type]} Special`}
                         </Text>
-                        <View style={styles.streakMetaRow}>
-                          {isCompleted && (
-                            <View style={styles.streakCheckCircle}>
-                              <Check
-                                size={10}
-                                color={theme.green}
-                                strokeWidth={4}
-                              />
-                            </View>
-                          )}
-                          <Text
-                            style={[
-                              styles.streakMeta,
-                              isCompleted && { color: theme.text },
-                            ]}
-                          >
-                            {getStreakLabel(isCompleted, streakCount, type)}
-                          </Text>
-                        </View>
+                        <Text style={styles.streakMeta}>
+                          {`${STREAK_STAR_COUNT[type]} star puzzle`}
+                        </Text>
+                        <StreakProgressRow
+                          cells={getStreakCells(type)}
+                          completedKeys={completedStreakKeys[type]}
+                          theme={theme}
+                        />
                       </Pressable>
                     );
                   })}
@@ -445,34 +427,16 @@ const createStyles = (
       color: theme.text,
       lineHeight: 30,
       fontSize: 24,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
+      fontWeight: '600',
       letterSpacing: -0.33,
       textTransform: 'capitalize',
-      marginTop: 16,
-    },
-    streakMetaRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 9,
+      marginTop: 6,
     },
     streakMeta: {
-      color: theme.text,
-      fontSize: 17,
-      lineHeight: 22,
-      fontWeight: '600',
-      marginTop: 7,
-    },
-    streakCheckCircle: {
-      width: 17,
-      height: 17,
-      borderRadius: 100,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 7,
-      borderWidth: 1.5,
-      paddingTop: 1,
-      borderColor: theme.green,
+      color: theme.textSecondary,
+      fontSize: 15,
+      lineHeight: 20,
+      fontWeight: '500',
     },
     sectionLabel: {
       lineHeight: 28,

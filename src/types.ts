@@ -91,6 +91,27 @@ export type PackCardSkeletonProps = {
   theme: Theme;
 };
 
+// One circle in a streak progress row (daily → days of the week, weekly → weeks
+// of the month, monthly → months of the year).
+//   key       — the streak completion key this cell maps to (matches the suffix
+//               stored in puzzle_progress, e.g. "2026-06-07" / "2026-W23" / "2026-06")
+//   letter    — single-character label drawn in the circle
+//   isCurrent — true for the cell that contains "now" (today's day/week/month)
+export type StreakCell = {
+  key: string;
+  letter: string;
+  isCurrent: boolean;
+};
+
+// Progress row at the bottom of a streak card. Renders one circle per cell,
+// filling those whose key is in completedKeys and connecting consecutive solved
+// cells. Used for daily, weekly, and monthly with cadence-specific cells.
+export type StreakProgressRowProps = {
+  cells: StreakCell[];
+  completedKeys: Set<string>;
+  theme: Theme;
+};
+
 export type ToolbarProps = {
   isZoomed: boolean;
   onZoomReset: () => void;
