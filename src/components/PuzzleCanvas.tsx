@@ -41,7 +41,7 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
   // constructs regionColors from a fixed set of color slots, so its length is
   // invariant across palettes and theme switches. Paths encode geometry only.
   const regionFillPaths = useMemo(
-    () => buildRegionFillPaths(regions, size, cs, bw),
+    () => buildRegionFillPaths(regions, size, cs, regionColors.length, bw),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [puzzle.id, canvasSize, bw],
   );

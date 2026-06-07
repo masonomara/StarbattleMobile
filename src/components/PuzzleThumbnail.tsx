@@ -20,7 +20,7 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
 
   const regionFillPaths = useMemo(() => {
     if (!coloredRegions) return null;
-    return buildRegionFillPaths(regions, gridSize, cs);
+    return buildRegionFillPaths(regions, gridSize, cs, theme.regionColors.length);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puzzle.id, size, coloredRegions]);
 
