@@ -41,7 +41,7 @@ const BackgroundCanvas = React.memo(function BackgroundCanvas({
   // constructs regionColors from a fixed set of color slots, so its length is
   // invariant across palettes and theme switches. Paths encode geometry only.
   const regionFillPaths = useMemo(
-    () => buildRegionFillPaths(regions, size, cs, bw),
+    () => buildRegionFillPaths(regions, size, cs, regionColors.length, bw),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [puzzle.id, canvasSize, bw],
   );
@@ -124,6 +124,13 @@ export const PuzzleCanvas = React.forwardRef<
   // prop drilling through PuzzleScreen → PuzzleCanvas → BackgroundCanvas.
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const totalSize = canvasSize + BORDER * 2;
+
+  // Hint ghosts are muted so they read as previews behind placed stars. In dark
+  // mode the border color is too faint, so show them as a translucent version of
+  // the star (text) color instead; light mode keeps the subtler border color.
+  const ghostColor = theme.isDark
+    ? rgba(theme.text, 0.4)
+    : rgba(theme.text, 0.4);
 
   // Transient in-flight preview cells accumulated during a drag stroke.
   // Merged with `cells` in dynamicPaths so the stroke is visible immediately.
@@ -236,7 +243,7 @@ export const PuzzleCanvas = React.forwardRef<
       >
         <Path path={dynamicPaths.starNormal} color={theme.text} />
         <Path path={dynamicPaths.starError} color={theme.red} />
-        <Path path={dynamicPaths.starGhost} color={theme.border} />
+        <Path path={dynamicPaths.starGhost} color={ghostColor} />
         <Path
           path={dynamicPaths.marks}
           color={theme.red}
@@ -246,7 +253,7 @@ export const PuzzleCanvas = React.forwardRef<
         />
         <Path
           path={dynamicPaths.marksGhost}
-          color={theme.border}
+          color={ghostColor}
           style="stroke"
           strokeWidth={2.25}
           strokeCap="square"
