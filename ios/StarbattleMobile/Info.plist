@@ -18,31 +18,36 @@
 			<dict>
 				<key>CFBundleIconName</key>
 				<string>AppIcon-gruvbox</string>
-			</dict>
-			<key>AppIcon-original</key>
-			<dict>
-				<key>CFBundleIconName</key>
-				<string>AppIcon-original</string>
+				<key>UIPrerenderedIcon</key>
+				<false/>
 			</dict>
 			<key>AppIcon-primer</key>
 			<dict>
 				<key>CFBundleIconName</key>
 				<string>AppIcon-primer</string>
+				<key>UIPrerenderedIcon</key>
+				<false/>
 			</dict>
 			<key>AppIcon-rosePine</key>
 			<dict>
 				<key>CFBundleIconName</key>
 				<string>AppIcon-rosePine</string>
+				<key>UIPrerenderedIcon</key>
+				<false/>
 			</dict>
 			<key>AppIcon-seoul256</key>
 			<dict>
 				<key>CFBundleIconName</key>
 				<string>AppIcon-seoul256</string>
+				<key>UIPrerenderedIcon</key>
+				<false/>
 			</dict>
 			<key>AppIcon-tokyoNight</key>
 			<dict>
 				<key>CFBundleIconName</key>
 				<string>AppIcon-tokyoNight</string>
+				<key>UIPrerenderedIcon</key>
+				<false/>
 			</dict>
 		</dict>
 		<key>CFBundlePrimaryIcon</key>

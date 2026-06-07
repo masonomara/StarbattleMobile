@@ -381,7 +381,7 @@ const createStyles = (theme: Theme) =>
     },
     tutorialText: {
       color: theme.text,
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: '600',
       textAlign: 'center',
     },
