@@ -4,7 +4,7 @@ import { PuzzleThumbnail } from './PuzzleThumbnail';
 import { PulseBox } from './Pulse';
 import type { PackCardProps, PackCardSkeletonProps, Theme } from '../types';
 
-const THUMB_SIZE = 48;
+const THUMB_SIZE = 80;
 
 export function PackCard({
   name,
@@ -35,8 +35,8 @@ export function PackCard({
         <View style={[styles.thumb, styles.thumbPlaceholder]} />
       )}
       <View style={styles.info}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.metaText}>{meta}</Text>
+        <Text role="callout" style={styles.name}>{name}</Text>
+        <Text role="subhead" style={styles.metaText}>{meta}</Text>
       </View>
       {right && <View style={styles.right}>{right}</View>}
     </Pressable>
@@ -79,12 +79,12 @@ const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: 16,
+      // padding: 16,
       borderRadius: 4,
-      marginBottom: 12,
+      marginBottom: 20,
       backgroundColor: theme.background,
-      borderWidth: 1,
-      borderColor: theme.border,
+      // borderWidth: 1,
+      // borderColor: theme.border,
     },
     cardDisabled: {
       opacity: 0.4,
@@ -103,19 +103,10 @@ const createStyles = (theme: Theme) =>
     info: { flex: 1 },
     skeletonMeta: { marginTop: 4 },
     name: {
-      fontSize: 17,
-      lineHeight: 22,
-      fontWeight: '700',
       color: theme.text,
-      letterSpacing: -0.56,
     },
     metaText: {
-      fontSize: 17,
-      lineHeight: 22,
-      fontWeight: '500',
       color: theme.textSecondary,
-      letterSpacing: -0.56,
-      marginTop: 2,
     },
     right: {
       display: 'flex',

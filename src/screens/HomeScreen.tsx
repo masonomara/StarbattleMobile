@@ -47,7 +47,7 @@ const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 // a stable, populated-looking shape from first paint.
 const SKELETON_PACK_COUNT = 4;
 // Streak card thumbnail width as a fraction of the viewport (RN has no vw unit).
-const STREAK_CARD_FRACTION = 0.6;
+const STREAK_CARD_FRACTION = 0.75;
 // Horizontal gap between streak cards (matches the carousel's contentContainer gap).
 const STREAK_CARD_GAP = 20;
 // Left inset of the streak carousel from the screen edge.
@@ -86,7 +86,7 @@ function PaidPackRow({
       theme={theme}
       coloredRegions={coloredRegions}
       right={
-        <Text style={priceStyle}>
+        <Text role="callout" style={priceStyle}>
           {price ??
             (pack.priceUsd != null ? `$${pack.priceUsd.toFixed(2)}` : '—')}
         </Text>
@@ -189,7 +189,9 @@ export function HomeScreen({
             scrolled && styles.headerBorder,
           ]}
         >
-          <Text style={styles.appTitle}>Star Battle Free</Text>
+          <Text role="display" style={styles.appTitle}>
+            Home
+          </Text>
           <View style={styles.headerRight}>
             <CircleButton
               ghost
@@ -216,6 +218,13 @@ export function HomeScreen({
         >
           {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
           <View style={styles.streakSection}>
+            <Text
+              role="headline"
+              style={[styles.sectionLabel, { marginLeft: 20, marginRight: 20 }]}
+            >
+              Streaks
+            </Text>
+
             <ScrollView
               style={styles.streakRow}
               horizontal
@@ -268,17 +277,17 @@ export function HomeScreen({
                           theme={theme}
                           coloredRegions={coloredRegions}
                         />
-                        <Text style={styles.streakLabel}>
+                        <Text role="subtitle" style={styles.streakLabel}>
                           {`${STREAK_LABELS[type]} Special`}
                         </Text>
-                        <Text style={styles.streakMeta}>
+                        <Text role="subhead" style={styles.streakMeta}>
                           {`${STREAK_STAR_COUNT[type]} star puzzle`}
                         </Text>
-                        <StreakProgressRow
+                        {/*<StreakProgressRow
                           cells={getStreakCells(type)}
                           completedKeys={completedStreakKeys[type]}
                           theme={theme}
-                        />
+                        />*/}
                       </Pressable>
                     );
                   })}
@@ -287,7 +296,9 @@ export function HomeScreen({
 
           {/* Puzzle library: free packs, then purchasable packs */}
           <View style={styles.packSection}>
-            <Text style={styles.sectionLabel}>Puzzle Library</Text>
+            <Text role="headline" style={styles.sectionLabel}>
+              Puzzle Library
+            </Text>
 
             {packCatalog.length === 0 &&
               Array.from({ length: SKELETON_PACK_COUNT }, (_, i) => (
@@ -374,7 +385,8 @@ const createStyles = (
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
+      paddingRight: 10,
       height: HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
       // Default border color matches background so it's invisible until
@@ -383,35 +395,28 @@ const createStyles = (
       borderBottomColor: theme.background,
     },
     headerBorder: {
-      borderBottomColor: theme.border,
+      // borderBottomColor: theme.border,
     },
     appTitle: {
-      fontSize: 25,
-      letterSpacing: -0.25,
-      lineHeight: 28,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
       color: theme.text,
     },
     headerRight: {
       flexDirection: 'row',
-      gap: 12,
+      gap: 0,
     },
     streakSection: {
-      paddingTop: 24,
       backgroundColor: theme.background,
     },
     packSection: {
-      paddingTop: 16,
+      paddingTop: 46,
       backgroundColor: theme.background,
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
     },
     streakRow: {
       flexDirection: 'row',
       gap: theme.spacingMd,
       zIndex: 100,
       overflow: 'visible',
-      marginBottom: 32,
     },
     streakCard: {
       justifyContent: 'flex-start',
@@ -425,31 +430,22 @@ const createStyles = (
     streakMetaSkeleton: { marginTop: 7 },
     streakLabel: {
       color: theme.text,
-      lineHeight: 30,
-      fontSize: 24,
-      fontWeight: '600',
-      letterSpacing: -0.33,
-      textTransform: 'capitalize',
-      marginTop: 6,
+      textTransform: 'uppercase',
+      marginTop: 9,
     },
     streakMeta: {
       color: theme.textSecondary,
-      fontSize: 15,
-      lineHeight: 20,
-      fontWeight: '500',
+      fontWeight: '400',
     },
     sectionLabel: {
-      lineHeight: 28,
       marginBottom: 16,
-      fontSize: 25,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
       color: theme.text,
-      letterSpacing: -0.25,
+      textTransform: 'uppercase',
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+      paddingTop: 12,
     },
     packPrice: {
-      fontSize: theme.fontSizeCallout,
-      fontWeight: theme.fontWeightSemibold,
       color: theme.textSecondary,
     },
   });

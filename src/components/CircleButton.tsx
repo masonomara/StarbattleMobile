@@ -44,7 +44,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: 'transparent',
       shadowOpacity: 0,
       elevation: 0,
-      height: 44,
-      width: 44,
+      height: 40,
+      width: 40,
     },
   });
