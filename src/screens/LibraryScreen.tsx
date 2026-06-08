@@ -111,7 +111,7 @@ const PuzzleCell = React.memo(function PuzzleCell({
             )}
           </View>
         )}
-        <Text style={styles.puzzleNumberText}>Puzzle {index + 1}</Text>
+        <Text role="subhead" style={styles.puzzleNumberText}>Puzzle {index + 1}</Text>
       </View>
     </Pressable>
   );
@@ -271,7 +271,7 @@ export function LibraryScreen({
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
-        <Text style={styles.headerTitle}>{packName}</Text>
+        <Text role="body" style={styles.headerTitle}>{packName}</Text>
         <View style={styles.headerSpacer} />
       </View>
       <FlatList
@@ -365,8 +365,6 @@ const createStyles = (
       marginLeft: -5,
     },
     puzzleNumberText: {
-      fontSize: 15,
-      lineHeight: 20,
       fontWeight: '600',
       color: theme.text,
     },
@@ -379,7 +377,6 @@ const createStyles = (
     },
     locked: { opacity: 0.4 },
     headerTitle: {
-      fontSize: 17,
       fontWeight: '600',
       color: theme.text,
     },

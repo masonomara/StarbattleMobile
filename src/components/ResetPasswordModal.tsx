@@ -38,10 +38,10 @@ export function ResetPasswordModal() {
     >
       <View style={styles.container}>
         <View style={styles.modalHeader}>
-          <Text style={styles.title}>New Password</Text>
+          <Text role="body" style={styles.title}>New Password</Text>
         </View>
         <View style={styles.body}>
-          <Text style={styles.description}>
+          <Text role="callout" style={styles.description}>
             Choose a new password for your account.
           </Text>
           <TextInput
@@ -54,10 +54,10 @@ export function ResetPasswordModal() {
             autoComplete="new-password"
             autoFocus
           />
-          <Text style={[styles.hint, password.length >= 6 && styles.hintMet]}>
+          <Text role="subhead" style={[styles.hint, password.length >= 6 && styles.hintMet]}>
             At least 6 characters
           </Text>
-          {error && <Text style={styles.error}>{error}</Text>}
+          {error && <Text role="subhead" style={styles.error}>{error}</Text>}
           <Pressable
             style={[styles.button, (password.length < 6 || loading) && styles.disabled]}
             onPress={handleSubmit}
@@ -66,7 +66,7 @@ export function ResetPasswordModal() {
             {loading ? (
               <ActivityIndicator color={theme.background} />
             ) : (
-              <Text style={styles.buttonText}>Set Password</Text>
+              <Text role="callout" style={styles.buttonText}>Set Password</Text>
             )}
           </Pressable>
         </View>
@@ -89,7 +89,6 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: 14,
     },
     title: {
-      fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
@@ -99,9 +98,7 @@ const createStyles = (theme: Theme) => {
       gap: theme.spacingMd,
     },
     description: {
-      fontSize: theme.fontSizeCallout,
       color: theme.textSecondary,
-      lineHeight: 22,
     },
     input: {
       height: 52,
@@ -119,20 +116,16 @@ const createStyles = (theme: Theme) => {
       backgroundColor: theme.blue,
     },
     buttonText: {
-      fontSize: theme.fontSizeCallout,
-      fontWeight: theme.fontWeightSemibold,
       color: theme.background,
     },
     disabled: { opacity: 0.6 },
     hint: {
-      fontSize: theme.fontSizeSubhead,
       color: theme.textSecondary,
     },
     hintMet: {
       color: theme.blue,
     },
     error: {
-      fontSize: theme.fontSizeSubhead,
       color: theme.red,
       textAlign: 'center',
     },

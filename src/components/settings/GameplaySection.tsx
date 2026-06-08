@@ -29,7 +29,7 @@ export function ToggleRow({
         borderColor: theme.border,
       }}
     >
-      <Text style={{ fontSize: 17, fontWeight: '600', color: theme.text }}>
+      <Text role="body" style={{ fontWeight: '600', color: theme.text }}>
         {label}
       </Text>
       <View>
@@ -53,7 +53,7 @@ export function GameplaySection() {
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Gameplay</Text>
+      <Text role="sectionTitle" style={styles.sectionTitle}>Gameplay</Text>
       <ToggleRow
         first
         label="Auto-X Neighbors"
@@ -97,12 +97,7 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     section: { marginTop: 40 },
     sectionTitle: {
-      fontSize: 20,
       color: theme.text,
-      lineHeight: 22,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
-      letterSpacing: -0.2,
       marginBottom: 14,
     },
   });

@@ -40,7 +40,7 @@ export function HeaderTimer() {
   }, [completed]);
 
   return (
-    <Text style={styles.timer}>
+    <Text role="body" style={styles.timer}>
       {stars != null ? `${stars} ${stars === 1 ? 'star' : 'stars'} - ` : ''}
       {formatElapsedTime(timeMs)}
     </Text>
@@ -52,7 +52,6 @@ const createStyles = (theme: Theme) =>
     timer: {
       fontVariant: ['tabular-nums'],
       fontWeight: '600',
-      fontSize: 17,
       color: theme.text,
     },
   });

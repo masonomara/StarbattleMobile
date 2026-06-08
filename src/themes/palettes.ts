@@ -1,4 +1,29 @@
-import type { ThemeName, ThemeColors, PaletteVariants } from '../types';
+import type {
+  ThemeName,
+  ThemeColors,
+  PaletteVariants,
+  TextRole,
+  TextRoleStyle,
+} from '../types';
+
+// Typographic role tokens — one complete bundle per role, the single source of
+// truth for text styling. Sizes/leadings mirror the values the app already used
+// so migration is visually faithful; the win is that every instance of a role
+// now shares identical line-height and tracking. fontWeight is the role default
+// and may be overridden per call site for emphasis. No fontFamily: text uses the
+// system font so it scales with the OS Dynamic Type setting.
+const type: Record<TextRole, TextRoleStyle> = {
+  display: { fontSize: 33, lineHeight: 36, fontWeight: '900', letterSpacing: -0.33 },
+  title: { fontSize: 25, lineHeight: 28, fontWeight: '900', letterSpacing: -0.25 },
+  headline: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.44 },
+  sectionTitle: { fontSize: 20, lineHeight: 22, fontWeight: '900', letterSpacing: -0.2 },
+  subtitle: { fontSize: 18, lineHeight: 24, fontWeight: '700', letterSpacing: -0.2 },
+  body: { fontSize: 17, lineHeight: 22, fontWeight: '400', letterSpacing: -0.34 },
+  callout: { fontSize: 16, lineHeight: 21, fontWeight: '600', letterSpacing: -0.32 },
+  subhead: { fontSize: 15, lineHeight: 20, fontWeight: '500', letterSpacing: -0.3 },
+  footnote: { fontSize: 13, lineHeight: 18, fontWeight: '500', letterSpacing: -0.26 },
+  caption: { fontSize: 11, lineHeight: 14, fontWeight: '500', letterSpacing: -0.22 },
+};
 
 export const tokens = {
   spacingMd: 12,
@@ -10,6 +35,7 @@ export const tokens = {
   fontSizeBody: 17,
   fontWeightSemibold: '600' as const,
   cellSize: 36,
+  type,
 };
 
 // ─── ORIGINAL ────────────────────────────────────────────────────────────────────

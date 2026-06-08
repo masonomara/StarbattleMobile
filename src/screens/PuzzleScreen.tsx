@@ -282,7 +282,7 @@ export function PuzzleScreen({
         }
         center={
           isTutorial ? (
-            <Text style={styles.tutorialText}>
+            <Text role="body" style={styles.tutorialText}>
               {tutorialMessage(cells, puzzle)}
             </Text>
           ) : (
@@ -301,7 +301,7 @@ export function PuzzleScreen({
               hitSlop={12}
               style={styles.skipButton}
             >
-              <Text style={styles.skip}>Skip</Text>
+              <Text role="subhead" style={styles.skip}>Skip</Text>
             </Pressable>
           ) : (
             <Animated.View
@@ -381,13 +381,11 @@ const createStyles = (theme: Theme) =>
     },
     tutorialText: {
       color: theme.text,
-      fontSize: 17,
       fontWeight: '600',
       textAlign: 'center',
     },
     skip: {
       color: theme.text,
-      fontSize: 15,
       fontWeight: '600',
     },
     skipButton: {

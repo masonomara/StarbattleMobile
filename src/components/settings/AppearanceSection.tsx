@@ -71,7 +71,7 @@ export function AppearanceSection() {
   return (
     <>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>General</Text>
+        <Text role="sectionTitle" style={styles.sectionTitle}>General</Text>
         <ToggleRow
           first
           label="Always show timer"
@@ -89,7 +89,7 @@ export function AppearanceSection() {
           onToggle={v => updateSettings({ haptics: v })}
         />
         <View style={styles.themeRow}>
-          <Text style={styles.rowLabel}>Theme</Text>
+          <Text role="body" style={styles.rowLabel}>Theme</Text>
           <View style={styles.themeButtons}>
             {THEME_OPTIONS.map(option => {
               const active = settings.theme === option.value;
@@ -103,6 +103,7 @@ export function AppearanceSection() {
                   ]}
                 >
                   <Text
+                    role="subhead"
                     style={[
                       styles.themeButtonLabel,
                       active && styles.themeButtonLabelActive,
@@ -118,7 +119,7 @@ export function AppearanceSection() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Color Theme</Text>
+        <Text role="sectionTitle" style={styles.sectionTitle}>Color Theme</Text>
         <View style={styles.swatchGrid}>
           {paletteRows.map((row, rowIdx) => (
             <View key={rowIdx} style={styles.swatchRow}>
@@ -139,7 +140,7 @@ export function AppearanceSection() {
                       }
                       style={[styles.swatchImage]}
                     />
-                    <Text style={styles.swatchLabel}>
+                    <Text role="footnote" style={styles.swatchLabel}>
                       {PALETTES[name].label}
                     </Text>
                   </Pressable>
@@ -161,11 +162,7 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     section: { marginTop: 40 },
     sectionTitle: {
-      fontSize: 20,
       color: theme.text,
-      lineHeight: 22,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
       marginBottom: 14,
     },
     themeRow: {
@@ -176,7 +173,7 @@ const createStyles = (theme: Theme) =>
       borderTopWidth: 1,
       borderColor: theme.border,
     },
-    rowLabel: { fontSize: 17, fontWeight: '600', color: theme.text },
+    rowLabel: { fontWeight: '600', color: theme.text },
     themeButtons: {
       flexDirection: 'row',
       gap: 6,
@@ -193,9 +190,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.blue,
     },
     themeButtonLabel: {
-      fontSize: 15,
       fontWeight: '700',
-      fontFamily: 'Karla',
       color: theme.text,
     },
     themeButtonLabelActive: {
@@ -221,7 +216,6 @@ const createStyles = (theme: Theme) =>
       borderColor: theme.border,
     },
     swatchLabel: {
-      fontSize: 13,
       fontWeight: '600',
       color: theme.text,
       paddingTop: 7,

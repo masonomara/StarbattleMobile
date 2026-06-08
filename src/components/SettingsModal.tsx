@@ -33,7 +33,7 @@ export function SettingsModal() {
         >
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text style={styles.title}>Settings</Text>
+            <Text role="title" style={styles.title}>Settings</Text>
           </View>
           <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeSettings} hitSlop={8}>
@@ -58,23 +58,23 @@ export function SettingsModal() {
                 onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text style={styles.legalLinkText}>Terms of Use</Text>
+                <Text role="footnote" style={styles.legalLinkText}>Terms of Use</Text>
               </Pressable>
-              <Text style={styles.legalSep}>·</Text>
+              <Text role="footnote" style={styles.legalSep}>·</Text>
               <Pressable
                 onPress={() =>
                   Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})
                 }
                 hitSlop={8}
               >
-                <Text style={styles.legalLinkText}>Privacy Policy</Text>
+                <Text role="footnote" style={styles.legalLinkText}>Privacy Policy</Text>
               </Pressable>
-              <Text style={styles.legalSep}>·</Text>
+              <Text role="footnote" style={styles.legalSep}>·</Text>
               <Pressable
                 onPress={() => Linking.openURL(CREDITS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text style={styles.legalLinkText}>Credits</Text>
+                <Text role="footnote" style={styles.legalLinkText}>Credits</Text>
               </Pressable>
             </View>
           </View>
@@ -110,11 +110,6 @@ const createStyles = (theme: Theme) =>
     },
     title: {
       color: theme.text,
-      fontSize: 25,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
-      letterSpacing: -0.25,
-      lineHeight: 28,
     },
     scrollContent: {
       paddingHorizontal: 16,
@@ -128,6 +123,6 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingLg,
       gap: 6,
     },
-    legalLinkText: { fontSize: 13, color: theme.textSecondary },
-    legalSep: { fontSize: theme.fontSizeSubhead, color: theme.textSecondary },
+    legalLinkText: { color: theme.textSecondary },
+    legalSep: { color: theme.textSecondary },
   });

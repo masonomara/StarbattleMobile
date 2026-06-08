@@ -111,7 +111,7 @@ export function StreaksModal() {
         >
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text style={styles.headerTitle}>Streaks</Text>
+            <Text role="title" style={styles.headerTitle}>Streaks</Text>
           </View>
           <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeStreaks} hitSlop={8}>
@@ -134,16 +134,16 @@ export function StreaksModal() {
                 n === 1 ? STREAK_UNIT[type] : `${STREAK_UNIT[type]}s`;
               return (
                 <View key={type} style={[styles.streakTile]}>
-                  <Text style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                  <Text role="subtitle" style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
                   <View style={styles.streakStatRow}>
-                    <Text style={styles.streakStatLabel}>Best</Text>
-                    <Text style={styles.streakStatValue}>
+                    <Text role="subhead" style={styles.streakStatLabel}>Best</Text>
+                    <Text role="body" style={styles.streakStatValue}>
                       {best} {unit(best)}
                     </Text>
                   </View>
                   <View style={styles.streakStatRow}>
-                    <Text style={styles.streakStatLabel}>Current</Text>
-                    <Text style={styles.streakStatValue}>
+                    <Text role="subhead" style={styles.streakStatLabel}>Current</Text>
+                    <Text role="body" style={styles.streakStatValue}>
                       {current} {unit(current)}
                     </Text>
                   </View>
@@ -152,7 +152,7 @@ export function StreaksModal() {
             })}
           </View>
 
-          <Text style={styles.sectionTitle}>Archived Specials</Text>
+          <Text role="sectionTitle" style={styles.sectionTitle}>Archived Specials</Text>
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
@@ -242,11 +242,6 @@ const createStyles = (theme: Theme) => {
     },
     headerTitle: {
       color: theme.text,
-      fontSize: 25,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
-      letterSpacing: -0.25,
-      lineHeight: 28,
     },
     streakGrid: {
       flexDirection: 'row',
@@ -262,37 +257,23 @@ const createStyles = (theme: Theme) => {
       borderRadius: 4,
     },
     streakLabel: {
-      fontSize: 18,
       color: theme.text,
-      lineHeight: 20,
-      fontFamily: 'Bricolage Grotesque',
       fontWeight: '900',
-      letterSpacing: -0.2,
     },
     streakStatRow: {
       marginTop: 8,
     },
     streakStatLabel: {
-      fontSize: 15,
-      lineHeight: 20,
-
-      fontWeight: '500',
       color: theme.textSecondary,
     },
     streakStatValue: {
-      fontSize: 17,
       fontWeight: '600',
       color: theme.text,
       marginTop: 1,
     },
     sectionTitle: {
-      fontSize: 20,
       color: theme.text,
-      lineHeight: 22,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
       marginBottom: 14,
-      letterSpacing: -0.2,
       marginTop: 32,
     },
   });

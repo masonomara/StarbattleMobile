@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { StyleProp, ViewStyle, TextStyle, TextProps } from 'react-native';
 
 // NAVIGATION
 // All app-wide types are centralised here per CLAUDE.md. Keep it that way —
@@ -323,6 +323,38 @@ export type Theme = {
   fontSizeBody: number;
   fontWeightSemibold: '600';
   cellSize: number;
+  // Named typographic roles — the single source of truth for size/leading/
+  // weight/tracking. Use via <Text role="..."> so every instance of a role is
+  // uniform. Font family is intentionally omitted (system font for Dynamic Type).
+  type: Record<TextRole, TextRoleStyle>;
+};
+
+// The set of typographic roles. Pick the closest role rather than hardcoding a
+// fontSize; a style may still override fontWeight/color for emphasis.
+export type TextRole =
+  | 'display'
+  | 'title'
+  | 'headline'
+  | 'sectionTitle'
+  | 'subtitle'
+  | 'body'
+  | 'callout'
+  | 'subhead'
+  | 'footnote'
+  | 'caption';
+
+export type TextRoleStyle = {
+  fontSize: number;
+  lineHeight: number;
+  fontWeight: TextStyle['fontWeight'];
+  letterSpacing: number;
+};
+
+// Props for the app's <Text> wrapper: RN TextProps plus an optional role token.
+// RN's TextProps already declares an accessibility `role`; omit it so our
+// typographic role takes that name (the app doesn't use the ARIA role on Text).
+export type AppTextProps = Omit<TextProps, 'role'> & {
+  role?: TextRole;
 };
 
 // USER

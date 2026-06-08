@@ -83,7 +83,7 @@ export function ArchivePackScreen({
                   <Check size={22} color={theme.blue} strokeWidth={2.5} />
                 </View>
               )}
-              <Text style={styles.dateText}>
+              <Text role="subhead" style={styles.dateText}>
                 {formatArchiveKey(type, dateKey)}
               </Text>
             </Pressable>
@@ -114,7 +114,7 @@ export function ArchivePackScreen({
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
-        <Text style={styles.headerTitle}>
+        <Text role="body" style={styles.headerTitle}>
           Past {STREAK_LABELS[type]} Specials
         </Text>
         <View style={styles.headerSpacer} />
@@ -164,7 +164,6 @@ const createStyles = (
       width: 44,
     },
     headerTitle: {
-      fontSize: 17,
       fontWeight: '600',
       color: theme.text,
     },
@@ -195,7 +194,6 @@ const createStyles = (
       right: 10,
     },
     dateText: {
-      fontSize: 15,
       fontWeight: '600',
       color: theme.text,
       textAlign: 'center',

@@ -104,10 +104,10 @@ export function WinBanner({
       ]}
     >
       {!tutorial && (
-        <Text style={styles.winInfo}>
+        <Text role="body" style={styles.winInfo}>
           {info}{' '}
           {streakType && (
-            <Text style={styles.winInfo}>
+            <Text role="body" style={styles.winInfo}>
               {streakCount > 0
                 ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak`
                 : ``}
@@ -115,10 +115,10 @@ export function WinBanner({
           )}
         </Text>
       )}
-      <Text style={styles.winText}>{mainText}</Text>
+      <Text role="display" style={styles.winText}>{mainText}</Text>
 
       <Pressable onPress={handlePress} style={styles.winButton}>
-        <Text style={styles.winButtonText}>{buttonLabel}</Text>
+        <Text role="subtitle" style={styles.winButtonText}>{buttonLabel}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -147,17 +147,10 @@ const createStyles = (theme: Theme) =>
     },
     winText: {
       color: theme.text,
-      lineHeight: 36,
-      fontSize: 33,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: 900,
-      letterSpacing: -0.33,
     },
     winInfo: {
       color: theme.text,
-      fontSize: 17,
-      lineHeight: 22,
-      fontWeight: 600,
+      fontWeight: '600',
       marginBottom: 7,
     },
     winButton: {
@@ -171,8 +164,6 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.text,
     },
     winButtonText: {
-      fontSize: 19,
-      fontWeight: 700,
       color: theme.background,
     },
   });

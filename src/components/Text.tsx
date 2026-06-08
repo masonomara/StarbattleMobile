@@ -1,25 +1,26 @@
 import React from 'react';
 import { Text as RNText, StyleSheet } from 'react-native';
-import type { TextProps, TextStyle } from 'react-native';
+import type { TextStyle } from 'react-native';
+import type { AppTextProps } from '../types';
+import { useTheme } from '../hooks/useTheme';
 
-// NOTE: StyleSheet.flatten() is called on every render to derive letterSpacing.
-// For a leaf component rendered this frequently this adds minor overhead.
-// An alternative: accept letterSpacing as a prop with a sensible default and let
-// callers override it, avoiding the flatten cost entirely. Or precompute a static
-// map of common font sizes to their letterSpacing values.
-export function Text({ style, ...props }: TextProps) {
+// The app's Text wrapper. Pass `role` to apply a typographic role token
+// (size/leading/weight/tracking) from the theme — this is the preferred path
+// and keeps every instance of a role uniform. A `style` may still override any
+// field (e.g. color, or fontWeight for emphasis) since it's applied last.
+//
+// Without `role`, we fall back to the legacy behaviour of deriving letterSpacing
+// from the style's fontSize, so un-migrated call sites render exactly as before.
+export function Text({ role, style, ...props }: AppTextProps) {
+  const theme = useTheme();
+
+  if (role) {
+    return <RNText style={[theme.type[role], style]} {...props} />;
+  }
+
   const flatStyle = StyleSheet.flatten(style) as TextStyle | undefined;
   const fontSize = flatStyle?.fontSize ?? 14;
   return (
-    <RNText
-      style={[styles.base, { letterSpacing: -0.02 * fontSize }, style]}
-      {...props}
-    />
+    <RNText style={[{ letterSpacing: -0.02 * fontSize }, style]} {...props} />
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    fontFamily: 'Karla',
-  },
-});

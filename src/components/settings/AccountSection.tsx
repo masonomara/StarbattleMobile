@@ -146,7 +146,7 @@ export function AccountSection() {
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>
+      <Text role="sectionTitle" style={styles.sectionTitle}>
         {isAnonymous
           ? authTab === 'signin'
             ? 'Sign in'
@@ -157,12 +157,12 @@ export function AccountSection() {
       {isAnonymous ? (
         <>
           {authTab === 'signup' ? (
-            <Text style={styles.sectionBody}>
+            <Text role="subhead" style={styles.sectionBody}>
               Create an account to keep your progress, streaks, and purchases
               across devices.
             </Text>
           ) : (
-            <Text style={styles.sectionBody}>
+            <Text role="subhead" style={styles.sectionBody}>
               Access your progress, streaks, and purchases across devices.
             </Text>
           )}
@@ -179,7 +179,7 @@ export function AccountSection() {
               >
                 <View style={styles.buttonRow}>
                   <AtSign size={18} color={theme.text} />
-                  <Text style={styles.secondaryButtonText}>
+                  <Text role="body" style={styles.secondaryButtonText}>
                     {authTab === 'signin'
                       ? 'Sign in with Email'
                       : 'Sign up with Email'}
@@ -196,7 +196,7 @@ export function AccountSection() {
                 ) : (
                   <View style={styles.buttonRow}>
                     <GoogleIcon size={18} />
-                    <Text style={styles.secondaryButtonText}>
+                    <Text role="body" style={styles.secondaryButtonText}>
                       {authTab === 'signin'
                         ? 'Sign in with Google'
                         : 'Sign up with Google'}
@@ -215,7 +215,7 @@ export function AccountSection() {
                   ) : (
                     <View style={styles.buttonRow}>
                       <AppleIcon size={18} color={theme.text} />
-                      <Text style={styles.secondaryButtonText}>
+                      <Text role="body" style={styles.secondaryButtonText}>
                         {authTab === 'signin'
                           ? 'Sign in with Apple'
                           : 'Sign up with Apple'}
@@ -230,7 +230,7 @@ export function AccountSection() {
                   setAuthTab(authTab === 'signin' ? 'signup' : 'signin')
                 }
               >
-                <Text style={styles.linkText}>
+                <Text role="body" style={styles.linkText}>
                   {authTab === 'signin'
                     ? 'Create an account'
                     : 'Already have an account? Sign in'}
@@ -241,7 +241,7 @@ export function AccountSection() {
 
           {(emailMode === 'signup' || emailMode === 'signin') && (
             <View style={{ gap: 12 }}>
-              <Text style={styles.inputLabel}>Email</Text>
+              <Text role="subhead" style={styles.inputLabel}>Email</Text>
               <TextInput
                 style={styles.input}
                 placeholderTextColor={theme.textSecondary}
@@ -251,7 +251,7 @@ export function AccountSection() {
                 keyboardType="email-address"
                 autoComplete="email"
               />
-              <Text style={styles.inputLabel}>Password</Text>
+              <Text role="subhead" style={styles.inputLabel}>Password</Text>
               <TextInput
                 style={styles.input}
                 placeholderTextColor={theme.textSecondary}
@@ -280,7 +280,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text style={styles.primaryButtonText}>
+                  <Text role="body" style={styles.primaryButtonText}>
                     {emailMode === 'signup' ? 'Create Account' : 'Sign In'}
                   </Text>
                 )}
@@ -294,7 +294,7 @@ export function AccountSection() {
                   }}
                   disabled={loading}
                 >
-                  <Text style={styles.linkText}>Forgot Password?</Text>
+                  <Text role="body" style={styles.linkText}>Forgot Password?</Text>
                 </Pressable>
               )}
               <Pressable
@@ -304,14 +304,14 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text style={styles.linkTextDanger}>Cancel</Text>
+                <Text role="body" style={styles.linkTextDanger}>Cancel</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'forgot-password' && (
             <View style={{ gap: 12 }}>
-              <Text style={styles.inputLabel}>Reset Password</Text>
+              <Text role="subhead" style={styles.inputLabel}>Reset Password</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -330,7 +330,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Send Reset Link</Text>
+                  <Text role="body" style={styles.primaryButtonText}>Send Reset Link</Text>
                 )}
               </Pressable>
               <Pressable
@@ -340,15 +340,15 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text style={styles.linkText}>Back to Sign In</Text>
+                <Text role="body" style={styles.linkText}>Back to Sign In</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'reset-sent' && (
             <View style={styles.confirmEmailBox}>
-              <Text style={styles.confirmEmailTitle}>Check your inbox</Text>
-              <Text style={styles.confirmEmailBody}>
+              <Text role="body" style={styles.confirmEmailTitle}>Check your inbox</Text>
+              <Text role="callout" style={styles.confirmEmailBody}>
                 We sent a password reset link to{' '}
                 <Text style={styles.confirmEmailAddress}>{email}</Text>.
               </Text>
@@ -360,15 +360,15 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text style={styles.primaryButtonText}>Done</Text>
+                <Text role="body" style={styles.primaryButtonText}>Done</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'confirm-email' && (
             <View style={styles.confirmEmailBox}>
-              <Text style={styles.confirmEmailTitle}>Check your inbox</Text>
-              <Text style={styles.confirmEmailBody}>
+              <Text role="body" style={styles.confirmEmailTitle}>Check your inbox</Text>
+              <Text role="callout" style={styles.confirmEmailBody}>
                 We sent a confirmation link to{' '}
                 <Text style={styles.confirmEmailAddress}>{email}</Text>. Open it
                 to finish creating your account.
@@ -381,25 +381,25 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text style={styles.primaryButtonText}>Done</Text>
+                <Text role="body" style={styles.primaryButtonText}>Done</Text>
               </Pressable>
             </View>
           )}
 
-          {error && <Text style={styles.error}>{error}</Text>}
+          {error && <Text role="subhead" style={styles.error}>{error}</Text>}
         </>
       ) : (
         <>
           <View style={[styles.infoRow, styles.infoRowFirst]}>
-            <Text style={styles.infoLabel}>Email</Text>
-            <Text style={styles.infoValue} numberOfLines={1}>
+            <Text role="body" style={styles.infoLabel}>Email</Text>
+            <Text role="body" style={styles.infoValue} numberOfLines={1}>
               {user?.email ?? 'Sign-in with provider'}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Account Type</Text>
-            <Text style={styles.infoValue}>
+            <Text role="body" style={styles.infoLabel}>Account Type</Text>
+            <Text role="body" style={styles.infoValue}>
               {entitlements.isPremium ? 'Premium' : 'Free'}
             </Text>
           </View>
@@ -416,7 +416,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text style={styles.primaryButtonText}>
+                  <Text role="body" style={styles.primaryButtonText}>
                     {premiumPrice
                       ? `Buy Premium · ${premiumPrice}`
                       : 'Buy Premium'}
@@ -444,14 +444,14 @@ export function AccountSection() {
               }}
               disabled={loading}
             >
-              <Text style={styles.secondaryButtonText}>Restore Purchases</Text>
+              <Text role="body" style={styles.secondaryButtonText}>Restore Purchases</Text>
             </Pressable>
 
             {ownedPacks.length > 0 && (
               <>
-                <Text style={styles.subLabel}>Owned Packs</Text>
+                <Text role="subhead" style={styles.subLabel}>Owned Packs</Text>
                 {ownedPacks.map(p => (
-                  <Text key={p.id} style={styles.ownedPackName}>
+                  <Text key={p.id} role="callout" style={styles.ownedPackName}>
                     {p.name}
                   </Text>
                 ))}
@@ -463,18 +463,18 @@ export function AccountSection() {
               onPress={() => withLoading(signOut)}
               disabled={loading}
             >
-              <Text style={styles.secondaryButtonText}>Sign Out</Text>
+              <Text role="body" style={styles.secondaryButtonText}>Sign Out</Text>
             </Pressable>
             <Pressable
               style={[styles.destructiveButton, loading && styles.disabled]}
               onPress={confirmDeleteAccount}
               disabled={loading}
             >
-              <Text style={styles.destructiveButtonText}>Delete Account</Text>
+              <Text role="body" style={styles.destructiveButtonText}>Delete Account</Text>
             </Pressable>
           </View>
 
-          {error && <Text style={styles.error}>{error}</Text>}
+          {error && <Text role="subhead" style={styles.error}>{error}</Text>}
         </>
       )}
     </View>
@@ -485,18 +485,11 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     section: { marginTop: 16 },
     sectionTitle: {
-      fontSize: 20,
       color: theme.text,
-      lineHeight: 22,
-      fontFamily: 'Bricolage Grotesque',
-      fontWeight: '900',
-      letterSpacing: -0.2,
       marginBottom: 14,
     },
     sectionBody: {
-      fontSize: 15,
       color: theme.textSecondary,
-      fontWeight: '500',
       marginTop: -7,
       marginBottom: 14,
     },
@@ -511,9 +504,8 @@ const createStyles = (theme: Theme) =>
     infoRowFirst: {
       borderTopWidth: 0,
     },
-    infoLabel: { fontSize: 17, fontWeight: '600', color: theme.text },
+    infoLabel: { fontWeight: '600', color: theme.text },
     infoValue: {
-      fontSize: 17,
       color: theme.textSecondary,
       fontWeight: '600',
       maxWidth: 240,
@@ -531,7 +523,6 @@ const createStyles = (theme: Theme) =>
       marginTop: 8,
     },
     primaryButtonText: {
-      fontSize: 17,
       fontWeight: '700',
       color: theme.background,
     },
@@ -545,7 +536,7 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       backgroundColor: theme.background,
     },
-    secondaryButtonText: { fontSize: 17, fontWeight: '700', color: theme.text },
+    secondaryButtonText: { fontWeight: '700', color: theme.text },
     accountActions: { gap: 12, marginTop: 14 },
     premiumBadge: {
       alignSelf: 'flex-start',
@@ -556,16 +547,14 @@ const createStyles = (theme: Theme) =>
       marginTop: 8,
     },
     premiumBadgeText: {
-      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.background,
     },
     subLabel: {
-      fontSize: theme.fontSizeSubhead,
       fontWeight: theme.fontWeightSemibold,
       color: theme.textSecondary,
     },
-    ownedPackName: { fontSize: theme.fontSizeCallout, color: theme.text },
+    ownedPackName: { color: theme.text },
     buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     linkButton: {
       height: 52,
@@ -579,25 +568,19 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingMd,
     },
     linkText: {
-      fontSize: 17,
       fontWeight: '700',
       color: theme.text,
     },
     linkTextDanger: {
-      fontSize: 17,
       fontWeight: '700',
       color: theme.red,
     },
     formTitle: {
-      fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     inputLabel: {
-      fontSize: 15,
-      lineHeight: 20,
       marginBottom: -4,
-      fontWeight: '500',
       color: theme.text,
     },
     input: {
@@ -622,33 +605,27 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background,
     },
     destructiveButtonText: {
-      fontSize: 17,
       fontWeight: theme.fontWeightSemibold,
       color: theme.red,
     },
     confirmEmailBox: { gap: theme.spacingMd },
     confirmEmailTitle: {
-      fontSize: theme.fontSizeBody,
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     confirmEmailBody: {
-      fontSize: theme.fontSizeCallout,
       color: theme.textSecondary,
-      lineHeight: 22,
     },
     confirmEmailAddress: {
       fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     passwordHint: {
-      fontSize: theme.fontSizeSubhead,
       color: theme.textSecondary,
     },
     passwordHintMet: { color: theme.blue },
     disabled: { opacity: 0.6 },
     error: {
-      fontSize: theme.fontSizeSubhead,
       color: theme.red,
       textAlign: 'center',
       marginTop: 18,
