@@ -78,8 +78,6 @@ export function PuzzleScreen({
     effectivePackId,
   } = packData ?? {};
 
-  const gridSize = isTutorial ? TUTORIAL_PUZZLE.size : packData?.gridSize ?? 0;
-
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
@@ -94,6 +92,14 @@ export function PuzzleScreen({
   const alwaysShowTimer = useSettingsStore(s => s.settings.alwaysShowTimer);
   const openSettings = useSettingsStore(s => s.openSettings);
   const completeTutorial = useSettingsStore(s => s.completeTutorial);
+
+  // Per-puzzle board size — must match what the canvas renders
+  // (theme.cellSize * puzzle.size). A pack can mix board sizes, so the gesture
+  // layer keys off the loaded puzzle, not pack catalog metadata. Falls back to
+  // the pack's gridSize only while the puzzle is still loading.
+  const boardSize = isTutorial
+    ? TUTORIAL_PUZZLE.size
+    : puzzle?.size ?? packData?.gridSize ?? 0;
 
   const userId = useAuthStore(s => s.user?.id);
   const { streaks: streakRows } = useStreakRows(userId);
@@ -137,7 +143,7 @@ export function PuzzleScreen({
     isZoomed,
     handleZoomReset,
     lastGestureEndRef,
-  } = useZoom(gridSize, theme.cellSize);
+  } = useZoom(boardSize, theme.cellSize);
 
   const drawLayerRef = useRef<DrawLayerHandle>(null);
 
@@ -160,7 +166,7 @@ export function PuzzleScreen({
   };
 
   const { drawGesture, tapGesture } = useDrawGesture(
-    gridSize,
+    boardSize,
     theme.cellSize,
     savedScale,
     savedTranslateX,
@@ -381,12 +387,10 @@ const createStyles = (theme: Theme) =>
     },
     tutorialText: {
       color: theme.text,
-      fontWeight: '600',
       textAlign: 'center',
     },
     skip: {
       color: theme.text,
-      fontWeight: '600',
     },
     skipButton: {
       backgroundColor: theme.surface,
