@@ -58,11 +58,6 @@
 	</dict>
 	<key>RCTNewArchEnabled</key>
 	<true/>
-	<key>UIAppFonts</key>
-	<array>
-		<string>BricolageGrotesque-Variable.ttf</string>
-		<string>Karla-Variable.ttf</string>
-	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>BootSplash</string>
 	<key>UIRequiredDeviceCapabilities</key>

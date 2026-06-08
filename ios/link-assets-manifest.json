@@ -1,13 +1,4 @@
 {
   "migIndex": 1,
-  "data": [
-    {
-      "path": "assets/fonts/BricolageGrotesque-Variable.ttf",
-      "sha1": "eb41484bba537d10397bc6fa741c534b4c0ae67b"
-    },
-    {
-      "path": "assets/fonts/Karla-Variable.ttf",
-      "sha1": "d96122d6b46f29eb39527703e20a429af1b57e66"
-    }
-  ]
+  "data": []
 }
