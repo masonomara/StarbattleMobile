@@ -29,7 +29,7 @@ import { useZoom } from '../hooks/useZoom';
 import { useDrawGesture } from '../hooks/useDrawGesture';
 import { usePackData } from '../hooks/usePackData';
 import { useStreakRows } from '../hooks/useStreakRows';
-import { loadPackHints } from '../packs';
+import { loadPackHints } from '../packs/packCache';
 import { TUTORIAL_PUZZLE } from '../tutorial/tutorialPuzzle';
 import { tutorialMessage } from '../tutorial/tutorialMessage';
 import { parsePuzzle } from '../utils/parsePuzzle';

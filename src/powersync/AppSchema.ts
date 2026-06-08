@@ -7,6 +7,9 @@ import { column, Schema, Table, PowerSyncDatabase } from '@powersync/react-nativ
 // expo-sqlite driver) for PowerSync's local SQLite database.
 import { OPSqliteOpenFactory } from '@powersync/op-sqlite';
 
+// NOTE: the Supabase `pack_hints` table is intentionally NOT wired here. Hints
+// ship as separate "{packId}-hints.json" Storage files (see packFetcher's
+// fetchHints); the DB table is staged for a future sync path, not live yet.
 const packs = new Table({
   name: column.text,
   grid_size: column.integer,

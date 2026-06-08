@@ -201,10 +201,16 @@ export type HintsFile = {
   hints: HintStep[][];
 };
 
+// Per-puzzle difficulty grade emitted by the generator. `difficulty` is a raw
+// numeric score; `band` is the bucketed label. Carried through but not yet
+// surfaced in the UI — present so they can be displayed/sorted on later.
+export type DifficultyBand = 'easy' | 'medium' | 'hard';
+
 export type RawPuzzle = {
   sbn: string;
   solution: Coord[];
-  hints?: HintStep[];
+  difficulty?: number;
+  band?: DifficultyBand;
 };
 
 export type Puzzle = {
@@ -216,15 +222,15 @@ export type Puzzle = {
   solution: Coord[];
   solutionSet: Set<number>;
   hints: HintStep[];
+  difficulty?: number;
+  band?: DifficultyBand;
 };
 
 export type Pack = {
   id: string;
   name: string;
   version: number;
-  free: boolean;
   gridSize: number;
-  stars: number;
   puzzles: RawPuzzle[];
 };
 

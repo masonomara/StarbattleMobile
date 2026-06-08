@@ -1,4 +1,4 @@
-import type { RawPuzzle, Pack, StreakType, HintStep, HintsFile } from '../types';
+import type { RawPuzzle, Pack, StreakType, HintsFile } from '../types';
 import { getRNFS, assertSafeKey, encodeForDisk } from './packStorage';
 import {
   fetchFromSupabase,
@@ -10,7 +10,6 @@ import {
 } from './packFetcher';
 import {
   loadPack,
-  loadPackHints as _loadPackHints,
   warmPackCache,
   hasPackCacheEntry,
   warmHintsCache,
@@ -18,10 +17,6 @@ import {
 } from './packCache';
 
 const PREVIEW_PUZZLE_COUNT = 1;
-
-export function loadPackHints(packId: string): Promise<HintStep[][]> {
-  return _loadPackHints(packId);
-}
 
 // ETag-aware background prefetch of "{packId}-hints.json" to disk; mirrors
 // prefetchPackFile.

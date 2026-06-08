@@ -25,7 +25,12 @@ function blobToText(blob: Blob): Promise<string> {
 // Verify that downloaded JSON has the expected pack structure.
 // Throws on malformed or tampered content before it is cached or parsed.
 export function validatePackText(text: string): void {
-  const data = JSON.parse(text) as { puzzles?: unknown };
+  const data = JSON.parse(text) as { puzzles?: unknown; version?: unknown };
+  // Reject stale formats before caching, so a v1 pack can't be downloaded and
+  // persisted only to be evicted on the next launch (see fetchPack's disk path).
+  if (typeof data?.version !== 'number' || data.version < PACK_MIN_VERSION) {
+    throw new Error('Invalid pack: unsupported version');
+  }
   if (!Array.isArray(data?.puzzles) || data.puzzles.length === 0) {
     throw new Error('Invalid pack: missing puzzles');
   }

@@ -1,4 +1,4 @@
-import type { RawPuzzle, Puzzle, HintStep } from '../types';
+import type { RawPuzzle, Puzzle } from '../types';
 
 // SBN (Star Battle Notation) encodes a puzzle as "<size>x<stars>.<layout>".
 // - size:   grid dimension (e.g. 8 for an 8×8 grid)
@@ -62,6 +62,11 @@ function _parsePuzzle(raw: RawPuzzle, puzzleId: string): Puzzle {
     regionCells,
     solution: raw.solution,
     solutionSet: new Set(raw.solution.map(([r, c]) => r * size + c)),
-    hints: (raw.hints ?? []) as HintStep[],
+    // Slim v2 packs carry no inline hints; real hints arrive via setHints from
+    // the separate "{packId}-hints.json" file.
+    hints: [],
+    // Generator-emitted difficulty grade; carried through for future use.
+    difficulty: raw.difficulty,
+    band: raw.band,
   };
 }
