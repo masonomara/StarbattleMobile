@@ -146,7 +146,7 @@ export function AccountSection() {
 
   return (
     <View style={styles.section}>
-      <Text role="sectionTitle" style={styles.sectionTitle}>
+      <Text role="headline" style={styles.sectionTitle}>
         {isAnonymous
           ? authTab === 'signin'
             ? 'Sign in'
@@ -157,12 +157,12 @@ export function AccountSection() {
       {isAnonymous ? (
         <>
           {authTab === 'signup' ? (
-            <Text role="subhead" style={styles.sectionBody}>
+            <Text role="body" style={styles.sectionBody}>
               Create an account to keep your progress, streaks, and purchases
               across devices.
             </Text>
           ) : (
-            <Text role="subhead" style={styles.sectionBody}>
+            <Text role="body" style={styles.sectionBody}>
               Access your progress, streaks, and purchases across devices.
             </Text>
           )}
@@ -179,7 +179,7 @@ export function AccountSection() {
               >
                 <View style={styles.buttonRow}>
                   <AtSign size={18} color={theme.text} />
-                  <Text role="body" style={styles.secondaryButtonText}>
+                  <Text role="subhead" style={styles.secondaryButtonText}>
                     {authTab === 'signin'
                       ? 'Sign in with Email'
                       : 'Sign up with Email'}
@@ -196,7 +196,7 @@ export function AccountSection() {
                 ) : (
                   <View style={styles.buttonRow}>
                     <GoogleIcon size={18} />
-                    <Text role="body" style={styles.secondaryButtonText}>
+                    <Text role="subhead" style={styles.secondaryButtonText}>
                       {authTab === 'signin'
                         ? 'Sign in with Google'
                         : 'Sign up with Google'}
@@ -215,7 +215,7 @@ export function AccountSection() {
                   ) : (
                     <View style={styles.buttonRow}>
                       <AppleIcon size={18} color={theme.text} />
-                      <Text role="body" style={styles.secondaryButtonText}>
+                      <Text role="subhead" style={styles.secondaryButtonText}>
                         {authTab === 'signin'
                           ? 'Sign in with Apple'
                           : 'Sign up with Apple'}
@@ -230,7 +230,7 @@ export function AccountSection() {
                   setAuthTab(authTab === 'signin' ? 'signup' : 'signin')
                 }
               >
-                <Text role="body" style={styles.linkText}>
+                <Text role="subhead" style={styles.linkText}>
                   {authTab === 'signin'
                     ? 'Create an account'
                     : 'Already have an account? Sign in'}
@@ -241,7 +241,7 @@ export function AccountSection() {
 
           {(emailMode === 'signup' || emailMode === 'signin') && (
             <View style={{ gap: 12 }}>
-              <Text role="subhead" style={styles.inputLabel}>Email</Text>
+              <Text role="body" style={styles.inputLabel}>Email</Text>
               <TextInput
                 style={styles.input}
                 placeholderTextColor={theme.textSecondary}
@@ -251,7 +251,7 @@ export function AccountSection() {
                 keyboardType="email-address"
                 autoComplete="email"
               />
-              <Text role="subhead" style={styles.inputLabel}>Password</Text>
+              <Text role="body" style={styles.inputLabel}>Password</Text>
               <TextInput
                 style={styles.input}
                 placeholderTextColor={theme.textSecondary}
@@ -280,7 +280,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text role="body" style={styles.primaryButtonText}>
+                  <Text role="headline" style={styles.primaryButtonText}>
                     {emailMode === 'signup' ? 'Create Account' : 'Sign In'}
                   </Text>
                 )}
@@ -294,7 +294,7 @@ export function AccountSection() {
                   }}
                   disabled={loading}
                 >
-                  <Text role="body" style={styles.linkText}>Forgot Password?</Text>
+                  <Text role="subhead" style={styles.linkText}>Forgot Password?</Text>
                 </Pressable>
               )}
               <Pressable
@@ -304,14 +304,14 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="body" style={styles.linkTextDanger}>Cancel</Text>
+                <Text role="subhead" style={styles.linkTextDanger}>Cancel</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'forgot-password' && (
             <View style={{ gap: 12 }}>
-              <Text role="subhead" style={styles.inputLabel}>Reset Password</Text>
+              <Text role="body" style={styles.inputLabel}>Reset Password</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -330,7 +330,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text role="body" style={styles.primaryButtonText}>Send Reset Link</Text>
+                  <Text role="headline" style={styles.primaryButtonText}>Send Reset Link</Text>
                 )}
               </Pressable>
               <Pressable
@@ -340,15 +340,15 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="body" style={styles.linkText}>Back to Sign In</Text>
+                <Text role="subhead" style={styles.linkText}>Back to Sign In</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'reset-sent' && (
             <View style={styles.confirmEmailBox}>
-              <Text role="body" style={styles.confirmEmailTitle}>Check your inbox</Text>
-              <Text role="callout" style={styles.confirmEmailBody}>
+              <Text role="headline" style={styles.confirmEmailTitle}>Check your inbox</Text>
+              <Text role="body" style={styles.confirmEmailBody}>
                 We sent a password reset link to{' '}
                 <Text style={styles.confirmEmailAddress}>{email}</Text>.
               </Text>
@@ -360,15 +360,15 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="body" style={styles.primaryButtonText}>Done</Text>
+                <Text role="headline" style={styles.primaryButtonText}>Done</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'confirm-email' && (
             <View style={styles.confirmEmailBox}>
-              <Text role="body" style={styles.confirmEmailTitle}>Check your inbox</Text>
-              <Text role="callout" style={styles.confirmEmailBody}>
+              <Text role="headline" style={styles.confirmEmailTitle}>Check your inbox</Text>
+              <Text role="body" style={styles.confirmEmailBody}>
                 We sent a confirmation link to{' '}
                 <Text style={styles.confirmEmailAddress}>{email}</Text>. Open it
                 to finish creating your account.
@@ -381,7 +381,7 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="body" style={styles.primaryButtonText}>Done</Text>
+                <Text role="headline" style={styles.primaryButtonText}>Done</Text>
               </Pressable>
             </View>
           )}
@@ -392,14 +392,14 @@ export function AccountSection() {
         <>
           <View style={[styles.infoRow, styles.infoRowFirst]}>
             <Text role="body" style={styles.infoLabel}>Email</Text>
-            <Text role="body" style={styles.infoValue} numberOfLines={1}>
+            <Text role="subhead" style={styles.infoValue} numberOfLines={1}>
               {user?.email ?? 'Sign-in with provider'}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
             <Text role="body" style={styles.infoLabel}>Account Type</Text>
-            <Text role="body" style={styles.infoValue}>
+            <Text role="subhead" style={styles.infoValue}>
               {entitlements.isPremium ? 'Premium' : 'Free'}
             </Text>
           </View>
@@ -416,7 +416,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text role="body" style={styles.primaryButtonText}>
+                  <Text role="headline" style={styles.primaryButtonText}>
                     {premiumPrice
                       ? `Buy Premium · ${premiumPrice}`
                       : 'Buy Premium'}
@@ -444,14 +444,14 @@ export function AccountSection() {
               }}
               disabled={loading}
             >
-              <Text role="body" style={styles.secondaryButtonText}>Restore Purchases</Text>
+              <Text role="subhead" style={styles.secondaryButtonText}>Restore Purchases</Text>
             </Pressable>
 
             {ownedPacks.length > 0 && (
               <>
                 <Text role="subhead" style={styles.subLabel}>Owned Packs</Text>
                 {ownedPacks.map(p => (
-                  <Text key={p.id} role="callout" style={styles.ownedPackName}>
+                  <Text key={p.id} role="body" style={styles.ownedPackName}>
                     {p.name}
                   </Text>
                 ))}
@@ -463,14 +463,14 @@ export function AccountSection() {
               onPress={() => withLoading(signOut)}
               disabled={loading}
             >
-              <Text role="body" style={styles.secondaryButtonText}>Sign Out</Text>
+              <Text role="subhead" style={styles.secondaryButtonText}>Sign Out</Text>
             </Pressable>
             <Pressable
               style={[styles.destructiveButton, loading && styles.disabled]}
               onPress={confirmDeleteAccount}
               disabled={loading}
             >
-              <Text role="body" style={styles.destructiveButtonText}>Delete Account</Text>
+              <Text role="subhead" style={styles.destructiveButtonText}>Delete Account</Text>
             </Pressable>
           </View>
 
@@ -504,10 +504,9 @@ const createStyles = (theme: Theme) =>
     infoRowFirst: {
       borderTopWidth: 0,
     },
-    infoLabel: { fontWeight: '600', color: theme.text },
+    infoLabel: { color: theme.text },
     infoValue: {
       color: theme.textSecondary,
-      fontWeight: '600',
       maxWidth: 240,
       textAlign: 'right',
       overflow: 'hidden',
@@ -523,7 +522,6 @@ const createStyles = (theme: Theme) =>
       marginTop: 8,
     },
     primaryButtonText: {
-      fontWeight: '700',
       color: theme.background,
     },
     secondaryButton: {
@@ -536,7 +534,7 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       backgroundColor: theme.background,
     },
-    secondaryButtonText: { fontWeight: '700', color: theme.text },
+    secondaryButtonText: { color: theme.text },
     accountActions: { gap: 12, marginTop: 14 },
     premiumBadge: {
       alignSelf: 'flex-start',
@@ -547,11 +545,9 @@ const createStyles = (theme: Theme) =>
       marginTop: 8,
     },
     premiumBadgeText: {
-      fontWeight: theme.fontWeightSemibold,
       color: theme.background,
     },
     subLabel: {
-      fontWeight: theme.fontWeightSemibold,
       color: theme.textSecondary,
     },
     ownedPackName: { color: theme.text },
@@ -568,15 +564,12 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingMd,
     },
     linkText: {
-      fontWeight: '700',
       color: theme.text,
     },
     linkTextDanger: {
-      fontWeight: '700',
       color: theme.red,
     },
     formTitle: {
-      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     inputLabel: {
@@ -591,7 +584,7 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: theme.spacingLg,
       backgroundColor: theme.surface,
       color: theme.text,
-      fontSize: theme.fontSizeCallout,
+      fontSize: theme.type.body.fontSize,
       marginBottom: 12,
     },
     destructiveButton: {
@@ -605,12 +598,10 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background,
     },
     destructiveButtonText: {
-      fontWeight: theme.fontWeightSemibold,
       color: theme.red,
     },
     confirmEmailBox: { gap: theme.spacingMd },
     confirmEmailTitle: {
-      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     confirmEmailBody: {

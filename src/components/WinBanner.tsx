@@ -115,10 +115,10 @@ export function WinBanner({
           )}
         </Text>
       )}
-      <Text role="display" style={styles.winText}>{mainText}</Text>
+      <Text role="largeTitle" style={styles.winText}>{mainText}</Text>
 
       <Pressable onPress={handlePress} style={styles.winButton}>
-        <Text role="subtitle" style={styles.winButtonText}>{buttonLabel}</Text>
+        <Text role="headline" style={styles.winButtonText}>{buttonLabel}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -150,7 +150,6 @@ const createStyles = (theme: Theme) =>
     },
     winInfo: {
       color: theme.text,
-      fontWeight: '600',
       marginBottom: 7,
     },
     winButton: {

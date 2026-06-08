@@ -4,7 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
-  TextStyle,
   useWindowDimensions,
 } from 'react-native';
 import { Text } from '../components/Text';
@@ -31,11 +30,9 @@ import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { StreakProgressRow } from '../components/StreakProgressRow';
 import { PackCard, PackCardSkeleton } from '../components/PackCard';
 import { PulseBox, PulseProvider } from '../components/Pulse';
-import { useProductPrice } from '../hooks/useProductPrice';
 import type {
   Theme,
   PackCatalogItem,
-  Puzzle,
   RootStackParamList,
   StreakType,
 } from '../types';
@@ -47,53 +44,11 @@ const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 // a stable, populated-looking shape from first paint.
 const SKELETON_PACK_COUNT = 4;
 // Streak card thumbnail width as a fraction of the viewport (RN has no vw unit).
-const STREAK_CARD_FRACTION = 0.75;
+const STREAK_CARD_FRACTION = 0.62;
 // Horizontal gap between streak cards (matches the carousel's contentContainer gap).
 const STREAK_CARD_GAP = 20;
 // Left inset of the streak carousel from the screen edge.
 const STREAK_ROW_PADDING = 20;
-
-// PaidPackRow is its own component because useProductPrice is a hook — hooks
-// cannot be called conditionally, so this component wraps the per-pack call
-// that would otherwise live inside the paidPacks.map() callback.
-function PaidPackRow({
-  pack,
-  completed,
-  onPress,
-  preview,
-  theme,
-  coloredRegions,
-  priceStyle,
-}: {
-  pack: PackCatalogItem;
-  completed: number;
-  onPress: () => void;
-  preview: Puzzle | undefined;
-  theme: Theme;
-  coloredRegions: boolean;
-  priceStyle: TextStyle;
-}) {
-  const price = useProductPrice(`starbattle_pack_${pack.id}`);
-  // Drop the whole row in once the preview is ready; until then show the full
-  // skeleton (the price hook above still runs, so it's warm when the card lands).
-  if (!preview) return <PackCardSkeleton theme={theme} />;
-  return (
-    <PackCard
-      name={pack.name}
-      meta={`${completed}/${pack.puzzleCount}`}
-      preview={preview}
-      onPress={onPress}
-      theme={theme}
-      coloredRegions={coloredRegions}
-      right={
-        <Text role="callout" style={priceStyle}>
-          {price ??
-            (pack.priceUsd != null ? `$${pack.priceUsd.toFixed(2)}` : '—')}
-        </Text>
-      }
-    />
-  );
-}
 
 // Star rating of each special, shown as the streak card's static subtitle (the
 // progress row below it conveys streak state, so the subtitle just describes the
@@ -189,18 +144,16 @@ export function HomeScreen({
             scrolled && styles.headerBorder,
           ]}
         >
-          <Text role="display" style={styles.appTitle}>
+          <Text role="largeTitle" serif style={styles.appTitle}>
             Home
           </Text>
           <View style={styles.headerRight}>
             <CircleButton
-              ghost
               onPress={() => useStreaksStore.getState().openStreaks()}
             >
               <Flame size={26} strokeWidth={2} color={theme.text} />
             </CircleButton>
             <CircleButton
-              ghost
               onPress={() => useSettingsStore.getState().openSettings()}
             >
               <User size={26} strokeWidth={2} color={theme.text} />
@@ -219,8 +172,19 @@ export function HomeScreen({
           {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
           <View style={styles.streakSection}>
             <Text
-              role="headline"
-              style={[styles.sectionLabel, { marginLeft: 20, marginRight: 20 }]}
+              serif
+              role="title1"
+              style={[
+                styles.sectionLabel,
+                {
+                  marginLeft: 20,
+                  marginRight: 20,
+                  borderTopWidth: 0,
+                  marginBottom: 26,
+                  marginTop: -14.5,
+                  paddingTop: 24,
+                },
+              ]}
             >
               Streaks
             </Text>
@@ -277,7 +241,7 @@ export function HomeScreen({
                           theme={theme}
                           coloredRegions={coloredRegions}
                         />
-                        <Text role="subtitle" style={styles.streakLabel}>
+                        <Text role="callout" style={styles.streakLabel}>
                           {`${STREAK_LABELS[type]} Special`}
                         </Text>
                         <Text role="subhead" style={styles.streakMeta}>
@@ -296,7 +260,11 @@ export function HomeScreen({
 
           {/* Puzzle library: free packs, then purchasable packs */}
           <View style={styles.packSection}>
-            <Text role="headline" style={styles.sectionLabel}>
+            <Text
+              serif
+              role="title1"
+              style={[styles.sectionLabel, { marginTop: 36, marginBottom: 24 }]}
+            >
               Puzzle Library
             </Text>
 
@@ -310,7 +278,9 @@ export function HomeScreen({
                 <PackCard
                   key={pack.id}
                   name={pack.name}
-                  meta={`${completedPerPack[pack.id] ?? 0}/${pack.puzzleCount}`}
+                  meta={`${pack.stars} star puzzles`}
+                  completed={completedPerPack[pack.id] ?? 0}
+                  total={pack.puzzleCount}
                   preview={packPreviews[pack.id]}
                   onPress={() =>
                     navigation.navigate('Library', { packId: pack.id })
@@ -324,39 +294,25 @@ export function HomeScreen({
             )}
 
             {paidPacks.map(pack => {
-              const completed = completedPerPack[pack.id] ?? 0;
-
-              // Purchased packs render identically to free packs.
-              if (hasPackAccess(pack.id)) {
-                return packPreviews[pack.id] ? (
-                  <PackCard
-                    key={pack.id}
-                    name={pack.name}
-                    meta={`${completed}/${pack.puzzleCount}`}
-                    preview={packPreviews[pack.id]}
-                    onPress={() =>
-                      navigation.navigate('Library', { packId: pack.id })
-                    }
-                    theme={theme}
-                    coloredRegions={coloredRegions}
-                  />
-                ) : (
-                  <PackCardSkeleton key={pack.id} theme={theme} />
-                );
+              const owned = hasPackAccess(pack.id);
+              if (!packPreviews[pack.id]) {
+                return <PackCardSkeleton key={pack.id} theme={theme} />;
               }
-
+              // Owned packs show solve progress; locked packs show a lock.
               return (
-                <PaidPackRow
+                <PackCard
                   key={pack.id}
-                  pack={pack}
-                  completed={completed}
+                  name={pack.name}
+                  meta={`${pack.stars} star puzzles`}
+                  locked={!owned}
+                  completed={owned ? completedPerPack[pack.id] ?? 0 : undefined}
+                  total={owned ? pack.puzzleCount : undefined}
+                  preview={packPreviews[pack.id]}
                   onPress={() =>
                     navigation.navigate('Library', { packId: pack.id })
                   }
-                  preview={packPreviews[pack.id]}
                   theme={theme}
                   coloredRegions={coloredRegions}
-                  priceStyle={styles.packPrice}
                 />
               );
             })}
@@ -386,7 +342,7 @@ const createStyles = (
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 20,
-      paddingRight: 10,
+
       height: HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
       // Default border color matches background so it's invisible until
@@ -402,19 +358,19 @@ const createStyles = (
     },
     headerRight: {
       flexDirection: 'row',
-      gap: 0,
+      gap: 12,
     },
     streakSection: {
       backgroundColor: theme.background,
     },
     packSection: {
-      paddingTop: 46,
+      paddingTop: 0,
       backgroundColor: theme.background,
       paddingHorizontal: 20,
     },
     streakRow: {
       flexDirection: 'row',
-      gap: theme.spacingMd,
+      gap: 12,
       zIndex: 100,
       overflow: 'visible',
     },
@@ -430,23 +386,17 @@ const createStyles = (
     streakMetaSkeleton: { marginTop: 7 },
     streakLabel: {
       color: theme.text,
-      textTransform: 'uppercase',
-      marginTop: 9,
+      fontWeight: 600,
+      marginTop: 10,
     },
     streakMeta: {
       color: theme.textSecondary,
-      fontWeight: '400',
     },
     sectionLabel: {
-      marginBottom: 16,
       color: theme.text,
-      textTransform: 'uppercase',
       borderTopWidth: 1,
       borderTopColor: theme.border,
       paddingTop: 12,
-    },
-    packPrice: {
-      color: theme.textSecondary,
     },
   });
 };

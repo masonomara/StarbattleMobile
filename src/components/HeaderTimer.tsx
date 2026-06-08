@@ -51,7 +51,6 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     timer: {
       fontVariant: ['tabular-nums'],
-      fontWeight: '600',
       color: theme.text,
     },
   });

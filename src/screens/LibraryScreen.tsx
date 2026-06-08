@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Pressable,
@@ -31,7 +31,10 @@ import type {
 } from '../types';
 import { SCREEN_HEADER_HEIGHT } from '../layout';
 
-const NUM_COLS = 3;
+const NUM_COLS = 5;
+const PADDING = 20;
+const GAP = 12;
+const PAGE_SIZE = 30;
 
 type PuzzleCellProps = {
   packId: string;
@@ -60,24 +63,17 @@ const PuzzleCell = React.memo(function PuzzleCell({
   coloredRegions,
   cellSize,
 }: PuzzleCellProps) {
-  const puzzleId = `${packId}:${index}`;
   const puzzle = useMemo(
-    () => (rawPuzzle ? parsePuzzle(rawPuzzle, puzzleId) : null),
-    [rawPuzzle, puzzleId],
+    () => (rawPuzzle ? parsePuzzle(rawPuzzle, `${packId}:${index}`) : null),
+    [rawPuzzle, packId, index],
   );
 
-  const status: 'completed' | 'active' | 'locked' = isCompleted
-    ? 'completed'
-    : canPlay
-    ? 'active'
-    : 'locked';
+  const locked = !isCompleted && !canPlay;
 
   return (
     <Pressable
-      style={[styles.puzzleCell, status === 'locked' && styles.locked]}
-      onPress={() =>
-        status === 'locked' ? onLockedPress(index) : onPress(index)
-      }
+      style={[{ width: cellSize }, locked && styles.lockedCell]}
+      onPress={() => (locked ? onLockedPress(index) : onPress(index))}
     >
       {puzzle && (
         <PuzzleThumbnail
@@ -87,32 +83,24 @@ const PuzzleCell = React.memo(function PuzzleCell({
           coloredRegions={coloredRegions}
         />
       )}
-
-      <View
-        style={[
-          styles.puzzleNumber,
-          status === 'completed'
-            ? styles.puzzleNumberCompleted
-            : status === 'locked'
-            ? styles.puzzleNumberLocked
-            : styles.puzzleNumberActive,
-        ]}
-      >
-        {status !== 'active' && (
-          <View>
-            {status === 'completed' ? (
-              <View style={styles.puzzleIconCompleted}>
-                <Check size={8} color={theme.green} strokeWidth={4} />
-              </View>
-            ) : (
-              <View style={styles.puzzleIconLocked}>
-                <Lock size={14} color={theme.text} />
-              </View>
-            )}
+      {/*<View style={styles.label}>
+        <Text
+          role="subhead"
+          style={locked ? styles.labelLocked : styles.labelText}
+        >
+          Puzzle {index + 1}
+        </Text>
+        {isCompleted && (
+          <View style={styles.iconCompleted}>
+            <Check size={8} color={theme.textSecondary} strokeWidth={4} />
           </View>
         )}
-        <Text role="subhead" style={styles.puzzleNumberText}>Puzzle {index + 1}</Text>
-      </View>
+        {locked && (
+          <View style={styles.iconLocked}>
+            <Lock size={14} color={theme.text} />
+          </View>
+        )}
+      </View>*/}
     </Pressable>
   );
 });
@@ -125,11 +113,10 @@ export function LibraryScreen({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const cellSize = Math.floor((width - 2 * 16 - NUM_COLS * 12) / NUM_COLS);
-  const styles = useMemo(
-    () => createStyles(theme, cellSize, insets),
-    [theme, cellSize, insets],
+  const cellSize = Math.floor(
+    (width - 2 * PADDING - (NUM_COLS - 1) * GAP) / NUM_COLS,
   );
+  const styles = useMemo(() => createStyles(theme, insets), [theme, insets]);
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const { packCatalog, canPlayPuzzle, hasPackAccess } = useEntitlements();
 
@@ -140,8 +127,9 @@ export function LibraryScreen({
   const priceUsd = catalogPack?.priceUsd;
   const storagePath = catalogPack?.storagePath;
 
-  const [scrolled, setScrolled] = useState(false);
   const [rawPuzzles, setRawPuzzles] = useState<RawPuzzle[] | null>(null);
+  const listRef = useRef<FlatList<number>>(null);
+  const [activeSection, setActiveSection] = useState(0);
 
   useEffect(() => {
     getPuzzlesForPack(packId, storagePath)
@@ -181,6 +169,12 @@ export function LibraryScreen({
     [catalogPack, completedSet, packId, canPlayPuzzle, completedCount],
   );
 
+  const handlePress = useCallback(
+    (index: number) =>
+      navigation.navigate('Puzzle', { packId, puzzleIndex: index }),
+    [navigation, packId],
+  );
+
   const handleLockedPress = useCallback(
     (index: number) => {
       if (!isFree && !hasPackAccess(packId)) {
@@ -202,45 +196,45 @@ export function LibraryScreen({
     [isFree, hasPackAccess, packId, priceUsd, storagePath, packName],
   );
 
-  const rows = useMemo(() => {
-    const result: number[][] = [];
-    for (let i = 0; i < puzzleCount; i += NUM_COLS) {
-      result.push(
-        Array.from(
-          { length: Math.min(NUM_COLS, puzzleCount - i) },
-          (_, j) => i + j,
-        ),
-      );
-    }
-    return result;
-  }, [puzzleCount]);
+  const sections = useMemo(
+    () => Array.from({ length: Math.ceil(puzzleCount / PAGE_SIZE) }, (_, i) => i),
+    [puzzleCount],
+  );
 
-  const renderRow = useCallback(
-    ({ item: rowIndices }: { item: number[] }) => (
-      <View style={styles.row}>
-        {rowIndices.map(index => (
-          <PuzzleCell
-            key={index}
-            packId={packId}
-            index={index}
-            rawPuzzle={rawPuzzles?.[index] ?? null}
-            onPress={i =>
-              navigation.navigate('Puzzle', { packId, puzzleIndex: i })
-            }
-            onLockedPress={handleLockedPress}
-            styles={styles}
-            theme={theme}
-            isCompleted={completedSet.has(`${packId}:${index}`)}
-            canPlay={isPuzzlePlayable(index)}
-            coloredRegions={coloredRegions}
-            cellSize={cellSize}
-          />
-        ))}
-      </View>
-    ),
+  const renderSection = useCallback(
+    ({ item: section }: { item: number }) => {
+      const start = section * PAGE_SIZE;
+      const end = Math.min(start + PAGE_SIZE, puzzleCount);
+      return (
+        <View style={[styles.page, { width }]}>
+          {Array.from({ length: end - start }, (_, j) => {
+            const index = start + j;
+            return (
+              <PuzzleCell
+                key={index}
+                packId={packId}
+                index={index}
+                rawPuzzle={rawPuzzles?.[index] ?? null}
+                onPress={handlePress}
+                onLockedPress={handleLockedPress}
+                styles={styles}
+                theme={theme}
+                isCompleted={completedSet.has(`${packId}:${index}`)}
+                canPlay={isPuzzlePlayable(index)}
+                coloredRegions={coloredRegions}
+                cellSize={cellSize}
+              />
+            );
+          })}
+        </View>
+      );
+    },
     [
       packId,
+      puzzleCount,
+      width,
       rawPuzzles,
+      handlePress,
       handleLockedPress,
       styles,
       theme,
@@ -248,7 +242,6 @@ export function LibraryScreen({
       isPuzzlePlayable,
       coloredRegions,
       cellSize,
-      navigation,
     ],
   );
 
@@ -261,28 +254,52 @@ export function LibraryScreen({
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.header,
-          { paddingTop: insets.top },
-          scrolled && styles.headerBorder,
-        ]}
-      >
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
-        <Text role="body" style={styles.headerTitle}>{packName}</Text>
+        <Text role="headline" style={styles.headerTitle}>
+          {packName}
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
       <FlatList
-        data={rows}
-        keyExtractor={item => String(item[0])}
-        renderItem={renderRow}
-        style={styles.scroll}
-        onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
-        scrollEventThrottle={16}
-        contentContainerStyle={styles.gridContent}
+        ref={listRef}
+        data={sections}
+        keyExtractor={String}
+        renderItem={renderSection}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        getItemLayout={(_, index) => ({
+          length: width,
+          offset: width * index,
+          index,
+        })}
+        onMomentumScrollEnd={e =>
+          setActiveSection(Math.round(e.nativeEvent.contentOffset.x / width))
+        }
       />
+      {sections.length > 1 && (
+        <View style={[styles.tabs, { bottom: insets.bottom + 16 }]}>
+          {sections.map(s => (
+            <Pressable
+              key={s}
+              onPress={() => listRef.current?.scrollToIndex({ index: s })}
+              style={[styles.tab, s === activeSection && styles.tabActive]}
+            >
+              <Text
+                role="subhead"
+                style={
+                  s === activeSection ? styles.tabTextActive : styles.tabText
+                }
+              >
+                {s + 1}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
       <PaywallModal
         context={paywallContext}
         onClose={() => setPaywallContext(null)}
@@ -295,12 +312,8 @@ export function LibraryScreen({
   );
 }
 
-const createStyles = (
-  theme: Theme,
-  cellSize: number,
-  insets: { top: number; bottom: number },
-) => {
-  return StyleSheet.create({
+const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
+  StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.background,
@@ -317,79 +330,75 @@ const createStyles = (
       paddingHorizontal: 16,
       height: SCREEN_HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background,
     },
-    headerBorder: {
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
+    headerTitle: {
+      color: theme.text,
     },
     headerSpacer: {
       width: 44,
     },
-    scroll: { flex: 1 },
-    gridContent: {
-      paddingHorizontal: 16,
-      paddingTop: SCREEN_HEADER_HEIGHT + insets.top + 24,
-      paddingBottom: insets.bottom,
-      rowGap: 12,
-    },
-    row: {
+    page: {
       flexDirection: 'row',
-      justifyContent: 'center',
+      flexWrap: 'wrap',
+      alignContent: 'flex-start',
+      rowGap: GAP,
+      columnGap: GAP,
+      paddingHorizontal: PADDING,
+      paddingTop: SCREEN_HEADER_HEIGHT + insets.top + 24,
+      paddingBottom: insets.bottom + 60,
     },
-    puzzleCell: {
-      height: cellSize,
-      width: cellSize,
-      marginHorizontal: 8,
-      marginBottom: 29,
-    },
-    puzzleCellOverlay: {
+    tabs: {
       position: 'absolute',
-      top: 0,
       left: 0,
       right: 0,
-      bottom: 0,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    puzzleNumber: {
-      paddingTop: 7,
-      textAlign: 'center',
-      paddingBottom: 7,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
       flexDirection: 'row',
-      gap: 5,
-      marginLeft: -5,
+      justifyContent: 'center',
+      gap: 8,
     },
-    puzzleNumberText: {
-      fontWeight: '600',
-      color: theme.text,
+    tab: {
+      minWidth: 32,
+      height: 32,
+      borderRadius: 100,
+      paddingHorizontal: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.surface,
     },
-    puzzleNumberCompleted: { color: theme.text },
-    puzzleNumberActive: {
-      color: theme.text,
+    tabActive: {
+      backgroundColor: theme.text,
     },
-    puzzleNumberLocked: {
+    tabText: {
       color: theme.textSecondary,
     },
-    locked: { opacity: 0.4 },
-    headerTitle: {
-      fontWeight: '600',
+    tabTextActive: {
+      color: theme.background,
+    },
+    lockedCell: {
+      opacity: 0.4,
+    },
+    label: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 5,
+      paddingVertical: 7,
+    },
+    labelText: {
       color: theme.text,
     },
-    puzzleIconCompleted: {
+    labelLocked: {
+      color: theme.textSecondary,
+    },
+    iconCompleted: {
       width: 15,
       height: 15,
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1.25,
-      borderColor: theme.green,
+      borderColor: theme.textSecondary,
     },
-    puzzleIconLocked: {
+    iconLocked: {
       width: 15,
       height: 15,
       borderRadius: 100,
@@ -399,4 +408,3 @@ const createStyles = (
       borderColor: theme.background,
     },
   });
-};

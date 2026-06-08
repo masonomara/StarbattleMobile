@@ -2,9 +2,11 @@ import { View, Pressable, StyleSheet } from 'react-native';
 import { Text } from './Text';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
 import { PulseBox } from './Pulse';
+import Lock from 'lucide-react-native/dist/cjs/icons/lock';
+import Check from 'lucide-react-native/dist/cjs/icons/check';
 import type { PackCardProps, PackCardSkeletonProps, Theme } from '../types';
 
-const THUMB_SIZE = 80;
+const THUMB_SIZE = 64;
 
 export function PackCard({
   name,
@@ -12,11 +14,32 @@ export function PackCard({
   preview,
   onPress,
   right,
+  locked = false,
+  completed,
+  total,
   theme,
   coloredRegions,
   disabled = false,
 }: PackCardProps) {
   const styles = createStyles(theme);
+
+  const isComplete = total != null && total > 0 && completed === total;
+  const rightNode =
+    right ??
+    (locked ? (
+      <Lock size={19} color={theme.textSecondary} strokeWidth={2.5} />
+    ) : total != null ? (
+      <View style={styles.progress}>
+        {isComplete && <Check size={14} color={theme.green} strokeWidth={3} />}
+        <Text
+          role="subhead"
+          style={[styles.progressText, isComplete && styles.progressComplete]}
+        >
+          {completed ?? 0}/{total}
+        </Text>
+      </View>
+    ) : null);
+
   return (
     <Pressable
       style={[styles.card, disabled && styles.cardDisabled]}
@@ -35,10 +58,14 @@ export function PackCard({
         <View style={[styles.thumb, styles.thumbPlaceholder]} />
       )}
       <View style={styles.info}>
-        <Text role="callout" style={styles.name}>{name}</Text>
-        <Text role="subhead" style={styles.metaText}>{meta}</Text>
+        <Text role="subhead" style={styles.name} numberOfLines={1}>
+          {name}
+        </Text>
+        <Text role="subhead" style={styles.metaText}>
+          {meta}
+        </Text>
       </View>
-      {right && <View style={styles.right}>{right}</View>}
+      {rightNode && <View style={styles.right}>{rightNode}</View>}
     </Pressable>
   );
 }
@@ -81,7 +108,7 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       // padding: 16,
       borderRadius: 4,
-      marginBottom: 20,
+      marginBottom: 14,
       backgroundColor: theme.background,
       // borderWidth: 1,
       // borderColor: theme.border,
@@ -104,15 +131,27 @@ const createStyles = (theme: Theme) =>
     skeletonMeta: { marginTop: 4 },
     name: {
       color: theme.text,
+      fontWeight: '600',
     },
     metaText: {
       color: theme.textSecondary,
     },
     right: {
-      display: 'flex',
-      alignItems: 'center',
+      marginLeft: 12,
+      flexShrink: 0,
+      alignItems: 'flex-end',
       justifyContent: 'center',
-      height: 28,
-      width: 28,
+    },
+    progress: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    progressText: {
+      color: theme.text,
+      fontWeight: '400',
+    },
+    progressComplete: {
+      color: theme.green,
     },
   });

@@ -38,10 +38,10 @@ export function ResetPasswordModal() {
     >
       <View style={styles.container}>
         <View style={styles.modalHeader}>
-          <Text role="body" style={styles.title}>New Password</Text>
+          <Text role="headline" style={styles.title}>New Password</Text>
         </View>
         <View style={styles.body}>
-          <Text role="callout" style={styles.description}>
+          <Text role="body" style={styles.description}>
             Choose a new password for your account.
           </Text>
           <TextInput
@@ -54,7 +54,7 @@ export function ResetPasswordModal() {
             autoComplete="new-password"
             autoFocus
           />
-          <Text role="subhead" style={[styles.hint, password.length >= 6 && styles.hintMet]}>
+          <Text role="body" style={[styles.hint, password.length >= 6 && styles.hintMet]}>
             At least 6 characters
           </Text>
           {error && <Text role="subhead" style={styles.error}>{error}</Text>}
@@ -66,7 +66,7 @@ export function ResetPasswordModal() {
             {loading ? (
               <ActivityIndicator color={theme.background} />
             ) : (
-              <Text role="callout" style={styles.buttonText}>Set Password</Text>
+              <Text role="headline" style={styles.buttonText}>Set Password</Text>
             )}
           </Pressable>
         </View>
@@ -89,7 +89,6 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: 14,
     },
     title: {
-      fontWeight: theme.fontWeightSemibold,
       color: theme.text,
     },
     body: {
@@ -106,7 +105,7 @@ const createStyles = (theme: Theme) => {
       paddingHorizontal: theme.spacingLg,
       backgroundColor: theme.background,
       color: theme.text,
-      fontSize: theme.fontSizeCallout,
+      fontSize: theme.type.body.fontSize,
     },
     button: {
       height: 52,

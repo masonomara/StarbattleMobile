@@ -114,7 +114,7 @@ export function ArchivePackScreen({
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
-        <Text role="body" style={styles.headerTitle}>
+        <Text role="headline" style={styles.headerTitle}>
           Past {STREAK_LABELS[type]} Specials
         </Text>
         <View style={styles.headerSpacer} />
@@ -164,7 +164,6 @@ const createStyles = (
       width: 44,
     },
     headerTitle: {
-      fontWeight: '600',
       color: theme.text,
     },
     scroll: { flex: 1 },
@@ -194,7 +193,6 @@ const createStyles = (
       right: 10,
     },
     dateText: {
-      fontWeight: '600',
       color: theme.text,
       textAlign: 'center',
     },

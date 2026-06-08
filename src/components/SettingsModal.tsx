@@ -33,7 +33,7 @@ export function SettingsModal() {
         >
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text role="title" style={styles.title}>Settings</Text>
+            <Text role="largeTitle" style={styles.title}>Settings</Text>
           </View>
           <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeSettings} hitSlop={8}>

@@ -28,6 +28,7 @@ import { useEntitlements } from '../hooks/useEntitlements';
 import { useStreakRows } from '../hooks/useStreakRows';
 import { getStreakPack } from '../packs';
 import { parsePuzzle } from '../utils/parsePuzzle';
+import { loadAllCompletionData } from '../utils/progress';
 import {
   getActiveStreak,
   getPuzzleIndex,
@@ -69,6 +70,12 @@ export function StreaksModal() {
   const [thumbnails, setThumbnails] = useState<
     Partial<Record<StreakType, Puzzle>>
   >({});
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!streaksModalVisible) return;
+    loadAllCompletionData().then(setCompletedIds);
+  }, [streaksModalVisible]);
 
   useEffect(() => {
     if (!streaksModalVisible) return;
@@ -111,7 +118,7 @@ export function StreaksModal() {
         >
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text role="title" style={styles.headerTitle}>Streaks</Text>
+            <Text role="largeTitle" style={styles.headerTitle}>Streaks</Text>
           </View>
           <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeStreaks} hitSlop={8}>
@@ -134,7 +141,7 @@ export function StreaksModal() {
                 n === 1 ? STREAK_UNIT[type] : `${STREAK_UNIT[type]}s`;
               return (
                 <View key={type} style={[styles.streakTile]}>
-                  <Text role="subtitle" style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                  <Text role="headline" style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
                   <View style={styles.streakStatRow}>
                     <Text role="subhead" style={styles.streakStatLabel}>Best</Text>
                     <Text role="body" style={styles.streakStatValue}>
@@ -152,10 +159,13 @@ export function StreaksModal() {
             })}
           </View>
 
-          <Text role="sectionTitle" style={styles.sectionTitle}>Archived Specials</Text>
+          <Text role="headline" style={styles.sectionTitle}>Archived Specials</Text>
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
+            const done = getPastDateKeys(type).filter(k =>
+              completedIds.has(`${type}:archive:${k}`),
+            ).length;
             const preview = thumbnails[type];
             const isEmpty = count === 0;
             const locked = !isPremium;
@@ -163,7 +173,7 @@ export function StreaksModal() {
               <PackCard
                 key={type}
                 name={ARCHIVE_NAMES[type]}
-                meta={isEmpty ? 'Coming soon' : `${count} specials`}
+                meta={isEmpty ? 'Coming soon' : `${done} of ${count} completed`}
                 preview={preview}
                 disabled={isEmpty}
                 onPress={() => {
@@ -258,7 +268,6 @@ const createStyles = (theme: Theme) => {
     },
     streakLabel: {
       color: theme.text,
-      fontWeight: '900',
     },
     streakStatRow: {
       marginTop: 8,
@@ -267,7 +276,6 @@ const createStyles = (theme: Theme) => {
       color: theme.textSecondary,
     },
     streakStatValue: {
-      fontWeight: '600',
       color: theme.text,
       marginTop: 1,
     },

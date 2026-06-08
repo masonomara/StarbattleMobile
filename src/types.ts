@@ -73,7 +73,15 @@ export type PackCardProps = {
   meta: string;
   preview?: Puzzle;
   onPress: () => void;
+  // Custom right-side content. Takes precedence over the locked/completed/total
+  // progress states below (used by StreaksModal to render its own lock).
   right?: ReactNode;
+  // Built-in right-side states. `locked` shows a lock icon; otherwise, when
+  // `total` is set, a "completed/total puzzles completed" label (with a leading
+  // checkmark once the pack is fully solved).
+  locked?: boolean;
+  completed?: number;
+  total?: number;
   theme: Theme;
   coloredRegions: boolean;
   disabled?: boolean;
@@ -329,25 +337,28 @@ export type Theme = {
   type: Record<TextRole, TextRoleStyle>;
 };
 
-// The set of typographic roles. Pick the closest role rather than hardcoding a
-// fontSize; a style may still override fontWeight/color for emphasis.
+// The set of typographic roles (an iOS-style type scale). Pick the closest role
+// rather than hardcoding a fontSize. The role owns size/line-height/weight — a
+// style should not override fontWeight, so every instance of a role matches.
 export type TextRole =
-  | 'display'
-  | 'title'
+  | 'largeTitle'
+  | 'title1'
+  | 'title2'
+  | 'title3'
   | 'headline'
-  | 'sectionTitle'
-  | 'subtitle'
   | 'body'
   | 'callout'
   | 'subhead'
   | 'footnote'
-  | 'caption';
+  | 'caption1'
+  | 'caption2';
 
+// Letter spacing is intentionally omitted: with the system font, the OS applies
+// its own optical tracking per size, which beats a hand-tuned constant.
 export type TextRoleStyle = {
   fontSize: number;
   lineHeight: number;
   fontWeight: TextStyle['fontWeight'];
-  letterSpacing: number;
 };
 
 // Props for the app's <Text> wrapper: RN TextProps plus an optional role token.
@@ -355,6 +366,10 @@ export type TextRoleStyle = {
 // typographic role takes that name (the app doesn't use the ARIA role on Text).
 export type AppTextProps = Omit<TextProps, 'role'> & {
   role?: TextRole;
+  // Render this text in the platform's system serif instead of the default
+  // sans. Orthogonal to `role`: the role still owns size/weight, `serif` only
+  // swaps the font family. A `style` fontFamily still wins if set.
+  serif?: boolean;
 };
 
 // USER

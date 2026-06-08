@@ -68,14 +68,15 @@ const createStyles = (theme: Theme) =>
     // Flexible gap between circles — transparent by default, full circle height
     // so that when lit it butts seamlessly against the discs as one bar.
     spacer: {
-      width: 8,
-      marginLeft: -2,
-      marginRight: -2,
-      height: 2,
+      width: 22,
+      marginLeft: -9,
+      marginRight: -9,
+      height: 18,
       backgroundColor: 'transparent',
+      zIndex: -1,
     },
     spacerLit: {
-      backgroundColor: theme.text,
+      backgroundColor: theme.textSecondary,
     },
     circle: {
       width: CIRCLE,
@@ -85,7 +86,7 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       marginLeft: 0,
       marginRight: 0,
-      backgroundColor: theme.border,
+      backgroundColor: theme.background,
       padding: 0,
     },
     circleToday: {
@@ -101,7 +102,7 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       borderWidth: 0,
       marginLeft: 0,
-      backgroundColor: theme.text,
+      backgroundColor: theme.textSecondary,
       marginRight: 0,
     },
     letter: {

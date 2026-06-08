@@ -71,7 +71,7 @@ export function AppearanceSection() {
   return (
     <>
       <View style={styles.section}>
-        <Text role="sectionTitle" style={styles.sectionTitle}>General</Text>
+        <Text role="headline" style={styles.sectionTitle}>General</Text>
         <ToggleRow
           first
           label="Always show timer"
@@ -119,7 +119,7 @@ export function AppearanceSection() {
       </View>
 
       <View style={styles.section}>
-        <Text role="sectionTitle" style={styles.sectionTitle}>Color Theme</Text>
+        <Text role="headline" style={styles.sectionTitle}>Color Theme</Text>
         <View style={styles.swatchGrid}>
           {paletteRows.map((row, rowIdx) => (
             <View key={rowIdx} style={styles.swatchRow}>
@@ -173,7 +173,7 @@ const createStyles = (theme: Theme) =>
       borderTopWidth: 1,
       borderColor: theme.border,
     },
-    rowLabel: { fontWeight: '600', color: theme.text },
+    rowLabel: { color: theme.text },
     themeButtons: {
       flexDirection: 'row',
       gap: 6,
@@ -190,7 +190,6 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.blue,
     },
     themeButtonLabel: {
-      fontWeight: '700',
       color: theme.text,
     },
     themeButtonLabelActive: {
@@ -216,7 +215,6 @@ const createStyles = (theme: Theme) =>
       borderColor: theme.border,
     },
     swatchLabel: {
-      fontWeight: '600',
       color: theme.text,
       paddingTop: 7,
       marginBottom: -7,

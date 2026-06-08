@@ -40,7 +40,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
             padding: 24,
           }}
         >
-          <Text role="callout" style={{ marginBottom: 16, textAlign: 'center' }}>
+          <Text role="body" style={{ marginBottom: 16, textAlign: 'center' }}>
             Something went wrong.
           </Text>
           <Pressable
@@ -53,7 +53,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
             onPress={this.handleReset}
           >
             <Text
-              role="callout"
+              role="headline"
               style={{
                 color: theme.text,
               }}

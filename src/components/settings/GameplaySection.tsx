@@ -29,11 +29,12 @@ export function ToggleRow({
         borderColor: theme.border,
       }}
     >
-      <Text role="body" style={{ fontWeight: '600', color: theme.text }}>
+      <Text role="subhead" style={{ color: theme.text, fontWeight: '600' }}>
         {label}
       </Text>
       <View>
         <Switch
+          style={{ transform: [{ scaleX: 0.88 }, { scaleY: 0.88 }] }}
           value={value}
           onValueChange={onToggle}
           trackColor={{ true: theme.blue, false: theme.border }}
@@ -53,7 +54,9 @@ export function GameplaySection() {
 
   return (
     <View style={styles.section}>
-      <Text role="sectionTitle" style={styles.sectionTitle}>Gameplay</Text>
+      <Text role="headline" style={styles.sectionTitle}>
+        Gameplay
+      </Text>
       <ToggleRow
         first
         label="Auto-X Neighbors"
