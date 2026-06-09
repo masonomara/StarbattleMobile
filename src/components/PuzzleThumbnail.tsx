@@ -17,13 +17,13 @@ import type { PuzzleThumbnailProps } from '../types';
 // Tune TARGET to change overall weight. Raise CAP_FRAC to let dense grids keep
 // more of the full width. Raise MIN if thin lines vanish on small dense tiles.
 // Set CAP_FRAC high (e.g. 1) and MIN low to make TARGET purely fixed everywhere.
-const REGION_BORDER_TARGET = 3; // px — heavy lines between regions + perimeter
-const REGION_BORDER_CAP_FRAC = 0.18; // ≤ 18% of a cell
-const REGION_BORDER_MIN = 2.1; // px floor
+const REGION_BORDER_TARGET = 2.1; // px — heavy lines between regions + perimeter
+const REGION_BORDER_CAP_FRAC = 0.15; // ≤ 18% of a cell
+const REGION_BORDER_MIN = 1.5; // px floor
 
-const GRID_LINE_TARGET = 1; // px — light lines between cells inside a region
-const GRID_LINE_CAP_FRAC = 0.06; // ≤ 6% of a cell
-const GRID_LINE_MIN = 0.7; // px floor
+const GRID_LINE_TARGET = 0.7; // px — light lines between cells inside a region
+const GRID_LINE_CAP_FRAC = 0.05; // ≤ 6% of a cell
+const GRID_LINE_MIN = 0.5; // px floor
 
 const clamp = (v: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(v, hi));

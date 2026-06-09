@@ -1,1 +1,1 @@
-export const SCREEN_HEADER_HEIGHT = 72;
+export const SCREEN_HEADER_HEIGHT = 70;

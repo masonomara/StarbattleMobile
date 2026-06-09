@@ -396,8 +396,12 @@ export type PackCatalogItem = {
   priceUsd?: number;
   puzzleCount: number;
   storagePath?: string;
-  // Present only for streak packs (daily/weekly/monthly). Absent for library packs.
-  type?: StreakType;
+  // Dual-purpose, set by the backend `packs.type` column:
+  //   - a StreakType ('daily' | 'weekly' | 'monthly') marks a streak-carousel pack
+  //   - any other non-empty string is a library bundle name and groups the pack
+  //     into a Puzzle Library section (e.g. 'Intro', '1-Star Puzzles')
+  // Absent/empty packs fall into the library's ungrouped section.
+  type?: string;
 };
 
 export type PaywallContext =

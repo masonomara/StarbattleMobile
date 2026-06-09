@@ -5,6 +5,7 @@ import {
   getCurrentKey,
   getPuzzleIndex,
   archiveKeyToDate,
+  isStreakType,
 } from '../utils/streakDate';
 import type { PackData } from '../types';
 
@@ -32,7 +33,7 @@ export function usePackData(
     const meta = packCatalog.find(p => p.id === packId);
     const streakType = meta?.type;
 
-    if (streakType) {
+    if (isStreakType(streakType)) {
       // Streak pack: load the shared streak puzzle file, then select today's
       // puzzle (or the archived one) by deterministic date index.
       getStreakPack(streakType)

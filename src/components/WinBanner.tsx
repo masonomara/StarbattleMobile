@@ -65,7 +65,7 @@ export function WinBanner({
   const info = tutorial
     ? 'Tutorial Complete'
     : streakType
-    ? `${STREAK_LABELS[streakType]} Special`
+    ? `${STREAK_LABELS[streakType]} Challenge`
     : `${packName} • Puzzle ${puzzleIndex + 1}`;
 
   const mainText = tutorial

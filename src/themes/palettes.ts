@@ -8,8 +8,8 @@ import type {
 
 // Typographic role tokens — one complete bundle per role, the single source of
 // truth for text styling (an iOS-style type scale). fontWeight 600 = semibold,
-// 400 = regular. No fontFamily: text uses the system font so it scales with the
-// OS Dynamic Type setting and the OS applies its own optical tracking.
+// 400 = regular. No fontFamily here: the Text wrapper applies the base font
+// (Karla), resolving each role's fontWeight to the matching Karla face.
 const type: Record<TextRole, TextRoleStyle> = {
   largeTitle: {
     fontSize: 36,
@@ -17,8 +17,8 @@ const type: Record<TextRole, TextRoleStyle> = {
     fontWeight: '700',
   },
   title1: { fontSize: 30, lineHeight: 37, fontWeight: '700' },
-  title2: { fontSize: 22, lineHeight: 28, fontWeight: '700' },
-  title3: { fontSize: 20, lineHeight: 25, fontWeight: '600' },
+  title2: { fontSize: 24, lineHeight: 30, fontWeight: '700' },
+  title3: { fontSize: 22, lineHeight: 28, fontWeight: '600' },
   headline: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
   body: { fontSize: 17, lineHeight: 22, fontWeight: '400' },
   callout: { fontSize: 16, lineHeight: 21, fontWeight: '400' },

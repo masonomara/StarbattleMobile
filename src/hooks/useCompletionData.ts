@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@powersync/react-native';
-import { getCurrentKey } from '../utils/streakDate';
+import { getCurrentKey, isStreakType } from '../utils/streakDate';
 import type { PackCatalogItem, StreakType } from '../types';
 
 const COMPLETED_QUERY =
@@ -18,7 +18,7 @@ const COMPLETED_QUERY =
 //   completedPuzzleIds — streak puzzle IDs completed today, keyed as "packId:dateKey"
 //   completedPerPack   — solved count per library pack
 //   completedStreakKeys — per cadence, the set of solved keys with the "packId:"
-//                        prefix stripped (today's + any archived specials), e.g.
+//                        prefix stripped (today's + any archived challenges), e.g.
 //                        daily "2026-06-07", weekly "2026-W23", monthly "2026-06".
 //                        Drives each streak card's progress row.
 //
@@ -45,16 +45,16 @@ export function useCompletionData(
     // Streak packs: check whether today's specific puzzle is done.
     const completedIds = new Set<string>();
     for (const pack of packCatalog) {
-      if (!pack.type) continue;
+      if (!isStreakType(pack.type)) continue;
       const puzzleId = `${pack.id}:${getCurrentKey(pack.type)}`;
       if (allCompleted.has(puzzleId)) completedIds.add(puzzleId);
     }
 
     // Map every streak pack id to its cadence so a single pass can route each
-    // completed key (today's + archived specials) to the right cadence set.
+    // completed key (today's + archived challenges) to the right cadence set.
     const streakTypeByPackId = new Map<string, StreakType>();
     for (const p of packCatalog) {
-      if (p.type) streakTypeByPackId.set(p.id, p.type);
+      if (isStreakType(p.type)) streakTypeByPackId.set(p.id, p.type);
     }
     const streakKeys: Record<StreakType, Set<string>> = {
       daily: new Set(),
@@ -65,7 +65,7 @@ export function useCompletionData(
     // Library packs: count solved puzzles per pack. Shares the single O(K) pass
     // over the completed set (K = number of completed puzzles) with streak keys.
     const libraryPackIds = new Set(
-      packCatalog.filter(p => !p.type).map(p => p.id),
+      packCatalog.filter(p => !isStreakType(p.type)).map(p => p.id),
     );
     const counts: Record<string, number> = {};
     for (const packId of libraryPackIds) counts[packId] = 0;

@@ -4,11 +4,11 @@ import Check from 'lucide-react-native/dist/cjs/icons/check';
 import { Text } from './Text';
 import type { StreakProgressRowProps, Theme } from '../types';
 
-const CIRCLE = 18;
+const CIRCLE = 22;
 
 // Progress row beneath a streak card: one circle per cell (daily → days of the
 // week, weekly → weeks of the month, monthly → months of the year). A cell fills
-// once its special is solved; the current day/week/month is underlined so it's
+// once its challenge is solved; the current day/week/month is underlined so it's
 // always identifiable, and the connector before a circle lights when both it and
 // the previous cell are completed, merging consecutive wins into one bar.
 // Pure render from props — cheap (a handful of cells) and always current as
@@ -38,14 +38,19 @@ export const StreakProgressRow = React.memo(function StreakProgressRow({
                 styles.circle,
                 cell.isCurrent && styles.circleToday,
                 isCompleted && styles.circleCompleted,
+                cell.isCurrent && isCompleted && styles.circleCompletedToday,
               ]}
             >
-              {isCompleted ? (
+              {cell.isCurrent && isCompleted ? (
                 // Solved cells show a check knocked out of the filled circle.
-                <Check size={10} color={theme.background} strokeWidth={4} />
+                <Check size={11} color={theme.background} strokeWidth={4} />
               ) : (
                 <Text
-                  style={[styles.letter, cell.isCurrent && styles.letterToday]}
+                  style={[
+                    styles.letter,
+                    cell.isCurrent && styles.letterToday,
+                    isCompleted && styles.letterCompleted,
+                  ]}
                 >
                   {cell.letter}
                 </Text>
@@ -63,20 +68,19 @@ const createStyles = (theme: Theme) =>
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 15,
     },
     // Flexible gap between circles — transparent by default, full circle height
     // so that when lit it butts seamlessly against the discs as one bar.
     spacer: {
-      width: 22,
-      marginLeft: -9,
-      marginRight: -9,
-      height: 18,
+      width: CIRCLE,
+      marginLeft: (CIRCLE / 2) * -1,
+      marginRight: (CIRCLE / 2) * -1,
+      height: CIRCLE,
       backgroundColor: 'transparent',
       zIndex: -1,
     },
     spacerLit: {
-      backgroundColor: theme.textSecondary,
+      backgroundColor: theme.border,
     },
     circle: {
       width: CIRCLE,
@@ -90,8 +94,11 @@ const createStyles = (theme: Theme) =>
       padding: 0,
     },
     circleToday: {
-      borderWidth: 1.25,
-
+      borderBottomWidth: 1.25,
+      borderRadius: 0,
+      width: CIRCLE / 2,
+      marginLeft: CIRCLE / 4,
+      marginRight: CIRCLE / 4,
       borderColor: theme.text,
     },
     circleCompleted: {
@@ -102,16 +109,31 @@ const createStyles = (theme: Theme) =>
       justifyContent: 'center',
       borderWidth: 0,
       marginLeft: 0,
-      backgroundColor: theme.textSecondary,
+      backgroundColor: theme.border,
+      marginRight: 0,
+      color: theme.background,
+    },
+    circleCompletedToday: {
+      width: CIRCLE,
+      height: CIRCLE,
+      borderRadius: CIRCLE / 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 0,
+      marginLeft: 0,
+      backgroundColor: theme.text,
       marginRight: 0,
     },
     letter: {
-      fontSize: 9,
+      fontSize: 11,
       lineHeight: 15,
       fontWeight: '600',
       color: theme.text,
     },
     letterToday: {
+      color: theme.text,
+    },
+    letterCompleted: {
       color: theme.text,
     },
   });

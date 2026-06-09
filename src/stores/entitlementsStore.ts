@@ -44,7 +44,8 @@ function mapPackRow(r: PackRow): PackCatalogItem {
     priceUsd: r.price_usd ?? undefined,
     puzzleCount: r.puzzle_count,
     storagePath: r.storage_path ?? undefined,
-    type: (r.type ?? undefined) as 'daily' | 'weekly' | 'monthly' | undefined,
+    // Either a StreakType (streak carousel) or a library bundle name — see PackCatalogItem.
+    type: r.type ?? undefined,
   };
 }
 

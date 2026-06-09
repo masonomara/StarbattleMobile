@@ -57,7 +57,16 @@ export async function fetchFromSupabase(storageKey: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from('packs')
     .download(storageKey);
-  if (error) throw error;
+  if (error) {
+    // Capture the real failure so a storage RLS denial (403) can be told apart
+    // from a genuinely missing object (404) and from a transient network error.
+    // StorageApiError carries status/statusCode/name; plain network errors don't.
+    const e = error as { message?: string; status?: number; statusCode?: string; name?: string };
+    console.warn(
+      `[SB:PACK] download failed for '${storageKey}' — name=${e.name} status=${e.status ?? e.statusCode} message=${e.message}`,
+    );
+    throw error;
+  }
   if (!data) throw new Error(`No data for ${storageKey}`);
   return blobToText(data);
 }

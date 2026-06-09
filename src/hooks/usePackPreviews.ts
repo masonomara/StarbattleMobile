@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getStreakPack, getPackPreview } from '../packs';
-import { getCurrentKey, getPuzzleIndex } from '../utils/streakDate';
+import { getCurrentKey, getPuzzleIndex, isStreakType } from '../utils/streakDate';
 import { parsePuzzle } from '../utils/parsePuzzle';
 import type { PackCatalogItem, Puzzle } from '../types';
 
@@ -27,7 +27,7 @@ export function usePackPreviews(
       await Promise.all(
         packCatalog.map(async pack => {
           try {
-            if (pack.type) {
+            if (isStreakType(pack.type)) {
               const streakPack = await getStreakPack(pack.type);
               if (!streakPack) return;
               const idx = getPuzzleIndex(pack.type, streakPack.puzzles.length);

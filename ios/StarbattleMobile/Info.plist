@@ -77,5 +77,60 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Karla-SemiBold.ttf</string>
+		<string>BricolageGrotesque-Regular.ttf</string>
+		<string>BricolageGrotesque-SemiBold.ttf</string>
+		<string>BricolageGrotesque-Medium.ttf</string>
+		<string>Karla-Medium.ttf</string>
+		<string>BricolageGrotesque-Bold.ttf</string>
+		<string>Karla-Regular.ttf</string>
+		<string>Karla-Bold.ttf</string>
+		<string>WorkSans-Regular.ttf</string>
+		<string>MomoTrustSans-Medium.ttf</string>
+		<string>TikTokSans-Regular.ttf</string>
+		<string>SpecialGothic-SemiBold.ttf</string>
+		<string>Geist-Regular.ttf</string>
+		<string>OpenSans-SemiBold.ttf</string>
+		<string>Archivo-Regular.ttf</string>
+		<string>MomoTrustSans-Regular.ttf</string>
+		<string>Fustat-Medium.ttf</string>
+		<string>SpecialGothic-Bold.ttf</string>
+		<string>Fustat-Regular.ttf</string>
+		<string>MomoTrustSans-Bold.ttf</string>
+		<string>Archivo-SemiBold.ttf</string>
+		<string>Geist-Bold.ttf</string>
+		<string>Monda-Regular.ttf</string>
+		<string>TikTokSans-SemiBold.ttf</string>
+		<string>Archivo-Medium.ttf</string>
+		<string>PublicSans-Regular.ttf</string>
+		<string>WorkSans-Medium.ttf</string>
+		<string>Monda-Bold.ttf</string>
+		<string>Fustat-SemiBold.ttf</string>
+		<string>Geist-Medium.ttf</string>
+		<string>PublicSans-Bold.ttf</string>
+		<string>WorkSans-SemiBold.ttf</string>
+		<string>InstrumentSans-Regular.ttf</string>
+		<string>PublicSans-SemiBold.ttf</string>
+		<string>MomoTrustSans-SemiBold.ttf</string>
+		<string>OpenSans-Bold.ttf</string>
+		<string>OpenSans-Medium.ttf</string>
+		<string>PublicSans-Medium.ttf</string>
+		<string>TikTokSans-Medium.ttf</string>
+		<string>TikTokSans-Bold.ttf</string>
+		<string>Archivo-Bold.ttf</string>
+		<string>Monda-SemiBold.ttf</string>
+		<string>Geist-SemiBold.ttf</string>
+		<string>OpenSans-Regular.ttf</string>
+		<string>InstrumentSans-SemiBold.ttf</string>
+		<string>InstrumentSans-Medium.ttf</string>
+		<string>Monda-Medium.ttf</string>
+		<string>Fustat-Bold.ttf</string>
+		<string>SpecialGothic-Regular.ttf</string>
+		<string>InstrumentSans-Bold.ttf</string>
+		<string>SpecialGothic-Medium.ttf</string>
+		<string>WorkSans-Bold.ttf</string>
+	</array>
 </dict>
 </plist>

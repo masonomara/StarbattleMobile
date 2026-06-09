@@ -41,9 +41,9 @@ import {
 import type { Theme, StreakType, Puzzle, RootStackParamList } from '../types';
 
 const ARCHIVE_NAMES: Record<StreakType, string> = {
-  daily: 'Daily Special',
-  weekly: 'Weekly Special',
-  monthly: 'Monthly Special',
+  daily: 'Daily Challenge',
+  weekly: 'Weekly Challenge',
+  monthly: 'Monthly Challenge',
 };
 
 export function StreaksModal() {
@@ -159,7 +159,7 @@ export function StreaksModal() {
             })}
           </View>
 
-          <Text role="headline" style={styles.sectionTitle}>Archived Specials</Text>
+          <Text role="headline" style={styles.sectionTitle}>Archived Challenges</Text>
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
@@ -180,7 +180,7 @@ export function StreaksModal() {
                   if (locked) {
                     Alert.alert(
                       'Premium Feature',
-                      'Upgrade to Premium to access past specials.',
+                      'Upgrade to Premium to access past challenges.',
                       [
                         { text: 'Not Now', style: 'cancel' },
                         {

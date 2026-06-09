@@ -2,6 +2,13 @@ import type { Streak, StreakType, StreakCell } from '../types';
 
 export const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 
+// A pack's `type` is dual-purpose: a StreakType marks a streak-carousel pack,
+// while any other string is a library bundle name. This guard is the single
+// source of truth for that distinction — only these three values are streaks.
+export function isStreakType(value: string | undefined | null): value is StreakType {
+  return value === 'daily' || value === 'weekly' || value === 'monthly';
+}
+
 export const STREAK_LABELS: Record<StreakType, string> = {
   daily: 'Daily',
   weekly: 'Weekly',
