@@ -6,7 +6,7 @@ import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import type { PackCardProps, PackCardSkeletonProps, Theme } from '../types';
 
-const THUMB_SIZE = 64;
+const THUMB_SIZE = 72;
 
 export function PackCard({
   name,
@@ -108,7 +108,7 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       // padding: 16,
       borderRadius: 4,
-      marginBottom: 14,
+      marginBottom: 20,
       backgroundColor: theme.background,
       // borderWidth: 1,
       // borderColor: theme.border,
@@ -117,7 +117,7 @@ const createStyles = (theme: Theme) =>
       opacity: 0.4,
     },
     thumb: {
-      marginRight: 14,
+      marginRight: 10,
     },
     // Static, non-animated fallback for cards that legitimately have no preview
     // (e.g. StreaksModal's "Coming soon" archive tiles). Loading states use a

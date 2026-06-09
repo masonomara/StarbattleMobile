@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   ScrollView,
+  Animated,
   StyleSheet,
   Pressable,
   useWindowDimensions,
@@ -12,6 +13,7 @@ import Flame from 'lucide-react-native/dist/cjs/icons/flame';
 import User from 'lucide-react-native/dist/cjs/icons/user';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CircleButton } from '../components/CircleButton';
+import { Haptics } from 'react-native-nitro-haptics';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
 import { useTheme } from '../hooks/useTheme';
@@ -44,7 +46,7 @@ const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 // a stable, populated-looking shape from first paint.
 const SKELETON_PACK_COUNT = 4;
 // Streak card thumbnail width as a fraction of the viewport (RN has no vw unit).
-const STREAK_CARD_FRACTION = 0.62;
+const STREAK_CARD_FRACTION = 0.8;
 // Horizontal gap between streak cards (matches the carousel's contentContainer gap).
 const STREAK_CARD_GAP = 20;
 // Left inset of the streak carousel from the screen edge.
@@ -69,9 +71,70 @@ export function HomeScreen({
   const styles = createStyles(theme, insets);
   const userId = useAuthStore(s => s.user?.id);
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
+  const hapticsEnabled = useSettingsStore(s => s.settings.haptics);
   const { packCatalog, hasPackAccess } = useEntitlements();
 
   const [scrolled, setScrolled] = useState(false);
+
+  // Distance between consecutive snap points (one card + the gap after it).
+  const streakInterval = streakCardSize + STREAK_CARD_GAP;
+
+  // Which streak special the carousel is currently parked on (daily/weekly/
+  // monthly). Drives the header indicator. The ref mirrors it so the scroll
+  // handler can detect a *change* without depending on render state.
+  const [activeStreakIndex, setActiveStreakIndex] = useState(0);
+  const activeStreakIndexRef = useRef(0);
+
+  // Live horizontal scroll offset of the carousel, mapped natively so the header
+  // row's opacity tracks the drag every frame (not gated by the JS thread).
+  const scrollX = useRef(new Animated.Value(0)).current;
+
+  // Fade the header progress row out as the carousel passes the midpoint between
+  // two cards and back in as the next card settles — a soft crossfade whose
+  // trough lines up with where the rendered cells swap (so the swap is unseen).
+  const headerProgressOpacity = useMemo(
+    () =>
+      Animated.modulo(scrollX, streakInterval).interpolate({
+        inputRange: [0, streakInterval / 2, streakInterval],
+        outputRange: [1, 0, 1],
+      }),
+    [scrollX, streakInterval],
+  );
+
+  // Update the active special as the carousel snaps between cards, bumping a
+  // light haptic on each crossing. Rounding to the nearest card means the swap
+  // fires as the user drags past the midpoint — the opacity trough — so the
+  // content changes while the row is invisible.
+  const handleStreakScroll = (e: {
+    nativeEvent: { contentOffset: { x: number } };
+  }) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / streakInterval);
+    if (
+      index !== activeStreakIndexRef.current &&
+      index >= 0 &&
+      index < STREAK_TYPES.length
+    ) {
+      activeStreakIndexRef.current = index;
+      setActiveStreakIndex(index);
+      if (hapticsEnabled) Haptics.impact('light');
+    }
+  };
+
+  // Native-driven offset mapping for the opacity, with the JS listener above
+  // still firing for the haptic and content swap.
+  const onStreakScroll = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+        useNativeDriver: true,
+        listener: handleStreakScroll,
+      }),
+    // handleStreakScroll closes over hapticsEnabled/streakInterval; rebuild when
+    // those change so the listener always sees current values.
+    [scrollX, streakInterval, hapticsEnabled],
+  );
+
+  // The special the carousel is parked on, whose progress row the header shows.
+  const activeStreakType = STREAK_TYPES[activeStreakIndex];
 
   useEffect(() => {
     startupTimer.log('HomeScreen first mount');
@@ -144,15 +207,23 @@ export function HomeScreen({
             scrolled && styles.headerBorder,
           ]}
         >
-          <Text role="largeTitle" serif style={styles.appTitle}>
-            Home
-          </Text>
+          {/* Progress row for the special the carousel is parked on. Fades out
+              and back in as the carousel scrolls between specials. */}
+          <Animated.View
+            style={[styles.headerProgress, { opacity: headerProgressOpacity }]}
+          >
+            <StreakProgressRow
+              cells={getStreakCells(activeStreakType)}
+              completedKeys={completedStreakKeys[activeStreakType]}
+              theme={theme}
+            />
+          </Animated.View>
           <View style={styles.headerRight}>
-            <CircleButton
+            {/*<CircleButton
               onPress={() => useStreaksStore.getState().openStreaks()}
             >
               <Flame size={26} strokeWidth={2} color={theme.text} />
-            </CircleButton>
+            </CircleButton>*/}
             <CircleButton
               onPress={() => useSettingsStore.getState().openSettings()}
             >
@@ -171,9 +242,8 @@ export function HomeScreen({
         >
           {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
           <View style={styles.streakSection}>
-            <Text
-              serif
-              role="title1"
+            {/*<Text
+              role="subhead"
               style={[
                 styles.sectionLabel,
                 {
@@ -187,12 +257,14 @@ export function HomeScreen({
               ]}
             >
               Streaks
-            </Text>
+            </Text>*/}
 
-            <ScrollView
+            <Animated.ScrollView
               style={styles.streakRow}
               horizontal
               showsHorizontalScrollIndicator={false}
+              onScroll={onStreakScroll}
+              scrollEventThrottle={16}
               // Snap each streak card to the left edge as it pauses.
               // Interval = card (thumbnail) width + the gap between cards, both
               // derived from the viewport so snapping stays aligned on every device.
@@ -241,7 +313,7 @@ export function HomeScreen({
                           theme={theme}
                           coloredRegions={coloredRegions}
                         />
-                        <Text role="callout" style={styles.streakLabel}>
+                        <Text role="title1" style={styles.streakLabel}>
                           {`${STREAK_LABELS[type]} Special`}
                         </Text>
                         <Text role="subhead" style={styles.streakMeta}>
@@ -255,15 +327,22 @@ export function HomeScreen({
                       </Pressable>
                     );
                   })}
-            </ScrollView>
+            </Animated.ScrollView>
           </View>
 
           {/* Puzzle library: free packs, then purchasable packs */}
           <View style={styles.packSection}>
             <Text
-              serif
-              role="title1"
-              style={[styles.sectionLabel, { marginTop: 36, marginBottom: 24 }]}
+              role="subhead"
+              style={[
+                styles.sectionLabel,
+                {
+                  marginTop: 40,
+                  marginBottom: 32,
+                  textTransform: 'uppercase',
+                  fontWeight: '600',
+                },
+              ]}
             >
               Puzzle Library
             </Text>
@@ -353,8 +432,10 @@ const createStyles = (
     headerBorder: {
       // borderBottomColor: theme.border,
     },
-    appTitle: {
-      color: theme.text,
+    // Cancels StreakProgressRow's own top margin (meant for under-card layout)
+    // so its circles sit centered in the header.
+    headerProgress: {
+      marginTop: -15,
     },
     headerRight: {
       flexDirection: 'row',
