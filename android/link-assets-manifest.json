@@ -2,22 +2,6 @@
   "migIndex": 1,
   "data": [
     {
-      "path": "assets/fonts/Archivo-Bold.ttf",
-      "sha1": "9af4ad84711f12bd8edc959e988691064ed4f157"
-    },
-    {
-      "path": "assets/fonts/Archivo-Medium.ttf",
-      "sha1": "ca125f7828e809dffa8be74e1aa974a05b348a1c"
-    },
-    {
-      "path": "assets/fonts/Archivo-Regular.ttf",
-      "sha1": "ea93b4ed7032a53d3c9b67754a94e5610266718f"
-    },
-    {
-      "path": "assets/fonts/Archivo-SemiBold.ttf",
-      "sha1": "2ae609c7b9956a2be89143eeccfd4aa11c2223ef"
-    },
-    {
       "path": "assets/fonts/BricolageGrotesque-Bold.ttf",
       "sha1": "0c48c38c9f84c40d05753b18f03e430804abef7e"
     },
@@ -34,54 +18,6 @@
       "sha1": "87104d5573f33b6a347484832c03059a58d201d2"
     },
     {
-      "path": "assets/fonts/Fustat-Bold.ttf",
-      "sha1": "b755350dc3ed2b83ac52ae5f86fe0149f9733262"
-    },
-    {
-      "path": "assets/fonts/Fustat-Medium.ttf",
-      "sha1": "e60d53265d5afb136615e87152715ae562c75aa4"
-    },
-    {
-      "path": "assets/fonts/Fustat-Regular.ttf",
-      "sha1": "3dc9731249dc7fbd21a86c7d42ff159905abe2d1"
-    },
-    {
-      "path": "assets/fonts/Fustat-SemiBold.ttf",
-      "sha1": "47b2ae15d70dbe21656ba449b2da28ec5025c410"
-    },
-    {
-      "path": "assets/fonts/Geist-Bold.ttf",
-      "sha1": "378dbca4c9cca96d6662a0439f2ea18746e45454"
-    },
-    {
-      "path": "assets/fonts/Geist-Medium.ttf",
-      "sha1": "2dfb80672c2c07e9d128239cc00f886c85fc5b36"
-    },
-    {
-      "path": "assets/fonts/Geist-Regular.ttf",
-      "sha1": "a21b23707f5f87e3dea7b4de5025109bbe071330"
-    },
-    {
-      "path": "assets/fonts/Geist-SemiBold.ttf",
-      "sha1": "5c7fd48f78d1ff31220b9cf3ed442fca608bc8cb"
-    },
-    {
-      "path": "assets/fonts/InstrumentSans-Bold.ttf",
-      "sha1": "f21441d27bbd5e93a61fb0829c5d59fec7b34f27"
-    },
-    {
-      "path": "assets/fonts/InstrumentSans-Medium.ttf",
-      "sha1": "b159d2a91a62c8b54dfa9e06fd5a174550e593a7"
-    },
-    {
-      "path": "assets/fonts/InstrumentSans-Regular.ttf",
-      "sha1": "126b4a7430629b0835199e1a8a4d4ce43c0aa386"
-    },
-    {
-      "path": "assets/fonts/InstrumentSans-SemiBold.ttf",
-      "sha1": "8cd6d6361bf4c45d76d76064bd8c6f9c262bde2f"
-    },
-    {
       "path": "assets/fonts/Karla-Bold.ttf",
       "sha1": "6f56a9d6cc6e51774600e98dfe91f97b30329840"
     },
@@ -96,118 +32,6 @@
     {
       "path": "assets/fonts/Karla-SemiBold.ttf",
       "sha1": "49567e4136d235b6d739c1e87501c642cb9cc3f3"
-    },
-    {
-      "path": "assets/fonts/MomoTrustSans-Bold.ttf",
-      "sha1": "46c580ba63c91cb5dbc4261fe443790370e1ae07"
-    },
-    {
-      "path": "assets/fonts/MomoTrustSans-Medium.ttf",
-      "sha1": "27767ad5d0e6e3b9fe024f3ee65b723b54076e4b"
-    },
-    {
-      "path": "assets/fonts/MomoTrustSans-Regular.ttf",
-      "sha1": "86afaf537c2d86f129a448bd098e6e3641dfb84a"
-    },
-    {
-      "path": "assets/fonts/MomoTrustSans-SemiBold.ttf",
-      "sha1": "c00a84c590994926b0579dbfcfa1bfff61c6652d"
-    },
-    {
-      "path": "assets/fonts/Monda-Bold.ttf",
-      "sha1": "97ba574df287996d749cfe815d79aed5d93b96be"
-    },
-    {
-      "path": "assets/fonts/Monda-Medium.ttf",
-      "sha1": "22802a1902c5c788f03171f8ebeaf80f764bebdc"
-    },
-    {
-      "path": "assets/fonts/Monda-Regular.ttf",
-      "sha1": "d081bfa5dc2a1dfa6dd4f10ea8c2c599a30270ce"
-    },
-    {
-      "path": "assets/fonts/Monda-SemiBold.ttf",
-      "sha1": "9f8fe52691c1d9ea9474ef7b8bd230c5694b4495"
-    },
-    {
-      "path": "assets/fonts/OpenSans-Bold.ttf",
-      "sha1": "c68ba479aa48b24de54b598653ce6a9accdbcbec"
-    },
-    {
-      "path": "assets/fonts/OpenSans-Medium.ttf",
-      "sha1": "990a60d3d85f43e14b5b8ca0aee0ac81d3a76f61"
-    },
-    {
-      "path": "assets/fonts/OpenSans-Regular.ttf",
-      "sha1": "5f3861aa21cf661a8c6a0a4f48e7449eba957d4d"
-    },
-    {
-      "path": "assets/fonts/OpenSans-SemiBold.ttf",
-      "sha1": "04db1ba99bbfd03c910715c981b702e01a29e8de"
-    },
-    {
-      "path": "assets/fonts/PublicSans-Bold.ttf",
-      "sha1": "d7633c1bd5508edcaf21cdcc63a138170a638afb"
-    },
-    {
-      "path": "assets/fonts/PublicSans-Medium.ttf",
-      "sha1": "7ea6ee9ffd49da31f3beb11ea71a08e698d958c3"
-    },
-    {
-      "path": "assets/fonts/PublicSans-Regular.ttf",
-      "sha1": "c1ed4e64c348c1e35d9c6ba202afd6aeffc3d886"
-    },
-    {
-      "path": "assets/fonts/PublicSans-SemiBold.ttf",
-      "sha1": "7b3f8bc2ddf7a65a2b4a7816ffe09d36292414f3"
-    },
-    {
-      "path": "assets/fonts/SpecialGothic-Bold.ttf",
-      "sha1": "9df0e58baca4a90b69e54f588d92c96083bd69a7"
-    },
-    {
-      "path": "assets/fonts/SpecialGothic-Medium.ttf",
-      "sha1": "35b877abb8c218ab25f34f000c903005f324d97a"
-    },
-    {
-      "path": "assets/fonts/SpecialGothic-Regular.ttf",
-      "sha1": "a8556dc5492925c1dfd83b2271907fec62821e95"
-    },
-    {
-      "path": "assets/fonts/SpecialGothic-SemiBold.ttf",
-      "sha1": "b2351d1fe16976e464aa051c1095768abc93c5df"
-    },
-    {
-      "path": "assets/fonts/TikTokSans-Bold.ttf",
-      "sha1": "6056e704470e31ee79b7061931f62ade07004d0d"
-    },
-    {
-      "path": "assets/fonts/TikTokSans-Medium.ttf",
-      "sha1": "b573d10a5a5228483cd8be22b7039d8454371ba4"
-    },
-    {
-      "path": "assets/fonts/TikTokSans-Regular.ttf",
-      "sha1": "4947480c9ead93cc759eaf3485ffd2d3788b0795"
-    },
-    {
-      "path": "assets/fonts/TikTokSans-SemiBold.ttf",
-      "sha1": "def2fb040a670faac73d904dfc4b7c2ebe7c2d77"
-    },
-    {
-      "path": "assets/fonts/WorkSans-Bold.ttf",
-      "sha1": "469b8bfd52d5885ae3fc66e15183fb470de829bb"
-    },
-    {
-      "path": "assets/fonts/WorkSans-Medium.ttf",
-      "sha1": "8e8b9c1a3599fb7ef18dec1216d0182713659129"
-    },
-    {
-      "path": "assets/fonts/WorkSans-Regular.ttf",
-      "sha1": "4f87d094f883e4bfb031d775f196ce8ac3723ccb"
-    },
-    {
-      "path": "assets/fonts/WorkSans-SemiBold.ttf",
-      "sha1": "aa9a9d5715ac9d8170a509620968634cd5ae5470"
     }
   ]
 }
