@@ -1,7 +1,3 @@
-// CLEANUP: archiveCounts is recomputed inline on each render by calling
-// getPastDateKeys three times. Wrap in useMemo — the value only changes at
-// day-rollover so it's effectively stable across a session.
-//
 // CONCERN: The premium lock for archive access uses an Alert to redirect to
 // Settings. Consider a dedicated PaywallModal context variant instead of an
 // Alert so the UX is consistent with the rest of the paywall flows.

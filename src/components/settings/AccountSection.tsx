@@ -536,17 +536,6 @@ const createStyles = (theme: Theme) =>
     },
     secondaryButtonText: { color: theme.text },
     accountActions: { gap: 12, marginTop: 14 },
-    premiumBadge: {
-      alignSelf: 'flex-start',
-      paddingHorizontal: theme.spacingLg,
-      paddingVertical: theme.spacingMd,
-      borderRadius: theme.radiusMd,
-      backgroundColor: theme.blue,
-      marginTop: 8,
-    },
-    premiumBadgeText: {
-      color: theme.background,
-    },
     subLabel: {
       color: theme.textSecondary,
     },
@@ -568,9 +557,6 @@ const createStyles = (theme: Theme) =>
     },
     linkTextDanger: {
       color: theme.red,
-    },
-    formTitle: {
-      color: theme.text,
     },
     inputLabel: {
       marginBottom: -4,

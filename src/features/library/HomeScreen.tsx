@@ -151,6 +151,7 @@ export function HomeScreen({
       }),
     // handleStreakScroll closes over hapticsEnabled/streakInterval; rebuild when
     // those change so the listener always sees current values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [scrollX, streakInterval, hapticsEnabled],
   );
 
@@ -442,7 +443,7 @@ const createStyles = (
       borderBottomColor: theme.background,
     },
     headerBorder: {
-      // borderBottomColor: theme.border,
+      borderBottomColor: theme.border,
     },
     // Fixed footprint that reserves space in the header for the stacked progress
     // rows (which are absolutely positioned and so don't size their parent).
@@ -486,16 +487,13 @@ const createStyles = (
     // Position the shimmer label/meta bars to match the real card's streakLabel
     // (marginTop 16) and streakMeta (marginTop 7); each bar's own size is passed
     // to PulseBox, so a placeholder card is height-identical to a loaded one.
-    streakLabelSkeleton: { marginTop: 16 },
-    streakMetaSkeleton: { marginTop: 7 },
+    streakLabelSkeleton: {},
+    streakMetaSkeleton: {},
     streakLabel: {
       color: theme.text,
-      fontWeight: 600,
-      marginTop: 10,
     },
     streakMeta: {
       color: theme.textSecondary,
-      paddingTop: 5,
     },
     // Section header for each Puzzle Library bundle (Intro, 1-Star, …).
     sectionLabel: {

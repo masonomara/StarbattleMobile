@@ -10,9 +10,7 @@ import {
 import { Text } from '../../shared/ui/Text';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import Check from 'lucide-react-native/dist/cjs/icons/check';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
-import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../../packs';
@@ -83,24 +81,6 @@ const PuzzleCell = React.memo(function PuzzleCell({
           coloredRegions={coloredRegions}
         />
       )}
-      {/*<View style={styles.label}>
-        <Text
-          role="subhead"
-          style={locked ? styles.labelLocked : styles.labelText}
-        >
-          Puzzle {index + 1}
-        </Text>
-        {isCompleted && (
-          <View style={styles.iconCompleted}>
-            <Check size={8} color={theme.textSecondary} strokeWidth={4} />
-          </View>
-        )}
-        {locked && (
-          <View style={styles.iconLocked}>
-            <Lock size={14} color={theme.text} />
-          </View>
-        )}
-      </View>*/}
     </Pressable>
   );
 });
@@ -375,36 +355,5 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     lockedCell: {
       opacity: 0.4,
-    },
-    label: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 5,
-      paddingVertical: 7,
-    },
-    labelText: {
-      color: theme.text,
-    },
-    labelLocked: {
-      color: theme.textSecondary,
-    },
-    iconCompleted: {
-      width: 15,
-      height: 15,
-      borderRadius: 100,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1.25,
-      borderColor: theme.textSecondary,
-    },
-    iconLocked: {
-      width: 15,
-      height: 15,
-      borderRadius: 100,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1.25,
-      borderColor: theme.background,
     },
   });

@@ -61,7 +61,6 @@ type PuzzleState = {
   clearBoard: () => void;
   tick: (ms?: number) => void;
   showHint: () => void;
-  dismissHint: () => void;
 };
 
 export const usePuzzleStore = create<PuzzleState>((set, get) => {
@@ -258,7 +257,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
 
   undo: () => {
     const { moveLog, cells, completed, autoMarks, puzzle } = get();
-    if (moveLog.length === 0 || completed) return;
+    if (moveLog.length === 0 || completed || !puzzle) return;
 
     dismissHints();
 
@@ -284,12 +283,12 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
       moveLog: moveLog.slice(0, -1),
       redoStack: [...state.redoStack, redoMove].slice(-MAX_HISTORY),
     }));
-    flushSave(puzzle!.id);
+    flushSave(puzzle.id);
   },
 
   redo: () => {
     const { redoStack, cells, autoMarks, completed, puzzle } = get();
-    if (redoStack.length === 0 || completed) return;
+    if (redoStack.length === 0 || completed || !puzzle) return;
 
     dismissHints();
 
@@ -316,8 +315,8 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
       redoStack: redoStack.slice(0, -1),
     }));
 
-    maybeWin(newCells, puzzle!);
-    flushSave(puzzle!.id);
+    maybeWin(newCells, puzzle);
+    flushSave(puzzle.id);
   },
 
   // Commits the changes accumulated during a drag stroke (see useDrawGesture).
@@ -416,10 +415,6 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
         return;
       }
     }
-  },
-
-  dismissHint: () => {
-    set({ hintGhosts: new Map() });
   },
 
   setHints: (hints: HintStep[]) => {
