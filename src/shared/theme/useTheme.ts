@@ -39,7 +39,7 @@ export function buildTheme(colors: ThemeColors): Theme {
       regions.purple,
       regions.teal,
     ],
-    regionColorAlpha: 0.4,
+    regionColorAlpha: 0.33,
     ...tokens,
   };
 }
