@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@powersync/react-native';
-import { getCurrentKey, isStreakType } from '../utils/streakDate';
-import type { PackCatalogItem, StreakType } from '../types';
+import { getCurrentKey, isStreakType } from '../../utils/streakDate';
+import type { PackCatalogItem, StreakType } from '../../types';
 
 const COMPLETED_QUERY =
   'SELECT puzzle_id FROM puzzle_progress WHERE user_id = ? AND completed = 1';

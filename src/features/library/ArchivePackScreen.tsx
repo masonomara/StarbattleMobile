@@ -7,18 +7,18 @@ import {
   ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
-import { Text } from '../shared/ui/Text';
+import { Text } from '../../shared/ui/Text';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
-import { CircleButton } from '../shared/ui/CircleButton';
+import { CircleButton } from '../../shared/ui/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useTheme } from '../shared/theme/useTheme';
-import { loadAllCompletionData } from '../utils/progress';
-import { getPastDateKeys, STREAK_LABELS, formatArchiveKey } from '../utils/streakDate';
-import { useEntitlementsStore } from '../stores/entitlementsStore';
-import type { RootStackParamList, Theme } from '../types';
-import { SCREEN_HEADER_HEIGHT } from '../shared/lib/layout';
+import { useTheme } from '../../shared/theme/useTheme';
+import { loadAllCompletionData } from '../../utils/progress';
+import { getPastDateKeys, STREAK_LABELS, formatArchiveKey } from '../../utils/streakDate';
+import { useEntitlementsStore } from '../../stores/entitlementsStore';
+import type { RootStackParamList, Theme } from '../../types';
+import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
 
 const NUM_COLS = 2;
 

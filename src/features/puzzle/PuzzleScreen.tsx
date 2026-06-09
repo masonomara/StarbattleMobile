@@ -27,7 +27,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import { useZoom } from './useZoom';
 import { useDrawGesture } from './useDrawGesture';
-import { usePackData } from '../../hooks/usePackData';
+import { usePackData } from './usePackData';
 import { useStreakRows } from '../../hooks/useStreakRows';
 import { loadPackHints } from '../../packs/packCache';
 import { TUTORIAL_PUZZLE } from './tutorial/tutorialPuzzle';

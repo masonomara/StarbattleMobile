@@ -11,7 +11,7 @@ import X from 'lucide-react-native/dist/cjs/icons/x';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../shared/theme/useTheme';
-import { rgba } from '../shared/theme/ansi';
+import { rgba } from '../shared/theme/color';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { purchasePremium, purchasePack } from '../utils/payments';

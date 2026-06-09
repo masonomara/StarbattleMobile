@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getStreakPack, getPackPreview } from '../packs';
-import { getCurrentKey, getPuzzleIndex, isStreakType } from '../utils/streakDate';
-import { parsePuzzle } from '../utils/parsePuzzle';
-import type { PackCatalogItem, Puzzle } from '../types';
+import { getStreakPack, getPackPreview } from '../../packs';
+import { getCurrentKey, getPuzzleIndex, isStreakType } from '../../utils/streakDate';
+import { parsePuzzle } from '../../utils/parsePuzzle';
+import type { PackCatalogItem, Puzzle } from '../../types';
 
 // Loads the first-glance preview puzzle for every pack:
 // - Streak packs: today's puzzle (deterministically selected by date index)

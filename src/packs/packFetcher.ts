@@ -1,4 +1,4 @@
-import { supabase } from '../supabase';
+import { supabase } from '../shared/lib/supabase';
 import { packMetaStorage } from '../shared/lib/mmkv';
 import type { Pack, HintStep, HintsFile } from '../types';
 import {

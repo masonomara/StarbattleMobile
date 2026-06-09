@@ -7,36 +7,36 @@ import {
   Pressable,
   useWindowDimensions,
 } from 'react-native';
-import { Text } from '../shared/ui/Text';
+import { Text } from '../../shared/ui/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CircleButton } from '../shared/ui/CircleButton';
+import { CircleButton } from '../../shared/ui/CircleButton';
 import { Haptics } from 'react-native-nitro-haptics';
-import { useSettingsStore } from '../stores/settingsStore';
-import { useTheme } from '../shared/theme/useTheme';
-import { useEntitlements } from '../hooks/useEntitlements';
-import { usePackPreviews } from '../hooks/usePackPreviews';
-import { useCompletionData } from '../hooks/useCompletionData';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { useTheme } from '../../shared/theme/useTheme';
+import { useEntitlements } from '../../hooks/useEntitlements';
+import { usePackPreviews } from './usePackPreviews';
+import { useCompletionData } from './useCompletionData';
 import {
   getCurrentKey,
   getStreakCells,
   STREAK_TYPES,
   STREAK_LABELS,
   isStreakType,
-} from '../utils/streakDate';
-import { useAuthStore } from '../stores/authStore';
-import { startupTimer } from '../shared/lib/startupTimer';
-import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
-import { StreakProgressRow } from '../components/StreakProgressRow';
-import { PackCard, PackCardSkeleton } from '../components/PackCard';
-import { PulseBox, PulseProvider } from '../shared/ui/Pulse';
+} from '../../utils/streakDate';
+import { useAuthStore } from '../../stores/authStore';
+import { startupTimer } from '../../shared/lib/startupTimer';
+import { PuzzleThumbnail } from './PuzzleThumbnail';
+import { StreakProgressRow } from './StreakProgressRow';
+import { PackCard, PackCardSkeleton } from './PackCard';
+import { PulseBox, PulseProvider } from '../../shared/ui/Pulse';
 import type {
   Theme,
   PackCatalogItem,
   RootStackParamList,
   StreakType,
-} from '../types';
-import { SCREEN_HEADER_HEIGHT } from '../shared/lib/layout';
+} from '../../types';
+import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
 import { MoreHorizontal } from 'lucide-react-native';
 
 const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;

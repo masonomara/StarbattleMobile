@@ -14,7 +14,7 @@ jest.mock('@powersync/react-native', () => {
     getAll: async () => [],
     getOptional: async () => undefined,
     execute: async () => ({ rows: { _array: [] } }),
-    connect: () => {},
+    connect: () => Promise.resolve(),
   };
   return {
     PowerSyncDatabase: jest.fn(() => db),

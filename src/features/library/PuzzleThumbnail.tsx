@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { PixelRatio } from 'react-native';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import { rgba } from '../shared/theme/ansi';
+import { rgba } from '../../shared/theme/color';
 import {
   buildRegionFillPaths,
   buildRegionBorderPath,
-} from '../utils/skiaHelpers';
-import type { PuzzleThumbnailProps } from '../types';
+} from '../../utils/skiaHelpers';
+import type { PuzzleThumbnailProps } from '../../types';
 
 // Each line renders at a fixed TARGET width so previews match at any size — an
 // 80px and a 200px preview (and most grid sizes) show identical line weights.

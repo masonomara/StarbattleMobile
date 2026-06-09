@@ -15,7 +15,7 @@ import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/shared/lib/config';
 import { getStreakPack } from './src/packs';
 import { prefetchAllCatalog } from './src/packs/prefetch';
-import { supabase } from './src/supabase';
+import { supabase } from './src/shared/lib/supabase';
 import type { PackCatalogItem } from './src/types';
 
 function runTieredPrefetch(catalog: PackCatalogItem[]): void {
@@ -66,8 +66,44 @@ export default function App() {
     startupTimer.log('settings store initialized');
 
     // Open local SQLite immediately — fetchCredentials() retries once auth resolves
-    db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
+    db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 }).catch(
+      err => console.warn('[PowerSync] connect failed:', err?.message ?? err),
+    );
     startupTimer.log('powersync db.connect called');
+
+    // Surface sync failures at runtime. Without this a misconfigured sync rule
+    // (a pack row that never replicates) or a storage/RLS denial fails silently:
+    // the catalog watch below just never fires and packs never appear. The
+    // downloadError carries the real reason. statusChanged fires often, so only
+    // log on a changed error string or a connection / first-sync transition.
+    let lastDownloadError = '';
+    let lastUploadError = '';
+    let wasConnected = false;
+    let hadSynced = false;
+    const removeSyncListener = db.registerListener({
+      statusChanged: status => {
+        const dl = status.dataFlowStatus.downloadError?.message ?? '';
+        if (dl !== lastDownloadError) {
+          lastDownloadError = dl;
+          if (dl) console.warn('[PowerSync] download error:', dl);
+        }
+        const ul = status.dataFlowStatus.uploadError?.message ?? '';
+        if (ul !== lastUploadError) {
+          lastUploadError = ul;
+          if (ul) console.warn('[PowerSync] upload error:', ul);
+        }
+        if (status.connected !== wasConnected) {
+          wasConnected = status.connected;
+          startupTimer.log(
+            `powersync ${status.connected ? 'connected' : 'disconnected'}`,
+          );
+        }
+        if (status.hasSynced && !hadSynced) {
+          hadSynced = true;
+          startupTimer.log('powersync first sync complete');
+        }
+      },
+    });
 
     const watchController = new AbortController();
 
@@ -142,6 +178,7 @@ export default function App() {
     return () => {
       authUnsub();
       entitlementsUnsub();
+      removeSyncListener();
       watchController.abort();
       appStateSub.remove();
       linkingSub.remove();

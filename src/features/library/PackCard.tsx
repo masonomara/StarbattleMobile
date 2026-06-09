@@ -1,10 +1,10 @@
 import { View, Pressable, StyleSheet } from 'react-native';
-import { Text } from '../shared/ui/Text';
+import { Text } from '../../shared/ui/Text';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
-import { PulseBox } from '../shared/ui/Pulse';
+import { PulseBox } from '../../shared/ui/Pulse';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
-import type { PackCardProps, PackCardSkeletonProps, Theme } from '../types';
+import type { PackCardProps, PackCardSkeletonProps, Theme } from '../../types';
 
 const THUMB_SIZE = 72;
 
@@ -58,7 +58,7 @@ export function PackCard({
         <View style={[styles.thumb, styles.thumbPlaceholder]} />
       )}
       <View style={styles.info}>
-        <Text role="subhead" style={styles.name} numberOfLines={1}>
+        <Text role="body" style={styles.name} numberOfLines={1}>
           {name}
         </Text>
         <Text role="subhead" style={styles.metaText}>

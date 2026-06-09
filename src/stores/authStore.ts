@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Linking } from 'react-native';
 import type { Session, User } from '@supabase/supabase-js';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { supabase } from '../supabase';
+import { supabase } from '../shared/lib/supabase';
 import { adapty } from 'react-native-adapty';
 import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../shared/lib/config';
 import { startupTimer } from '../shared/lib/startupTimer';

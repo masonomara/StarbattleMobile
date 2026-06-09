@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useEntitlementsStore } from '../stores/entitlementsStore';
-import { getStreakPack, getPuzzlesForPack } from '../packs';
+import { useEntitlementsStore } from '../../stores/entitlementsStore';
+import { getStreakPack, getPuzzlesForPack } from '../../packs';
 import {
   getCurrentKey,
   getPuzzleIndex,
   archiveKeyToDate,
   isStreakType,
-} from '../utils/streakDate';
-import type { PackData } from '../types';
+} from '../../utils/streakDate';
+import type { PackData } from '../../types';
 
 // Resolves route params into a fully loaded PackData object.
 // Returns null while loading; calls navigation.goBack() on any load failure.

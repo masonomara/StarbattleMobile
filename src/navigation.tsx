@@ -7,11 +7,11 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import BootSplash from 'react-native-bootsplash';
-import { HomeScreen } from './screens/HomeScreen';
-import { LibraryScreen } from './screens/LibraryScreen';
+import { HomeScreen } from './features/library/HomeScreen';
+import { LibraryScreen } from './features/library/LibraryScreen';
 import { PuzzleScreen } from './features/puzzle/PuzzleScreen';
-import { ArchivePackScreen } from './screens/ArchivePackScreen';
-import { StreaksModal } from './components/StreaksModal';
+import { ArchivePackScreen } from './features/library/ArchivePackScreen';
+import { StreaksModal } from './features/library/StreaksModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
