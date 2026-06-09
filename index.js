@@ -2,7 +2,7 @@
  * @format
  */
 
-import { startupTimer } from './src/utils/startupTimer';
+import { startupTimer } from './src/shared/lib/startupTimer';
 import 'react-native-url-polyfill/auto';
 import 'fast-text-encoding'; // TextDecoder/TextEncoder required by sql.js
 import { AppRegistry } from 'react-native';
