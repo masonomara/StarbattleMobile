@@ -12,11 +12,11 @@ import { LibraryScreen } from './features/library/LibraryScreen';
 import { PuzzleScreen } from './features/puzzle/PuzzleScreen';
 import { ArchivePackScreen } from './features/library/ArchivePackScreen';
 import { StreaksModal } from './features/library/StreaksModal';
-import { SettingsModal } from './components/SettingsModal';
-import { ResetPasswordModal } from './components/ResetPasswordModal';
+import { SettingsModal } from './features/settings/SettingsModal';
+import { ResetPasswordModal } from './shared/ui/ResetPasswordModal';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { useTheme } from './shared/theme/useTheme';
-import { hasSeenTutorial } from './stores/settingsStore';
+import { hasSeenTutorial } from './shared/stores/settingsStore';
 import type { RootStackParamList } from './types';
 // type-only: pulls in global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.

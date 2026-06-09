@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { db } from '../powersync/AppSchema';
-import type { Entitlements, PackCatalogItem } from '../types';
+import { db } from '../../powersync/AppSchema';
+import type { Entitlements, PackCatalogItem } from '../../types';
 
 // Raw row shape returned by the `packs` PowerSync table.
 // Mapped to PackCatalogItem (camelCase, booleans) before reaching the UI.

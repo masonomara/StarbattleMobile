@@ -1,4 +1,4 @@
-import type { Streak, StreakType, StreakCell } from '../types';
+import type { Streak, StreakType, StreakCell } from '../../types';
 
 export const STREAK_TYPES: StreakType[] = ['daily', 'weekly', 'monthly'];
 

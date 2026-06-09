@@ -16,15 +16,15 @@ import X from 'lucide-react-native/dist/cjs/icons/x';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useSettingsStore } from '../../stores/settingsStore';
-import { useStreaksStore } from '../../stores/streaksStore';
-import { useAuthStore } from '../../stores/authStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
+import { useStreaksStore } from '../../shared/stores/streaksStore';
+import { useAuthStore } from '../../shared/stores/authStore';
 import { useTheme } from '../../shared/theme/useTheme';
-import { useEntitlements } from '../../hooks/useEntitlements';
-import { useStreakRows } from '../../hooks/useStreakRows';
+import { useEntitlements } from '../../shared/hooks/useEntitlements';
+import { useStreakRows } from '../../shared/hooks/useStreakRows';
 import { getStreakPack } from '../../packs';
-import { parsePuzzle } from '../../utils/parsePuzzle';
-import { loadAllCompletionData } from '../../utils/progress';
+import { parsePuzzle } from '../../shared/lib/parsePuzzle';
+import { loadAllCompletionData } from '../../shared/lib/progress';
 import {
   getActiveStreak,
   getPuzzleIndex,
@@ -33,7 +33,7 @@ import {
   STREAK_TYPES,
   STREAK_LABELS,
   STREAK_UNIT,
-} from '../../utils/streakDate';
+} from '../../shared/lib/streakDate';
 import type { Theme, StreakType, Puzzle, RootStackParamList } from '../../types';
 
 const ARCHIVE_NAMES: Record<StreakType, string> = {

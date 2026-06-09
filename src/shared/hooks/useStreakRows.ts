@@ -1,5 +1,5 @@
 import { useQuery } from '@powersync/react-native';
-import type { Streak } from '../types';
+import type { Streak } from '../../types';
 
 const STREAKS_QUERY =
   'SELECT type, current_count, best_count, last_completed_key FROM streaks WHERE user_id = ?';

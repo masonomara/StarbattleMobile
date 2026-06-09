@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useEntitlementsStore } from '../../stores/entitlementsStore';
+import { useEntitlementsStore } from '../../shared/stores/entitlementsStore';
 import { getStreakPack, getPuzzlesForPack } from '../../packs';
 import {
   getCurrentKey,
   getPuzzleIndex,
   archiveKeyToDate,
   isStreakType,
-} from '../../utils/streakDate';
+} from '../../shared/lib/streakDate';
 import type { PackData } from '../../types';
 
 // Resolves route params into a fully loaded PackData object.

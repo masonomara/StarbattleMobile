@@ -1,8 +1,8 @@
 import { adapty } from 'react-native-adapty';
 import type { AdaptyPaywallProduct } from 'react-native-adapty';
-import { downloadPack } from '../packs';
+import { downloadPack } from '../../packs';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
-import { prefetchAllCatalog } from '../packs/prefetch';
+import { prefetchAllCatalog } from '../../packs/prefetch';
 
 // NOTE: _productsPromise caches the paywall products for the lifetime of the
 // process. If Adapty's paywall configuration changes server-side (e.g. price

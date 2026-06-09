@@ -1,5 +1,5 @@
 import { prefetchPackFile, cachePackPreview, prefetchHintsFile } from './index';
-import { useEntitlementsStore } from '../stores/entitlementsStore';
+import { useEntitlementsStore } from '../shared/stores/entitlementsStore';
 import type { PackCatalogItem } from '../types';
 
 // ETag-aware refresh of all catalog content and streak packs.

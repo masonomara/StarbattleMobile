@@ -1,4 +1,4 @@
-import type { RawPuzzle, Puzzle } from '../types';
+import type { RawPuzzle, Puzzle } from '../../types';
 
 // SBN (Star Battle Notation) encodes a puzzle as "<size>x<stars>.<layout>".
 // - size:   grid dimension (e.g. 8 for an 8×8 grid)

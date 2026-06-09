@@ -9,12 +9,12 @@ import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from './puzzleStore';
-import { recordStreak } from '../../utils/progress';
-import { STREAK_LABELS, STREAK_UNIT } from '../../utils/streakDate';
+import { recordStreak } from '../../shared/lib/progress';
+import { STREAK_LABELS, STREAK_UNIT } from '../../shared/lib/streakDate';
 import { formatElapsedTime } from '../../shared/lib/time';
 
 import { useTheme } from '../../shared/theme/useTheme';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
 import type { Theme, RootStackParamList, WinBannerProps } from '../../types';
 
 export function WinBanner({

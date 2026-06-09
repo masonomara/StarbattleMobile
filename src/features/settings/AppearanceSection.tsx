@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Text } from '../../shared/ui/Text';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import { PALETTES, PALETTE_NAMES } from '../../shared/theme/palettes';
 import { ToggleRow } from '../../shared/ui/ToggleRow';

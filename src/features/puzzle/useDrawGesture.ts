@@ -12,7 +12,7 @@ import { useCallback, useRef } from 'react';
 import { Gesture } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import { usePuzzleStore } from './puzzleStore';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { Haptics } from 'react-native-nitro-haptics';
 import type { CellChange, DrawLayerHandle } from '../../types';
 

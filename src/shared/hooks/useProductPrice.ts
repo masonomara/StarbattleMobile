@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getLocalizedPrice } from '../utils/payments';
+import { getLocalizedPrice } from '../lib/payments';
 
 export function useProductPrice(vendorProductId: string): string | null {
   const [price, setPrice] = useState<string | null>(null);

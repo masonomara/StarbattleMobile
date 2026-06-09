@@ -2,8 +2,8 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import { ToggleRow } from '../../shared/ui/ToggleRow';
-import { useSettingsStore } from '../../stores/settingsStore';
-import { usePuzzleStore } from '../../features/puzzle/puzzleStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
+import { usePuzzleStore } from '../puzzle/puzzleStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import type { Theme } from '../../types';
 

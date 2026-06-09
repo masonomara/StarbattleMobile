@@ -2,12 +2,12 @@ import { create } from 'zustand';
 import { Linking } from 'react-native';
 import type { Session, User } from '@supabase/supabase-js';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { supabase } from '../shared/lib/supabase';
+import { supabase } from '../lib/supabase';
 import { adapty } from 'react-native-adapty';
-import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../shared/lib/config';
-import { startupTimer } from '../shared/lib/startupTimer';
-import { db } from '../powersync/AppSchema';
-import { SupabaseConnector } from '../powersync/Connector';
+import { GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID } from '../lib/config';
+import { startupTimer } from '../lib/startupTimer';
+import { db } from '../../powersync/AppSchema';
+import { SupabaseConnector } from '../../powersync/Connector';
 import { useEntitlementsStore } from './entitlementsStore';
 
 type AuthState = {

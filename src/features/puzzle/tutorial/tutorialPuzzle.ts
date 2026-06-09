@@ -1,4 +1,4 @@
-import { parsePuzzle } from '../../../utils/parsePuzzle';
+import { parsePuzzle } from '../../../shared/lib/parsePuzzle';
 import type { Puzzle } from '../../../types';
 
 // A real 5×5 / 1★ puzzle (the easiest in 5x5-normal). Swappable for any valid

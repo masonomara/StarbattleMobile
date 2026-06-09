@@ -22,19 +22,19 @@ import { PuzzleCanvas } from './PuzzleCanvas';
 import { Toolbar } from './Toolbar';
 import { WinBanner } from './WinBanner';
 import { usePuzzleStore } from './puzzleStore';
-import { useSettingsStore } from '../../stores/settingsStore';
-import { useAuthStore } from '../../stores/authStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
+import { useAuthStore } from '../../shared/stores/authStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import { useZoom } from './useZoom';
 import { useDrawGesture } from './useDrawGesture';
 import { usePackData } from './usePackData';
-import { useStreakRows } from '../../hooks/useStreakRows';
+import { useStreakRows } from '../../shared/hooks/useStreakRows';
 import { loadPackHints } from '../../packs/packCache';
 import { TUTORIAL_PUZZLE } from './tutorial/tutorialPuzzle';
 import { tutorialMessage } from './tutorial/tutorialMessage';
-import { parsePuzzle } from '../../utils/parsePuzzle';
-import { saveProgress } from '../../utils/progress';
-import { getActiveStreak } from '../../utils/streakDate';
+import { parsePuzzle } from '../../shared/lib/parsePuzzle';
+import { saveProgress } from '../../shared/lib/progress';
+import { getActiveStreak } from '../../shared/lib/streakDate';
 import type { Theme, RootStackParamList, DrawLayerHandle } from '../../types';
 
 // Chrome heights used both in the board layout calculation and in the view

@@ -1,12 +1,12 @@
 import React, { useImperativeHandle, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import { rgba } from '../../shared/theme/color';
 import {
   buildRegionFillPaths,
   buildRegionBorderPath,
-} from '../../utils/skiaHelpers';
+} from '../../shared/lib/skiaHelpers';
 import type {
   Puzzle,
   CellValue,

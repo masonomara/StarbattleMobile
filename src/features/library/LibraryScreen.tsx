@@ -14,13 +14,13 @@ import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../../packs';
-import { PaywallModal } from '../../components/PaywallModal';
+import { PaywallModal } from '../../shared/ui/PaywallModal';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
 import { useTheme } from '../../shared/theme/useTheme';
-import { useEntitlements } from '../../hooks/useEntitlements';
-import { useSettingsStore } from '../../stores/settingsStore';
-import { getCompletedPuzzleIdsForPack } from '../../utils/progress';
-import { parsePuzzle } from '../../utils/parsePuzzle';
+import { useEntitlements } from '../../shared/hooks/useEntitlements';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
+import { getCompletedPuzzleIdsForPack } from '../../shared/lib/progress';
+import { parsePuzzle } from '../../shared/lib/parsePuzzle';
 import type {
   Theme,
   RawPuzzle,

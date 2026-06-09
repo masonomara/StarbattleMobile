@@ -3,8 +3,8 @@
 // module — nothing outside the store should read or write settings directly.
 // This keeps the persistence layer as an implementation detail of the store.
 import { create } from 'zustand';
-import { settingsStorage as storage } from '../shared/lib/mmkv';
-import type { UserSettings } from '../types';
+import { settingsStorage as storage } from '../lib/mmkv';
+import type { UserSettings } from '../../types';
 
 const SETTINGS_KEY = 'settings';
 

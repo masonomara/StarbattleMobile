@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@powersync/react-native';
-import { getCurrentKey, isStreakType } from '../../utils/streakDate';
+import { getCurrentKey, isStreakType } from '../../shared/lib/streakDate';
 import type { PackCatalogItem, StreakType } from '../../types';
 
 const COMPLETED_QUERY =

@@ -6,17 +6,17 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
-import { Text } from '../shared/ui/Text';
+import { Text } from './Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useTheme } from '../shared/theme/useTheme';
-import { rgba } from '../shared/theme/color';
+import { useTheme } from '../theme/useTheme';
+import { rgba } from '../theme/color';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useProductPrice } from '../hooks/useProductPrice';
-import { purchasePremium, purchasePack } from '../utils/payments';
-import { PRIVACY_POLICY_URL, TERMS_URL } from '../shared/lib/config';
-import type { Theme, PaywallModalProps } from '../types';
+import { purchasePremium, purchasePack } from '../lib/payments';
+import { PRIVACY_POLICY_URL, TERMS_URL } from '../lib/config';
+import type { Theme, PaywallModalProps } from '../../types';
 
 // NOTE: `renderContent()` is a plain function call inside JSX, not a React
 // component. For the current scale this is fine; if PaywallModal grows, make

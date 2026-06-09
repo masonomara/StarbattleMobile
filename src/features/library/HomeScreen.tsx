@@ -12,9 +12,9 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { Haptics } from 'react-native-nitro-haptics';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useTheme } from '../../shared/theme/useTheme';
-import { useEntitlements } from '../../hooks/useEntitlements';
+import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { usePackPreviews } from './usePackPreviews';
 import { useCompletionData } from './useCompletionData';
 import {
@@ -23,8 +23,8 @@ import {
   STREAK_TYPES,
   STREAK_LABELS,
   isStreakType,
-} from '../../utils/streakDate';
-import { useAuthStore } from '../../stores/authStore';
+} from '../../shared/lib/streakDate';
+import { useAuthStore } from '../../shared/stores/authStore';
 import { startupTimer } from '../../shared/lib/startupTimer';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
 import { StreakProgressRow } from './StreakProgressRow';

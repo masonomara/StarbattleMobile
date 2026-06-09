@@ -11,16 +11,16 @@ import {
 import AtSign from 'lucide-react-native/dist/cjs/icons/at-sign';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '../../shared/ui/Text';
-import { useAuthStore } from '../../stores/authStore';
-import { useEntitlements } from '../../hooks/useEntitlements';
-import { useProductPrice } from '../../hooks/useProductPrice';
+import { useAuthStore } from '../../shared/stores/authStore';
+import { useEntitlements } from '../../shared/hooks/useEntitlements';
+import { useProductPrice } from '../../shared/hooks/useProductPrice';
 import { useTheme } from '../../shared/theme/useTheme';
-import { useAsyncAction } from '../../hooks/useAsyncAction';
+import { useAsyncAction } from '../../shared/hooks/useAsyncAction';
 import {
   purchasePremium,
   restorePurchases,
   PREMIUM_PRODUCT_ID,
-} from '../../utils/payments';
+} from '../../shared/lib/payments';
 import type { Theme } from '../../types';
 
 type EmailMode =

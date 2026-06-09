@@ -1,7 +1,7 @@
-import { db } from '../powersync/AppSchema';
+import { db } from '../../powersync/AppSchema';
 import { useAuthStore } from '../stores/authStore';
 import { getCurrentKey, getPreviousKey } from './streakDate';
-import type { CellValue, StreakType, Streak } from '../types';
+import type { CellValue, StreakType, Streak } from '../../types';
 
 // PowerSync exposes tables as views with INSTEAD OF triggers. rowsAffected is
 // unreliable on views (SQLite does not count trigger-internal changes), so we

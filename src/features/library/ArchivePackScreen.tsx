@@ -14,9 +14,9 @@ import { CircleButton } from '../../shared/ui/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../../shared/theme/useTheme';
-import { loadAllCompletionData } from '../../utils/progress';
-import { getPastDateKeys, STREAK_LABELS, formatArchiveKey } from '../../utils/streakDate';
-import { useEntitlementsStore } from '../../stores/entitlementsStore';
+import { loadAllCompletionData } from '../../shared/lib/progress';
+import { getPastDateKeys, STREAK_LABELS, formatArchiveKey } from '../../shared/lib/streakDate';
+import { useEntitlementsStore } from '../../shared/stores/entitlementsStore';
 import type { RootStackParamList, Theme } from '../../types';
 import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
 

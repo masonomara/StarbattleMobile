@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Haptics } from 'react-native-nitro-haptics';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
 import {
   computeAutoXForStar,
   applyMarks,
@@ -8,7 +8,7 @@ import {
   computeErrors,
   checkWin,
 } from './puzzleLogic';
-import { loadProgress, saveProgress } from '../../utils/progress';
+import { loadProgress, saveProgress } from '../../shared/lib/progress';
 import type { CellChange, CellValue, HintStep, Move, Puzzle, TapMode } from '../../types';
 
 // Keeps memory usage bounded — older moves beyond this limit are dropped.

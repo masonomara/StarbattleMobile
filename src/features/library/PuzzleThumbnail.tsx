@@ -5,7 +5,7 @@ import { rgba } from '../../shared/theme/color';
 import {
   buildRegionFillPaths,
   buildRegionBorderPath,
-} from '../../utils/skiaHelpers';
+} from '../../shared/lib/skiaHelpers';
 import type { PuzzleThumbnailProps } from '../../types';
 
 // Each line renders at a fixed TARGET width so previews match at any size — an
