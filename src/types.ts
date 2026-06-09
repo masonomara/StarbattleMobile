@@ -40,6 +40,13 @@ export type HeaderProps = {
   bordered?: boolean;
 };
 
+export type ToggleRowProps = {
+  label: string;
+  value: boolean;
+  onToggle: (v: boolean) => void;
+  first?: boolean;
+};
+
 export type ErrorBoundaryProps = {
   children: ReactNode;
   onReset?: () => void;

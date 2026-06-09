@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Switch } from 'react-native';
+import { View, Switch, StyleSheet } from 'react-native';
 import { Text } from './Text';
 import { useTheme } from '../theme/useTheme';
 
@@ -17,21 +17,18 @@ export function ToggleRow({
   const theme = useTheme();
   return (
     <View
-      style={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        minHeight: 56,
-        borderTopWidth: first ? 0 : 1,
-        borderColor: theme.border,
-      }}
+      style={[
+        styles.row,
+        !first && styles.bordered,
+        { borderColor: theme.border },
+      ]}
     >
-      <Text role="subhead" style={{ color: theme.text, fontWeight: '600' }}>
+      <Text role="body" style={{ color: theme.text }}>
         {label}
       </Text>
       <View>
         <Switch
-          style={{ transform: [{ scaleX: 0.88 }, { scaleY: 0.88 }] }}
+          style={styles.switch}
           value={value}
           onValueChange={onToggle}
           trackColor={{ true: theme.blue, false: theme.border }}
@@ -41,3 +38,18 @@ export function ToggleRow({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 54,
+  },
+  bordered: {
+    borderTopWidth: 1,
+  },
+  switch: {
+    transform: [{ scaleX: 0.87 }, { scaleY: 0.87 }],
+  },
+});
