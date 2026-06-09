@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Switch, StyleSheet } from 'react-native';
-import { Text } from '../Text';
+import { Text } from '../../shared/ui/Text';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { usePuzzleStore } from '../../stores/puzzleStore';
-import { useTheme } from '../../hooks/useTheme';
+import { usePuzzleStore } from '../../features/puzzle/puzzleStore';
+import { useTheme } from '../../shared/theme/useTheme';
 import type { Theme } from '../../types';
 
 export function ToggleRow({

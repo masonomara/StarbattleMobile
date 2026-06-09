@@ -2,7 +2,7 @@ import React, { useImperativeHandle, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import { rgba } from '../../themes/ansi';
+import { rgba } from '../../shared/theme/ansi';
 import {
   buildRegionFillPaths,
   buildRegionBorderPath,

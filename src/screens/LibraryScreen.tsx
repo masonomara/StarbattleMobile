@@ -7,18 +7,18 @@ import {
   ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
-import { Text } from '../components/Text';
+import { Text } from '../shared/ui/Text';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
-import { CircleButton } from '../components/CircleButton';
+import { CircleButton } from '../shared/ui/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../packs';
 import { PaywallModal } from '../components/PaywallModal';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../shared/theme/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useSettingsStore } from '../stores/settingsStore';
 import { getCompletedPuzzleIdsForPack } from '../utils/progress';
@@ -29,7 +29,7 @@ import type {
   RootStackParamList,
   PaywallContext,
 } from '../types';
-import { SCREEN_HEADER_HEIGHT } from '../layout';
+import { SCREEN_HEADER_HEIGHT } from '../shared/lib/layout';
 
 const NUM_COLS = 5;
 const PADDING = 20;

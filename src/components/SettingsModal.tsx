@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Modal, View, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { Text } from './Text';
+import { Text } from '../shared/ui/Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
 import { Linking } from 'react-native';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../shared/theme/useTheme';
 import { AccountSection } from './settings/AccountSection';
 import { GameplaySection } from './settings/GameplaySection';
 import { AppearanceSection } from './settings/AppearanceSection';
-import { PRIVACY_POLICY_URL, TERMS_URL, CREDITS_URL } from '../config';
+import { PRIVACY_POLICY_URL, TERMS_URL, CREDITS_URL } from '../shared/lib/config';
 import type { Theme } from '../types';
 
 // Visibility is driven by Zustand so any screen can open this modal without prop drilling.

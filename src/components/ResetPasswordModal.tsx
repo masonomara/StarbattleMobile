@@ -7,9 +7,9 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Text } from './Text';
+import { Text } from '../shared/ui/Text';
 import { useAuthStore } from '../stores/authStore';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../shared/theme/useTheme';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import type { Theme } from '../types';
 

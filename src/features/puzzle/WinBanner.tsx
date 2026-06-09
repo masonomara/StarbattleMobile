@@ -4,16 +4,16 @@
 // strict mode. Prefer string literals for consistency.
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
-import { Text } from '../../components/Text';
+import { Text } from '../../shared/ui/Text';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePuzzleStore } from './puzzleStore';
 import { recordStreak } from '../../utils/progress';
 import { STREAK_LABELS, STREAK_UNIT } from '../../utils/streakDate';
-import { formatElapsedTime } from '../../utils/time';
+import { formatElapsedTime } from '../../shared/lib/time';
 
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../shared/theme/useTheme';
 import { useSettingsStore } from '../../stores/settingsStore';
 import type { Theme, RootStackParamList, WinBannerProps } from '../../types';
 

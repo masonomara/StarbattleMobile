@@ -1,4 +1,4 @@
-import type { TextRole } from './types';
+import type { TextRole } from '../../types';
 
 // Custom font families bundled in assets/fonts/ and linked into the native
 // projects via `npx react-native-asset` (driven by react-native.config.js).
@@ -25,20 +25,12 @@ const family = (base: string): FontFamily => ({
 });
 
 // Every bundled sans family (each shipped as 4 static weights, 400/500/600/700).
+// Only the families actually used in the pairing below are bundled in
+// assets/fonts/. To try another typeface, add its 4 weight files there and a
+// line here, then point displayFont/baseFont at it.
 export const Fonts = {
   bricolage: family('BricolageGrotesque'),
   karla: family('Karla'),
-  archivo: family('Archivo'),
-  publicSans: family('PublicSans'),
-  workSans: family('WorkSans'),
-  fustat: family('Fustat'),
-  tiktokSans: family('TikTokSans'),
-  specialGothic: family('SpecialGothic'),
-  monda: family('Monda'),
-  instrumentSans: family('InstrumentSans'),
-  openSans: family('OpenSans'),
-  geist: family('Geist'),
-  momoTrustSans: family('MomoTrustSans'),
 } as const;
 
 // ─── Type pairing ────────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ import {
   AppState,
   Pressable,
 } from 'react-native';
-import { Text } from '../../components/Text';
+import { Text } from '../../shared/ui/Text';
 import type { LayoutChangeEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -15,8 +15,8 @@ import ReAnimated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import Ellipsis from 'lucide-react-native/dist/cjs/icons/ellipsis';
-import { CircleButton } from '../../components/CircleButton';
-import { Header } from '../../components/Header';
+import { CircleButton } from '../../shared/ui/CircleButton';
+import { Header } from '../../shared/ui/Header';
 import { HeaderTimer } from './HeaderTimer';
 import { PuzzleCanvas } from './PuzzleCanvas';
 import { Toolbar } from './Toolbar';
@@ -24,7 +24,7 @@ import { WinBanner } from './WinBanner';
 import { usePuzzleStore } from './puzzleStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAuthStore } from '../../stores/authStore';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../shared/theme/useTheme';
 import { useZoom } from './useZoom';
 import { useDrawGesture } from './useDrawGesture';
 import { usePackData } from '../../hooks/usePackData';

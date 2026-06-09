@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { authStorage } from './mmkv';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
+import { authStorage } from './shared/lib/mmkv';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './shared/lib/config';
 
 // Adapts the MMKV storage interface to what Supabase's auth client expects.
 // MMKV reads are synchronous, which prevents the auth-token flash that

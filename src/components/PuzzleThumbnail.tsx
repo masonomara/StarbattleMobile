@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { PixelRatio } from 'react-native';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import { rgba } from '../themes/ansi';
+import { rgba } from '../shared/theme/ansi';
 import {
   buildRegionFillPaths,
   buildRegionBorderPath,

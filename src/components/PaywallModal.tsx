@@ -6,16 +6,16 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
-import { Text } from './Text';
+import { Text } from '../shared/ui/Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
 import { useAuthStore } from '../stores/authStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useTheme } from '../hooks/useTheme';
-import { rgba } from '../themes/ansi';
+import { useTheme } from '../shared/theme/useTheme';
+import { rgba } from '../shared/theme/ansi';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { purchasePremium, purchasePack } from '../utils/payments';
-import { PRIVACY_POLICY_URL, TERMS_URL } from '../config';
+import { PRIVACY_POLICY_URL, TERMS_URL } from '../shared/lib/config';
 import type { Theme, PaywallModalProps } from '../types';
 
 // NOTE: `renderContent()` is a plain function call inside JSX, not a React

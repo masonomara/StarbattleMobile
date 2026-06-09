@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
 import { Text } from './Text';
-import type { ErrorBoundaryProps } from '../types';
+import type { ErrorBoundaryProps } from '../../types';
 
 interface State {
   hasError: boolean;

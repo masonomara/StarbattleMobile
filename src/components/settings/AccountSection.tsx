@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import AtSign from 'lucide-react-native/dist/cjs/icons/at-sign';
 import Svg, { Path } from 'react-native-svg';
-import { Text } from '../Text';
+import { Text } from '../../shared/ui/Text';
 import { useAuthStore } from '../../stores/authStore';
 import { useEntitlements } from '../../hooks/useEntitlements';
 import { useProductPrice } from '../../hooks/useProductPrice';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../shared/theme/useTheme';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import {
   purchasePremium,

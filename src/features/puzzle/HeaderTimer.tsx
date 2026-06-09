@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { AppState, StyleSheet } from 'react-native';
-import { Text } from '../../components/Text';
+import { Text } from '../../shared/ui/Text';
 import { usePuzzleStore } from './puzzleStore';
-import { useTheme } from '../../hooks/useTheme';
-import { formatElapsedTime } from '../../utils/time';
+import { useTheme } from '../../shared/theme/useTheme';
+import { formatElapsedTime } from '../../shared/lib/time';
 import type { Theme } from '../../types';
 
 export function HeaderTimer() {

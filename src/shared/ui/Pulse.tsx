@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import type { PulseBoxProps } from '../types';
+import type { PulseBoxProps } from '../../types';
 
 // The box is a solid baseColor View, so its View opacity reads directly as the
 // base color's opacity: pulse between 67% and 33%.

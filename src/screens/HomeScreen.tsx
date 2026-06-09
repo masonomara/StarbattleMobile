@@ -7,15 +7,13 @@ import {
   Pressable,
   useWindowDimensions,
 } from 'react-native';
-import { Text } from '../components/Text';
+import { Text } from '../shared/ui/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import Flame from 'lucide-react-native/dist/cjs/icons/flame';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CircleButton } from '../components/CircleButton';
+import { CircleButton } from '../shared/ui/CircleButton';
 import { Haptics } from 'react-native-nitro-haptics';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useStreaksStore } from '../stores/streaksStore';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../shared/theme/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { usePackPreviews } from '../hooks/usePackPreviews';
 import { useCompletionData } from '../hooks/useCompletionData';
@@ -27,18 +25,18 @@ import {
   isStreakType,
 } from '../utils/streakDate';
 import { useAuthStore } from '../stores/authStore';
-import { startupTimer } from '../utils/startupTimer';
+import { startupTimer } from '../shared/lib/startupTimer';
 import { PuzzleThumbnail } from '../components/PuzzleThumbnail';
 import { StreakProgressRow } from '../components/StreakProgressRow';
 import { PackCard, PackCardSkeleton } from '../components/PackCard';
-import { PulseBox, PulseProvider } from '../components/Pulse';
+import { PulseBox, PulseProvider } from '../shared/ui/Pulse';
 import type {
   Theme,
   PackCatalogItem,
   RootStackParamList,
   StreakType,
 } from '../types';
-import { SCREEN_HEADER_HEIGHT } from '../layout';
+import { SCREEN_HEADER_HEIGHT } from '../shared/lib/layout';
 import { MoreHorizontal } from 'lucide-react-native';
 
 const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
@@ -261,11 +259,6 @@ export function HomeScreen({
             ))}
           </View>
           <View style={styles.headerRight}>
-            {/*<CircleButton
-              onPress={() => useStreaksStore.getState().openStreaks()}
-            >
-              <Flame size={26} strokeWidth={2} color={theme.text} />
-            </CircleButton>*/}
             <CircleButton
               ghost
               onPress={() => useSettingsStore.getState().openSettings()}
@@ -285,23 +278,6 @@ export function HomeScreen({
         >
           {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
           <View style={styles.streakSection}>
-            {/*<Text
-              role="subhead"
-              style={[
-                styles.sectionLabel,
-                {
-                  marginLeft: 20,
-                  marginRight: 20,
-                  borderTopWidth: 0,
-                  marginBottom: 26,
-                  marginTop: -14.5,
-                  paddingTop: 24,
-                },
-              ]}
-            >
-              Streaks
-            </Text>*/}
-
             <Animated.ScrollView
               style={styles.streakRow}
               horizontal
@@ -519,7 +495,7 @@ const createStyles = (
     },
     streakMeta: {
       color: theme.textSecondary,
-      marginTop: 1,
+      paddingTop: 5,
     },
     // Section header for each Puzzle Library bundle (Intro, 1-Star, …).
     sectionLabel: {

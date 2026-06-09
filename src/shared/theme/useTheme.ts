@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import { useSettingsStore } from '../stores/settingsStore';
-import { PALETTES, tokens } from '../themes/palettes';
-import type { Theme, ThemeColors } from '../types';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { PALETTES, tokens } from './palettes';
+import type { Theme, ThemeColors } from '../../types';
 
 function hexLuminance(hex: string): number {
   const h = hex.replace('#', '').slice(0, 6);

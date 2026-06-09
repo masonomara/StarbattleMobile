@@ -9,13 +9,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import BootSplash from 'react-native-bootsplash';
 import { HomeScreen } from './screens/HomeScreen';
 import { LibraryScreen } from './screens/LibraryScreen';
-import { PuzzleScreen } from './screens/PuzzleScreen';
+import { PuzzleScreen } from './features/puzzle/PuzzleScreen';
 import { ArchivePackScreen } from './screens/ArchivePackScreen';
 import { StreaksModal } from './components/StreaksModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { useTheme } from './hooks/useTheme';
+import { ErrorBoundary } from './shared/ui/ErrorBoundary';
+import { useTheme } from './shared/theme/useTheme';
 import { hasSeenTutorial } from './stores/settingsStore';
 import type { RootStackParamList } from './types';
 // type-only: pulls in global ReactNavigation.RootParamList augmentation so

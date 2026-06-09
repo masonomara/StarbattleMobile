@@ -1,7 +1,7 @@
 import { View, Pressable, StyleSheet } from 'react-native';
-import { Text } from './Text';
+import { Text } from '../shared/ui/Text';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
-import { PulseBox } from './Pulse';
+import { PulseBox } from '../shared/ui/Pulse';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import type { PackCardProps, PackCardSkeletonProps, Theme } from '../types';

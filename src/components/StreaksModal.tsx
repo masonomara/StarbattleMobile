@@ -14,7 +14,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { Text } from './Text';
+import { Text } from '../shared/ui/Text';
 import { PackCard } from './PackCard';
 import X from 'lucide-react-native/dist/cjs/icons/x';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
@@ -23,7 +23,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useStreaksStore } from '../stores/streaksStore';
 import { useAuthStore } from '../stores/authStore';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../shared/theme/useTheme';
 import { useEntitlements } from '../hooks/useEntitlements';
 import { useStreakRows } from '../hooks/useStreakRows';
 import { getStreakPack } from '../packs';

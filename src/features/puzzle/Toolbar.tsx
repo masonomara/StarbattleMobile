@@ -10,7 +10,7 @@ import Eraser from 'lucide-react-native/dist/cjs/icons/eraser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePuzzleStore } from './puzzleStore';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '../../shared/theme/useTheme';
 import { Haptics } from 'react-native-nitro-haptics';
 import type { TapMode, Theme, ToolbarProps } from '../../types';
 

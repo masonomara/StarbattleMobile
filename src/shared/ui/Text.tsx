@@ -1,10 +1,10 @@
 import React from 'react';
 import { Text as RNText, StyleSheet, Platform } from 'react-native';
 import type { TextStyle } from 'react-native';
-import type { AppTextProps } from '../types';
-import { useTheme } from '../hooks/useTheme';
-import { baseFont, displayFont, DISPLAY_ROLES } from '../fonts';
-import type { FontFamily } from '../fonts';
+import type { AppTextProps } from '../../types';
+import { useTheme } from '../theme/useTheme';
+import { baseFont, displayFont, DISPLAY_ROLES } from '../theme/fonts';
+import type { FontFamily } from '../theme/fonts';
 
 // The platform's serif. iOS: Charter — a system serif registered by name (so RN's
 // UIFont(name:) lookup resolves it) whose tone is close to Android's Noto Serif.

@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { packMetaStorage } from '../mmkv';
+import { packMetaStorage } from '../shared/lib/mmkv';
 import type { Pack, HintStep, HintsFile } from '../types';
 import {
   getRNFS,

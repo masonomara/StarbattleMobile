@@ -6,10 +6,10 @@ import {
   useColorScheme,
   StyleSheet,
 } from 'react-native';
-import { Text } from '../Text';
+import { Text } from '../../shared/ui/Text';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { useTheme } from '../../hooks/useTheme';
-import { PALETTES, PALETTE_NAMES } from '../../themes/palettes';
+import { useTheme } from '../../shared/theme/useTheme';
+import { PALETTES, PALETTE_NAMES } from '../../shared/theme/palettes';
 import { ToggleRow } from './GameplaySection';
 import type { Theme, UserSettings } from '../../types';
 

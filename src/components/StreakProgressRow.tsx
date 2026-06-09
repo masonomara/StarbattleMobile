@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
-import { Text } from './Text';
+import { Text } from '../shared/ui/Text';
 import type { StreakProgressRowProps, Theme } from '../types';
 
 const CIRCLE = 22;

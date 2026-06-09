@@ -4,7 +4,7 @@ import type {
   PaletteVariants,
   TextRole,
   TextRoleStyle,
-} from '../types';
+} from '../../types';
 
 // Typographic role tokens — one complete bundle per role, the single source of
 // truth for text styling (an iOS-style type scale). fontWeight 600 = semibold,
