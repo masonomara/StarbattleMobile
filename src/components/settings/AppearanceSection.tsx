@@ -10,7 +10,7 @@ import { Text } from '../../shared/ui/Text';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import { PALETTES, PALETTE_NAMES } from '../../shared/theme/palettes';
-import { ToggleRow } from './GameplaySection';
+import { ToggleRow } from '../../shared/ui/ToggleRow';
 import type { Theme, UserSettings } from '../../types';
 
 const PALETTE_ICONS: Record<

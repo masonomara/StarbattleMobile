@@ -24,67 +24,37 @@ import './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-// Each screen is wrapped individually rather than using a HOC so that:
-// (a) TypeScript can infer screen props without extra generic plumbing, and
-// (b) each boundary can set a screen-specific onReset (e.g. goBack vs no-op).
-// REFACTOR: The four Wrapped* components are structurally identical except for
-// the screen component and the onReset callback. A typed generic helper would
-// eliminate the repetition, but the TypeScript ceremony is non-trivial. If
-// more screens are added, that tradeoff shifts — consider the HOC then.
-function WrappedHome(
-  props: NativeStackScreenProps<RootStackParamList, 'Home'>,
+// Wraps a screen in an ErrorBoundary. `resetOnGoBack` controls whether the
+// boundary's "Try Again" pops the stack (Library/Puzzle/ArchivePack) or just
+// clears the error in place (Home/Tutorial, which are roots with nowhere to
+// pop to). The explicit <Name> type arg keeps screen props fully inferred.
+function withErrorBoundary<Name extends keyof RootStackParamList>(
+  Screen: React.ComponentType<NativeStackScreenProps<RootStackParamList, Name>>,
+  resetOnGoBack = false,
 ) {
-  const theme = useTheme();
-  return (
-    <ErrorBoundary theme={theme}>
-      <HomeScreen {...props} />
-    </ErrorBoundary>
-  );
+  return function WrappedScreen(
+    props: NativeStackScreenProps<RootStackParamList, Name>,
+  ) {
+    const theme = useTheme();
+    return (
+      <ErrorBoundary
+        theme={theme}
+        onReset={resetOnGoBack ? () => props.navigation.goBack() : undefined}
+      >
+        <Screen {...props} />
+      </ErrorBoundary>
+    );
+  };
 }
 
-function WrappedLibrary(
-  props: NativeStackScreenProps<RootStackParamList, 'Library'>,
-) {
-  const theme = useTheme();
-  return (
-    <ErrorBoundary theme={theme} onReset={() => props.navigation.goBack()}>
-      <LibraryScreen {...props} />
-    </ErrorBoundary>
-  );
-}
-
-function WrappedPuzzle(
-  props: NativeStackScreenProps<RootStackParamList, 'Puzzle'>,
-) {
-  const theme = useTheme();
-  return (
-    <ErrorBoundary theme={theme} onReset={() => props.navigation.goBack()}>
-      <PuzzleScreen {...props} />
-    </ErrorBoundary>
-  );
-}
-
-function WrappedArchivePack(
-  props: NativeStackScreenProps<RootStackParamList, 'ArchivePack'>,
-) {
-  const theme = useTheme();
-  return (
-    <ErrorBoundary theme={theme} onReset={() => props.navigation.goBack()}>
-      <ArchivePackScreen {...props} />
-    </ErrorBoundary>
-  );
-}
-
-function WrappedTutorial(
-  props: NativeStackScreenProps<RootStackParamList, 'Tutorial'>,
-) {
-  const theme = useTheme();
-  return (
-    <ErrorBoundary theme={theme}>
-      <PuzzleScreen {...props} />
-    </ErrorBoundary>
-  );
-}
+const WrappedHome = withErrorBoundary<'Home'>(HomeScreen);
+const WrappedLibrary = withErrorBoundary<'Library'>(LibraryScreen, true);
+const WrappedPuzzle = withErrorBoundary<'Puzzle'>(PuzzleScreen, true);
+const WrappedArchivePack = withErrorBoundary<'ArchivePack'>(
+  ArchivePackScreen,
+  true,
+);
+const WrappedTutorial = withErrorBoundary<'Tutorial'>(PuzzleScreen);
 
 export function Navigation() {
   const theme = useTheme();
