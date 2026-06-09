@@ -125,12 +125,9 @@ export const PuzzleCanvas = React.forwardRef<
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
   const totalSize = canvasSize + BORDER * 2;
 
-  // Hint ghosts are muted so they read as previews behind placed stars. In dark
-  // mode the border color is too faint, so show them as a translucent version of
-  // the star (text) color instead; light mode keeps the subtler border color.
-  const ghostColor = theme.isDark
-    ? rgba(theme.text, 0.4)
-    : rgba(theme.text, 0.4);
+  // Hint ghosts are muted so they read as previews behind placed stars — a
+  // translucent version of the star (text) color.
+  const ghostColor = rgba(theme.text, 0.4);
 
   // Transient in-flight preview cells accumulated during a drag stroke.
   // Merged with `cells` in dynamicPaths so the stroke is visible immediately.

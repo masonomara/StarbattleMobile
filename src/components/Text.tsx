@@ -48,12 +48,12 @@ function faceForWeight(family: FontFamily, weight: TextStyle['fontWeight']): str
 // Without `role`, we fall back to the legacy behaviour of deriving letterSpacing
 // from the style's fontSize, so un-migrated call sites render exactly as before.
 //
-// Tracking is per-font: the display face is tracked tight (-2% of its size) for
-// titles, the base face sits at 0 (natural metrics). letterSpacing is absolute
+// Tracking is per-font: the display face (Bricolage Grotesque) is tracked at -2%
+// of its size for titles, the base face (Karla) at -4%. letterSpacing is absolute
 // points in RN, not a ratio, so we derive it per call from the effective
 // fontSize. Applied first in every path so a `style` can still override it.
 const DISPLAY_TRACKING_RATIO = -0.02;
-const BASE_TRACKING_RATIO = 0;
+const BASE_TRACKING_RATIO = -0.04;
 
 export function Text({ role, serif, style, ...props }: AppTextProps) {
   const theme = useTheme();

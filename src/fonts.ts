@@ -49,9 +49,9 @@ export const Fonts = {
 //   display — used for the roles in DISPLAY_ROLES (headings/branding)
 //   base    — used for every other role and all un-roled text (body/UI)
 //
-// Current pairing: Bricolage Grotesque titles + Geist body.
+// Current pairing: Bricolage Grotesque titles + Karla body.
 export const displayFont: FontFamily = Fonts.bricolage;
-export const baseFont: FontFamily = Fonts.archivo;
+export const baseFont: FontFamily = Fonts.karla;
 
 // Roles that render in the display font. Everything else uses the base font.
 // Tune this set to push more/fewer headings onto the display face.

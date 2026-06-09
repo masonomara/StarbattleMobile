@@ -8,7 +8,7 @@ const CIRCLE = 22;
 
 // Progress row beneath a streak card: one circle per cell (daily → days of the
 // week, weekly → weeks of the month, monthly → months of the year). A cell fills
-// once its challenge is solved; the current day/week/month is underlined so it's
+// once its special is solved; the current day/week/month is underlined so it's
 // always identifiable, and the connector before a circle lights when both it and
 // the previous cell are completed, merging consecutive wins into one bar.
 // Pure render from props — cheap (a handful of cells) and always current as

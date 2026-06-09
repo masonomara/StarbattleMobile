@@ -359,7 +359,7 @@ export function HomeScreen({
                           theme={theme}
                           coloredRegions={coloredRegions}
                         />
-                        <Text role="title2" style={styles.streakLabel}>
+                        <Text role="title1" style={styles.streakLabel}>
                           {`${STREAK_LABELS[type]} Challenge`}
                         </Text>
                         <Text role="subhead" style={styles.streakMeta}>
@@ -472,7 +472,7 @@ const createStyles = (
     // rows (which are absolutely positioned and so don't size their parent).
     // Height = a progress circle; width covers the widest row (daily, 7 cells).
     headerProgress: {
-      height: 18,
+      height: 22,
       width: 156,
       overflow: 'visible',
     },
@@ -500,7 +500,7 @@ const createStyles = (
       gap: 12,
       zIndex: 100,
       overflow: 'visible',
-      marginTop: 26,
+      marginTop: 30,
     },
     streakCard: {
       justifyContent: 'flex-start',

@@ -5,7 +5,7 @@
 // CONCERN: The premium lock for archive access uses an Alert to redirect to
 // Settings. Consider a dedicated PaywallModal context variant instead of an
 // Alert so the UX is consistent with the rest of the paywall flows.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -62,10 +62,20 @@ export function StreaksModal() {
   const { streaks } = useStreakRows(userId);
 
   const [scrolled, setScrolled] = useState(false);
+  // Past archive date keys per type. Computed once per mount — the values only
+  // change at the midnight rollover, which doesn't matter within a session.
+  const keysByType = useMemo<Record<StreakType, string[]>>(
+    () => ({
+      daily: getPastDateKeys('daily'),
+      weekly: getPastDateKeys('weekly'),
+      monthly: getPastDateKeys('monthly'),
+    }),
+    [],
+  );
   const archiveCounts: Record<StreakType, number> = {
-    daily: getPastDateKeys('daily').length,
-    weekly: getPastDateKeys('weekly').length,
-    monthly: getPastDateKeys('monthly').length,
+    daily: keysByType.daily.length,
+    weekly: keysByType.weekly.length,
+    monthly: keysByType.monthly.length,
   };
   const [thumbnails, setThumbnails] = useState<
     Partial<Record<StreakType, Puzzle>>
@@ -87,7 +97,7 @@ export function StreaksModal() {
           try {
             const pack = await getStreakPack(type);
             if (!pack) return;
-            const recentKey = getPastDateKeys(type)[0];
+            const recentKey = keysByType[type][0];
             const date = recentKey
               ? archiveKeyToDate(type, recentKey)
               : new Date();
@@ -103,7 +113,7 @@ export function StreaksModal() {
     }
 
     loadThumbnails();
-  }, [streaksModalVisible]);
+  }, [streaksModalVisible, keysByType]);
 
   return (
     <Modal
@@ -163,7 +173,7 @@ export function StreaksModal() {
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
-            const done = getPastDateKeys(type).filter(k =>
+            const done = keysByType[type].filter(k =>
               completedIds.has(`${type}:archive:${k}`),
             ).length;
             const preview = thumbnails[type];

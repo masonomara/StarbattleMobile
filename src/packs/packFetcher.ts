@@ -22,9 +22,10 @@ function blobToText(blob: Blob): Promise<string> {
   });
 }
 
-// Verify that downloaded JSON has the expected pack structure.
+// Verify that downloaded JSON has the expected pack structure, returning the
+// parsed pack so callers don't have to JSON.parse the same text a second time.
 // Throws on malformed or tampered content before it is cached or parsed.
-export function validatePackText(text: string): void {
+export function validatePackText(text: string): Pack {
   const data = JSON.parse(text) as { puzzles?: unknown; version?: unknown };
   // Reject stale formats before caching, so a v1 pack can't be downloaded and
   // persisted only to be evicted on the next launch (see fetchPack's disk path).
@@ -39,6 +40,7 @@ export function validatePackText(text: string): void {
       throw new Error('Invalid pack: malformed puzzle SBN');
     }
   }
+  return data as unknown as Pack;
 }
 
 export function getCachedEtag(key: string): string | undefined {
@@ -113,12 +115,11 @@ export async function fetchPack(
       // not on disk yet — fall through to network
     }
     const text = await fetchFromSupabase(effectiveRemoteKey);
-    validatePackText(text);
+    const downloaded = validatePackText(text);
     await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
     await rnfs
       .writeFile(localPath, encodeForDisk(text), 'utf8')
       .catch(() => {});
-    const downloaded = JSON.parse(text) as Pack;
     __DEV__ &&
       console.log(
         `[SB:PACK] ${localKey} downloaded — v${downloaded.version}, ${
