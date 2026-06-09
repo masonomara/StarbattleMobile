@@ -379,10 +379,6 @@ export type TextRoleStyle = {
 // typographic role takes that name (the app doesn't use the ARIA role on Text).
 export type AppTextProps = Omit<TextProps, 'role'> & {
   role?: TextRole;
-  // Render this text in the platform's system serif instead of the default
-  // sans. Orthogonal to `role`: the role still owns size/weight, `serif` only
-  // swaps the font family. A `style` fontFamily still wins if set.
-  serif?: boolean;
 };
 
 // USER
