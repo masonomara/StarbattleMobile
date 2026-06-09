@@ -36,7 +36,7 @@ export function ArchivePackScreen({
     [theme, cellSize, insets],
   );
 
-  const dateKeys = getPastDateKeys(type);
+  const dateKeys = useMemo(() => getPastDateKeys(type), [type]);
 
   const [scrolled, setScrolled] = useState(false);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());

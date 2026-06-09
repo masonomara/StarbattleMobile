@@ -72,6 +72,8 @@ export async function restorePurchases(): Promise<boolean> {
   const isPremium = profile.accessLevels?.premium?.isActive ?? false;
   if (isPremium) {
     useEntitlementsStore.getState().setIsPremium(true);
+    const { packCatalog } = useEntitlementsStore.getState();
+    prefetchAllCatalog(packCatalog).catch(() => {});
   }
   return isPremium;
 }

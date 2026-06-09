@@ -147,13 +147,13 @@ export async function downloadPack(
   const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
   await rnfs.mkdir(packDir).catch(() => {});
   const text = await fetchFromSupabase(storagePath);
-  validatePackText(text);
+  const pack = validatePackText(text);
   await rnfs.writeFile(
     `${packDir}/${packId}.json`,
     encodeForDisk(text),
     'utf8',
   );
-  warmPackCache(`${packId}.json`, JSON.parse(text) as Pack);
+  warmPackCache(`${packId}.json`, pack);
 }
 
 // ETag-aware download for a regular pack. Uses storagePath for the Supabase
@@ -193,9 +193,10 @@ export async function prefetchPackFile(
   }
 
   let text: string;
+  let pack: Pack;
   try {
     text = await fetchFromSupabase(storagePath);
-    validatePackText(text);
+    pack = validatePackText(text);
   } catch {
     return;
   }
@@ -208,7 +209,7 @@ export async function prefetchPackFile(
       .catch(() => {});
   }
 
-  warmPackCache(`${packId}.json`, JSON.parse(text) as Pack);
+  warmPackCache(`${packId}.json`, pack);
   if (remoteEtag) setCachedEtag(storagePath, remoteEtag);
 }
 
@@ -256,14 +257,14 @@ export async function cachePackPreview(
   }
 
   let text: string;
+  let parsed: Pack;
   try {
     text = await fetchFromSupabase(storagePath);
-    validatePackText(text);
+    parsed = validatePackText(text);
   } catch {
     return;
   }
 
-  const parsed = JSON.parse(text) as { puzzles: RawPuzzle[] };
   const previewData = {
     puzzles: parsed.puzzles.slice(0, PREVIEW_PUZZLE_COUNT),
   };

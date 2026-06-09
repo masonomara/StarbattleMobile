@@ -10,7 +10,6 @@ import {
 import { Text } from '../components/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Flame from 'lucide-react-native/dist/cjs/icons/flame';
-import User from 'lucide-react-native/dist/cjs/icons/user';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CircleButton } from '../components/CircleButton';
 import { Haptics } from 'react-native-nitro-haptics';

@@ -66,15 +66,20 @@ export function getPuzzleIndex(
     (now.getTime() - epoch.getTime()) / msPerDay,
   );
 
+  // Euclidean modulo: JS `%` keeps the sign of the dividend, so a date before
+  // RELEASE_DATE (negative elapsed time) would otherwise yield a negative,
+  // out-of-bounds puzzle index.
+  const mod = (n: number, m: number) => ((n % m) + m) % m;
+
   switch (type) {
     case 'daily':
-      return daysSinceEpoch % packSize;
+      return mod(daysSinceEpoch, packSize);
     case 'weekly':
-      return Math.floor(daysSinceEpoch / 7) % packSize;
+      return mod(Math.floor(daysSinceEpoch / 7), packSize);
     case 'monthly': {
       const monthsSinceEpoch =
         (now.getFullYear() - 2026) * 12 + (now.getMonth() - 3);
-      return monthsSinceEpoch % packSize;
+      return mod(monthsSinceEpoch, packSize);
     }
   }
 }
