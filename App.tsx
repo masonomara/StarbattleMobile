@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AppState, Linking } from 'react-native';
+import { AppState, InteractionManager, Linking } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Navigation } from './src/navigation';
@@ -19,7 +19,13 @@ import { supabase } from './src/shared/lib/supabase';
 import type { PackCatalogItem } from './src/types';
 
 function runTieredPrefetch(catalog: PackCatalogItem[]): void {
-  prefetchAllCatalog(catalog).catch(() => {});
+  // Defer the catalog prefetch until interactions/animations settle so it never
+  // competes with first paint or the tutorial. The disk writes inside are also
+  // concurrency-capped (see writeFileThrottled); together these keep first-launch
+  // caching from pinning the JS thread.
+  InteractionManager.runAfterInteractions(() => {
+    prefetchAllCatalog(catalog).catch(() => {});
+  });
 }
 
 export default function App() {

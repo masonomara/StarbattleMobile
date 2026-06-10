@@ -112,29 +112,6 @@ export function PuzzleScreen({
   const [headerVisible, setHeaderVisible] = useState(true);
   const buttonOpacity = useRef(new Animated.Value(1)).current;
 
-  // [SB:MEASURE] remove after profiling. Stamps mount and runs a JS-thread stall
-  // detector: a 100ms interval that logs whenever a tick lands >150ms late, which
-  // means the JS thread was blocked for that long (the freeze, measured directly).
-  const measureMountRef = useRef(Date.now());
-  useEffect(() => {
-    const mounted = measureMountRef.current;
-    console.log('[SB:MEASURE] PuzzleScreen mount @0ms');
-    let last = Date.now();
-    const id = setInterval(() => {
-      const now = Date.now();
-      const stall = now - last - 100;
-      if (stall > 150) {
-        console.log(
-          `[SB:MEASURE] JS THREAD STALLED ${stall}ms (+${
-            now - mounted
-          }ms since mount)`,
-        );
-      }
-      last = now;
-    }, 100);
-    return () => clearInterval(id);
-  }, []);
-
   function finishTutorial() {
     completeTutorial();
     navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
@@ -222,10 +199,6 @@ export function PuzzleScreen({
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
       loadPuzzle(parsed);
       setIsReady(true);
-      // [SB:MEASURE] remove after profiling.
-      console.log(
-        `[SB:MEASURE] puzzle ready +${Date.now() - measureMountRef.current}ms`,
-      );
     } catch {
       navigation.goBack();
     }
@@ -236,19 +209,8 @@ export function PuzzleScreen({
   useEffect(() => {
     if (isTutorial || !isReady || !effectivePackId) return;
     let cancelled = false;
-    // [SB:MEASURE] remove after profiling — brackets the full hints load
-    // (async disk read + the synchronous parse that blocks the thread).
-    const _mt0 = Date.now();
-    console.log(
-      `[SB:MEASURE] hints load START +${_mt0 - measureMountRef.current}ms`,
-    );
     loadPackHints(effectivePackId)
       .then(all => {
-        console.log(
-          `[SB:MEASURE] hints load DONE in ${Date.now() - _mt0}ms (+${
-            Date.now() - measureMountRef.current
-          }ms since mount)`,
-        );
         if (!cancelled) setHints(all[puzzleIndexInPack] ?? []);
       })
       .catch(() => {

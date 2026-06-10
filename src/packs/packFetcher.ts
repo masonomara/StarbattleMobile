@@ -1,12 +1,12 @@
 import { supabase } from '../shared/lib/supabase';
 import { packMetaStorage } from '../shared/lib/mmkv';
-import type { Pack, HintStep, HintsFile } from '../types';
+import type { Pack, HintStep } from '../types';
 import {
   getRNFS,
   assertSafeKey,
-  encodeForDisk,
   decodeFromDisk,
   decodeHintsFromDisk,
+  writeFileThrottled,
 } from './packStorage';
 
 // Packs below this version use a format that the parser no longer supports.
@@ -26,7 +26,6 @@ function blobToText(blob: Blob): Promise<string> {
 // parsed pack so callers don't have to JSON.parse the same text a second time.
 // Throws on malformed or tampered content before it is cached or parsed.
 export function validatePackText(text: string): Pack {
-  const _mt0 = Date.now(); // [SB:MEASURE]
   const data = JSON.parse(text) as { puzzles?: unknown; version?: unknown };
   // Reject stale formats before caching, so a v1 pack can't be downloaded and
   // persisted only to be evicted on the next launch (see fetchPack's disk path).
@@ -41,12 +40,6 @@ export function validatePackText(text: string): Pack {
       throw new Error('Invalid pack: malformed puzzle SBN');
     }
   }
-  // [SB:MEASURE] remove after profiling — parse+validate cost on the JS thread.
-  console.log(
-    `[SB:MEASURE] validatePackText ${(text.length / 1024).toFixed(0)}KB in ${
-      Date.now() - _mt0
-    }ms`,
-  );
   return data as unknown as Pack;
 }
 
@@ -77,15 +70,7 @@ export async function fetchFromSupabase(storageKey: string): Promise<string> {
     throw error;
   }
   if (!data) throw new Error(`No data for ${storageKey}`);
-  // [SB:MEASURE] remove after profiling — blob→string bridge marshalling cost.
-  const _mt0 = Date.now();
-  const out = await blobToText(data);
-  console.log(
-    `[SB:MEASURE] blobToText ${storageKey} ${(out.length / 1024).toFixed(
-      0,
-    )}KB in ${Date.now() - _mt0}ms`,
-  );
-  return out;
+  return blobToText(data);
 }
 
 // Returns the remote ETag for a storage path. Throws on network error so
@@ -100,6 +85,60 @@ export async function fetchPackEtag(
   return data?.etag ?? undefined;
 }
 
+// Signed URLs only need to outlive a single download; 10 minutes is generous.
+const SIGNED_URL_TTL_SECONDS = 600;
+
+// Streams a storage object straight to disk via a signed URL so the bytes never
+// enter the JS heap. This is the offline-cache write path for prefetch: pulling
+// a Blob into a string (blobToText) and pushing a large utf8 string back out
+// (writeFile) each marshal the whole payload across the bridge and block the JS
+// thread ~2s per multi-MB file — the residual first-launch freeze after write
+// throttling. downloadFile does the transfer natively, off the JS thread.
+// NOTE: bypasses encodeForDisk (see packStorage) — the file lands as raw bytes
+// from the network. Fine while encodeForDisk is a passthrough; if a compression
+// or encryption layer is ever added, this path must apply it too.
+export async function downloadToFile(
+  storagePath: string,
+  localPath: string,
+): Promise<void> {
+  const rnfs = getRNFS();
+  if (!rnfs) throw new Error('File system unavailable');
+  const { data, error } = await supabase.storage
+    .from('packs')
+    .createSignedUrl(storagePath, SIGNED_URL_TTL_SECONDS);
+  if (error || !data?.signedUrl) {
+    throw error ?? new Error(`No signed URL for ${storagePath}`);
+  }
+  // Capture the advertised body size so we can reject a truncated download
+  // (e.g. the connection dropped mid-stream but still reported 200). Without
+  // this, a partial file would be persisted AND its ETag cached, so prefetch
+  // would skip re-downloading it and offline would be permanently broken for
+  // that pack. This replaces the structural validation the old blob path got
+  // from JSON.parse — without reading the file back across the bridge.
+  let expectedBytes = -1;
+  const result = await rnfs.downloadFile({
+    fromUrl: data.signedUrl,
+    toFile: localPath,
+    begin: ({ contentLength }) => {
+      expectedBytes = contentLength;
+    },
+  }).promise;
+  // Use "<" not "!=": a truncated body always writes fewer bytes than
+  // advertised, while a gzip-encoded response can legitimately write MORE
+  // (Content-Length is the compressed size). Erring toward accepting avoids
+  // false-rejecting a valid file; structural corruption that slips through is
+  // caught and evicted on read (see fetchPack/fetchHints).
+  const truncated = expectedBytes > 0 && result.bytesWritten < expectedBytes;
+  if (result.statusCode !== 200 || truncated) {
+    // Remove the partial/error body so a later read doesn't parse garbage and
+    // so the caller never caches an ETag for it.
+    await rnfs.unlink(localPath).catch(() => {});
+    throw new Error(
+      `download ${storagePath} failed: status=${result.statusCode} bytes=${result.bytesWritten}/${expectedBytes}`,
+    );
+  }
+}
+
 // localKey = disk filename (e.g. "pack-id.json")
 // remoteKey = Supabase storage path; defaults to localKey when omitted
 export async function fetchPack(
@@ -111,37 +150,40 @@ export async function fetchPack(
   const rnfs = getRNFS();
   if (rnfs) {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${localKey}`;
+    let raw: string | null = null;
     try {
-      const raw = await rnfs.readFile(localPath, 'utf8');
-      // [SB:MEASURE] remove after profiling — isolates the synchronous JSON.parse cost.
-      const _mt0 = Date.now();
-      const pack = decodeFromDisk(raw);
-      console.log(
-        `[SB:MEASURE] pack parse ${localKey}: ${(raw.length / 1024).toFixed(
-          0,
-        )}KB in ${Date.now() - _mt0}ms`,
-      );
-      __DEV__ &&
-        console.log(
-          `[SB:PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${
-            pack.puzzles?.length ?? '?'
-          } puzzles`,
-        );
-      if (pack.version < PACK_MIN_VERSION) {
+      raw = await rnfs.readFile(localPath, 'utf8');
+    } catch {
+      // not on disk yet — fall through to network below
+    }
+    if (raw !== null) {
+      try {
+        const pack = decodeFromDisk(raw);
+        if (pack.version < PACK_MIN_VERSION) throw new Error('stale version');
+        __DEV__ &&
+          console.log(
+            `[SB:PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${
+              pack.puzzles?.length ?? '?'
+            } puzzles`,
+          );
+        return pack;
+      } catch {
+        // On disk but corrupt or stale: evict the file AND its ETag so the next
+        // prefetch re-downloads it (an ETag match would otherwise skip it),
+        // then fall through to a network re-fetch. Clear both possible ETag
+        // keys — prefetch caches under the remote storagePath, callers may use
+        // the local filename — since a missing-key remove is a harmless no-op.
         await rnfs.unlink(localPath).catch(() => {});
         packMetaStorage.remove(`etag:${localKey}`);
-        throw new Error(`stale pack evicted: ${localKey}`);
+        if (effectiveRemoteKey !== localKey) {
+          packMetaStorage.remove(`etag:${effectiveRemoteKey}`);
+        }
       }
-      return pack;
-    } catch {
-      // not on disk yet — fall through to network
     }
     const text = await fetchFromSupabase(effectiveRemoteKey);
     const downloaded = validatePackText(text);
     await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
-    await rnfs
-      .writeFile(localPath, encodeForDisk(text), 'utf8')
-      .catch(() => {});
+    await writeFileThrottled(rnfs, localPath, text).catch(() => {});
     __DEV__ &&
       console.log(
         `[SB:PACK] ${localKey} downloaded — v${downloaded.version}, ${
@@ -157,18 +199,14 @@ export async function fetchPack(
   );
 }
 
-export function validateHintsText(text: string): void {
-  const _mt0 = Date.now(); // [SB:MEASURE]
+// Validates and returns the parsed hints so callers reuse this parse instead of
+// JSON.parse-ing the same (often multi-MB) text a second time.
+export function validateHintsText(text: string): HintStep[][] {
   const data = JSON.parse(text) as { hints?: HintStep[][] };
   if (!Array.isArray(data.hints)) {
     throw new Error('Invalid hints file: missing hints array');
   }
-  // [SB:MEASURE] remove after profiling — hints parse cost on the JS thread.
-  console.log(
-    `[SB:MEASURE] validateHintsText ${(text.length / 1024).toFixed(0)}KB in ${
-      Date.now() - _mt0
-    }ms`,
-  );
+  return data.hints;
 }
 
 // Disk-first read of "{packId}-hints.json"; mirrors fetchPack.
@@ -178,27 +216,28 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
   const rnfs = getRNFS();
   if (rnfs) {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${key}`;
+    let raw: string | null = null;
     try {
-      const raw = await rnfs.readFile(localPath, 'utf8');
-      // [SB:MEASURE] remove after profiling — the prime freeze suspect.
-      const _mt0 = Date.now();
-      const hints = decodeHintsFromDisk(raw).hints;
-      console.log(
-        `[SB:MEASURE] hints parse ${key}: ${(raw.length / 1024).toFixed(
-          0,
-        )}KB in ${Date.now() - _mt0}ms`,
-      );
-      return hints;
+      raw = await rnfs.readFile(localPath, 'utf8');
     } catch {
-      // not on disk yet — fall through to network
+      // not on disk yet — fall through to network below
+    }
+    if (raw !== null) {
+      try {
+        return decodeHintsFromDisk(raw).hints;
+      } catch {
+        // On disk but corrupt: evict the file and its ETag so the next prefetch
+        // re-downloads it instead of skipping on a matching ETag.
+        await rnfs.unlink(localPath).catch(() => {});
+        packMetaStorage.remove(`etag:${key}`);
+      }
     }
     const text = await fetchFromSupabase(key);
-    validateHintsText(text);
+    const hints = validateHintsText(text);
     await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
-    await rnfs.writeFile(localPath, encodeForDisk(text), 'utf8').catch(() => {});
-    return (JSON.parse(text) as HintsFile).hints;
+    await writeFileThrottled(rnfs, localPath, text).catch(() => {});
+    return hints;
   }
   const text = await fetchFromSupabase(key);
-  validateHintsText(text);
-  return (JSON.parse(text) as HintsFile).hints;
+  return validateHintsText(text);
 }

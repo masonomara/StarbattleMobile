@@ -10,9 +10,6 @@ import type { PackCatalogItem } from '../types';
 // Access check delegates to hasPackAccess in the entitlements store so the
 // logic stays in one place and prefetch always uses the current entitlements.
 export async function prefetchAllCatalog(catalog: PackCatalogItem[]): Promise<void> {
-  // [SB:MEASURE] remove after profiling — brackets the whole catalog prefetch pass.
-  const _mt0 = Date.now();
-  console.log(`[SB:MEASURE] prefetchAllCatalog START — ${catalog.length} packs`);
   const { hasPackAccess } = useEntitlementsStore.getState();
   const packWork = catalog
     .filter(p => p.storagePath)
@@ -28,6 +25,4 @@ export async function prefetchAllCatalog(catalog: PackCatalogItem[]): Promise<vo
       return cachePackPreview(p.id, p.storagePath!).catch(() => {});
     });
   await Promise.allSettled(packWork);
-  // [SB:MEASURE] remove after profiling.
-  console.log(`[SB:MEASURE] prefetchAllCatalog DONE in ${Date.now() - _mt0}ms`);
 }
