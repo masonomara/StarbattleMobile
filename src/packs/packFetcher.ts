@@ -26,6 +26,7 @@ function blobToText(blob: Blob): Promise<string> {
 // parsed pack so callers don't have to JSON.parse the same text a second time.
 // Throws on malformed or tampered content before it is cached or parsed.
 export function validatePackText(text: string): Pack {
+  const _mt0 = Date.now(); // [SB:MEASURE]
   const data = JSON.parse(text) as { puzzles?: unknown; version?: unknown };
   // Reject stale formats before caching, so a v1 pack can't be downloaded and
   // persisted only to be evicted on the next launch (see fetchPack's disk path).
@@ -40,6 +41,12 @@ export function validatePackText(text: string): Pack {
       throw new Error('Invalid pack: malformed puzzle SBN');
     }
   }
+  // [SB:MEASURE] remove after profiling — parse+validate cost on the JS thread.
+  console.log(
+    `[SB:MEASURE] validatePackText ${(text.length / 1024).toFixed(0)}KB in ${
+      Date.now() - _mt0
+    }ms`,
+  );
   return data as unknown as Pack;
 }
 
@@ -70,7 +77,15 @@ export async function fetchFromSupabase(storageKey: string): Promise<string> {
     throw error;
   }
   if (!data) throw new Error(`No data for ${storageKey}`);
-  return blobToText(data);
+  // [SB:MEASURE] remove after profiling — blob→string bridge marshalling cost.
+  const _mt0 = Date.now();
+  const out = await blobToText(data);
+  console.log(
+    `[SB:MEASURE] blobToText ${storageKey} ${(out.length / 1024).toFixed(
+      0,
+    )}KB in ${Date.now() - _mt0}ms`,
+  );
+  return out;
 }
 
 // Returns the remote ETag for a storage path. Throws on network error so
@@ -98,7 +113,14 @@ export async function fetchPack(
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${localKey}`;
     try {
       const raw = await rnfs.readFile(localPath, 'utf8');
+      // [SB:MEASURE] remove after profiling — isolates the synchronous JSON.parse cost.
+      const _mt0 = Date.now();
       const pack = decodeFromDisk(raw);
+      console.log(
+        `[SB:MEASURE] pack parse ${localKey}: ${(raw.length / 1024).toFixed(
+          0,
+        )}KB in ${Date.now() - _mt0}ms`,
+      );
       __DEV__ &&
         console.log(
           `[SB:PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${
@@ -136,10 +158,17 @@ export async function fetchPack(
 }
 
 export function validateHintsText(text: string): void {
+  const _mt0 = Date.now(); // [SB:MEASURE]
   const data = JSON.parse(text) as { hints?: HintStep[][] };
   if (!Array.isArray(data.hints)) {
     throw new Error('Invalid hints file: missing hints array');
   }
+  // [SB:MEASURE] remove after profiling — hints parse cost on the JS thread.
+  console.log(
+    `[SB:MEASURE] validateHintsText ${(text.length / 1024).toFixed(0)}KB in ${
+      Date.now() - _mt0
+    }ms`,
+  );
 }
 
 // Disk-first read of "{packId}-hints.json"; mirrors fetchPack.
@@ -151,7 +180,15 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${key}`;
     try {
       const raw = await rnfs.readFile(localPath, 'utf8');
-      return decodeHintsFromDisk(raw).hints;
+      // [SB:MEASURE] remove after profiling — the prime freeze suspect.
+      const _mt0 = Date.now();
+      const hints = decodeHintsFromDisk(raw).hints;
+      console.log(
+        `[SB:MEASURE] hints parse ${key}: ${(raw.length / 1024).toFixed(
+          0,
+        )}KB in ${Date.now() - _mt0}ms`,
+      );
+      return hints;
     } catch {
       // not on disk yet — fall through to network
     }

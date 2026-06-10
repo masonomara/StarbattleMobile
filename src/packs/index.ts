@@ -56,12 +56,27 @@ export async function prefetchHintsFile(packId: string): Promise<void> {
   if (rnfs) {
     const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
     await rnfs.mkdir(packDir).catch(() => {});
+    const _wt0 = Date.now(); // [SB:MEASURE]
     await rnfs
       .writeFile(`${packDir}/${key}`, encodeForDisk(text), 'utf8')
       .catch(() => {});
+    // [SB:MEASURE] remove after profiling — disk-write bridge cost.
+    console.log(
+      `[SB:MEASURE] writeFile ${key} ${(text.length / 1024).toFixed(0)}KB in ${
+        Date.now() - _wt0
+      }ms`,
+    );
   }
 
+  // [SB:MEASURE] remove after profiling — note this is a SECOND parse of the same
+  // hints text (validateHintsText already parsed it above). Confirms double-parse.
+  const _mt0 = Date.now();
   warmHintsCache(packId, (JSON.parse(text) as HintsFile).hints);
+  console.log(
+    `[SB:MEASURE] prefetchHints warm-parse ${packId} ${(
+      text.length / 1024
+    ).toFixed(0)}KB in ${Date.now() - _mt0}ms`,
+  );
   if (remoteEtag) setCachedEtag(key, remoteEtag);
 }
 
@@ -204,9 +219,16 @@ export async function prefetchPackFile(
   if (rnfs) {
     const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
     await rnfs.mkdir(packDir).catch(() => {});
+    const _wt0 = Date.now(); // [SB:MEASURE]
     await rnfs
       .writeFile(`${packDir}/${packId}.json`, encodeForDisk(text), 'utf8')
       .catch(() => {});
+    // [SB:MEASURE] remove after profiling — disk-write bridge cost.
+    console.log(
+      `[SB:MEASURE] writeFile ${packId}.json ${(text.length / 1024).toFixed(
+        0,
+      )}KB in ${Date.now() - _wt0}ms`,
+    );
   }
 
   warmPackCache(`${packId}.json`, pack);
