@@ -111,7 +111,7 @@ const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 // Streak progress cells for a cadence — the circles drawn under a streak card.
 // Daily → 7 days of the current week; weekly → every week the current month
-// touches; monthly → the 3 months of the current season.
+// touches (numbered 1…N); monthly → all 12 months of the current year.
 export function getStreakCells(type: StreakType, now = new Date()): StreakCell[] {
   switch (type) {
     case 'daily':
@@ -135,9 +135,9 @@ function getDayCells(now: Date): StreakCell[] {
 }
 
 // Weekly: one cell per Sunday-start week that the current month touches (the
-// week of the 1st through the week of the last day — 4 to 6 weeks). The letter
-// is the initial of the month the week's *Sunday* falls in, so e.g. June 2024
-// (whose 1st is a Saturday) reads M J J J J J — the first week's Sunday is in May.
+// week of the 1st through the week of the last day — 4 to 6 weeks). The label
+// is the week's ordinal within the displayed set (1…N) so the row reads
+// 1 2 3 4 5 instead of a repeated month initial.
 //
 // The streak system keys weeks by ISO week (Mon–Sun), which is offset one day
 // from these Sunday-start display weeks. Each display week overlaps one ISO week
@@ -160,43 +160,60 @@ function getWeekCells(now: Date): StreakCell[] {
 
   const cells: StreakCell[] = [];
   const cursor = new Date(weekStart);
+  let weekNumber = 1;
   while (cursor <= lastOfMonth) {
     const midweek = new Date(cursor);
     midweek.setDate(cursor.getDate() + 3); // Wednesday — in the dominant ISO week
     cells.push({
       key: getCurrentKey('weekly', midweek),
-      letter: MONTH_LETTERS[cursor.getMonth()],
+      // Previous: month initial of the week's Sunday (e.g. M J J J J J).
+      // letter: MONTH_LETTERS[cursor.getMonth()],
+      letter: String(weekNumber),
       isCurrent: cursor.getTime() === todaySunday.getTime(),
     });
     cursor.setDate(cursor.getDate() + 7);
+    weekNumber++;
   }
   return cells;
 }
 
-// Monthly: the three months of the current meteorological season — winter
-// (Dec–Feb), spring (Mar–May), summer (Jun–Aug), or fall (Sep–Nov). Seasons
-// start every 3 months from December, so the offset of the current month within
-// its season is its distance (mod 3) from the most recent December. Subtracting
-// that offset gives the season's first month; Date normalizes the rollover so a
-// January/February current month correctly reaches the previous year's December.
+// Monthly: all 12 months of the current year, Jan → Dec, labeled J F M A M J J
+// A S O N D with the current month highlighted.
 function getMonthCells(now: Date): StreakCell[] {
-  const monthsSinceDecember = (now.getMonth() - 11 + 12) % 12;
-  const offsetInSeason = monthsSinceDecember % 3;
-  const seasonStart = new Date(now.getFullYear(), now.getMonth() - offsetInSeason, 1);
+  // Previous: only the three months of the current meteorological season —
+  // winter (Dec–Feb), spring (Mar–May), summer (Jun–Aug), or fall (Sep–Nov).
+  // Seasons start every 3 months from December, so the offset of the current
+  // month within its season is its distance (mod 3) from the most recent
+  // December. Subtracting that offset gives the season's first month; Date
+  // normalizes the rollover so a January/February current month correctly
+  // reaches the previous year's December.
+  // const monthsSinceDecember = (now.getMonth() - 11 + 12) % 12;
+  // const offsetInSeason = monthsSinceDecember % 3;
+  // const seasonStart = new Date(now.getFullYear(), now.getMonth() - offsetInSeason, 1);
+  // const cells: StreakCell[] = [];
+  // for (let i = 0; i < 3; i++) {
+  //   const monthDate = new Date(
+  //     seasonStart.getFullYear(),
+  //     seasonStart.getMonth() + i,
+  //     1,
+  //   );
+  //   cells.push({
+  //     key: getCurrentKey('monthly', monthDate),
+  //     letter: MONTH_LETTERS[monthDate.getMonth()],
+  //     isCurrent:
+  //       monthDate.getFullYear() === now.getFullYear() &&
+  //       monthDate.getMonth() === now.getMonth(),
+  //   });
+  // }
+  // return cells;
 
   const cells: StreakCell[] = [];
-  for (let i = 0; i < 3; i++) {
-    const monthDate = new Date(
-      seasonStart.getFullYear(),
-      seasonStart.getMonth() + i,
-      1,
-    );
+  for (let i = 0; i < 12; i++) {
+    const monthDate = new Date(now.getFullYear(), i, 1);
     cells.push({
       key: getCurrentKey('monthly', monthDate),
-      letter: MONTH_LETTERS[monthDate.getMonth()],
-      isCurrent:
-        monthDate.getFullYear() === now.getFullYear() &&
-        monthDate.getMonth() === now.getMonth(),
+      letter: MONTH_LETTERS[i],
+      isCurrent: i === now.getMonth(),
     });
   }
   return cells;

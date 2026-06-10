@@ -38,7 +38,6 @@ export function ArchivePackScreen({
 
   const dateKeys = useMemo(() => getPastDateKeys(type), [type]);
 
-  const [scrolled, setScrolled] = useState(false);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -104,13 +103,7 @@ export function ArchivePackScreen({
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.header,
-          { paddingTop: insets.top },
-          scrolled && styles.headerBorder,
-        ]}
-      >
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
@@ -124,8 +117,6 @@ export function ArchivePackScreen({
         keyExtractor={item => item[0]}
         renderItem={renderRow}
         style={styles.scroll}
-        onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
-        scrollEventThrottle={16}
         contentContainerStyle={styles.gridContent}
       />
     </View>
@@ -154,11 +145,6 @@ const createStyles = (
       paddingHorizontal: 16,
       height: SCREEN_HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background,
-    },
-    headerBorder: {
-      borderBottomColor: theme.border,
     },
     headerSpacer: {
       width: 44,

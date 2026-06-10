@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import {
   View,
   Pressable,
@@ -79,6 +85,12 @@ const PuzzleCell = React.memo(function PuzzleCell({
           size={cellSize}
           theme={theme}
           coloredRegions={coloredRegions}
+          regionBorderTarget={2.1}
+          regionBorderCapFrac={0.15}
+          regionBorderMin={0.9}
+          gridLineTarget={0.7}
+          gridLineCapFrac={0.05}
+          gridLineMin={0.3}
         />
       )}
     </Pressable>
@@ -177,7 +189,8 @@ export function LibraryScreen({
   );
 
   const sections = useMemo(
-    () => Array.from({ length: Math.ceil(puzzleCount / PAGE_SIZE) }, (_, i) => i),
+    () =>
+      Array.from({ length: Math.ceil(puzzleCount / PAGE_SIZE) }, (_, i) => i),
     [puzzleCount],
   );
 

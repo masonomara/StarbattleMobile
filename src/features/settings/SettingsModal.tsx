@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Modal, View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
@@ -18,8 +18,6 @@ export function SettingsModal() {
   const settingsModalVisible = useSettingsStore(s => s.settingsModalVisible);
   const closeSettings = useSettingsStore(s => s.closeSettings);
 
-  const [scrolled, setScrolled] = useState(false);
-
   return (
     <Modal
       visible={settingsModalVisible}
@@ -28,9 +26,7 @@ export function SettingsModal() {
       onRequestClose={closeSettings}
     >
       <View style={styles.container}>
-        <View
-          style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}
-        >
+        <View style={styles.modalHeader}>
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
             <Text role="largeTitle" style={styles.title}>Settings</Text>
@@ -43,8 +39,6 @@ export function SettingsModal() {
         </View>
 
         <ScrollView
-          onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
-          scrollEventThrottle={16}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
@@ -94,10 +88,7 @@ const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 16,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: 'transparent',
     },
-    modalHeaderBorder: { borderBottomColor: theme.border },
     modalHeaderSide: {
       width: 44,
       alignItems: 'center',

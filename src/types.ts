@@ -73,6 +73,13 @@ export type PuzzleThumbnailProps = {
   size: number;
   theme: Theme;
   coloredRegions: boolean;
+  // Line-weight tuning (px). See PuzzleThumbnail for how each is clamped.
+  regionBorderTarget?: number; // heavy lines between regions + perimeter
+  regionBorderCapFrac?: number; // max fraction of a cell
+  regionBorderMin?: number; // px floor
+  gridLineTarget?: number; // light lines between cells inside a region
+  gridLineCapFrac?: number; // max fraction of a cell
+  gridLineMin?: number; // px floor
 };
 
 export type PackCardProps = {
@@ -124,6 +131,25 @@ export type StreakCell = {
 export type StreakProgressRowProps = {
   cells: StreakCell[];
   completedKeys: Set<string>;
+  theme: Theme;
+};
+
+// Whether today's streak puzzle is untouched, started but unsolved, or solved.
+export type StreakCardStatus = 'not-started' | 'in-progress' | 'complete';
+
+export type StreakCardProps = {
+  label: string;
+  starCount: number;
+  status: StreakCardStatus;
+  preview: Puzzle;
+  size: number;
+  theme: Theme;
+  coloredRegions: boolean;
+  onPress: () => void;
+};
+
+export type StreakCardSkeletonProps = {
+  size: number;
   theme: Theme;
 };
 

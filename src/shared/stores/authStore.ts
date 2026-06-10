@@ -14,7 +14,6 @@ type AuthState = {
   session: Session | null;
   user: User | null;
   isAnonymous: boolean;
-  isPasswordRecovery: boolean;
   initialize: () => Promise<void>;
   signInAnonymously: () => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
@@ -24,7 +23,7 @@ type AuthState = {
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
-  setNewPassword: (password: string) => Promise<void>;
+  resetPasswordWithOtp: (email: string, token: string, newPassword: string) => Promise<void>;
   handleDeepLink: (url: string) => Promise<void>;
 };
 
@@ -41,9 +40,21 @@ async function applySignIn(set: SetState, session: Session | null, user: User): 
 
 // Clears the named session and drops back to a fresh anonymous user.
 // Used by both signOut and deleteAccount, which share identical post-action cleanup.
+//
+// Wiping local PowerSync is REQUIRED here, not optional: the named user's rows
+// (puzzle_progress, streaks, entitlements) live in local SQLite and are NOT
+// removed by supabase.auth.signOut(). Without disconnectAndClear the new
+// anonymous user would inherit the previous account's progress locally — that
+// progress must stay in the account, not leak to the signed-out device. We
+// rebuild for the new anon id so its (empty) state syncs down before the UI
+// reads it.
 async function resetToAnonymous(set: SetState, get: () => AuthState): Promise<void> {
   set({ session: null, user: null, isAnonymous: true });
-  try { await get().signInAnonymously(); } catch {}
+  try {
+    await get().signInAnonymously();
+    const anonId = get().user?.id;
+    if (anonId) await reconnectPowerSync(anonId);
+  } catch {}
 }
 
 // Parses a URL fragment string ("key=val&key2=val2") into a plain object.
@@ -104,14 +115,16 @@ async function migrateAnonProgress(anonId: string, anonToken: string): Promise<v
   if (error) throw new Error(`Progress migration failed: ${error.message}`);
 }
 
-// After a successful merge, wipes the local PowerSync database and rebuilds it
-// for the named user. Prevents anon rows from coexisting with named-user rows
-// locally and ensures the UI reads merged data before it becomes visible.
-async function reconnectPowerSync(namedId: string): Promise<void> {
+// Wipes the local PowerSync database and rebuilds it for the given user, then
+// loads that user's entitlements. Called after a sign-in merge (rebuild for the
+// named user) and after sign-out/delete (rebuild for the fresh anon user).
+// Prevents one identity's rows from coexisting with another's locally and
+// ensures the UI reads the correct data before it becomes visible.
+async function reconnectPowerSync(userId: string): Promise<void> {
   await db.disconnectAndClear();
   await db.connect(new SupabaseConnector(), { crudUploadThrottleMs: 500 });
   await db.waitForFirstSync();
-  await useEntitlementsStore.getState().loadEntitlements(namedId);
+  await useEntitlementsStore.getState().loadEntitlements(userId);
 }
 
 // Shared wrapper for all three social/password sign-in flows.
@@ -165,7 +178,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
   isAnonymous: true,
-  isPasswordRecovery: false,
 
   initialize: async () => {
     GoogleSignin.configure({
@@ -193,18 +205,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     authSubscription?.unsubscribe();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        set({ session, user: session?.user ?? null, isAnonymous: false, isPasswordRecovery: true });
-        if (session) try { await adapty.identify(session.user.id); } catch {}
-        return;
-      }
       if (event === 'USER_UPDATED') {
         // Do NOT derive isAnonymous here. Supabase fires USER_UPDATED after
         // updateUser() during the pending-email-confirmation window, at which
         // point is_anonymous may already read false even though the email has
         // not been confirmed. isAnonymous is only updated on SIGNED_IN (which
         // fires when the confirmation link is clicked and setSession() runs).
-        if (get().isPasswordRecovery) set({ isPasswordRecovery: false });
         set({ session, user: session?.user ?? null });
         return;
       }
@@ -229,7 +235,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   handleDeepLink: async (url: string) => {
     // Supabase embeds the link type as a query param OR fragment param depending
     // on the flow. Checking the full URL string catches both cases.
-    if (!url.includes('type=recovery') && !url.includes('type=signup') && !url.includes('type=email_change')) return;
+    // Password recovery does NOT use deep links — it's an in-app OTP code flow
+    // (see requestPasswordReset / resetPasswordWithOtp). Only signup and
+    // email_change confirmations arrive here.
+    if (!url.includes('type=signup') && !url.includes('type=email_change')) return;
 
     const hashIdx = url.indexOf('#');
     const fragment = hashIdx >= 0 ? parseUrlFragment(url.slice(hashIdx + 1)) : {};
@@ -249,10 +258,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       queryStart >= 0 ? parseUrlFragment(url.slice(queryStart + 1, queryEnd)) : {};
     const tokenHash = query.token_hash ?? fragment.token_hash;
     const otpType = query.type ?? fragment.type;
-    if (
-      tokenHash &&
-      (otpType === 'recovery' || otpType === 'signup' || otpType === 'email_change')
-    ) {
+    if (tokenHash && (otpType === 'signup' || otpType === 'email_change')) {
       await supabase.auth.verifyOtp({ type: otpType, token_hash: tokenHash });
     }
   },
@@ -314,21 +320,41 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
+  // Sends a 6-digit recovery code to the user's email. The "Reset Password"
+  // email template must use {{ .Token }} (not {{ .ConfirmationURL }}) so the
+  // email carries a code rather than a link — the whole flow stays in-app.
   requestPasswordReset: async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'starbattle://reset-password',
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) throw error;
   },
 
-  setNewPassword: async (password: string) => {
-    if (password.length < 6) throw new Error('Password must be at least 6 characters');
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) throw error;
-    set({ isPasswordRecovery: false });
+  // Completes the in-app reset: verifies the emailed code, sets the new
+  // password, then runs the same migration + PowerSync reconnect as a normal
+  // sign-in so the recovered account's data actually loads on this device.
+  //
+  // verifyOtp + updateUser run inside withAnonMigration's doSignIn so the
+  // device's anonymous id is captured BEFORE the session flips to the named
+  // user — identical behavior to pressing "Sign In".
+  resetPasswordWithOtp: async (email: string, token: string, newPassword: string) => {
+    if (newPassword.length < 6) throw new Error('Password must be at least 6 characters');
+    await withAnonMigration(get, set, async () => {
+      const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' });
+      if (error) throw error;
+      const { data: updated, error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (updateError) throw updateError;
+      return { session: data.session, user: updated.user };
+    });
   },
 
   signOut: async () => {
+    // Best-effort: flush pending writes to the server while the named session
+    // is still valid, so the last few moves land in the account before
+    // resetToAnonymous wipes the local DB. Swallow failures (offline/timeout) —
+    // sign-out must not hang or be blocked by a stuck queue. Anything that can't
+    // sync offline is unavoidably lost; this just narrows that window.
+    try { await drainUploadQueue(); } catch {}
     await supabase.auth.signOut();
     try { await adapty.logout(); } catch {}
     await resetToAnonymous(set, get);

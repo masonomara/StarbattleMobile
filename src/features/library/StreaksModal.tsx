@@ -57,7 +57,6 @@ export function StreaksModal() {
   const userId = useAuthStore(s => s.user?.id);
   const { streaks } = useStreakRows(userId);
 
-  const [scrolled, setScrolled] = useState(false);
   // Past archive date keys per type. Computed once per mount — the values only
   // change at the midnight rollover, which doesn't matter within a session.
   const keysByType = useMemo<Record<StreakType, string[]>>(
@@ -119,9 +118,7 @@ export function StreaksModal() {
       onRequestClose={closeStreaks}
     >
       <View style={styles.container}>
-        <View
-          style={[styles.modalHeader, scrolled && styles.modalHeaderBorder]}
-        >
+        <View style={styles.modalHeader}>
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
             <Text role="largeTitle" style={styles.headerTitle}>Streaks</Text>
@@ -134,8 +131,6 @@ export function StreaksModal() {
         </View>
 
         <ScrollView
-          onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
-          scrollEventThrottle={16}
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.streakGrid}>
@@ -240,11 +235,6 @@ const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 16,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: 'transparent',
-    },
-    modalHeaderBorder: {
-      borderBottomColor: theme.border,
     },
     modalHeaderSide: {
       width: 44,

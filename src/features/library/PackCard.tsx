@@ -6,7 +6,7 @@ import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import type { PackCardProps, PackCardSkeletonProps, Theme } from '../../types';
 
-const THUMB_SIZE = 72;
+const THUMB_SIZE = 64;
 
 export function PackCard({
   name,
@@ -24,20 +24,16 @@ export function PackCard({
   const styles = createStyles(theme);
 
   const isComplete = total != null && total > 0 && completed === total;
+  // Fold solve progress into the subtitle, e.g. "1-star · 60/90 complete"
+  // (non-breaking spaces keep the middot glued to its neighbors).
+  const subtitle =
+    !locked && total != null ? `${meta} · ${completed ?? 0}/${total}` : meta;
   const rightNode =
     right ??
     (locked ? (
       <Lock size={19} color={theme.textSecondary} strokeWidth={2.5} />
-    ) : total != null ? (
-      <View style={styles.progress}>
-        {isComplete && <Check size={14} color={theme.green} strokeWidth={3} />}
-        <Text
-          role="subhead"
-          style={[styles.progressText, isComplete && styles.progressComplete]}
-        >
-          {completed ?? 0}/{total}
-        </Text>
-      </View>
+    ) : isComplete ? (
+      <Check size={14} color={theme.green} strokeWidth={3} />
     ) : null);
 
   return (
@@ -52,6 +48,12 @@ export function PackCard({
             size={THUMB_SIZE}
             theme={theme}
             coloredRegions={coloredRegions}
+            regionBorderTarget={2.1}
+            regionBorderCapFrac={0.15}
+            regionBorderMin={0.9}
+            gridLineTarget={0.7}
+            gridLineCapFrac={0.05}
+            gridLineMin={0.3}
           />
         </View>
       ) : (
@@ -62,7 +64,7 @@ export function PackCard({
           {name}
         </Text>
         <Text role="subhead" style={styles.metaText}>
-          {meta}
+          {subtitle}
         </Text>
       </View>
       {rightNode && <View style={styles.right}>{rightNode}</View>}

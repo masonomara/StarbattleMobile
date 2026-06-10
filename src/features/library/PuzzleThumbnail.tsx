@@ -17,6 +17,7 @@ import type { PuzzleThumbnailProps } from '../../types';
 // Tune TARGET to change overall weight. Raise CAP_FRAC to let dense grids keep
 // more of the full width. Raise MIN if thin lines vanish on small dense tiles.
 // Set CAP_FRAC high (e.g. 1) and MIN low to make TARGET purely fixed everywhere.
+// These are the defaults; callers can override any of them per usage via props.
 const REGION_BORDER_TARGET = 2.4; // px — heavy lines between regions + perimeter
 const REGION_BORDER_CAP_FRAC = 0.15; // ≤ 18% of a cell
 const REGION_BORDER_MIN = 1.5; // px floor
@@ -33,6 +34,12 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   size,
   theme,
   coloredRegions,
+  regionBorderTarget = REGION_BORDER_TARGET,
+  regionBorderCapFrac = REGION_BORDER_CAP_FRAC,
+  regionBorderMin = REGION_BORDER_MIN,
+  gridLineTarget = GRID_LINE_TARGET,
+  gridLineCapFrac = GRID_LINE_CAP_FRAC,
+  gridLineMin = GRID_LINE_MIN,
 }: PuzzleThumbnailProps) {
   const { size: gridSize, regions } = puzzle;
   // Previews are sized from fractional widths (streak cards = windowWidth * 0.75,
@@ -45,11 +52,11 @@ export const PuzzleThumbnail = React.memo(function PuzzleThumbnail({
   const px = Math.floor(size * dpr) / dpr;
   const cs = px / gridSize;
   const borderW = clamp(
-    REGION_BORDER_TARGET,
-    REGION_BORDER_MIN,
-    cs * REGION_BORDER_CAP_FRAC,
+    regionBorderTarget,
+    regionBorderMin,
+    cs * regionBorderCapFrac,
   );
-  const gridW = clamp(GRID_LINE_TARGET, GRID_LINE_MIN, cs * GRID_LINE_CAP_FRAC);
+  const gridW = clamp(gridLineTarget, gridLineMin, cs * gridLineCapFrac);
 
   const regionFillPaths = useMemo(() => {
     if (!coloredRegions) return null;

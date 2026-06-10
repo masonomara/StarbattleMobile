@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   ScrollView,
   Animated,
   StyleSheet,
-  Pressable,
   useWindowDimensions,
 } from 'react-native';
 import { Text } from '../../shared/ui/Text';
@@ -18,6 +17,7 @@ import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { usePackPreviews } from './usePackPreviews';
 import { useCompletionData } from './useCompletionData';
 import {
+  getCurrentKey,
   getStreakCells,
   STREAK_TYPES,
   STREAK_LABELS,
@@ -25,15 +25,16 @@ import {
 } from '../../shared/lib/streakDate';
 import { useAuthStore } from '../../shared/stores/authStore';
 import { startupTimer } from '../../shared/lib/startupTimer';
-import { PuzzleThumbnail } from './PuzzleThumbnail';
 import { StreakProgressRow } from './StreakProgressRow';
+import { StreakCard, StreakCardSkeleton } from './StreakCard';
 import { PackCard, PackCardSkeleton } from './PackCard';
-import { PulseBox, PulseProvider } from '../../shared/ui/Pulse';
+import { PulseProvider } from '../../shared/ui/Pulse';
 import type {
   Theme,
   PackCatalogItem,
   RootStackParamList,
   StreakType,
+  StreakCardStatus,
 } from '../../types';
 import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
 import { MoreHorizontal } from 'lucide-react-native';
@@ -44,7 +45,7 @@ const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 // a stable, populated-looking shape from first paint.
 const SKELETON_PACK_COUNT = 4;
 // Streak card thumbnail width as a fraction of the viewport (RN has no vw unit).
-const STREAK_CARD_FRACTION = 0.8;
+const STREAK_CARD_FRACTION = 0.85;
 // Horizontal gap between streak cards (matches the carousel's contentContainer gap).
 const STREAK_CARD_GAP = 20;
 // Left inset of the streak carousel from the screen edge.
@@ -86,14 +87,52 @@ export function HomeScreen({
   const hapticsEnabled = useSettingsStore(s => s.settings.haptics);
   const { packCatalog, hasPackAccess } = useEntitlements();
 
-  const [scrolled, setScrolled] = useState(false);
-
   // Distance between consecutive snap points (one card + the gap after it).
   const streakInterval = streakCardSize + STREAK_CARD_GAP;
 
   // Carousel scroll offset, mapped natively so the header crossfade tracks the
   // drag on the UI thread without re-rendering on JS (the fast-scroll jank).
   const scrollX = useRef(new Animated.Value(0)).current;
+
+  // Vertical scroll offset of the page, used to fade the header progress row out
+  // once the streak carousel it mirrors has scrolled up behind the header — once
+  // the cards are gone, the little progress dots have nothing to point at.
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const onPageScroll = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+        useNativeDriver: true,
+      }),
+    [scrollY],
+  );
+  // Bottom edge of the streak section in content coordinates (measured), so we
+  // know the scroll offset at which the carousel finishes hiding behind header.
+  const [streakBottom, setStreakBottom] = useState(0);
+  const headerBottom = HEADER_HEIGHT + insets.top;
+  // As the carousel hides behind the header, crossfade the progress dots out and
+  // a "Puzzle Library" title in — the header keeps a label once the dots have
+  // nothing to point at.
+  const { headerProgressOpacity, headerTitleOpacity } = useMemo(() => {
+    if (streakBottom <= 0)
+      return { headerProgressOpacity: 1, headerTitleOpacity: 0 };
+    // scrollY at which the section's bottom edge meets the header's bottom edge —
+    // the moment the carousel is fully tucked away. Fade across the last stretch
+    // before that so it dissolves as it goes rather than blinking off.
+    const goneAt = streakBottom - headerBottom;
+    const fadeStart = Math.max(0, goneAt - 80);
+    return {
+      headerProgressOpacity: scrollY.interpolate({
+        inputRange: [fadeStart, goneAt],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      }),
+      headerTitleOpacity: scrollY.interpolate({
+        inputRange: [fadeStart, goneAt],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+      }),
+    };
+  }, [scrollY, streakBottom, headerBottom]);
 
   // One opacity per challenge. A row stays fully visible while its card is parked
   // and through most of the swipe (the PLATEAU), then fades to 0 by the midpoint —
@@ -180,58 +219,51 @@ export function HomeScreen({
   // Thumbnail previews per pack; each card fills in as its preview resolves.
   const { packPreviews } = usePackPreviews(packCatalog);
 
-  // Solved counts per library pack and the streak keys for the header progress
-  // rows. Reloads on focus so numbers update after the user solves a puzzle.
-  const { completedPerPack, completedStreakKeys } = useCompletionData(
-    packCatalog,
-    userId,
-  );
-
-  // Fixed-size placeholder matching a streak card's footprint, so the carousel
-  // doesn't pop in and shove the library list down while previews load.
-  const renderStreakSkeleton = (key: string) => (
-    <View key={key} style={styles.streakCard}>
-      <PulseBox
-        width={streakCardSize}
-        height={streakCardSize}
-        radius={5}
-        baseColor={theme.border}
-      />
-      <PulseBox width={120} height={36} radius={5} baseColor={theme.border} />
-      <PulseBox width={110} height={22} radius={5} baseColor={theme.border} />
-    </View>
-  );
+  // Streak status (completed / in-progress today) and per-pack solved counts plus
+  // the streak keys for the header progress rows. Updates reactively as the user
+  // solves or starts puzzles.
+  const {
+    completedPuzzleIds,
+    startedStreakIds,
+    completedPerPack,
+    completedStreakKeys,
+  } = useCompletionData(packCatalog, userId);
 
   return (
     <PulseProvider>
       <View style={styles.container}>
-        {/* Floating header — shows a bottom border once the user has scrolled */}
-        <View
-          style={[
-            styles.header,
-            { paddingTop: insets.top },
-            scrolled && styles.headerBorder,
-          ]}
-        >
+        {/* Floating header */}
+        <View style={[styles.header, { paddingTop: insets.top }]}>
           {/* Stacked progress rows that crossfade as the carousel scrolls between
               challenges — driven by native scroll offset, no re-renders. */}
           <View style={styles.headerProgress}>
-            {STREAK_TYPES.map((type, i) => (
-              <Animated.View
-                key={type}
-                pointerEvents="none"
-                style={[
-                  styles.headerProgressLayer,
-                  { opacity: headerOpacities[i] },
-                ]}
-              >
-                <StreakProgressRow
-                  cells={getStreakCells(type)}
-                  completedKeys={completedStreakKeys[type]}
-                  theme={theme}
-                />
-              </Animated.View>
-            ))}
+            <Animated.View style={{ opacity: headerProgressOpacity }}>
+              {STREAK_TYPES.map((type, i) => (
+                <Animated.View
+                  key={type}
+                  pointerEvents="none"
+                  style={[
+                    styles.headerProgressLayer,
+                    { opacity: headerOpacities[i] },
+                  ]}
+                >
+                  <StreakProgressRow
+                    cells={getStreakCells(type)}
+                    completedKeys={completedStreakKeys[type]}
+                    theme={theme}
+                  />
+                </Animated.View>
+              ))}
+            </Animated.View>
+            {/* Fades in as the progress dots fade out, once the carousel is gone. */}
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.headerTitle, { opacity: headerTitleOpacity }]}
+            >
+              <Text role="subhead" style={styles.headerTitleText}>
+                Puzzle Library
+              </Text>
+            </Animated.View>
           </View>
           <View style={styles.headerRight}>
             <CircleButton
@@ -243,8 +275,8 @@ export function HomeScreen({
           </View>
         </View>
 
-        <ScrollView
-          onScroll={e => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+        <Animated.ScrollView
+          onScroll={onPageScroll}
           scrollEventThrottle={16}
           contentContainerStyle={{
             paddingTop: HEADER_HEIGHT + insets.top,
@@ -252,7 +284,13 @@ export function HomeScreen({
           }}
         >
           {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
-          <View style={styles.streakSection}>
+          <View
+            style={styles.streakSection}
+            onLayout={e => {
+              const { y, height } = e.nativeEvent.layout;
+              setStreakBottom(y + height);
+            }}
+          >
             <Animated.ScrollView
               style={styles.streakRow}
               horizontal
@@ -276,36 +314,51 @@ export function HomeScreen({
               }}
             >
               {streakPacks.length === 0
-                ? STREAK_TYPES.map(type => renderStreakSkeleton(type))
+                ? STREAK_TYPES.map(type => (
+                    <StreakCardSkeleton
+                      key={type}
+                      size={streakCardSize}
+                      theme={theme}
+                    />
+                  ))
                 : streakPacks.map(pack => {
                     // streakPacks only holds StreakType packs (see categorization),
                     // so the guard always passes here — it just narrows the type.
                     if (!isStreakType(pack.type)) return null;
                     const type = pack.type;
                     const preview = packPreviews[pack.id];
-                    if (!preview) return renderStreakSkeleton(pack.id);
+                    if (!preview)
+                      return (
+                        <StreakCardSkeleton
+                          key={pack.id}
+                          size={streakCardSize}
+                          theme={theme}
+                        />
+                      );
+
+                    const puzzleId = `${pack.id}:${getCurrentKey(type)}`;
+                    const status: StreakCardStatus = completedPuzzleIds.has(
+                      puzzleId,
+                    )
+                      ? 'complete'
+                      : startedStreakIds.has(puzzleId)
+                      ? 'in-progress'
+                      : 'not-started';
 
                     return (
-                      <Pressable
+                      <StreakCard
+                        key={pack.id}
+                        label={STREAK_LABELS[type]}
+                        starCount={STREAK_STAR_COUNT[type]}
+                        status={status}
+                        preview={preview}
+                        size={streakCardSize}
+                        theme={theme}
+                        coloredRegions={coloredRegions}
                         onPress={() =>
                           navigation.navigate('Puzzle', { packId: pack.id })
                         }
-                        key={pack.id}
-                        style={styles.streakCard}
-                      >
-                        <PuzzleThumbnail
-                          puzzle={preview}
-                          size={streakCardSize}
-                          theme={theme}
-                          coloredRegions={coloredRegions}
-                        />
-                        <Text role="title1" style={styles.streakLabel}>
-                          {`${STREAK_LABELS[type]} Challenge`}
-                        </Text>
-                        <Text role="subhead" style={styles.streakMeta}>
-                          {`${STREAK_STAR_COUNT[type]} star puzzle`}
-                        </Text>
-                      </Pressable>
+                      />
                     );
                   })}
             </Animated.ScrollView>
@@ -336,7 +389,7 @@ export function HomeScreen({
                     <PackCard
                       key={pack.id}
                       name={pack.name}
-                      meta={`${pack.stars} star puzzles`}
+                      meta={`${pack.stars}-star`}
                       locked={!owned}
                       completed={
                         owned ? completedPerPack[pack.id] ?? 0 : undefined
@@ -354,7 +407,7 @@ export function HomeScreen({
               </View>
             ))}
           </View>
-        </ScrollView>
+        </Animated.ScrollView>
       </View>
     </PulseProvider>
   );
@@ -381,13 +434,6 @@ const createStyles = (
       paddingHorizontal: 20,
       height: HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
-      // Default border color matches background so it's invisible until
-      // headerBorder overrides it on scroll.
-      borderBottomWidth: 1,
-      borderBottomColor: theme.background,
-    },
-    headerBorder: {
-      borderBottomColor: theme.border,
     },
     // Reserves header space for the absolutely-positioned progress rows.
     // Height = one circle; width covers the widest row (daily, 7 cells).
@@ -401,9 +447,24 @@ const createStyles = (
       position: 'absolute',
       left: 0,
     },
+    // "Puzzle Library" title that replaces the progress dots once they fade out.
+    // Absolute + left-anchored so it shares the slot without wrapping (the
+    // reserved 156px box has overflow visible, so a wider title still shows).
+    headerTitle: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
+    },
+    headerTitleText: {
+      color: theme.text,
+      fontWeight: '600',
+    },
     headerRight: {
       flexDirection: 'row',
       gap: 12,
+      marginRight: -7,
     },
     streakSection: {
       backgroundColor: theme.background,
@@ -417,30 +478,21 @@ const createStyles = (
       gap: 12,
       zIndex: 100,
       overflow: 'visible',
-      marginTop: 24,
-    },
-    streakCard: {
-      justifyContent: 'flex-start',
-    },
-    streakLabel: {
-      color: theme.text,
-      marginTop: 10,
-    },
-    streakMeta: {
-      color: theme.textSecondary,
+      marginTop: 34,
+      marginBottom: 34,
     },
     // Section header for each Puzzle Library bundle (Intro, 1-Star, …).
     sectionLabel: {
       color: theme.text,
       borderTopWidth: 1,
       borderTopColor: theme.border,
-      paddingTop: 12,
-      marginTop: 50,
+      paddingTop: 8,
+      marginTop: 12,
       marginBottom: 24,
-      textTransform: 'uppercase',
-      fontWeight: '400',
-      fontSize: 14,
-      lineHeight: 19,
+      // textTransform: 'uppercase',
+      fontWeight: '500',
+      // fontSize: 14,
+      // lineHeight: 19,
     },
   });
 };

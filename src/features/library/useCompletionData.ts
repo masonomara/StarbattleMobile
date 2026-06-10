@@ -6,6 +6,13 @@ import type { PackCatalogItem, StreakType } from '../../types';
 const COMPLETED_QUERY =
   'SELECT puzzle_id FROM puzzle_progress WHERE user_id = ? AND completed = 1';
 
+// In-progress rows: a puzzle the user has touched but not solved. Scoped only by
+// completed=0 (filtered to today's streak ids in JS). The rowComparator keys on
+// puzzle_id, so mid-play writes (cells/marks/timer) don't re-emit — only a
+// puzzle's first move (row appears) or its completion (row leaves this set) does.
+const STARTED_QUERY =
+  'SELECT puzzle_id FROM puzzle_progress WHERE user_id = ? AND completed = 0';
+
 // Tracks puzzle completion for every visible pack via a live PowerSync query.
 // Counts update reactively as puzzle_progress changes, so no focus-based refresh
 // is needed.
@@ -16,6 +23,7 @@ const COMPLETED_QUERY =
 //
 // Returns three values derived from the same completion scan:
 //   completedPuzzleIds — streak puzzle IDs completed today, keyed as "packId:dateKey"
+//   startedStreakIds   — today's streak puzzle IDs touched but not yet solved
 //   completedPerPack   — solved count per library pack
 //   completedStreakKeys — per cadence, the set of solved keys with the "packId:"
 //                        prefix stripped (today's + any archived challenges), e.g.
@@ -29,6 +37,7 @@ export function useCompletionData(
   userId: string | undefined,
 ): {
   completedPuzzleIds: Set<string>;
+  startedStreakIds: Set<string>;
   completedPerPack: Record<string, number>;
   completedStreakKeys: Record<StreakType, Set<string>>;
   isLoading: boolean;
@@ -39,15 +48,29 @@ export function useCompletionData(
     { rowComparator: { keyBy: r => r.puzzle_id, compareBy: r => r.puzzle_id } },
   );
 
-  const { completedPuzzleIds, completedPerPack, completedStreakKeys } = useMemo(() => {
-    const allCompleted = new Set(data.map(r => r.puzzle_id));
+  const { data: startedData } = useQuery<{ puzzle_id: string }>(
+    STARTED_QUERY,
+    [userId ?? ''],
+    { rowComparator: { keyBy: r => r.puzzle_id, compareBy: r => r.puzzle_id } },
+  );
 
-    // Streak packs: check whether today's specific puzzle is done.
+  const {
+    completedPuzzleIds,
+    startedStreakIds,
+    completedPerPack,
+    completedStreakKeys,
+  } = useMemo(() => {
+    const allCompleted = new Set(data.map(r => r.puzzle_id));
+    const allStarted = new Set(startedData.map(r => r.puzzle_id));
+
+    // Streak packs: classify today's specific puzzle as done or in-progress.
     const completedIds = new Set<string>();
+    const startedIds = new Set<string>();
     for (const pack of packCatalog) {
       if (!isStreakType(pack.type)) continue;
       const puzzleId = `${pack.id}:${getCurrentKey(pack.type)}`;
       if (allCompleted.has(puzzleId)) completedIds.add(puzzleId);
+      else if (allStarted.has(puzzleId)) startedIds.add(puzzleId);
     }
 
     // Map every streak pack id to its cadence so a single pass can route each
@@ -84,10 +107,17 @@ export function useCompletionData(
 
     return {
       completedPuzzleIds: completedIds,
+      startedStreakIds: startedIds,
       completedPerPack: counts,
       completedStreakKeys: streakKeys,
     };
-  }, [data, packCatalog]);
+  }, [data, startedData, packCatalog]);
 
-  return { completedPuzzleIds, completedPerPack, completedStreakKeys, isLoading };
+  return {
+    completedPuzzleIds,
+    startedStreakIds,
+    completedPerPack,
+    completedStreakKeys,
+    isLoading,
+  };
 }

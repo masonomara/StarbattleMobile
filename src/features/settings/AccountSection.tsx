@@ -28,7 +28,7 @@ type EmailMode =
   | 'signin'
   | 'confirm-email'
   | 'forgot-password'
-  | 'reset-sent'
+  | 'reset-otp'
   | null;
 
 function GoogleIcon({ size }: { size: number }) {
@@ -76,6 +76,7 @@ export function AccountSection() {
   const signUpWithEmail = useAuthStore(s => s.signUpWithEmail);
   const signInWithEmail = useAuthStore(s => s.signInWithEmail);
   const requestPasswordReset = useAuthStore(s => s.requestPasswordReset);
+  const resetPasswordWithOtp = useAuthStore(s => s.resetPasswordWithOtp);
   const signOut = useAuthStore(s => s.signOut);
   const deleteAccount = useAuthStore(s => s.deleteAccount);
 
@@ -88,6 +89,7 @@ export function AccountSection() {
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [resetCode, setResetCode] = useState('');
 
   async function handleForgotPassword() {
     if (!email) {
@@ -96,7 +98,30 @@ export function AccountSection() {
     }
     await withLoading(async () => {
       await requestPasswordReset(email);
-      setEmailMode('reset-sent');
+      setResetCode('');
+      setPassword('');
+      setEmailMode('reset-otp');
+    });
+  }
+
+  async function handleResetPassword() {
+    if (resetCode.trim().length !== 6) {
+      setError('Enter the 6-digit code from your email');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    await withLoading(async () => {
+      // On success the session flips to the recovered (non-anonymous) account,
+      // so this section re-renders into the signed-in view — no success screen
+      // needed. Just clear the transient inputs.
+      await resetPasswordWithOtp(email, resetCode.trim(), password);
+      setEmailMode(null);
+      setEmail('');
+      setPassword('');
+      setResetCode('');
     });
   }
 
@@ -312,6 +337,9 @@ export function AccountSection() {
           {emailMode === 'forgot-password' && (
             <View style={{ gap: 12 }}>
               <Text role="body" style={styles.inputLabel}>Reset Password</Text>
+              <Text role="body" style={styles.sectionBody}>
+                Enter your email and we'll send you a code to reset your password.
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -330,7 +358,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text role="headline" style={styles.primaryButtonText}>Send Reset Link</Text>
+                  <Text role="headline" style={styles.primaryButtonText}>Send Code</Text>
                 )}
               </Pressable>
               <Pressable
@@ -345,22 +373,71 @@ export function AccountSection() {
             </View>
           )}
 
-          {emailMode === 'reset-sent' && (
-            <View style={styles.confirmEmailBox}>
-              <Text role="headline" style={styles.confirmEmailTitle}>Check your inbox</Text>
-              <Text role="body" style={styles.confirmEmailBody}>
-                We sent a password reset link to{' '}
-                <Text style={styles.confirmEmailAddress}>{email}</Text>.
+          {emailMode === 'reset-otp' && (
+            <View style={{ gap: 12 }}>
+              <Text role="body" style={styles.inputLabel}>Reset Password</Text>
+              <Text role="body" style={styles.sectionBody}>
+                Enter the code we sent to{' '}
+                <Text style={styles.confirmEmailAddress}>{email}</Text> and choose
+                a new password.
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="6-digit code"
+                placeholderTextColor={theme.textSecondary}
+                value={resetCode}
+                onChangeText={setResetCode}
+                keyboardType="number-pad"
+                autoComplete="one-time-code"
+                textContentType="oneTimeCode"
+                maxLength={6}
+                autoFocus
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="New password"
+                placeholderTextColor={theme.textSecondary}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoComplete="new-password"
+              />
+              <Text
+                style={[
+                  styles.passwordHint,
+                  password.length >= 6 && styles.passwordHintMet,
+                ]}
+              >
+                At least 6 characters
               </Text>
               <Pressable
-                style={styles.primaryButton}
+                style={[styles.primaryButton, loading && styles.disabled]}
+                onPress={handleResetPassword}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color={theme.background} />
+                ) : (
+                  <Text role="headline" style={styles.primaryButtonText}>Reset Password</Text>
+                )}
+              </Pressable>
+              <Pressable
+                style={styles.linkButton}
+                onPress={() => withLoading(() => requestPasswordReset(email))}
+                disabled={loading}
+              >
+                <Text role="subhead" style={styles.linkText}>Resend Code</Text>
+              </Pressable>
+              <Pressable
+                style={styles.linkButton}
                 onPress={() => {
-                  setEmailMode(null);
-                  setEmail('');
+                  setEmailMode('signin');
+                  setResetCode('');
+                  setPassword('');
                   setError(null);
                 }}
               >
-                <Text role="headline" style={styles.primaryButtonText}>Done</Text>
+                <Text role="subhead" style={styles.linkText}>Back to Sign In</Text>
               </Pressable>
             </View>
           )}

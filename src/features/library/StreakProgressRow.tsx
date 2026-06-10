@@ -94,7 +94,7 @@ const createStyles = (theme: Theme) =>
       padding: 0,
     },
     circleToday: {
-      borderBottomWidth: 1.25,
+      borderBottomWidth: 1,
       borderRadius: 0,
       width: CIRCLE / 2,
       marginLeft: CIRCLE / 4,
@@ -128,7 +128,7 @@ const createStyles = (theme: Theme) =>
       fontSize: 11,
       lineHeight: 15,
       fontWeight: '600',
-      color: theme.text,
+      color: theme.textSecondary,
     },
     letterToday: {
       color: theme.text,

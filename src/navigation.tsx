@@ -13,7 +13,6 @@ import { PuzzleScreen } from './features/puzzle/PuzzleScreen';
 import { ArchivePackScreen } from './features/library/ArchivePackScreen';
 import { StreaksModal } from './features/library/StreaksModal';
 import { SettingsModal } from './features/settings/SettingsModal';
-import { ResetPasswordModal } from './shared/ui/ResetPasswordModal';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { useTheme } from './shared/theme/useTheme';
 import { hasSeenTutorial } from './shared/stores/settingsStore';
@@ -93,7 +92,6 @@ export function Navigation() {
         <Stack.Screen name="Tutorial" component={WrappedTutorial} />
       </Stack.Navigator>
       <SettingsModal />
-      <ResetPasswordModal />
       <StreaksModal />
     </NavigationContainer>
   );
