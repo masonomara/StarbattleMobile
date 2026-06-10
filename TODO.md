@@ -21,5 +21,8 @@
 - [ ] Add paid packs to test how they work
 - [ ] Add prices for Latin America and Europe
 
+### UX
+- [ ] Add streak notifications
+
 ### Android
 - [ ] Test on Android

@@ -54,7 +54,7 @@ Primary outcome: A popular and user friendly puzzle app.
 Top priorities:
 1. The user experienc eneeds to feel like a natural way designed by Jony Ive
 2. Performance such as speeding up hitn loading and making puzzles laod as quickly as possible
-3. Mak esur everythign is ready to send out to people who want to test the app.
+3. Make sure the offline experience is perfect, people need to be abel to play with no internet as compeltley as possible
 
 Active projects:
 - Adding a better puzzle library
