@@ -7,7 +7,7 @@ import {
   decodeFromDisk,
   decodeHintsFromDisk,
   writeFileThrottled,
-  readFileChunked,
+  readFileText,
 } from './packStorage';
 import { mark, time } from '../shared/lib/perfLog';
 
@@ -121,15 +121,28 @@ export async function downloadToFile(
   const result = await rnfs.downloadFile({
     fromUrl: data.signedUrl,
     toFile: localPath,
+    // Force an UNCOMPRESSED transfer. Supabase fronts storage with Cloudflare,
+    // which gzips JSON on the fly whenever the client sends Accept-Encoding: gzip
+    // (NSURLSession does by default) AND then drops Content-Length (HTTP/2
+    // streaming). That breaks this path two ways: (1) the truncation guard below
+    // goes inert because `begin` reports contentLength = -1, and (2) if the
+    // native download layer doesn't transparently inflate the body, the raw gzip
+    // bytes land on disk and every later JSON.parse throws — which surfaces as
+    // fetchHints' "streaming failed" in-memory fallback on cold daily-open.
+    // identity restores a real Content-Length (so the truncation guard below
+    // works) and guarantees plain JSON on disk. The catalog is a one-time
+    // offline-library prefetch, so the larger transfer is an acceptable trade for
+    // a reliable offline cache.
+    headers: { 'Accept-Encoding': 'identity' },
     begin: ({ contentLength }) => {
       expectedBytes = contentLength;
     },
   }).promise;
-  // Use "<" not "!=": a truncated body always writes fewer bytes than
-  // advertised, while a gzip-encoded response can legitimately write MORE
-  // (Content-Length is the compressed size). Erring toward accepting avoids
-  // false-rejecting a valid file; structural corruption that slips through is
-  // caught and evicted on read (see fetchPack/fetchHints).
+  // With identity the body is uncompressed, so bytesWritten should EQUAL
+  // expectedBytes. Keep "<" (not "!=") as defense-in-depth: a truncated body
+  // always writes fewer bytes than advertised, and should a CDN ever ignore
+  // identity and gzip anyway, a transparently-inflated body writes MORE than the
+  // (compressed) Content-Length — which we must not false-reject.
   const truncated = expectedBytes > 0 && result.bytesWritten < expectedBytes;
   if (result.statusCode !== 200 || truncated) {
     // Remove the partial/error body so a later read doesn't parse garbage and
@@ -154,10 +167,8 @@ export async function fetchPack(
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${localKey}`;
     let raw: string | null = null;
     try {
-      // Chunked + yielding read (see readFileChunked): a one-shot readFile of all
-      // packs at HomeScreen mount marshalled each across the bridge back-to-back
-      // and stalled the JS thread ~1s. Chunked keeps the home screen responsive.
-      raw = await readFileChunked(rnfs, localPath, localKey);
+      // readFile over JSI (new arch); the board/home never await this read.
+      raw = await readFileText(localPath, localKey);
     } catch {
       // not on disk yet (stat/read threw) — fall through to network below
     }
@@ -219,11 +230,9 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${key}`;
     let raw: string | null = null;
     try {
-      // Chunked + yielding read: the hints file is the largest in the catalog,
-      // and a one-shot rnfs.readFile('utf8') of it froze the JS thread/bridge for
-      // ~39s on puzzle open. readFileChunked keeps gameplay interactive while it
-      // loads in the background (the board never awaits this).
-      raw = await readFileChunked(rnfs, localPath, key);
+      // readFile over JSI (new arch); the board loads hints without awaiting
+      // this, so the largest file in the catalog never blocks puzzle open.
+      raw = await readFileText(localPath, key);
     } catch {
       // not on disk yet (stat/read threw) — fall through to network below
     }
@@ -241,11 +250,10 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
       }
     }
     // Not on disk (or evicted as corrupt). Stream the download straight to disk
-    // natively (downloadToFile, off the bridge) then read it back chunked — both
-    // non-blocking. The old path here did fetchFromSupabase + writeFileThrottled,
-    // which marshalled the whole 3.7MB across the bridge to WRITE it and froze the
-    // JS thread ~28s on first daily-open. Streak hints aren't prefetched, so this
-    // network path is the common first-open case, not a rare fallback.
+    // natively (downloadToFile, off the JS thread) then read it back. This is the
+    // cold-open path when prefetch hasn't yet finished this file; the old path
+    // here did fetchFromSupabase + writeFileThrottled, which marshalled the whole
+    // 3.7MB across the bridge to WRITE it and froze the JS thread ~28s.
     mark('HINTS', `${key} not on disk — streaming download to disk`);
     const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
     await rnfs.mkdir(packDir).catch(() => {});
@@ -253,7 +261,7 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
       const endDl = time('HINTS', `downloadToFile ${key}`);
       await downloadToFile(key, localPath);
       endDl();
-      const text = await readFileChunked(rnfs, localPath, key);
+      const text = await readFileText(localPath, key);
       const endParse = time('HINTS', `JSON.parse ${key} (after download)`);
       const parsed = decodeHintsFromDisk(text).hints;
       endParse(`${parsed.length} puzzles`);
