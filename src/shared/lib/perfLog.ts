@@ -33,15 +33,25 @@ export function mark(tag: string, msg: string): void {
 }
 
 // Times a synchronous-or-async span. Returns an end() that logs the duration.
-// The duration is wall-clock; for a span that blocks the JS thread (a big
-// JSON.parse), the duration IS the stall. Pass a size/count via the end() arg
-// to annotate the line (e.g. file KB, puzzle count).
-export function time(tag: string, label: string): (extra?: string) => number {
+// Pass a size/count via the end() arg to annotate the line (e.g. file KB).
+//
+// HOT flag: only spans the caller declares `sync: true` (pure JS-thread CPU,
+// e.g. a JSON.parse) get the ⚠ JS-THREAD HOT marker when they run ≥100ms —
+// for those the wall-clock duration IS the thread-block time. For an async span
+// the duration is wall-clock that includes I/O waits and says NOTHING about
+// thread blockage (a 2s streamed download never touches the thread), so flagging
+// it HOT is a false alarm. The [SB:STALL] watchdog is the authoritative freeze
+// signal for async work; don't infer freezes from these durations.
+export function time(
+  tag: string,
+  label: string,
+  opts?: { sync?: boolean },
+): (extra?: string) => number {
   if (!PERF_ENABLED) return () => 0;
   const start = now();
   return (extra?: string) => {
     const dur = now() - start;
-    const hot = dur >= 100 ? '  ⚠ JS-THREAD HOT' : '';
+    const hot = opts?.sync && dur >= 100 ? '  ⚠ JS-THREAD HOT' : '';
     console.log(
       `[SB:${tag}] ${fmt(start)} ${label} took ${dur}ms${extra ? ` (${extra})` : ''}${hot}`,
     );

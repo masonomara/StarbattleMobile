@@ -25,6 +25,7 @@ import {
 } from '../../shared/lib/streakDate';
 import { useAuthStore } from '../../shared/stores/authStore';
 import { startupTimer } from '../../shared/lib/startupTimer';
+import { mark } from '../../shared/lib/perfLog';
 import { StreakProgressRow } from './StreakProgressRow';
 import { StreakCard, StreakCardSkeleton } from './StreakCard';
 import { PackCard, PackCardSkeleton } from './PackCard';
@@ -40,6 +41,12 @@ import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
 import { MoreHorizontal } from 'lucide-react-native';
 
 const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
+
+// One-shot guard so the first-render mark fires once for the cold launch, not on
+// every re-render. Separates "HomeScreen body evaluated (render)" from the
+// existing useEffect "first mount" log — the gap between them is JS-thread
+// effect-flush latency (a painted-but-frozen screen), distinct from a late paint.
+let loggedFirstRender = false;
 
 // Placeholder library cards rendered before the catalog syncs, so the list has
 // a stable, populated-looking shape from first paint.
@@ -77,6 +84,10 @@ function bundleSortKey(bundle: string): number {
 export function HomeScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
+  if (!loggedFirstRender) {
+    loggedFirstRender = true;
+    mark('STARTUP', 'HomeScreen FIRST RENDER (body eval, pre-paint)');
+  }
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
   const streakCardSize = windowWidth * STREAK_CARD_FRACTION;

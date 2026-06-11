@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { db } from '../../powersync/AppSchema';
+import { time } from '../lib/perfLog';
 import type { Entitlements, PackCatalogItem } from '../../types';
 
 // Raw row shape returned by the `packs` PowerSync table.
@@ -73,7 +74,10 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   // Loads the published pack list from PowerSync. Called once at app startup
   // after the first sync, and again after reconnectPowerSync on account migration.
   loadPackCatalog: async () => {
-    const packCatalog = (await db.getAll<PackRow>(PACK_QUERY)).map(mapPackRow);
+    const endQuery = time('STARTUP', 'loadPackCatalog db.getAll(packs)');
+    const rows = await db.getAll<PackRow>(PACK_QUERY);
+    endQuery(`${rows.length} rows`);
+    const packCatalog = rows.map(mapPackRow);
     set({ packCatalog });
   },
 

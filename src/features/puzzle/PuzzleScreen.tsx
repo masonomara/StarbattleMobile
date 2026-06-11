@@ -204,7 +204,9 @@ export function PuzzleScreen({
     }
     if (!packData || !rawPuzzle) return;
     try {
-      const endParse = time('PZSCREEN', `parsePuzzle ${puzzleId}`);
+      const endParse = time('PZSCREEN', `parsePuzzle ${puzzleId}`, {
+        sync: true,
+      });
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
       endParse();
       loadPuzzle(parsed);

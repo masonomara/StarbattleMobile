@@ -8,7 +8,7 @@ import { useAuthStore } from './src/shared/stores/authStore';
 import { useSettingsStore } from './src/shared/stores/settingsStore';
 import { useEntitlementsStore } from './src/shared/stores/entitlementsStore';
 import { startupTimer } from './src/shared/lib/startupTimer';
-import { startStallWatch } from './src/shared/lib/perfLog';
+import { startStallWatch, mark, time } from './src/shared/lib/perfLog';
 import { db } from './src/powersync/AppSchema';
 import { PowerSyncContext } from '@powersync/react-native';
 import { SupabaseConnector } from './src/powersync/Connector';
@@ -19,13 +19,74 @@ import { prefetchAllCatalog } from './src/packs/prefetch';
 import { supabase } from './src/shared/lib/supabase';
 import type { PackCatalogItem } from './src/types';
 
-function runTieredPrefetch(catalog: PackCatalogItem[]): void {
+// Dedupes prefetch requests. Several independent signals ask for a catalog
+// refresh: the packs and entitlements watches (which RE-EMIT repeatedly while the
+// first sync settles, with identical rows), plus purchase and foreground events.
+// Each would otherwise kick a full prefetchAllCatalog (42 ETag round-trips +
+// downloads). Measured on a warm launch: it fired twice (+215ms and +1374ms),
+// the second from a watch re-emitting unchanged rows — pure waste.
+//
+// A signature over (catalog ids/paths + entitlements) collapses unchanged
+// re-emits, while `force` lets the foreground refresh re-run anyway to pick up
+// server-side content updates (a new ETag on the same pack set). The in-flight
+// guard ensures only one cycle runs at a time; a genuinely-new request that
+// arrives mid-cycle queues exactly one follow-up.
+let prefetchInFlight = false;
+let prefetchRerunRequested = false;
+let prefetchRerunForce = false;
+let lastPrefetchSignature = '';
+
+function prefetchSignature(catalog: PackCatalogItem[]): string {
+  const { entitlements } = useEntitlementsStore.getState();
+  const packs = catalog.map(p => `${p.id}:${p.storagePath ?? ''}`).join(',');
+  return `${entitlements.isPremium ? 1 : 0}|${[...entitlements.ownedPackIds]
+    .sort()
+    .join(',')}|${packs}`;
+}
+
+function runTieredPrefetch(
+  catalog: PackCatalogItem[],
+  { force = false }: { force?: boolean } = {},
+): void {
+  const signature = prefetchSignature(catalog);
+  if (prefetchInFlight) {
+    // Queue one follow-up only if this request is forced or the inputs actually
+    // changed; drop unchanged watch re-emits.
+    if (force || signature !== lastPrefetchSignature) {
+      prefetchRerunRequested = true;
+      prefetchRerunForce = prefetchRerunForce || force;
+    }
+    return;
+  }
+  // Nothing changed since the last cycle and not a forced refresh — skip.
+  if (!force && signature === lastPrefetchSignature) return;
+  prefetchInFlight = true;
+  lastPrefetchSignature = signature;
   // Defer the catalog prefetch until interactions/animations settle so it never
   // competes with first paint or the tutorial. The disk writes inside are also
   // concurrency-capped (see writeFileThrottled); together these keep first-launch
   // caching from pinning the JS thread.
+  // Mark the lag between scheduling and firing: runAfterInteractions only runs
+  // once every interaction handle clears, so a leaked/long animation handle can
+  // delay the whole catalog prefetch (and anything chained behind it).
+  mark('STARTUP', 'runTieredPrefetch scheduled (awaiting interactions)');
   InteractionManager.runAfterInteractions(() => {
-    prefetchAllCatalog(catalog).catch(() => {});
+    mark('STARTUP', 'runAfterInteractions fired — prefetch starting');
+    prefetchAllCatalog(catalog)
+      .catch(() => {})
+      .finally(() => {
+        prefetchInFlight = false;
+        if (prefetchRerunRequested) {
+          prefetchRerunRequested = false;
+          const force2 = prefetchRerunForce;
+          prefetchRerunForce = false;
+          // Re-read the freshest catalog from the store rather than reusing the
+          // possibly-stale list captured by the coalesced earlier call.
+          runTieredPrefetch(useEntitlementsStore.getState().packCatalog, {
+            force: force2,
+          });
+        }
+      });
   });
 }
 
@@ -63,13 +124,18 @@ export default function App() {
     // opens, and PuzzleScreen loads them itself (sharing this cache), so warming
     // them at launch is pure startup cost for data the home screen never uses.
     authReady
-      .then(() =>
-        Promise.all([
+      .then(() => {
+        mark('STARTUP', 'authReady resolved — warming streak packs');
+        const endWarm = time('STARTUP', 'warm streak packs (3x getStreakPack)');
+        return Promise.all([
           getStreakPack('daily'),
           getStreakPack('weekly'),
           getStreakPack('monthly'),
-        ]),
-      )
+        ]).then(r => {
+          endWarm();
+          return r;
+        });
+      })
       .then(() => startupTimer.log('streak packs resolved'))
       .catch(() => {});
 
@@ -123,8 +189,10 @@ export default function App() {
       [],
       {
         onResult: async () => {
+          const endCat = time('STARTUP', 'packs watch onResult — loadPackCatalog');
           await useEntitlementsStore.getState().loadPackCatalog();
           const { packCatalog } = useEntitlementsStore.getState();
+          endCat(`${packCatalog.length} packs`);
           runTieredPrefetch(packCatalog);
         },
       },
@@ -176,7 +244,9 @@ export default function App() {
       if (nextState === 'active') {
         await supabase.auth.refreshSession();
         const { packCatalog } = useEntitlementsStore.getState();
-        runTieredPrefetch(packCatalog);
+        // force: re-check ETags on every foreground even when the catalog and
+        // entitlements are unchanged, so a server-side content update is picked up.
+        runTieredPrefetch(packCatalog, { force: true });
       }
     });
 

@@ -16,6 +16,7 @@ import { SettingsModal } from './features/settings/SettingsModal';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { useTheme } from './shared/theme/useTheme';
 import { hasSeenTutorial } from './shared/stores/settingsStore';
+import { mark } from './shared/lib/perfLog';
 import type { RootStackParamList } from './types';
 // type-only: pulls in global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.
@@ -70,8 +71,10 @@ export function Navigation() {
   // mounted, then wait one frame so the themed content has actually painted —
   // fading the splash any earlier reveals an unpainted frame (white flash).
   const onReady = () => {
+    mark('STARTUP', 'NavigationContainer onReady (navigator mounted)');
     requestAnimationFrame(() => {
       BootSplash.hide({ fade: true }).catch(() => {});
+      mark('STARTUP', 'bootsplash hidden (first frame painted)');
     });
   };
 

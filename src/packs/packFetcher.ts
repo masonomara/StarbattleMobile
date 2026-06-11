@@ -173,7 +173,7 @@ export async function fetchPack(
       // not on disk yet (stat/read threw) — fall through to network below
     }
     if (raw !== null) {
-      const endParse = time('PACK', `JSON.parse ${localKey}`);
+      const endParse = time('PACK', `JSON.parse ${localKey}`, { sync: true });
       try {
         const pack = decodeFromDisk(raw);
         if (pack.version < PACK_MIN_VERSION) throw new Error('stale version');
@@ -237,7 +237,7 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
       // not on disk yet (stat/read threw) — fall through to network below
     }
     if (raw !== null) {
-      const endParse = time('HINTS', `JSON.parse ${key}`);
+      const endParse = time('HINTS', `JSON.parse ${key}`, { sync: true });
       try {
         const parsed = decodeHintsFromDisk(raw).hints;
         endParse(`${parsed.length} puzzles`);
@@ -262,7 +262,9 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
       await downloadToFile(key, localPath);
       endDl();
       const text = await readFileText(localPath, key);
-      const endParse = time('HINTS', `JSON.parse ${key} (after download)`);
+      const endParse = time('HINTS', `JSON.parse ${key} (after download)`, {
+        sync: true,
+      });
       const parsed = decodeHintsFromDisk(text).hints;
       endParse(`${parsed.length} puzzles`);
       return parsed;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getStreakPack, getPackPreview } from '../../packs';
 import { getCurrentKey, getPuzzleIndex, isStreakType } from '../../shared/lib/streakDate';
 import { parsePuzzle } from '../../shared/lib/parsePuzzle';
+import { mark, time } from '../../shared/lib/perfLog';
 import type { PackCatalogItem, Puzzle } from '../../types';
 
 // Loads the first-glance preview puzzle for every pack:
@@ -23,6 +24,9 @@ export function usePackPreviews(
     let cancelled = false;
 
     async function load() {
+      if (packCatalog.length === 0) return;
+      mark('STARTUP', `usePackPreviews load start — ${packCatalog.length} packs`);
+      const endLoad = time('STARTUP', 'usePackPreviews load+parse all');
       const results: Record<string, Puzzle> = {};
       await Promise.all(
         packCatalog.map(async pack => {
@@ -52,7 +56,9 @@ export function usePackPreviews(
       // single coordinated drop-in, rather than popping in one-by-one out of
       // sync with each other and their pulse animations. Merge into prev so a
       // catalog re-sync doesn't flash already-loaded cards back to skeletons.
+      endLoad(`${Object.keys(results).length} previews`);
       if (!cancelled) {
+        mark('STARTUP', 'usePackPreviews committing previews (cards reveal)');
         setPackPreviews(prev => ({ ...prev, ...results }));
       }
     }
