@@ -15,7 +15,7 @@ import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/shared/lib/config';
 import { getStreakPack } from './src/packs';
-import { prefetchAllCatalog } from './src/packs/prefetch';
+import { prefetchAllCatalog, prefetchStreakHints } from './src/packs/prefetch';
 import { supabase } from './src/shared/lib/supabase';
 import type { PackCatalogItem } from './src/types';
 
@@ -72,7 +72,16 @@ function runTieredPrefetch(
   mark('STARTUP', 'runTieredPrefetch scheduled (awaiting interactions)');
   InteractionManager.runAfterInteractions(() => {
     mark('STARTUP', 'runAfterInteractions fired — prefetch starting');
-    prefetchAllCatalog(catalog)
+    // Streak hints prefetch alongside (not behind) the catalog: both stream
+    // natively to disk off the JS thread, and the daily puzzle is the most-opened
+    // file in the app, so it shouldn't queue behind the entire catalog. Folded
+    // into this cycle so it inherits the in-flight dedup, the foreground
+    // force-refresh (picks up new daily content via ETag), and — most importantly
+    // — the InteractionManager gate that keeps it off the first-paint path.
+    Promise.all([
+      prefetchAllCatalog(catalog).catch(() => {}),
+      prefetchStreakHints().catch(() => {}),
+    ])
       .catch(() => {})
       .finally(() => {
         prefetchInFlight = false;
