@@ -16,6 +16,7 @@ import {
   warmHintsCache,
   hasHintsCacheEntry,
 } from './packCache';
+import { time } from '../shared/lib/perfLog';
 
 const PREVIEW_PUZZLE_COUNT = 1;
 
@@ -268,7 +269,12 @@ export async function cachePackPreview(
   let parsed: Pack;
   try {
     text = await fetchFromSupabase(storagePath);
+    // Old non-streaming path: the full pack crosses the bridge (blobToText) and
+    // is JSON.parsed on the JS thread, once per unpurchased pack. Timed because
+    // several of these can overlap a puzzle open and contend for the thread.
+    const endParse = time('PREVIEW', `JSON.parse ${packId} full pack`);
     parsed = validatePackText(text);
+    endParse(`${(text.length / 1024).toFixed(0)} KB`);
   } catch {
     return;
   }

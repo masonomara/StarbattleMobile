@@ -8,6 +8,7 @@ import { useAuthStore } from './src/shared/stores/authStore';
 import { useSettingsStore } from './src/shared/stores/settingsStore';
 import { useEntitlementsStore } from './src/shared/stores/entitlementsStore';
 import { startupTimer } from './src/shared/lib/startupTimer';
+import { startStallWatch } from './src/shared/lib/perfLog';
 import { db } from './src/powersync/AppSchema';
 import { PowerSyncContext } from '@powersync/react-native';
 import { SupabaseConnector } from './src/powersync/Connector';
@@ -31,6 +32,10 @@ function runTieredPrefetch(catalog: PackCatalogItem[]): void {
 export default function App() {
   useEffect(() => {
     startupTimer.log('App mounted — first render complete');
+    // Watchdog runs for the whole session: any [SB:STALL] line timestamps a
+    // JS-thread freeze that can be lined up against the operation logs to find
+    // what blocked gameplay (e.g. a multi-MB hints JSON.parse on puzzle open).
+    startStallWatch();
   }, []);
 
   const theme = useTheme();

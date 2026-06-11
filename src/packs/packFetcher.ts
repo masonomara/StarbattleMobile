@@ -7,7 +7,9 @@ import {
   decodeFromDisk,
   decodeHintsFromDisk,
   writeFileThrottled,
+  readFileChunked,
 } from './packStorage';
+import { mark, time } from '../shared/lib/perfLog';
 
 // Packs below this version use a format that the parser no longer supports.
 // On first load, stale packs are evicted from disk and re-fetched.
@@ -152,20 +154,19 @@ export async function fetchPack(
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${localKey}`;
     let raw: string | null = null;
     try {
-      raw = await rnfs.readFile(localPath, 'utf8');
+      // Chunked + yielding read (see readFileChunked): a one-shot readFile of all
+      // packs at HomeScreen mount marshalled each across the bridge back-to-back
+      // and stalled the JS thread ~1s. Chunked keeps the home screen responsive.
+      raw = await readFileChunked(rnfs, localPath, localKey);
     } catch {
-      // not on disk yet — fall through to network below
+      // not on disk yet (stat/read threw) — fall through to network below
     }
     if (raw !== null) {
+      const endParse = time('PACK', `JSON.parse ${localKey}`);
       try {
         const pack = decodeFromDisk(raw);
         if (pack.version < PACK_MIN_VERSION) throw new Error('stale version');
-        __DEV__ &&
-          console.log(
-            `[SB:PACK] ${localKey}: ${(raw.length / 1024).toFixed(1)} KB, ${
-              pack.puzzles?.length ?? '?'
-            } puzzles`,
-          );
+        endParse(`${pack.puzzles?.length ?? '?'} puzzles`);
         return pack;
       } catch {
         // On disk but corrupt or stale: evict the file AND its ETag so the next
@@ -218,13 +219,20 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${key}`;
     let raw: string | null = null;
     try {
-      raw = await rnfs.readFile(localPath, 'utf8');
+      // Chunked + yielding read: the hints file is the largest in the catalog,
+      // and a one-shot rnfs.readFile('utf8') of it froze the JS thread/bridge for
+      // ~39s on puzzle open. readFileChunked keeps gameplay interactive while it
+      // loads in the background (the board never awaits this).
+      raw = await readFileChunked(rnfs, localPath, key);
     } catch {
-      // not on disk yet — fall through to network below
+      // not on disk yet (stat/read threw) — fall through to network below
     }
     if (raw !== null) {
+      const endParse = time('HINTS', `JSON.parse ${key}`);
       try {
-        return decodeHintsFromDisk(raw).hints;
+        const parsed = decodeHintsFromDisk(raw).hints;
+        endParse(`${parsed.length} puzzles`);
+        return parsed;
       } catch {
         // On disk but corrupt: evict the file and its ETag so the next prefetch
         // re-downloads it instead of skipping on a matching ETag.
@@ -232,11 +240,37 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
         packMetaStorage.remove(`etag:${key}`);
       }
     }
-    const text = await fetchFromSupabase(key);
-    const hints = validateHintsText(text);
-    await rnfs.mkdir(`${rnfs.DocumentDirectoryPath}/packs`).catch(() => {});
-    await writeFileThrottled(rnfs, localPath, text).catch(() => {});
-    return hints;
+    // Not on disk (or evicted as corrupt). Stream the download straight to disk
+    // natively (downloadToFile, off the bridge) then read it back chunked — both
+    // non-blocking. The old path here did fetchFromSupabase + writeFileThrottled,
+    // which marshalled the whole 3.7MB across the bridge to WRITE it and froze the
+    // JS thread ~28s on first daily-open. Streak hints aren't prefetched, so this
+    // network path is the common first-open case, not a rare fallback.
+    mark('HINTS', `${key} not on disk — streaming download to disk`);
+    const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+    await rnfs.mkdir(packDir).catch(() => {});
+    try {
+      const endDl = time('HINTS', `downloadToFile ${key}`);
+      await downloadToFile(key, localPath);
+      endDl();
+      const text = await readFileChunked(rnfs, localPath, key);
+      const endParse = time('HINTS', `JSON.parse ${key} (after download)`);
+      const parsed = decodeHintsFromDisk(text).hints;
+      endParse(`${parsed.length} puzzles`);
+      return parsed;
+    } catch (e) {
+      // Streaming/read failed (FS error, or a genuinely offline first-open).
+      // Last resort: in-memory fetch. This marshals across the bridge and can
+      // stall, but only when streaming to disk is impossible — better than no
+      // hints. Returns without persisting; the next prefetch caches it properly.
+      // Surface the real reason so a streaming failure can't hide as a "fallback".
+      mark(
+        'HINTS',
+        `${key} streaming failed (${(e as Error)?.message ?? String(e)}) — in-memory fallback`,
+      );
+      const text = await fetchFromSupabase(key);
+      return validateHintsText(text);
+    }
   }
   const text = await fetchFromSupabase(key);
   return validateHintsText(text);

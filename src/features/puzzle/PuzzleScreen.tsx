@@ -30,6 +30,7 @@ import { useDrawGesture } from './useDrawGesture';
 import { usePackData } from './usePackData';
 import { useStreakRows } from '../../shared/hooks/useStreakRows';
 import { loadPackHints } from '../../packs/packCache';
+import { mark, time } from '../../shared/lib/perfLog';
 import { TUTORIAL_PUZZLE } from './tutorial/tutorialPuzzle';
 import { tutorialMessage } from './tutorial/tutorialMessage';
 import { parsePuzzle } from '../../shared/lib/parsePuzzle';
@@ -186,6 +187,13 @@ export function PuzzleScreen({
     Gesture.Race(drawGesture, Gesture.Exclusive(panGesture, tapGesture)),
   );
 
+  // One-shot mount marker so the puzzle-open timeline can be located in the log.
+  const mountedRef = useRef(false);
+  if (!mountedRef.current) {
+    mountedRef.current = true;
+    mark('PZSCREEN', `mount ${isTutorial ? 'tutorial' : packId}`);
+  }
+
   // Load the puzzle into the store. Tutorial loads its fixed puzzle; the real
   // path parses the resolved pack puzzle once packData is ready.
   useEffect(() => {
@@ -196,9 +204,12 @@ export function PuzzleScreen({
     }
     if (!packData || !rawPuzzle) return;
     try {
+      const endParse = time('PZSCREEN', `parsePuzzle ${puzzleId}`);
       const parsed = parsePuzzle(rawPuzzle, puzzleId);
+      endParse();
       loadPuzzle(parsed);
       setIsReady(true);
+      mark('PZSCREEN', `isReady=true — board can render for ${puzzleId}`);
     } catch {
       navigation.goBack();
     }
@@ -209,11 +220,17 @@ export function PuzzleScreen({
   useEffect(() => {
     if (isTutorial || !isReady || !effectivePackId) return;
     let cancelled = false;
+    // Wall-clock of the full hints load (disk readFile + JSON.parse, both on the
+    // JS thread). Correlate this span with [SB:STALL] lines: if a stall lands
+    // inside it, the hints read is what froze gameplay on puzzle open.
+    const endLoad = time('PZSCREEN', `loadPackHints ${effectivePackId}`);
     loadPackHints(effectivePackId)
       .then(all => {
+        endLoad();
         if (!cancelled) setHints(all[puzzleIndexInPack] ?? []);
       })
       .catch(() => {
+        endLoad('failed');
         if (!cancelled) setHints([]);
       });
     return () => {
