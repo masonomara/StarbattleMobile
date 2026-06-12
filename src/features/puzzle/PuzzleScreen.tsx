@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   AppState,
   Pressable,
+  Alert,
 } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import type { LayoutChangeEvent } from 'react-native';
@@ -15,6 +16,7 @@ import ReAnimated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import Ellipsis from 'lucide-react-native/dist/cjs/icons/ellipsis';
+import ChevronsRight from 'lucide-react-native/dist/cjs/icons/chevrons-right';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { Header } from '../../shared/ui/Header';
 import { HeaderTimer } from './HeaderTimer';
@@ -117,6 +119,17 @@ export function PuzzleScreen({
   function finishTutorial() {
     completeTutorial();
     navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+  }
+
+  function confirmSkipTutorial() {
+    Alert.alert(
+      'Skip tutorial',
+      'This is a one-time walkthrough that you will not be able to return to.',
+      [
+        { text: 'Keep Learning', style: 'cancel' },
+        { text: 'Skip', style: 'destructive', onPress: finishTutorial },
+      ],
+    );
   }
 
   // Fade header buttons and status bar in/out when the user hides the chrome.
@@ -344,13 +357,13 @@ export function PuzzleScreen({
         right={
           isTutorial ? (
             <Pressable
-              onPress={finishTutorial}
+              onPress={confirmSkipTutorial}
               hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Skip tutorial"
               style={styles.skipButton}
             >
-              <Text role="subhead" style={styles.skip}>
-                Skip
-              </Text>
+              <ChevronsRight size={26} color={theme.text} />
             </Pressable>
           ) : (
             <Animated.View
@@ -432,9 +445,11 @@ const createStyles = (theme: Theme) =>
       color: theme.text,
       textAlign: 'center',
       fontWeight: '600',
-    },
-    skip: {
-      color: theme.text,
+      borderWidth: 1,
+      borderColor: 'red',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     skipButton: {
       backgroundColor: theme.surface,
