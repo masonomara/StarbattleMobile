@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Animated,
+  Pressable,
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
@@ -11,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { Haptics } from 'react-native-nitro-haptics';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
+import { useStreaksStore } from '../../shared/stores/streaksStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { usePackPreviews } from './usePackPreviews';
@@ -250,7 +252,11 @@ export function HomeScreen({
         <View style={[styles.header, { paddingTop: insets.top }]}>
           {/* Stacked progress rows that crossfade as the carousel scrolls between
               challenges — driven by native scroll offset, no re-renders. */}
-          <View style={styles.headerProgress}>
+          <Pressable
+            style={styles.headerProgress}
+            hitSlop={8}
+            onPress={() => useStreaksStore.getState().openStreaks()}
+          >
             <Animated.View style={{ opacity: headerProgressOpacity }}>
               {STREAK_TYPES.map((type, i) => (
                 <Animated.View
@@ -278,7 +284,7 @@ export function HomeScreen({
                 Puzzle Library
               </Text>
             </Animated.View>
-          </View>
+          </Pressable>
           <View style={styles.headerRight}>
             <CircleButton
               ghost
