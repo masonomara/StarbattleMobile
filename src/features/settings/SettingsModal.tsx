@@ -9,6 +9,7 @@ import { useTheme } from '../../shared/theme/useTheme';
 import { AccountSection } from './AccountSection';
 import { GameplaySection } from './GameplaySection';
 import { AppearanceSection } from './AppearanceSection';
+import { AccountActions } from './AccountActions';
 import {
   PRIVACY_POLICY_URL,
   TERMS_URL,
@@ -53,6 +54,7 @@ export function SettingsModal() {
           <AccountSection />
           <GameplaySection />
           <AppearanceSection />
+          <AccountActions />
 
           <View style={styles.legalSection}>
             <View style={styles.legalLinks}>
@@ -60,7 +62,7 @@ export function SettingsModal() {
                 onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>
+                <Text role="caption1" style={styles.legalLinkText}>
                   {t('settings.terms')}
                 </Text>
               </Pressable>
@@ -73,18 +75,18 @@ export function SettingsModal() {
                 }
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>
+                <Text role="caption1" style={styles.legalLinkText}>
                   {t('settings.privacy')}
                 </Text>
               </Pressable>
-              <Text role="footnote" style={styles.legalSep}>
+              <Text role="caption1" style={styles.legalSep}>
                 ·
               </Text>
               <Pressable
                 onPress={() => Linking.openURL(CREDITS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>
+                <Text role="caption1" style={styles.legalLinkText}>
                   {t('settings.credits')}
                 </Text>
               </Pressable>
@@ -132,6 +134,6 @@ const createStyles = (theme: Theme) =>
       paddingVertical: theme.spacingLg,
       gap: 6,
     },
-    legalLinkText: { color: theme.textSecondary },
+    legalLinkText: { color: theme.textSecondary, fontWeight: '500' },
     legalSep: { color: theme.textSecondary },
   });

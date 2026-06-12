@@ -11,7 +11,6 @@ import { HomeScreen } from './features/library/HomeScreen';
 import { LibraryScreen } from './features/library/LibraryScreen';
 import { PuzzleScreen } from './features/puzzle/PuzzleScreen';
 import { ArchivePackScreen } from './features/library/ArchivePackScreen';
-import { StreaksModal } from './features/library/StreaksModal';
 import { SettingsModal } from './features/settings/SettingsModal';
 import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { useTheme } from './shared/theme/useTheme';
@@ -91,11 +90,14 @@ export function Navigation() {
         <Stack.Screen name="Home" component={WrappedHome} />
         <Stack.Screen name="Library" component={WrappedLibrary} />
         <Stack.Screen name="Puzzle" component={WrappedPuzzle} />
-        <Stack.Screen name="ArchivePack" component={WrappedArchivePack} />
+        <Stack.Screen
+          name="ArchivePack"
+          component={WrappedArchivePack}
+          options={{ presentation: 'modal' }}
+        />
         <Stack.Screen name="Tutorial" component={WrappedTutorial} />
       </Stack.Navigator>
       <SettingsModal />
-      <StreaksModal />
     </NavigationContainer>
   );
 }

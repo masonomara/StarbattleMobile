@@ -418,12 +418,12 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: 8,
+      gap: 0,
       height: 80,
     },
     tab: {
-      width: 22,
-      height: 22,
+      width: 24,
+      height: 24,
       borderRadius: 100,
 
       alignItems: 'center',
@@ -435,8 +435,8 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     tabText: {
       color: theme.textSecondary,
-      fontSize: 11,
-      lineHeight: 15,
+      fontSize: 12,
+      lineHeight: 16,
       fontWeight: '600',
     },
     tabTextActive: {
@@ -473,6 +473,9 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       color: theme.text,
       fontWeight: '700',
       textAlign: 'center',
+      textShadowColor: theme.background,
+      textShadowOffset: { width: 0, height: 0 },
+      textShadowRadius: 4,
     },
     cellNumberCompleted: {
       color: theme.background,

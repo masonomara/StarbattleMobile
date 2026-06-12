@@ -4,7 +4,7 @@ import Check from 'lucide-react-native/dist/cjs/icons/check';
 import { Text } from '../../shared/ui/Text';
 import type { StreakProgressRowProps, Theme } from '../../types';
 
-const CIRCLE = 22;
+const CIRCLE = 24;
 
 // Progress row beneath a streak card: one circle per cell (daily → days of the
 // week, weekly → weeks of the month, monthly → months of the year). A cell fills
@@ -125,8 +125,8 @@ const createStyles = (theme: Theme) =>
       marginRight: 0,
     },
     letter: {
-      fontSize: 11,
-      lineHeight: 15,
+      fontSize: 12,
+      lineHeight: 16,
       fontWeight: '600',
       color: theme.textSecondary,
     },

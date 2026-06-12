@@ -75,7 +75,7 @@ export function AppearanceSection() {
   return (
     <>
       <View style={styles.section}>
-        <Text role="headline" style={styles.sectionTitle}>
+        <Text role="subhead" style={styles.sectionTitle}>
           {t('settings.general')}
         </Text>
         <ToggleRow
@@ -127,7 +127,7 @@ export function AppearanceSection() {
       </View>
 
       <View style={styles.section}>
-        <Text role="headline" style={styles.sectionTitle}>
+        <Text role="subhead" style={styles.sectionTitle}>
           {t('settings.colorTheme')}
         </Text>
         <View style={styles.swatchGrid}>
@@ -173,7 +173,11 @@ const createStyles = (theme: Theme) =>
     section: { marginTop: 40 },
     sectionTitle: {
       color: theme.text,
+      // borderTopWidth: 1,
+      // borderTopColor: theme.border,
+      // paddingTop: 8,
       marginBottom: 14,
+      fontWeight: '500',
     },
     themeRow: {
       flexDirection: 'row',

@@ -12,7 +12,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { Haptics } from 'react-native-nitro-haptics';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
-import { useStreaksStore } from '../../shared/stores/streaksStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { usePackPreviews } from './usePackPreviews';
@@ -257,7 +256,11 @@ export function HomeScreen({
           <Pressable
             style={styles.headerProgress}
             hitSlop={8}
-            onPress={() => useStreaksStore.getState().openStreaks()}
+            onPress={() =>
+              navigation.navigate('ArchivePack', {
+                type: STREAK_TYPES[activeStreakIndexRef.current],
+              })
+            }
           >
             <Animated.View style={{ opacity: headerProgressOpacity }}>
               {STREAK_TYPES.map((type, i) => (
