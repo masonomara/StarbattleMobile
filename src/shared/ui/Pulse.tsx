@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect } from 'react';
+import { View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -8,7 +9,7 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import type { PulseBoxProps } from '../../types';
+import type { PulseBoxProps, PulseLineProps } from '../../types';
 
 // The box is a solid baseColor View, so its View opacity reads directly as the
 // base color's opacity: pulse between 67% and 33%.
@@ -80,5 +81,29 @@ export function PulseBox({
         style,
       ]}
     />
+  );
+}
+
+// Skeleton for one line of text. The outer box claims the real line's full
+// lineHeight (so the placeholder footprint matches the Text it stands in for),
+// while the pulsing bar inside is sized to the text's ink (~cap height) and
+// centered — it reads as a line of text, not a chunky full-leading block.
+export function PulseLine({
+  width,
+  lineHeight,
+  barHeight,
+  radius = 4,
+  baseColor,
+  style,
+}: PulseLineProps) {
+  return (
+    <View style={[{ height: lineHeight, justifyContent: 'center' }, style]}>
+      <PulseBox
+        width={width}
+        height={barHeight}
+        radius={radius}
+        baseColor={baseColor}
+      />
+    </View>
   );
 }

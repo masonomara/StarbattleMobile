@@ -109,6 +109,19 @@ export type PulseBoxProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+// A skeleton stand-in for a single line of text: a shorter visible bar
+// (barHeight ≈ the text's ink height) centered inside a lineHeight-tall box, so
+// the placeholder reads like a text run yet occupies the real line's exact
+// vertical footprint — no layout shift when the real Text swaps in.
+export type PulseLineProps = {
+  width: number;
+  lineHeight: number;
+  barHeight: number;
+  radius?: number;
+  baseColor: string;
+  style?: StyleProp<ViewStyle>;
+};
+
 export type PackCardSkeletonProps = {
   theme: Theme;
 };

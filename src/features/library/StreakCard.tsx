@@ -1,7 +1,7 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
-import { PulseBox } from '../../shared/ui/Pulse';
+import { PulseBox, PulseLine } from '../../shared/ui/Pulse';
 import type {
   StreakCardProps,
   StreakCardSkeletonProps,
@@ -59,20 +59,30 @@ export function StreakCardSkeleton({ size, theme }: StreakCardSkeletonProps) {
   const styles = createStyles(theme);
   return (
     <View style={styles.card}>
+      {/* Square to match the Skia thumbnail's hard rectangular border (0 radius). */}
       <PulseBox
         width={size}
         height={size}
-        radius={5}
+        radius={0}
         baseColor={theme.border}
       />
-      <PulseBox
-        width={120}
-        height={36}
-        radius={5}
+      {/* title1 line: 30/37. Bar ≈ cap height, centered in the 37px line box. */}
+      <PulseLine
+        width={210}
+        lineHeight={37}
+        barHeight={21}
+        radius={6}
         baseColor={theme.border}
         style={styles.label}
       />
-      <PulseBox width={110} height={22} radius={5} baseColor={theme.border} />
+      {/* subhead meta line: 15/20, butted directly under the title (no gap). */}
+      <PulseLine
+        width={140}
+        lineHeight={20}
+        barHeight={11}
+        radius={4}
+        baseColor={theme.border}
+      />
     </View>
   );
 }

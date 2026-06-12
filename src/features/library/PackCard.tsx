@@ -1,7 +1,7 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
-import { PulseBox } from '../../shared/ui/Pulse';
+import { PulseBox, PulseLine } from '../../shared/ui/Pulse';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import type { PackCardProps, PackCardSkeletonProps, Theme } from '../../types';
@@ -89,13 +89,19 @@ export function PackCardSkeleton({ theme }: PackCardSkeletonProps) {
         />
       </View>
       <View style={styles.info}>
-        <PulseBox width={90} height={17} radius={2} baseColor={theme.border} />
-        <PulseBox
-          width={45}
-          height={17}
-          radius={2}
+        {/* body name line: 17/22. */}
+        <PulseLine
+          width={110}
+          lineHeight={22}
+          barHeight={12}
           baseColor={theme.border}
-          style={styles.skeletonMeta}
+        />
+        {/* subhead meta line: 15/20, butted under the name like the real card. */}
+        <PulseLine
+          width={56}
+          lineHeight={20}
+          barHeight={11}
+          baseColor={theme.border}
         />
       </View>
     </View>
@@ -130,7 +136,6 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.border,
     },
     info: { flex: 1 },
-    skeletonMeta: { marginTop: 4 },
     name: {
       color: theme.text,
       fontWeight: '600',
