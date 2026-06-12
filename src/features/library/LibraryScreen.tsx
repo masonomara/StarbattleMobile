@@ -11,14 +11,17 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  Alert,
   useWindowDimensions,
 } from 'react-native';
 import { Text } from '../../shared/ui/Text';
+import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
-import { MoreHorizontal } from 'lucide-react-native';
+import { MoreHorizontal, Lock, Check } from 'lucide-react-native';
 import { CircleButton } from '../../shared/ui/CircleButton';
+import { rgba } from '../../shared/theme/color';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../../packs';
 import { PaywallModal } from '../../shared/ui/PaywallModal';
@@ -74,10 +77,16 @@ const PuzzleCell = React.memo(function PuzzleCell({
   );
 
   const locked = !isCompleted && !canPlay;
+  const badge = Math.round(cellSize * 0.36);
+  const numberSize = Math.round(cellSize * 0.34);
 
   return (
     <Pressable
-      style={[{ width: cellSize }, locked && styles.lockedCell]}
+      style={[
+        styles.cell,
+        { width: cellSize, height: cellSize },
+        locked && styles.lockedCell,
+      ]}
       onPress={() => (locked ? onLockedPress(index) : onPress(index))}
     >
       {puzzle && (
@@ -94,6 +103,55 @@ const PuzzleCell = React.memo(function PuzzleCell({
           gridLineMin={0.3}
         />
       )}
+      <View style={styles.overlay} pointerEvents="none">
+        <View
+          style={[
+            styles.scrim,
+            isCompleted && styles.scrimCompleted,
+            locked && styles.scrimLocked,
+          ]}
+        />
+        <Text
+          style={[
+            styles.cellNumber,
+            { fontSize: numberSize, lineHeight: Math.round(numberSize * 1.2) },
+            isCompleted && styles.cellNumberCompleted,
+            locked && styles.cellNumberLocked,
+          ]}
+        >
+          {index + 1}
+        </Text>
+        {isCompleted && (
+          <View
+            style={[
+              styles.cornerBadge,
+              styles.cornerBadgeCompleted,
+              { width: badge, height: badge, borderRadius: badge / 2 },
+            ]}
+          >
+            <Check
+              size={Math.round(badge * 0.62)}
+              strokeWidth={3}
+              color={theme.background}
+            />
+          </View>
+        )}
+        {locked && (
+          <View
+            style={[
+              styles.cornerBadge,
+              styles.cornerBadgeLocked,
+              { width: badge, height: badge, borderRadius: badge / 2 },
+            ]}
+          >
+            <Lock
+              size={Math.round(badge * 0.54)}
+              strokeWidth={2.5}
+              color={theme.textSecondary}
+            />
+          </View>
+        )}
+      </View>
     </Pressable>
   );
 });
@@ -103,6 +161,7 @@ export function LibraryScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Library'>) {
   const { packId } = route.params;
+  const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -182,11 +241,20 @@ export function LibraryScreen({
         } else {
           setPaywallContext({ type: 'unavailable', packId, packName });
         }
-      } else {
-        setPaywallContext({ type: 'sequential', packId, puzzleIndex: index });
+        return;
       }
+      // Sequential lock on a free pack: a native alert mirroring the premium
+      // prompt in ArchivePackScreen. "Unlock All" routes to settings, where the
+      // premium purchase lives.
+      Alert.alert(t('paywall.lockedTitle'), t('paywall.lockedBody'), [
+        { text: t('streaks.notNow'), style: 'cancel' },
+        {
+          text: t('paywall.unlockAll'),
+          onPress: () => useSettingsStore.getState().openSettings(),
+        },
+      ]);
     },
-    [isFree, hasPackAccess, packId, priceUsd, storagePath, packName],
+    [isFree, hasPackAccess, packId, priceUsd, storagePath, packName, t],
   );
 
   const sections = useMemo(
@@ -377,7 +445,52 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       lineHeight: 15,
       fontWeight: '600',
     },
+    cell: {
+      position: 'relative',
+    },
     lockedCell: {
-      opacity: 0.4,
+      opacity: 0.55,
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    // Full-cell scrim keeps the centered number legible over a busy grid while
+    // still letting the puzzle preview read through. State tints the scrim so
+    // the cell is identifiable at a glance without obscuring the thumbnail.
+    scrim: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: rgba(theme.background, 0.34),
+    },
+    scrimCompleted: {
+      backgroundColor: rgba(theme.green, 0.42),
+    },
+    scrimLocked: {
+      backgroundColor: rgba(theme.background, 0.52),
+    },
+    cellNumber: {
+      color: theme.text,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    cellNumberCompleted: {
+      color: theme.background,
+    },
+    cellNumberLocked: {
+      color: theme.textSecondary,
+    },
+    cornerBadge: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cornerBadgeCompleted: {
+      backgroundColor: theme.green,
+    },
+    cornerBadgeLocked: {
+      backgroundColor: theme.surface,
     },
   });
