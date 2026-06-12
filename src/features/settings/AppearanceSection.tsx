@@ -75,7 +75,9 @@ export function AppearanceSection() {
   return (
     <>
       <View style={styles.section}>
-        <Text role="headline" style={styles.sectionTitle}>{t('settings.general')}</Text>
+        <Text role="headline" style={styles.sectionTitle}>
+          {t('settings.general')}
+        </Text>
         <ToggleRow
           first
           label={t('settings.alwaysShowTimer')}
@@ -93,7 +95,9 @@ export function AppearanceSection() {
           onToggle={v => updateSettings({ haptics: v })}
         />
         <View style={styles.themeRow}>
-          <Text role="body" style={styles.rowLabel}>{t('settings.theme')}</Text>
+          <Text role="subhead" style={styles.rowLabel}>
+            {t('settings.theme')}
+          </Text>
           <View style={styles.themeButtons}>
             {THEME_OPTIONS.map(option => {
               const active = settings.theme === option.value;
@@ -123,7 +127,9 @@ export function AppearanceSection() {
       </View>
 
       <View style={styles.section}>
-        <Text role="headline" style={styles.sectionTitle}>{t('settings.colorTheme')}</Text>
+        <Text role="headline" style={styles.sectionTitle}>
+          {t('settings.colorTheme')}
+        </Text>
         <View style={styles.swatchGrid}>
           {paletteRows.map((row, rowIdx) => (
             <View key={rowIdx} style={styles.swatchRow}>
@@ -144,7 +150,7 @@ export function AppearanceSection() {
                       }
                       style={[styles.swatchImage]}
                     />
-                    <Text role="footnote" style={styles.swatchLabel}>
+                    <Text role="subhead" style={styles.swatchLabel}>
                       {PALETTES[name].label}
                     </Text>
                   </Pressable>
@@ -177,7 +183,7 @@ const createStyles = (theme: Theme) =>
       borderTopWidth: 1,
       borderColor: theme.border,
     },
-    rowLabel: { color: theme.text },
+    rowLabel: { color: theme.text, fontWeight: '600' },
     themeButtons: {
       flexDirection: 'row',
       gap: 6,
@@ -195,20 +201,21 @@ const createStyles = (theme: Theme) =>
     },
     themeButtonLabel: {
       color: theme.text,
+      fontWeight: '600',
     },
     themeButtonLabelActive: {
       color: theme.background,
     },
-    swatchGrid: { gap: 12 },
-    swatchRow: { flexDirection: 'row', gap: 12 },
+    swatchGrid: { gap: 10 },
+    swatchRow: { flexDirection: 'row', gap: 10 },
     swatchCard: {
       flex: 1,
       borderRadius: 8,
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: theme.border,
       overflow: 'hidden',
       alignItems: 'center',
-      padding: 14,
+      padding: 12,
     },
     swatchImage: {
       width: '100%',
@@ -220,7 +227,8 @@ const createStyles = (theme: Theme) =>
     },
     swatchLabel: {
       color: theme.text,
-      paddingTop: 7,
-      marginBottom: -7,
+      paddingTop: 8,
+      marginBottom: -4,
+      fontWeight: '600',
     },
   });
