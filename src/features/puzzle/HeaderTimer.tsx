@@ -44,7 +44,7 @@ export function HeaderTimer() {
   return (
     <Text role="body" style={styles.timer}>
       {stars != null
-        ? t('puzzle.timer', { count: stars, time: formatElapsedTime(timeMs) })
+        ? t('puzzle.timer', { stars, time: formatElapsedTime(timeMs) })
         : formatElapsedTime(timeMs)}
     </Text>
   );
