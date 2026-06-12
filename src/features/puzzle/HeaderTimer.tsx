@@ -55,5 +55,6 @@ const createStyles = (theme: Theme) =>
     timer: {
       fontVariant: ['tabular-nums'],
       color: theme.text,
+      fontWeight: 600,
     },
   });

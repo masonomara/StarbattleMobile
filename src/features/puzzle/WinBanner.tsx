@@ -16,7 +16,12 @@ import { STREAK_UNIT_KEY } from '../../shared/lib/streakDate';
 
 import { useTheme } from '../../shared/theme/useTheme';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
-import type { StreakType, Theme, RootStackParamList, WinBannerProps } from '../../types';
+import type {
+  StreakType,
+  Theme,
+  RootStackParamList,
+  WinBannerProps,
+} from '../../types';
 
 // The win-banner streak info line uses puzzle.winStreakInfo{Day|Week|Month}
 // ("Day Streak" / "Racha diaria") — a distinct singular suffix from the
@@ -117,24 +122,26 @@ export function WinBanner({
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
     >
-      {!tutorial && (
-        <Text role="body" style={styles.winInfo}>
-          {info}{' '}
-          {streakType && (
-            <Text role="body" style={styles.winInfo}>
-              {streakCount > 0
-                ? ` •  ${t(`streaks.${STREAK_UNIT_KEY[streakType!]}`, {
-                    count: streakCount,
-                  })}`
-                : ``}
-            </Text>
-          )}
-        </Text>
-      )}
-      <Text role="largeTitle" style={styles.winText}>{mainText}</Text>
+      <Text role="body" style={styles.winInfo}>
+        {info}{' '}
+        {streakType && (
+          <Text role="body" style={styles.winInfo}>
+            {streakCount > 0
+              ? ` · ${t(`streaks.${STREAK_UNIT_KEY[streakType!]}`, {
+                  count: streakCount,
+                })}`
+              : ``}
+          </Text>
+        )}
+      </Text>
+      <Text role="largeTitle" style={styles.winText}>
+        {mainText}
+      </Text>
 
       <Pressable onPress={handlePress} style={styles.winButton}>
-        <Text role="headline" style={styles.winButtonText}>{buttonLabel}</Text>
+        <Text role="headline" style={styles.winButtonText}>
+          {buttonLabel}
+        </Text>
       </Pressable>
     </Animated.View>
   );

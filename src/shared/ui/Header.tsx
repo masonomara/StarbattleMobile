@@ -42,7 +42,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    gap: 20,
+    gap: 16,
+    overflow: 'visible',
   },
   absolute: {
     position: 'absolute',
@@ -58,6 +59,6 @@ const styles = StyleSheet.create({
   center: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
 });

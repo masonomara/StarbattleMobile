@@ -9,7 +9,11 @@ import { useTheme } from '../../shared/theme/useTheme';
 import { AccountSection } from './AccountSection';
 import { GameplaySection } from './GameplaySection';
 import { AppearanceSection } from './AppearanceSection';
-import { PRIVACY_POLICY_URL, TERMS_URL, CREDITS_URL } from '../../shared/lib/config';
+import {
+  PRIVACY_POLICY_URL,
+  TERMS_URL,
+  CREDITS_URL,
+} from '../../shared/lib/config';
 import type { Theme } from '../../types';
 
 // Visibility is driven by Zustand so any screen can open this modal without prop drilling.
@@ -31,7 +35,9 @@ export function SettingsModal() {
         <View style={styles.modalHeader}>
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text role="largeTitle" style={styles.title}>{t('settings.title')}</Text>
+            <Text role="title2" style={styles.title}>
+              {t('settings.title')}
+            </Text>
           </View>
           <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeSettings} hitSlop={8}>
@@ -54,23 +60,33 @@ export function SettingsModal() {
                 onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>{t('settings.terms')}</Text>
+                <Text role="footnote" style={styles.legalLinkText}>
+                  {t('settings.terms')}
+                </Text>
               </Pressable>
-              <Text role="footnote" style={styles.legalSep}>·</Text>
+              <Text role="footnote" style={styles.legalSep}>
+                ·
+              </Text>
               <Pressable
                 onPress={() =>
                   Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})
                 }
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>{t('settings.privacy')}</Text>
+                <Text role="footnote" style={styles.legalLinkText}>
+                  {t('settings.privacy')}
+                </Text>
               </Pressable>
-              <Text role="footnote" style={styles.legalSep}>·</Text>
+              <Text role="footnote" style={styles.legalSep}>
+                ·
+              </Text>
               <Pressable
                 onPress={() => Linking.openURL(CREDITS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>{t('settings.credits')}</Text>
+                <Text role="footnote" style={styles.legalLinkText}>
+                  {t('settings.credits')}
+                </Text>
               </Pressable>
             </View>
           </View>

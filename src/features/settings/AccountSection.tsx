@@ -153,18 +153,14 @@ export function AccountSection() {
   }
 
   function confirmDeleteAccount() {
-    Alert.alert(
-      t('account.deleteTitle'),
-      t('account.deleteBody'),
-      [
-        { text: t('account.deleteCancel'), style: 'cancel' },
-        {
-          text: t('account.deleteConfirm'),
-          style: 'destructive',
-          onPress: () => withLoading(deleteAccount),
-        },
-      ],
-    );
+    Alert.alert(t('account.deleteTitle'), t('account.deleteBody'), [
+      { text: t('account.deleteCancel'), style: 'cancel' },
+      {
+        text: t('account.deleteConfirm'),
+        style: 'destructive',
+        onPress: () => withLoading(deleteAccount),
+      },
+    ]);
   }
 
   const ownedPacks = packCatalog.filter(p =>
@@ -267,7 +263,9 @@ export function AccountSection() {
 
           {(emailMode === 'signup' || emailMode === 'signin') && (
             <View style={{ gap: 12 }}>
-              <Text role="body" style={styles.inputLabel}>{t('account.emailLabel')}</Text>
+              <Text role="body" style={styles.inputLabel}>
+                {t('account.emailLabel')}
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholderTextColor={theme.textSecondary}
@@ -277,7 +275,9 @@ export function AccountSection() {
                 keyboardType="email-address"
                 autoComplete="email"
               />
-              <Text role="body" style={styles.inputLabel}>{t('account.passwordLabel')}</Text>
+              <Text role="body" style={styles.inputLabel}>
+                {t('account.passwordLabel')}
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholderTextColor={theme.textSecondary}
@@ -322,7 +322,9 @@ export function AccountSection() {
                   }}
                   disabled={loading}
                 >
-                  <Text role="subhead" style={styles.linkText}>{t('account.forgotPassword')}</Text>
+                  <Text role="subhead" style={styles.linkText}>
+                    {t('account.forgotPassword')}
+                  </Text>
                 </Pressable>
               )}
               <Pressable
@@ -332,14 +334,18 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="subhead" style={styles.linkTextDanger}>{t('account.cancel')}</Text>
+                <Text role="subhead" style={styles.linkTextDanger}>
+                  {t('account.cancel')}
+                </Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'forgot-password' && (
             <View style={{ gap: 12 }}>
-              <Text role="body" style={styles.inputLabel}>{t('account.resetTitle')}</Text>
+              <Text role="body" style={styles.inputLabel}>
+                {t('account.resetTitle')}
+              </Text>
               <Text role="body" style={styles.sectionBody}>
                 {t('account.resetHelper')}
               </Text>
@@ -361,7 +367,9 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text role="headline" style={styles.primaryButtonText}>{t('account.sendCode')}</Text>
+                  <Text role="headline" style={styles.primaryButtonText}>
+                    {t('account.sendCode')}
+                  </Text>
                 )}
               </Pressable>
               <Pressable
@@ -371,14 +379,18 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="subhead" style={styles.linkText}>{t('account.backToSignIn')}</Text>
+                <Text role="subhead" style={styles.linkText}>
+                  {t('account.backToSignIn')}
+                </Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'reset-otp' && (
             <View style={{ gap: 12 }}>
-              <Text role="body" style={styles.inputLabel}>{t('account.resetTitle')}</Text>
+              <Text role="body" style={styles.inputLabel}>
+                {t('account.resetTitle')}
+              </Text>
               <Text role="body" style={styles.sectionBody}>
                 {t('account.resetOtpInstructions', { email })}
               </Text>
@@ -419,7 +431,9 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text role="headline" style={styles.primaryButtonText}>{t('account.resetTitle')}</Text>
+                  <Text role="headline" style={styles.primaryButtonText}>
+                    {t('account.resetTitle')}
+                  </Text>
                 )}
               </Pressable>
               <Pressable
@@ -427,7 +441,9 @@ export function AccountSection() {
                 onPress={() => withLoading(() => requestPasswordReset(email))}
                 disabled={loading}
               >
-                <Text role="subhead" style={styles.linkText}>{t('account.resendCode')}</Text>
+                <Text role="subhead" style={styles.linkText}>
+                  {t('account.resendCode')}
+                </Text>
               </Pressable>
               <Pressable
                 style={styles.linkButton}
@@ -438,14 +454,18 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="subhead" style={styles.linkText}>{t('account.backToSignIn')}</Text>
+                <Text role="subhead" style={styles.linkText}>
+                  {t('account.backToSignIn')}
+                </Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'confirm-email' && (
             <View style={styles.confirmEmailBox}>
-              <Text role="headline" style={styles.confirmEmailTitle}>{t('account.confirmInboxTitle')}</Text>
+              <Text role="headline" style={styles.confirmEmailTitle}>
+                {t('account.confirmInboxTitle')}
+              </Text>
               <Text role="body" style={styles.confirmEmailBody}>
                 {t('account.confirmInboxBody', { email })}
               </Text>
@@ -457,26 +477,38 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="headline" style={styles.primaryButtonText}>{t('account.done')}</Text>
+                <Text role="headline" style={styles.primaryButtonText}>
+                  {t('account.done')}
+                </Text>
               </Pressable>
             </View>
           )}
 
-          {error && <Text role="subhead" style={styles.error}>{error}</Text>}
+          {error && (
+            <Text role="subhead" style={styles.error}>
+              {error}
+            </Text>
+          )}
         </>
       ) : (
         <>
           <View style={[styles.infoRow, styles.infoRowFirst]}>
-            <Text role="body" style={styles.infoLabel}>{t('account.emailRowLabel')}</Text>
+            <Text role="body" style={styles.infoLabel}>
+              {t('account.emailRowLabel')}
+            </Text>
             <Text role="subhead" style={styles.infoValue} numberOfLines={1}>
               {user?.email ?? t('account.providerFallback')}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text role="body" style={styles.infoLabel}>{t('account.accountType')}</Text>
+            <Text role="body" style={styles.infoLabel}>
+              {t('account.accountType')}
+            </Text>
             <Text role="subhead" style={styles.infoValue}>
-              {entitlements.isPremium ? t('account.premium') : t('account.free')}
+              {entitlements.isPremium
+                ? t('account.premium')
+                : t('account.free')}
             </Text>
           </View>
 
@@ -520,12 +552,16 @@ export function AccountSection() {
               }}
               disabled={loading}
             >
-              <Text role="subhead" style={styles.secondaryButtonText}>{t('account.restorePurchases')}</Text>
+              <Text role="subhead" style={styles.secondaryButtonText}>
+                {t('account.restorePurchases')}
+              </Text>
             </Pressable>
 
             {ownedPacks.length > 0 && (
               <>
-                <Text role="subhead" style={styles.subLabel}>{t('account.ownedPacks')}</Text>
+                <Text role="subhead" style={styles.subLabel}>
+                  {t('account.ownedPacks')}
+                </Text>
                 {ownedPacks.map(p => (
                   <Text key={p.id} role="body" style={styles.ownedPackName}>
                     {p.name}
@@ -539,18 +575,26 @@ export function AccountSection() {
               onPress={() => withLoading(signOut)}
               disabled={loading}
             >
-              <Text role="subhead" style={styles.secondaryButtonText}>{t('account.signOut')}</Text>
+              <Text role="subhead" style={styles.secondaryButtonText}>
+                {t('account.signOut')}
+              </Text>
             </Pressable>
             <Pressable
               style={[styles.destructiveButton, loading && styles.disabled]}
               onPress={confirmDeleteAccount}
               disabled={loading}
             >
-              <Text role="subhead" style={styles.destructiveButtonText}>{t('account.deleteAccount')}</Text>
+              <Text role="subhead" style={styles.destructiveButtonText}>
+                {t('account.deleteAccount')}
+              </Text>
             </Pressable>
           </View>
 
-          {error && <Text role="subhead" style={styles.error}>{error}</Text>}
+          {error && (
+            <Text role="subhead" style={styles.error}>
+              {error}
+            </Text>
+          )}
         </>
       )}
     </View>

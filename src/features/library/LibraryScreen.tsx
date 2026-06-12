@@ -17,6 +17,7 @@ import { Text } from '../../shared/ui/Text';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
+import { MoreHorizontal } from 'lucide-react-native';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../../packs';
@@ -254,7 +255,12 @@ export function LibraryScreen({
         <Text role="headline" style={styles.headerTitle}>
           {packName}
         </Text>
-        <View style={styles.headerSpacer} />
+        <CircleButton
+          ghost
+          onPress={() => useSettingsStore.getState().openSettings()}
+        >
+          <MoreHorizontal size={26} strokeWidth={2} color={theme.text} />
+        </CircleButton>
       </View>
       <FlatList
         ref={listRef}
@@ -326,9 +332,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     headerTitle: {
       color: theme.text,
-    },
-    headerSpacer: {
-      width: 44,
     },
     page: {
       flexDirection: 'row',
