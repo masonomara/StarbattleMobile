@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AppState, StyleSheet } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../../shared/ui/Text';
 import { usePuzzleStore } from './puzzleStore';
@@ -42,19 +42,30 @@ export function HeaderTimer() {
   }, [completed]);
 
   return (
-    <Text role="body" style={styles.timer}>
-      {stars != null
-        ? t('puzzle.timer', { stars, time: formatElapsedTime(timeMs) })
-        : formatElapsedTime(timeMs)}
-    </Text>
+    <View style={styles.container}>
+      {stars != null && (
+        <Text role="subhead" style={styles.stars}>
+          {t('puzzle.stars', { stars })}
+        </Text>
+      )}
+      <Text role="headline" style={styles.timer}>
+        {t('puzzle.timer', { time: formatElapsedTime(timeMs) })}
+      </Text>
+    </View>
   );
 }
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
+    container: {
+      alignItems: 'center',
+    },
+    stars: {
+      color: theme.textSecondary,
+    },
     timer: {
       fontVariant: ['tabular-nums'],
       color: theme.text,
-      fontWeight: 600,
+      letterSpacing: 0,
     },
   });

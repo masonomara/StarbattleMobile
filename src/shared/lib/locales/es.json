@@ -18,7 +18,8 @@
     "hintsDisabled": "Las pistas no están disponibles durante el tutorial."
   },
   "puzzle": {
-    "timer": "{{stars}} estrella · {{time}}",
+    "stars": "{{stars}} estrella",
+    "timer": "{{time}}",
     "hintsTitle": "Pistas",
     "hintsLoading": "Las pistas se están cargando.",
     "hintsUnavailableTitle": "Pistas no disponibles",

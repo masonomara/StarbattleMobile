@@ -18,7 +18,8 @@
     "hintsDisabled": "Hints are not available during the tutorial."
   },
   "puzzle": {
-    "timer": "{{stars}}-star · {{time}}",
+    "stars": "{{stars}}-star",
+    "timer": "{{time}}",
     "hintsTitle": "Hints",
     "hintsLoading": "Hints are loading.",
     "hintsUnavailableTitle": "Hints Unavailable",

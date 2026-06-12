@@ -118,6 +118,7 @@ const PuzzleCell = React.memo(function PuzzleCell({
             isCompleted && styles.cellNumberCompleted,
             locked && styles.cellNumberLocked,
           ]}
+          role="headline"
         >
           {index + 1}
         </Text>
@@ -471,11 +472,14 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     cellNumber: {
       color: theme.text,
-      fontWeight: '700',
+      fontWeight: '600',
       textAlign: 'center',
-      textShadowColor: theme.background,
-      textShadowOffset: { width: 0, height: 0 },
-      textShadowRadius: 4,
+      justifyContent: 'center',
+      borderRadius: 199,
+      overflow: 'visible',
+      backgroundColor: theme.background,
+      height: 32,
+      width: 32,
     },
     cellNumberCompleted: {
       color: theme.background,

@@ -41,9 +41,9 @@ export function Header({
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 16,
-    gap: 16,
+    gap: 12,
     overflow: 'visible',
   },
   absolute: {
@@ -56,10 +56,13 @@ const styles = StyleSheet.create({
     width: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    height: '100%',
   },
   center: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
+
+    height: '100%',
   },
 });

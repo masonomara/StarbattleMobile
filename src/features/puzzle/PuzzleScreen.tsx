@@ -344,10 +344,7 @@ export function PuzzleScreen({
         }
         center={
           isTutorial ? (
-            <Text
-              role="body"
-              style={[styles.tutorialText, { top: HEADER_H * 3 }]}
-            >
+            <Text role="body" style={[styles.tutorialText]}>
               {tutorialMessage(cells, puzzle)}
             </Text>
           ) : (
@@ -434,7 +431,7 @@ export function PuzzleScreen({
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background },
+    container: { flex: 1, backgroundColor: theme.background, display: 'flex' },
     loading: {
       flex: 1,
       justifyContent: 'center',
@@ -450,17 +447,13 @@ const createStyles = (theme: Theme) =>
       color: theme.text,
       textAlign: 'center',
       fontWeight: '600',
-
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'flex-start',
-      overflow: 'visible',
-      top: 48,
+
       zIndex: 200,
-      height: 90,
-      width: 309,
-      // borderWidth: 1,
-      // borderColor: 'red',
+      height: 'auto',
+      maxWidth: 309,
     },
     skipButton: {
       backgroundColor: theme.surface,
