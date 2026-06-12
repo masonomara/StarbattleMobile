@@ -4,7 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/useTheme';
 import type { HeaderProps } from '../../types';
 
-export function Header({ left, center, right, absolute = true, bordered = false }: HeaderProps) {
+export function Header({
+  left,
+  center,
+  right,
+  absolute = true,
+  bordered = false,
+}: HeaderProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
 
@@ -16,7 +22,10 @@ export function Header({ left, center, right, absolute = true, bordered = false 
         styles.header,
         absolute && styles.absolute,
         { paddingTop: insets.top, height: 48 + insets.top },
-        bordered && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+        bordered && {
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: theme.border,
+        },
       ]}
     >
       <View style={styles.side}>{left}</View>
@@ -33,6 +42,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
+    gap: 20,
   },
   absolute: {
     position: 'absolute',
