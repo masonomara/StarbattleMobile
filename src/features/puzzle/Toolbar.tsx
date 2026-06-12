@@ -19,7 +19,11 @@ const TAP_MODE_ICONS: Record<TapMode, typeof Pencil> = {
   erase: Eraser,
 };
 
-export function Toolbar({ isZoomed, onZoomReset, hintDisabledMessage }: ToolbarProps) {
+export function Toolbar({
+  isZoomed,
+  onZoomReset,
+  hintDisabledMessage,
+}: ToolbarProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
@@ -61,15 +65,20 @@ export function Toolbar({ isZoomed, onZoomReset, hintDisabledMessage }: ToolbarP
     if (hasHints) {
       press(showHint);
     } else {
-      Alert.alert('Hints Unavailable', 'Hints could not be loaded. Check your connection and try again.');
+      Alert.alert(
+        'Hints Unavailable',
+        'Hints could not be loaded. Check your connection and try again.',
+      );
     }
   }
 
   function handleClear() {
-    press(() => Alert.alert('Clear Board', 'Are you sure you want to clear the board?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Clear', style: 'destructive', onPress: clearBoard },
-    ]));
+    press(() =>
+      Alert.alert('Clear Board', 'Are you sure you want to clear the board?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: clearBoard },
+      ]),
+    );
   }
 
   return (
@@ -81,10 +90,7 @@ export function Toolbar({ isZoomed, onZoomReset, hintDisabledMessage }: ToolbarP
           disabled={!isZoomed}
           style={[styles.button, !isZoomed && styles.buttonDisabled]}
         >
-          <Minimize2
-            size={26}
-            color={theme.text}
-          />
+          <Minimize2 size={26} color={theme.text} />
         </Pressable>
 
         <Pressable
@@ -105,10 +111,7 @@ export function Toolbar({ isZoomed, onZoomReset, hintDisabledMessage }: ToolbarP
           disabled={completed}
           style={[styles.button, completed && styles.buttonDisabled]}
         >
-          <TapModeIcon
-            size={26}
-            color={theme.text}
-          />
+          <TapModeIcon size={26} color={theme.text} />
         </Pressable>
 
         <Pressable
@@ -116,10 +119,7 @@ export function Toolbar({ isZoomed, onZoomReset, hintDisabledMessage }: ToolbarP
           disabled={undoDisabled}
           style={[styles.button, undoDisabled && styles.buttonDisabled]}
         >
-          <Undo2
-            size={26}
-            color={theme.text}
-          />
+          <Undo2 size={26} color={theme.text} />
         </Pressable>
 
         <Pressable
@@ -127,10 +127,7 @@ export function Toolbar({ isZoomed, onZoomReset, hintDisabledMessage }: ToolbarP
           disabled={redoDisabled}
           style={[styles.button, redoDisabled && styles.buttonDisabled]}
         >
-          <Redo2
-            size={26}
-            color={theme.text}
-          />
+          <Redo2 size={26} color={theme.text} />
         </Pressable>
 
         <Pressable
@@ -138,10 +135,7 @@ export function Toolbar({ isZoomed, onZoomReset, hintDisabledMessage }: ToolbarP
           disabled={clearDisabled}
           style={[styles.button, clearDisabled && styles.buttonDisabled]}
         >
-          <Trash2
-            size={26}
-            color={theme.text}
-          />
+          <Trash2 size={26} color={theme.text} />
         </Pressable>
       </View>
     </View>
