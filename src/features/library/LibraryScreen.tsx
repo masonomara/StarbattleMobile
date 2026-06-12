@@ -14,6 +14,7 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Text } from '../../shared/ui/Text';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,7 +22,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import { MoreHorizontal, Lock, Check } from 'lucide-react-native';
 import { CircleButton } from '../../shared/ui/CircleButton';
-import { rgba } from '../../shared/theme/color';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../../packs';
 import { PaywallModal } from '../../shared/ui/PaywallModal';
@@ -58,6 +58,38 @@ type PuzzleCellProps = {
   cellSize: number;
 };
 
+// Radial scrim: tints each cell strongest at the center — behind the number —
+// and fades to transparent at the edges so the thumbnail corners read through.
+// Replaces the old flat scrim while keeping the same per-state colors.
+function RadialScrim({
+  size,
+  color,
+  centerOpacity,
+  edgeOpacity,
+}: {
+  size: number;
+  color: string;
+  centerOpacity: number;
+  edgeOpacity: number;
+}) {
+  return (
+    <Svg
+      width={size}
+      height={size}
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
+    >
+      <Defs>
+        <RadialGradient id="cellScrim" cx="50%" cy="50%" r="50%">
+          <Stop offset="0" stopColor={color} stopOpacity={centerOpacity} />
+          <Stop offset="1" stopColor={color} stopOpacity={edgeOpacity} />
+        </RadialGradient>
+      </Defs>
+      <Rect width={size} height={size} fill="url(#cellScrim)" />
+    </Svg>
+  );
+}
+
 const PuzzleCell = React.memo(function PuzzleCell({
   packId,
   index,
@@ -89,27 +121,12 @@ const PuzzleCell = React.memo(function PuzzleCell({
       ]}
       onPress={() => (locked ? onLockedPress(index) : onPress(index))}
     >
-      {puzzle && (
-        <PuzzleThumbnail
-          puzzle={puzzle}
-          size={cellSize}
-          theme={theme}
-          coloredRegions={coloredRegions}
-          regionBorderTarget={2.1}
-          regionBorderCapFrac={0.15}
-          regionBorderMin={0.9}
-          gridLineTarget={0.7}
-          gridLineCapFrac={0.05}
-          gridLineMin={0.3}
-        />
-      )}
       <View style={styles.overlay} pointerEvents="none">
-        <View
-          style={[
-            styles.scrim,
-            isCompleted && styles.scrimCompleted,
-            locked && styles.scrimLocked,
-          ]}
+        <RadialScrim
+          size={cellSize}
+          color={isCompleted ? theme.blue : theme.background}
+          centerOpacity={locked ? 0.62 : isCompleted ? 0.5 : 0.48}
+          edgeOpacity={0}
         />
         <Text
           style={[
@@ -153,6 +170,20 @@ const PuzzleCell = React.memo(function PuzzleCell({
           </View>
         )}
       </View>
+      {puzzle && (
+        <PuzzleThumbnail
+          puzzle={puzzle}
+          size={cellSize}
+          theme={theme}
+          coloredRegions={coloredRegions}
+          regionBorderTarget={2.1}
+          regionBorderCapFrac={0.15}
+          regionBorderMin={0.9}
+          gridLineTarget={0.7}
+          gridLineCapFrac={0.05}
+          gridLineMin={0.3}
+        />
+      )}
     </Pressable>
   );
 });
@@ -450,25 +481,13 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       position: 'relative',
     },
     lockedCell: {
-      opacity: 0.55,
+      opacity: 0.33,
     },
     overlay: {
       ...StyleSheet.absoluteFillObject,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    // Full-cell scrim keeps the centered number legible over a busy grid while
-    // still letting the puzzle preview read through. State tints the scrim so
-    // the cell is identifiable at a glance without obscuring the thumbnail.
-    scrim: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: rgba(theme.background, 0.34),
-    },
-    scrimCompleted: {
-      backgroundColor: rgba(theme.green, 0.42),
-    },
-    scrimLocked: {
-      backgroundColor: rgba(theme.background, 0.52),
+      zIndex: 200,
     },
     cellNumber: {
       color: theme.text,
