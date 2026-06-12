@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react';
+import i18n from '../lib/i18n';
+import { UserFacingError } from '../lib/errors';
 
 function toUserMessage(e: unknown): string | null {
   const msg = e instanceof Error ? e.message : String(e);
@@ -11,27 +13,28 @@ function toUserMessage(e: unknown): string | null {
     msg.includes('The user canceled')
   ) return null;
 
-  // Our own already-friendly messages from payments.ts / authStore.ts
-  if (
-    msg.includes('Purchase did not complete') ||
-    msg.includes('Account deletion failed') ||
-    msg.includes('product not found') ||
-    msg.includes('Progress migration failed') ||
-    msg.includes('hasn\'t synced yet')
-  ) return msg;
+  // Our own errors from payments.ts / authStore.ts / packs already carry a
+  // localized, user-presentable message — show it verbatim. Tagged via the
+  // UserFacingError class so this works regardless of the active language
+  // (substring matching on English would break once the text is translated).
+  if (e instanceof UserFacingError) return e.message;
+
+  // The branches below match raw SDK output, which Supabase/Google/Apple always
+  // emit in English regardless of app language — so the .includes() keys stay
+  // English while the returned message is localized.
 
   // Supabase auth
-  if (msg.includes('Invalid login credentials')) return 'Incorrect email or password.';
-  if (msg.includes('Email not confirmed')) return 'Please confirm your email address before signing in.';
-  if (msg.includes('User already registered')) return 'An account with this email already exists.';
-  if (msg.includes('Password should be at least')) return 'Password must be at least 6 characters.';
-  if (msg.includes('invalid format') || msg.includes('valid email')) return 'Please enter a valid email address.';
-  if (msg.includes('signup disabled')) return 'Sign-up is currently unavailable. Please try again later.';
-  if (msg.includes('Email rate limit exceeded')) return 'Too many attempts. Please wait a moment and try again.';
+  if (msg.includes('Invalid login credentials')) return i18n.t('errors.incorrectCredentials');
+  if (msg.includes('Email not confirmed')) return i18n.t('errors.confirmEmail');
+  if (msg.includes('User already registered')) return i18n.t('errors.accountExists');
+  if (msg.includes('Password should be at least')) return i18n.t('errors.passwordLength');
+  if (msg.includes('invalid format') || msg.includes('valid email')) return i18n.t('errors.invalidEmail');
+  if (msg.includes('signup disabled')) return i18n.t('errors.signupUnavailable');
+  if (msg.includes('Email rate limit exceeded')) return i18n.t('errors.tooManyAttempts');
 
   // Network / connectivity
   if (msg.includes('NETWORK_ERROR') || msg.includes('network request failed') || msg.includes('fetch failed')) {
-    return 'Network error. Please check your connection and try again.';
+    return i18n.t('errors.network');
   }
 
   // Supabase internal (RLS, constraints, Postgres) — never show raw to users
@@ -40,10 +43,10 @@ function toUserMessage(e: unknown): string | null {
     msg.includes('violates') ||
     msg.includes('duplicate key') ||
     msg.includes('foreign key')
-  ) return 'Something went wrong. Please try again.';
+  ) return i18n.t('errors.generic');
 
   // Generic fallback for any other third-party SDK message
-  return 'Something went wrong. Please try again.';
+  return i18n.t('errors.generic');
 }
 
 export function useAsyncAction() {

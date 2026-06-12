@@ -13,9 +13,10 @@ import Check from 'lucide-react-native/dist/cjs/icons/check';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../shared/theme/useTheme';
 import { loadAllCompletionData } from '../../shared/lib/progress';
-import { getPastDateKeys, STREAK_LABELS, formatArchiveKey } from '../../shared/lib/streakDate';
+import { getPastDateKeys, formatArchiveKey, capitalize } from '../../shared/lib/streakDate';
 import { useEntitlementsStore } from '../../shared/stores/entitlementsStore';
 import type { RootStackParamList, Theme } from '../../types';
 import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
@@ -27,6 +28,7 @@ export function ArchivePackScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'ArchivePack'>) {
   const { type } = route.params;
+  const { t } = useTranslation();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -108,7 +110,7 @@ export function ArchivePackScreen({
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
         <Text role="headline" style={styles.headerTitle}>
-          Past {STREAK_LABELS[type]} Challenges
+          {t(`library.archiveHeader${capitalize(type)}`)}
         </Text>
         <View style={styles.headerSpacer} />
       </View>

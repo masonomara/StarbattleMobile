@@ -25,24 +25,20 @@ import { useStreakRows } from '../../shared/hooks/useStreakRows';
 import { getStreakPack } from '../../packs';
 import { parsePuzzle } from '../../shared/lib/parsePuzzle';
 import { loadAllCompletionData } from '../../shared/lib/progress';
+import { useTranslation } from 'react-i18next';
 import {
   getActiveStreak,
   getPuzzleIndex,
   getPastDateKeys,
   archiveKeyToDate,
+  capitalize,
   STREAK_TYPES,
-  STREAK_LABELS,
-  STREAK_UNIT,
+  STREAK_UNIT_KEY,
 } from '../../shared/lib/streakDate';
 import type { Theme, StreakType, Puzzle, RootStackParamList } from '../../types';
 
-const ARCHIVE_NAMES: Record<StreakType, string> = {
-  daily: 'Daily Challenge',
-  weekly: 'Weekly Challenge',
-  monthly: 'Monthly Challenge',
-};
-
 export function StreaksModal() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const styles = createStyles(theme);
   const coloredRegions = useSettingsStore(s => s.settings.coloredRegions);
@@ -121,7 +117,7 @@ export function StreaksModal() {
         <View style={styles.modalHeader}>
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text role="largeTitle" style={styles.headerTitle}>Streaks</Text>
+            <Text role="largeTitle" style={styles.headerTitle}>{t('streaks.title')}</Text>
           </View>
           <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeStreaks} hitSlop={8}>
@@ -138,21 +134,19 @@ export function StreaksModal() {
               const found = streaks.find(s => s.type === type);
               const current = found ? getActiveStreak(found, type) : 0;
               const best = found ? found.best : 0;
-              const unit = (n: number) =>
-                n === 1 ? STREAK_UNIT[type] : `${STREAK_UNIT[type]}s`;
               return (
                 <View key={type} style={[styles.streakTile]}>
-                  <Text role="headline" style={styles.streakLabel}>{STREAK_LABELS[type]}</Text>
+                  <Text role="headline" style={styles.streakLabel}>{t(`streaks.label${capitalize(type)}`)}</Text>
                   <View style={styles.streakStatRow}>
-                    <Text role="subhead" style={styles.streakStatLabel}>Best</Text>
+                    <Text role="subhead" style={styles.streakStatLabel}>{t('streaks.best')}</Text>
                     <Text role="body" style={styles.streakStatValue}>
-                      {best} {unit(best)}
+                      {t(`streaks.${STREAK_UNIT_KEY[type]}`, { count: best })}
                     </Text>
                   </View>
                   <View style={styles.streakStatRow}>
-                    <Text role="subhead" style={styles.streakStatLabel}>Current</Text>
+                    <Text role="subhead" style={styles.streakStatLabel}>{t('streaks.current')}</Text>
                     <Text role="body" style={styles.streakStatValue}>
-                      {current} {unit(current)}
+                      {t(`streaks.${STREAK_UNIT_KEY[type]}`, { count: current })}
                     </Text>
                   </View>
                 </View>
@@ -160,7 +154,7 @@ export function StreaksModal() {
             })}
           </View>
 
-          <Text role="headline" style={styles.sectionTitle}>Archived Challenges</Text>
+          <Text role="headline" style={styles.sectionTitle}>{t('streaks.archivedTitle')}</Text>
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
@@ -173,19 +167,23 @@ export function StreaksModal() {
             return (
               <PackCard
                 key={type}
-                name={ARCHIVE_NAMES[type]}
-                meta={isEmpty ? 'Coming soon' : `${done} of ${count} completed`}
+                name={t(`library.challenge${capitalize(type)}`)}
+                meta={
+                  isEmpty
+                    ? t('streaks.comingSoon')
+                    : t('streaks.archiveProgress', { done, count })
+                }
                 preview={preview}
                 disabled={isEmpty}
                 onPress={() => {
                   if (locked) {
                     Alert.alert(
-                      'Premium Feature',
-                      'Upgrade to Premium to access past challenges.',
+                      t('streaks.premiumTitle'),
+                      t('streaks.premiumBody'),
                       [
-                        { text: 'Not Now', style: 'cancel' },
+                        { text: t('streaks.notNow'), style: 'cancel' },
                         {
-                          text: 'Upgrade',
+                          text: t('streaks.upgrade'),
                           onPress: () =>
                             useSettingsStore.getState().openSettings(),
                         },

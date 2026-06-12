@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Pressable,
@@ -66,6 +67,7 @@ function AppleIcon({ size, color }: { size: number; color: string }) {
 }
 
 export function AccountSection() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const styles = createStyles(theme);
 
@@ -93,7 +95,7 @@ export function AccountSection() {
 
   async function handleForgotPassword() {
     if (!email) {
-      setError('Enter your email address first');
+      setError(t('account.errEmailFirst'));
       return;
     }
     await withLoading(async () => {
@@ -106,11 +108,11 @@ export function AccountSection() {
 
   async function handleResetPassword() {
     if (resetCode.trim().length !== 6) {
-      setError('Enter the 6-digit code from your email');
+      setError(t('account.errOtp'));
       return;
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('account.errPasswordLength'));
       return;
     }
     await withLoading(async () => {
@@ -127,11 +129,11 @@ export function AccountSection() {
 
   async function handleEmailSubmit() {
     if (!email || !password) {
-      setError('Enter email and password');
+      setError(t('account.errEmptyFields'));
       return;
     }
     if (emailMode === 'signup' && password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('account.errPasswordLength'));
       return;
     }
     if (emailMode === 'signup') {
@@ -152,12 +154,12 @@ export function AccountSection() {
 
   function confirmDeleteAccount() {
     Alert.alert(
-      'Delete Account',
-      'This permanently deletes your account and all game data (progress, streaks, and entitlements). App Store purchase receipts are managed by Apple and remain in your purchase history. This cannot be undone.',
+      t('account.deleteTitle'),
+      t('account.deleteBody'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('account.deleteCancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('account.deleteConfirm'),
           style: 'destructive',
           onPress: () => withLoading(deleteAccount),
         },
@@ -174,21 +176,20 @@ export function AccountSection() {
       <Text role="headline" style={styles.sectionTitle}>
         {isAnonymous
           ? authTab === 'signin'
-            ? 'Sign in'
-            : 'Sign up'
-          : 'Account'}
+            ? t('account.signInTab')
+            : t('account.signUpTab')
+          : t('account.accountTab')}
       </Text>
 
       {isAnonymous ? (
         <>
           {authTab === 'signup' ? (
             <Text role="body" style={styles.sectionBody}>
-              Create an account to keep your progress, streaks, and purchases
-              across devices.
+              {t('account.signUpIntro')}
             </Text>
           ) : (
             <Text role="body" style={styles.sectionBody}>
-              Access your progress, streaks, and purchases across devices.
+              {t('account.signInIntro')}
             </Text>
           )}
 
@@ -206,8 +207,8 @@ export function AccountSection() {
                   <AtSign size={18} color={theme.text} />
                   <Text role="subhead" style={styles.secondaryButtonText}>
                     {authTab === 'signin'
-                      ? 'Sign in with Email'
-                      : 'Sign up with Email'}
+                      ? t('account.signInEmail')
+                      : t('account.signUpEmail')}
                   </Text>
                 </View>
               </Pressable>
@@ -223,8 +224,8 @@ export function AccountSection() {
                     <GoogleIcon size={18} />
                     <Text role="subhead" style={styles.secondaryButtonText}>
                       {authTab === 'signin'
-                        ? 'Sign in with Google'
-                        : 'Sign up with Google'}
+                        ? t('account.signInGoogle')
+                        : t('account.signUpGoogle')}
                     </Text>
                   </View>
                 )}
@@ -242,8 +243,8 @@ export function AccountSection() {
                       <AppleIcon size={18} color={theme.text} />
                       <Text role="subhead" style={styles.secondaryButtonText}>
                         {authTab === 'signin'
-                          ? 'Sign in with Apple'
-                          : 'Sign up with Apple'}
+                          ? t('account.signInApple')
+                          : t('account.signUpApple')}
                       </Text>
                     </View>
                   )}
@@ -257,8 +258,8 @@ export function AccountSection() {
               >
                 <Text role="subhead" style={styles.linkText}>
                   {authTab === 'signin'
-                    ? 'Create an account'
-                    : 'Already have an account? Sign in'}
+                    ? t('account.switchToSignUp')
+                    : t('account.switchToSignIn')}
                 </Text>
               </Pressable>
             </View>
@@ -266,7 +267,7 @@ export function AccountSection() {
 
           {(emailMode === 'signup' || emailMode === 'signin') && (
             <View style={{ gap: 12 }}>
-              <Text role="body" style={styles.inputLabel}>Email</Text>
+              <Text role="body" style={styles.inputLabel}>{t('account.emailLabel')}</Text>
               <TextInput
                 style={styles.input}
                 placeholderTextColor={theme.textSecondary}
@@ -276,7 +277,7 @@ export function AccountSection() {
                 keyboardType="email-address"
                 autoComplete="email"
               />
-              <Text role="body" style={styles.inputLabel}>Password</Text>
+              <Text role="body" style={styles.inputLabel}>{t('account.passwordLabel')}</Text>
               <TextInput
                 style={styles.input}
                 placeholderTextColor={theme.textSecondary}
@@ -294,7 +295,7 @@ export function AccountSection() {
                     password.length >= 6 && styles.passwordHintMet,
                   ]}
                 >
-                  At least 6 characters
+                  {t('account.passwordHint')}
                 </Text>
               )}
               <Pressable
@@ -306,7 +307,9 @@ export function AccountSection() {
                   <ActivityIndicator color={theme.background} />
                 ) : (
                   <Text role="headline" style={styles.primaryButtonText}>
-                    {emailMode === 'signup' ? 'Create Account' : 'Sign In'}
+                    {emailMode === 'signup'
+                      ? t('account.submitSignUp')
+                      : t('account.submitSignIn')}
                   </Text>
                 )}
               </Pressable>
@@ -319,7 +322,7 @@ export function AccountSection() {
                   }}
                   disabled={loading}
                 >
-                  <Text role="subhead" style={styles.linkText}>Forgot Password?</Text>
+                  <Text role="subhead" style={styles.linkText}>{t('account.forgotPassword')}</Text>
                 </Pressable>
               )}
               <Pressable
@@ -329,20 +332,20 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="subhead" style={styles.linkTextDanger}>Cancel</Text>
+                <Text role="subhead" style={styles.linkTextDanger}>{t('account.cancel')}</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'forgot-password' && (
             <View style={{ gap: 12 }}>
-              <Text role="body" style={styles.inputLabel}>Reset Password</Text>
+              <Text role="body" style={styles.inputLabel}>{t('account.resetTitle')}</Text>
               <Text role="body" style={styles.sectionBody}>
-                Enter your email and we'll send you a code to reset your password.
+                {t('account.resetHelper')}
               </Text>
               <TextInput
                 style={styles.input}
-                placeholder="Email"
+                placeholder={t('account.emailPlaceholder')}
                 placeholderTextColor={theme.textSecondary}
                 value={email}
                 onChangeText={setEmail}
@@ -358,7 +361,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text role="headline" style={styles.primaryButtonText}>Send Code</Text>
+                  <Text role="headline" style={styles.primaryButtonText}>{t('account.sendCode')}</Text>
                 )}
               </Pressable>
               <Pressable
@@ -368,22 +371,20 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="subhead" style={styles.linkText}>Back to Sign In</Text>
+                <Text role="subhead" style={styles.linkText}>{t('account.backToSignIn')}</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'reset-otp' && (
             <View style={{ gap: 12 }}>
-              <Text role="body" style={styles.inputLabel}>Reset Password</Text>
+              <Text role="body" style={styles.inputLabel}>{t('account.resetTitle')}</Text>
               <Text role="body" style={styles.sectionBody}>
-                Enter the code we sent to{' '}
-                <Text style={styles.confirmEmailAddress}>{email}</Text> and choose
-                a new password.
+                {t('account.resetOtpInstructions', { email })}
               </Text>
               <TextInput
                 style={styles.input}
-                placeholder="6-digit code"
+                placeholder={t('account.otpPlaceholder')}
                 placeholderTextColor={theme.textSecondary}
                 value={resetCode}
                 onChangeText={setResetCode}
@@ -395,7 +396,7 @@ export function AccountSection() {
               />
               <TextInput
                 style={styles.input}
-                placeholder="New password"
+                placeholder={t('account.newPasswordPlaceholder')}
                 placeholderTextColor={theme.textSecondary}
                 value={password}
                 onChangeText={setPassword}
@@ -408,7 +409,7 @@ export function AccountSection() {
                   password.length >= 6 && styles.passwordHintMet,
                 ]}
               >
-                At least 6 characters
+                {t('account.passwordHint')}
               </Text>
               <Pressable
                 style={[styles.primaryButton, loading && styles.disabled]}
@@ -418,7 +419,7 @@ export function AccountSection() {
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text role="headline" style={styles.primaryButtonText}>Reset Password</Text>
+                  <Text role="headline" style={styles.primaryButtonText}>{t('account.resetTitle')}</Text>
                 )}
               </Pressable>
               <Pressable
@@ -426,7 +427,7 @@ export function AccountSection() {
                 onPress={() => withLoading(() => requestPasswordReset(email))}
                 disabled={loading}
               >
-                <Text role="subhead" style={styles.linkText}>Resend Code</Text>
+                <Text role="subhead" style={styles.linkText}>{t('account.resendCode')}</Text>
               </Pressable>
               <Pressable
                 style={styles.linkButton}
@@ -437,18 +438,16 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="subhead" style={styles.linkText}>Back to Sign In</Text>
+                <Text role="subhead" style={styles.linkText}>{t('account.backToSignIn')}</Text>
               </Pressable>
             </View>
           )}
 
           {emailMode === 'confirm-email' && (
             <View style={styles.confirmEmailBox}>
-              <Text role="headline" style={styles.confirmEmailTitle}>Check your inbox</Text>
+              <Text role="headline" style={styles.confirmEmailTitle}>{t('account.confirmInboxTitle')}</Text>
               <Text role="body" style={styles.confirmEmailBody}>
-                We sent a confirmation link to{' '}
-                <Text style={styles.confirmEmailAddress}>{email}</Text>. Open it
-                to finish creating your account.
+                {t('account.confirmInboxBody', { email })}
               </Text>
               <Pressable
                 style={styles.primaryButton}
@@ -458,7 +457,7 @@ export function AccountSection() {
                   setError(null);
                 }}
               >
-                <Text role="headline" style={styles.primaryButtonText}>Done</Text>
+                <Text role="headline" style={styles.primaryButtonText}>{t('account.done')}</Text>
               </Pressable>
             </View>
           )}
@@ -468,16 +467,16 @@ export function AccountSection() {
       ) : (
         <>
           <View style={[styles.infoRow, styles.infoRowFirst]}>
-            <Text role="body" style={styles.infoLabel}>Email</Text>
+            <Text role="body" style={styles.infoLabel}>{t('account.emailRowLabel')}</Text>
             <Text role="subhead" style={styles.infoValue} numberOfLines={1}>
-              {user?.email ?? 'Sign-in with provider'}
+              {user?.email ?? t('account.providerFallback')}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text role="body" style={styles.infoLabel}>Account Type</Text>
+            <Text role="body" style={styles.infoLabel}>{t('account.accountType')}</Text>
             <Text role="subhead" style={styles.infoValue}>
-              {entitlements.isPremium ? 'Premium' : 'Free'}
+              {entitlements.isPremium ? t('account.premium') : t('account.free')}
             </Text>
           </View>
 
@@ -495,8 +494,8 @@ export function AccountSection() {
                 ) : (
                   <Text role="headline" style={styles.primaryButtonText}>
                     {premiumPrice
-                      ? `Buy Premium · ${premiumPrice}`
-                      : 'Buy Premium'}
+                      ? t('account.buyPremiumPrice', { price: premiumPrice })
+                      : t('account.buyPremium')}
                   </Text>
                 )}
               </Pressable>
@@ -512,21 +511,21 @@ export function AccountSection() {
                   },
                   () =>
                     Alert.alert(
-                      'Purchases Restored',
+                      t('account.restoredTitle'),
                       wasPremium
-                        ? 'Your premium access has been restored.'
-                        : 'No previous purchases were found on this account.',
+                        ? t('account.restoredFound')
+                        : t('account.restoredNone'),
                     ),
                 );
               }}
               disabled={loading}
             >
-              <Text role="subhead" style={styles.secondaryButtonText}>Restore Purchases</Text>
+              <Text role="subhead" style={styles.secondaryButtonText}>{t('account.restorePurchases')}</Text>
             </Pressable>
 
             {ownedPacks.length > 0 && (
               <>
-                <Text role="subhead" style={styles.subLabel}>Owned Packs</Text>
+                <Text role="subhead" style={styles.subLabel}>{t('account.ownedPacks')}</Text>
                 {ownedPacks.map(p => (
                   <Text key={p.id} role="body" style={styles.ownedPackName}>
                     {p.name}
@@ -540,14 +539,14 @@ export function AccountSection() {
               onPress={() => withLoading(signOut)}
               disabled={loading}
             >
-              <Text role="subhead" style={styles.secondaryButtonText}>Sign Out</Text>
+              <Text role="subhead" style={styles.secondaryButtonText}>{t('account.signOut')}</Text>
             </Pressable>
             <Pressable
               style={[styles.destructiveButton, loading && styles.disabled]}
               onPress={confirmDeleteAccount}
               disabled={loading}
             >
-              <Text role="subhead" style={styles.destructiveButtonText}>Delete Account</Text>
+              <Text role="subhead" style={styles.destructiveButtonText}>{t('account.deleteAccount')}</Text>
             </Pressable>
           </View>
 
@@ -669,10 +668,6 @@ const createStyles = (theme: Theme) =>
     },
     confirmEmailBody: {
       color: theme.textSecondary,
-    },
-    confirmEmailAddress: {
-      fontWeight: theme.fontWeightSemibold,
-      color: theme.text,
     },
     passwordHint: {
       color: theme.textSecondary,

@@ -9,13 +9,20 @@ export function isStreakType(value: string | undefined | null): value is StreakT
   return value === 'daily' || value === 'weekly' || value === 'monthly';
 }
 
-export const STREAK_LABELS: Record<StreakType, string> = {
-  daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
-};
+// Display labels and unit words now live in the i18n bundles (streaks.label*,
+// library.challenge*, and the pluralized streaks.day/week/month keys); these
+// English constants were removed when the UI moved to react-i18next.
 
-export const STREAK_UNIT: Record<StreakType, string> = {
+// Capitalizes a cadence for the i18n keys that suffix it (library.challengeDaily,
+// streaks.labelWeekly, library.archiveHeaderMonthly). The Capitalize<T> return
+// type lets callers build those keys as typed template literals, so t() can still
+// type-check a dynamically-constructed key.
+export function capitalize<T extends string>(value: T): Capitalize<T> {
+  return (value[0].toUpperCase() + value.slice(1)) as Capitalize<T>;
+}
+
+// Cadence -> the base of the pluralized streaks.{day|week|month} keys.
+export const STREAK_UNIT_KEY: Record<StreakType, 'day' | 'week' | 'month'> = {
   daily: 'day',
   weekly: 'week',
   monthly: 'month',

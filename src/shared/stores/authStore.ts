@@ -9,6 +9,8 @@ import { startupTimer } from '../lib/startupTimer';
 import { db } from '../../powersync/AppSchema';
 import { SupabaseConnector } from '../../powersync/Connector';
 import { useEntitlementsStore } from './entitlementsStore';
+import i18n from '../lib/i18n';
+import { UserFacingError } from '../lib/errors';
 
 type AuthState = {
   session: Session | null;
@@ -91,18 +93,16 @@ async function drainUploadQueue(timeoutMs = 30_000): Promise<void> {
 
     // Fail fast if PowerSync has given up uploading.
     if (!db.connected) {
-      throw new Error('You appear to be offline. Please check your connection and try again.');
+      throw new UserFacingError(i18n.t('errors.offline'));
     }
     const uploadError = db.currentStatus.dataFlowStatus?.uploadError;
     if (uploadError) {
-      throw new Error('Progress sync failed. Please check your connection and try again.');
+      throw new UserFacingError(i18n.t('errors.syncFailed'));
     }
 
     await new Promise<void>(resolve => setTimeout(resolve, 500));
   }
-  throw new Error(
-    'Your progress is taking too long to sync. Please check your connection and try again.',
-  );
+  throw new UserFacingError(i18n.t('errors.syncTimeout'));
 }
 
 // Invokes the server-side merge Edge Function.
@@ -112,7 +112,10 @@ async function migrateAnonProgress(anonId: string, anonToken: string): Promise<v
   const { error } = await supabase.functions.invoke('migrate-anon-account', {
     body: { anonId, anonToken },
   });
-  if (error) throw new Error(`Progress migration failed: ${error.message}`);
+  if (error)
+    throw new UserFacingError(
+      i18n.t('errors.migrationFailed', { message: error.message }),
+    );
 }
 
 // Wipes the local PowerSync database and rebuilds it for the given user, then
@@ -336,7 +339,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // device's anonymous id is captured BEFORE the session flips to the named
   // user — identical behavior to pressing "Sign In".
   resetPasswordWithOtp: async (email: string, token: string, newPassword: string) => {
-    if (newPassword.length < 6) throw new Error('Password must be at least 6 characters');
+    if (newPassword.length < 6)
+      throw new UserFacingError(i18n.t('errors.passwordLength'));
     await withAnonMigration(get, set, async () => {
       const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' });
       if (error) throw error;
@@ -373,7 +377,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // user_entitlements, and streak_archive automatically.
   deleteAccount: async () => {
     const { error } = await supabase.rpc('delete_user');
-    if (error) throw new Error('Account deletion failed. Please try again or contact support.');
+    if (error) throw new UserFacingError(i18n.t('errors.deleteFailed'));
     try { await adapty.logout(); } catch {}
     await resetToAnonymous(set, get);
   },

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, View, Pressable, StyleSheet } from 'react-native';
 import Undo2 from 'lucide-react-native/dist/cjs/icons/undo-2';
 import Redo2 from 'lucide-react-native/dist/cjs/icons/redo-2';
@@ -24,6 +25,7 @@ export function Toolbar({
   onZoomReset,
   hintDisabledMessage,
 }: ToolbarProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const styles = createStyles(theme);
   const insets = useSafeAreaInsets();
@@ -55,28 +57,28 @@ export function Toolbar({
 
   function handleHint() {
     if (hintDisabledMessage) {
-      Alert.alert('Hints', hintDisabledMessage);
+      Alert.alert(t('puzzle.hintsTitle'), hintDisabledMessage);
       return;
     }
     if (hintsLoading) {
-      Alert.alert('Hints', 'Hints are loading.');
+      Alert.alert(t('puzzle.hintsTitle'), t('puzzle.hintsLoading'));
       return;
     }
     if (hasHints) {
       press(showHint);
     } else {
       Alert.alert(
-        'Hints Unavailable',
-        'Hints could not be loaded. Check your connection and try again.',
+        t('puzzle.hintsUnavailableTitle'),
+        t('puzzle.hintsLoadFailed'),
       );
     }
   }
 
   function handleClear() {
     press(() =>
-      Alert.alert('Clear Board', 'Are you sure you want to clear the board?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Clear', style: 'destructive', onPress: clearBoard },
+      Alert.alert(t('puzzle.clearTitle'), t('puzzle.clearBody'), [
+        { text: t('puzzle.clearCancel'), style: 'cancel' },
+        { text: t('puzzle.clearConfirm'), style: 'destructive', onPress: clearBoard },
       ]),
     );
   }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
 import { Text } from './Text';
+import i18n from '../lib/i18n';
 import type { ErrorBoundaryProps } from '../../types';
 
 interface State {
@@ -41,7 +42,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
           }}
         >
           <Text role="body" style={{ marginBottom: 16, textAlign: 'center' }}>
-            Something went wrong.
+            {i18n.t('errors.somethingWrong')}
           </Text>
           <Pressable
             style={{
@@ -58,7 +59,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
                 color: theme.text,
               }}
             >
-              Try Again
+              {i18n.t('errors.tryAgain')}
             </Text>
           </Pressable>
         </View>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Pressable,
@@ -33,6 +34,7 @@ export function PaywallModal({
   onClose,
   onPurchaseSuccess,
 }: PaywallModalProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const styles = createStyles(theme);
   const isAnonymous = useAuthStore(s => s.isAnonymous);
@@ -53,9 +55,9 @@ export function PaywallModal({
     if (context.type === 'sequential') {
       return (
         <>
-          <Text role="headline" style={styles.title}>Puzzle Locked</Text>
+          <Text role="headline" style={styles.title}>{t('paywall.lockedTitle')}</Text>
           <Text role="body" style={styles.body}>
-            Complete the previous puzzle to unlock this one.
+            {t('paywall.lockedBody')}
           </Text>
           <Pressable
             style={[styles.primaryButton, loading && styles.disabled]}
@@ -67,8 +69,8 @@ export function PaywallModal({
             ) : (
               <Text role="headline" style={styles.primaryButtonText}>
                 {premiumPrice
-                  ? `Unlock All with Premium · ${premiumPrice}`
-                  : 'Unlock All with Premium'}
+                  ? t('paywall.unlockAllPrice', { price: premiumPrice })
+                  : t('paywall.unlockAll')}
               </Text>
             )}
           </Pressable>
@@ -82,8 +84,9 @@ export function PaywallModal({
           <>
             <Text role="headline" style={styles.title}>{context.packName}</Text>
             <Text role="body" style={styles.body}>
-              Create an account to purchase this pack
-              {packPrice ? ` for ${packPrice}` : ''}.
+              {packPrice
+                ? t('paywall.createAccountToBuy', { price: packPrice })
+                : t('paywall.createAccountToBuyNoPrice')}
             </Text>
             <Pressable
               style={styles.primaryButton}
@@ -92,7 +95,7 @@ export function PaywallModal({
                 useSettingsStore.getState().openSettings();
               }}
             >
-              <Text role="headline" style={styles.primaryButtonText}>Create Account</Text>
+              <Text role="headline" style={styles.primaryButtonText}>{t('paywall.createAccount')}</Text>
             </Pressable>
           </>
         );
@@ -112,7 +115,9 @@ export function PaywallModal({
               <ActivityIndicator color={theme.background} />
             ) : (
               <Text role="headline" style={styles.primaryButtonText}>
-                {packPrice ? `Buy Pack · ${packPrice}` : 'Buy Pack'}
+                {packPrice
+                  ? t('paywall.buyPackPrice', { price: packPrice })
+                  : t('paywall.buyPack')}
               </Text>
             )}
           </Pressable>
@@ -123,8 +128,8 @@ export function PaywallModal({
           >
             <Text role="subhead" style={styles.secondaryButtonText}>
               {premiumPrice
-                ? `Buy Premium · ${premiumPrice} · All Packs`
-                : 'Buy Premium · All Packs'}
+                ? t('paywall.buyPremiumAllPacksPrice', { price: premiumPrice })
+                : t('paywall.buyPremiumAllPacks')}
             </Text>
           </Pressable>
         </>
@@ -136,10 +141,10 @@ export function PaywallModal({
         <>
           <Text role="headline" style={styles.title}>{context.packName}</Text>
           <Text role="body" style={styles.body}>
-            This pack isn't available for purchase right now. Please check back later.
+            {t('paywall.unavailableBody')}
           </Text>
           <Pressable style={styles.primaryButton} onPress={onClose}>
-            <Text role="headline" style={styles.primaryButtonText}>Got it</Text>
+            <Text role="headline" style={styles.primaryButtonText}>{t('paywall.gotIt')}</Text>
           </Pressable>
         </>
       );
@@ -160,11 +165,11 @@ export function PaywallModal({
         {error && <Text role="subhead" style={styles.error}>{error}</Text>}
         <View style={styles.disclosureLinks}>
           <Pressable onPress={() => Linking.openURL(TERMS_URL).catch(() => {})} hitSlop={8}>
-            <Text role="footnote" style={styles.disclosureLink}>Terms of Use</Text>
+            <Text role="footnote" style={styles.disclosureLink}>{t('paywall.terms')}</Text>
           </Pressable>
           <Text role="footnote" style={styles.disclosureSep}>·</Text>
           <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} hitSlop={8}>
-            <Text role="footnote" style={styles.disclosureLink}>Privacy Policy</Text>
+            <Text role="footnote" style={styles.disclosureLink}>{t('paywall.privacy')}</Text>
           </Pressable>
         </View>
       </View>

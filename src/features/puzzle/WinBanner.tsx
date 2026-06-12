@@ -8,14 +8,25 @@ import { Text } from '../../shared/ui/Text';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { usePuzzleStore } from './puzzleStore';
 import { recordStreak } from '../../shared/lib/progress';
-import { STREAK_LABELS, STREAK_UNIT } from '../../shared/lib/streakDate';
 import { formatElapsedTime } from '../../shared/lib/time';
+import { STREAK_UNIT_KEY } from '../../shared/lib/streakDate';
 
 import { useTheme } from '../../shared/theme/useTheme';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
-import type { Theme, RootStackParamList, WinBannerProps } from '../../types';
+import type { StreakType, Theme, RootStackParamList, WinBannerProps } from '../../types';
+
+// The win-banner streak info line uses puzzle.winStreakInfo{Day|Week|Month}
+// ("Day Streak" / "Racha diaria") — a distinct singular suffix from the
+// Daily/Weekly/Monthly capitalize() used by the challenge/label keys, so it stays
+// local. The count suffix uses the shared pluralized streaks.{day|week|month} keys.
+const STREAK_INFO_SUFFIX: Record<StreakType, 'Day' | 'Week' | 'Month'> = {
+  daily: 'Day',
+  weekly: 'Week',
+  monthly: 'Month',
+};
 
 export function WinBanner({
   packId,
@@ -26,6 +37,7 @@ export function WinBanner({
   streakCount = 0,
   tutorial = false,
 }: WinBannerProps) {
+  const { t } = useTranslation();
   const completed = usePuzzleStore(s => s.completed);
   const completeTutorial = useSettingsStore(s => s.completeTutorial);
   const loadedAsCompleted = usePuzzleStore(s => s.loadedAsCompleted);
@@ -63,22 +75,24 @@ export function WinBanner({
   if (!completed) return null;
 
   const info = tutorial
-    ? 'Tutorial Complete'
+    ? t('puzzle.winTutorialInfo')
     : streakType
-    ? `${STREAK_LABELS[streakType]} Challenge`
-    : `${packName} • Puzzle ${puzzleIndex + 1}`;
+    ? t(`puzzle.winStreakInfo${STREAK_INFO_SUFFIX[streakType]}`)
+    : t('puzzle.winPackInfo', { packName, n: puzzleIndex + 1 });
 
   const mainText = tutorial
-    ? 'You’re Ready!'
-    : `Solved in ${formatElapsedTime(timeMs)}`;
+    ? t('puzzle.winTutorialHeadline')
+    : t('puzzle.winSolvedHeadline', { time: formatElapsedTime(timeMs) });
 
   const buttonLabel = tutorial
-    ? 'Start playing'
+    ? t('puzzle.winTutorialButton')
     : streakType
-    ? 'Back to Home'
+    ? t('puzzle.winBackHome')
     : isLastPuzzle
-    ? `Back to ${packName || 'Pack'}`
-    : 'Next Puzzle';
+    ? packName
+      ? t('puzzle.winBackToPack', { packName })
+      : t('puzzle.winBackToPackFallback')
+    : t('puzzle.winNextPuzzle');
 
   function handlePress() {
     if (tutorial) {
@@ -109,7 +123,9 @@ export function WinBanner({
           {streakType && (
             <Text role="body" style={styles.winInfo}>
               {streakCount > 0
-                ? ` •  ${streakCount} ${STREAK_UNIT[streakType!]} streak`
+                ? ` •  ${t(`streaks.${STREAK_UNIT_KEY[streakType!]}`, {
+                    count: streakCount,
+                  })}`
                 : ``}
             </Text>
           )}

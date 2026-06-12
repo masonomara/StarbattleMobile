@@ -1,4 +1,5 @@
 import { View, Pressable, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Text } from '../../shared/ui/Text';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
 import { PulseBox, PulseLine } from '../../shared/ui/Pulse';
@@ -9,14 +10,16 @@ import type {
   Theme,
 } from '../../types';
 
-const STATUS_LABEL: Record<StreakCardStatus, string> = {
-  'not-started': 'Not started',
-  'in-progress': 'In progress',
-  complete: 'Complete',
-};
+// `as const` keeps the values as literal key types (not widened to string) so
+// t(STATUS_KEY[status]) stays type-checked; `satisfies` enforces full coverage.
+const STATUS_KEY = {
+  'not-started': 'library.streakStatusNotStarted',
+  'in-progress': 'library.streakStatusInProgress',
+  complete: 'library.streakStatusComplete',
+} as const satisfies Record<StreakCardStatus, string>;
 
-// A streak carousel card: thumbnail, "<cadence> Challenge" title, and a meta line
-// of "<n> star puzzle • <status>".
+// A streak carousel card: thumbnail, the fully-composed challenge title (passed in
+// as `label`, e.g. "Daily Challenge"), and a meta line of "<n>-star • <status>".
 export function StreakCard({
   label,
   starCount,
@@ -27,6 +30,7 @@ export function StreakCard({
   coloredRegions,
   onPress,
 }: StreakCardProps) {
+  const { t } = useTranslation();
   const styles = createStyles(theme);
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -43,11 +47,11 @@ export function StreakCard({
         gridLineMin={0.5}
       />
       <Text role="title1" style={styles.label}>
-        {`${label} Challenge`}
+        {label}
       </Text>
       <Text role="subhead" style={styles.meta}>
-        {`${starCount}-star`}&nbsp;·&nbsp;
-        {`${STATUS_LABEL[status]}`}
+        {t('home.packStar', { count: starCount })}&nbsp;·&nbsp;
+        {t(STATUS_KEY[status])}
       </Text>
     </Pressable>
   );

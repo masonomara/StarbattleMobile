@@ -17,11 +17,12 @@ import { useTheme } from '../../shared/theme/useTheme';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { usePackPreviews } from './usePackPreviews';
 import { useCompletionData } from './useCompletionData';
+import { useTranslation } from 'react-i18next';
 import {
   getCurrentKey,
   getStreakCells,
+  capitalize,
   STREAK_TYPES,
-  STREAK_LABELS,
   isStreakType,
 } from '../../shared/lib/streakDate';
 import { useAuthStore } from '../../shared/stores/authStore';
@@ -90,6 +91,7 @@ export function HomeScreen({
     loggedFirstRender = true;
     mark('STARTUP', 'HomeScreen FIRST RENDER (body eval, pre-paint)');
   }
+  const { t } = useTranslation();
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
   const streakCardSize = windowWidth * STREAK_CARD_FRACTION;
@@ -281,7 +283,7 @@ export function HomeScreen({
               style={[styles.headerTitle, { opacity: headerTitleOpacity }]}
             >
               <Text role="subhead" style={styles.headerTitleText}>
-                Puzzle Library
+                {t('home.libraryTitle')}
               </Text>
             </Animated.View>
           </Pressable>
@@ -368,7 +370,7 @@ export function HomeScreen({
                     return (
                       <StreakCard
                         key={pack.id}
-                        label={STREAK_LABELS[type]}
+                        label={t(`library.challenge${capitalize(type)}`)}
                         starCount={STREAK_STAR_COUNT[type]}
                         status={status}
                         preview={preview}
@@ -409,7 +411,7 @@ export function HomeScreen({
                     <PackCard
                       key={pack.id}
                       name={pack.name}
-                      meta={`${pack.stars}-star`}
+                      meta={t('home.packStar', { count: pack.stars })}
                       locked={!owned}
                       completed={
                         owned ? completedPerPack[pack.id] ?? 0 : undefined

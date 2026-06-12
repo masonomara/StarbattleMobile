@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   StyleSheet,
@@ -53,6 +54,7 @@ export function PuzzleScreen({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Puzzle' | 'Tutorial'>) {
+  const { t } = useTranslation();
   const isTutorial = route.name === 'Tutorial';
   // route.params is `PuzzleParams | undefined` (undefined for the tutorial route).
   const params = route.params;
@@ -122,14 +124,14 @@ export function PuzzleScreen({
   }
 
   function confirmSkipTutorial() {
-    Alert.alert(
-      'Skip tutorial',
-      'This is a one-time walkthrough that you will not be able to return to.',
-      [
-        { text: 'Keep Learning', style: 'cancel' },
-        { text: 'Skip', style: 'destructive', onPress: finishTutorial },
-      ],
-    );
+    Alert.alert(t('tutorial.skipTitle'), t('tutorial.skipBody'), [
+      { text: t('tutorial.skipCancel'), style: 'cancel' },
+      {
+        text: t('tutorial.skipConfirm'),
+        style: 'destructive',
+        onPress: finishTutorial,
+      },
+    ]);
   }
 
   // Fade header buttons and status bar in/out when the user hides the chrome.
@@ -360,7 +362,7 @@ export function PuzzleScreen({
               onPress={confirmSkipTutorial}
               hitSlop={12}
               accessibilityRole="button"
-              accessibilityLabel="Skip tutorial"
+              accessibilityLabel={t('tutorial.skipA11yLabel')}
               style={styles.skipButton}
             >
               <ChevronsRight size={26} color={theme.text} />
@@ -410,7 +412,7 @@ export function PuzzleScreen({
           isZoomed={isZoomed}
           onZoomReset={handleZoomReset}
           hintDisabledMessage={
-            isTutorial ? 'Hints not available for the tutorial' : undefined
+            isTutorial ? t('tutorial.hintsDisabled') : undefined
           }
         />
       </Animated.View>

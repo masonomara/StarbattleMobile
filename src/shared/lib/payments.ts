@@ -3,6 +3,8 @@ import type { AdaptyPaywallProduct } from 'react-native-adapty';
 import { downloadPack } from '../../packs';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
 import { prefetchAllCatalog } from '../../packs/prefetch';
+import i18n from './i18n';
+import { UserFacingError } from './errors';
 
 // NOTE: _productsPromise caches the paywall products for the lifetime of the
 // process. If Adapty's paywall configuration changes server-side (e.g. price
@@ -34,19 +36,20 @@ export const PREMIUM_PRODUCT_ID = 'sb_premium_599';
 export async function purchasePremium(): Promise<boolean> {
   const products = await getProducts();
   const product = products.find(p => p.vendorProductId === PREMIUM_PRODUCT_ID);
-  if (!product) throw new Error('Premium product not found in paywall');
+  if (!product)
+    throw new UserFacingError(i18n.t('errors.productUnavailable'));
 
   const result = await adapty.makePurchase(product);
   if (result.type === 'success') {
     if (!(result.profile.accessLevels?.premium?.isActive ?? false)) {
-      throw new Error('Purchase recorded but access not yet active. Please use Restore Purchases.');
+      throw new UserFacingError(i18n.t('errors.purchaseLag'));
     }
     useEntitlementsStore.getState().setIsPremium(true);
     const { packCatalog } = useEntitlementsStore.getState();
     prefetchAllCatalog(packCatalog).catch(() => {});
     return true;
   }
-  throw new Error('Purchase did not complete. Please try again.');
+  throw new UserFacingError(i18n.t('errors.purchaseFailed'));
 }
 
 export async function purchasePack(
@@ -57,10 +60,11 @@ export async function purchasePack(
   const product = products.find(
     p => p.vendorProductId === `starbattle_pack_${packId}`,
   );
-  if (!product) throw new Error(`Pack product not found: starbattle_pack_${packId}`);
+  if (!product) throw new UserFacingError(i18n.t('errors.packUnavailable'));
 
   const result = await adapty.makePurchase(product);
-  if (result.type !== 'success') throw new Error('Purchase did not complete. Please try again.');
+  if (result.type !== 'success')
+    throw new UserFacingError(i18n.t('errors.purchaseFailed'));
   await downloadPack(packId, storagePath);
   useEntitlementsStore.getState().addOwnedPack(packId);
 }

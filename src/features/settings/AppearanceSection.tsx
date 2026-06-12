@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Pressable,
@@ -43,13 +44,16 @@ const PALETTE_ICONS: Record<
   },
 };
 
-const THEME_OPTIONS: { label: string; value: UserSettings['theme'] }[] = [
-  { label: 'System', value: 'system' },
-  { label: 'Light', value: 'light' },
-  { label: 'Dark', value: 'dark' },
-];
+// `as const` keeps labelKey as a literal i18n key (not widened to string) so
+// t(option.labelKey) stays type-checked; `satisfies` validates the value field.
+const THEME_OPTIONS = [
+  { labelKey: 'settings.themeSystem', value: 'system' },
+  { labelKey: 'settings.themeLight', value: 'light' },
+  { labelKey: 'settings.themeDark', value: 'dark' },
+] as const satisfies { labelKey: string; value: UserSettings['theme'] }[];
 
 export function AppearanceSection() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const styles = createStyles(theme);
   const systemScheme = useColorScheme();
@@ -71,25 +75,25 @@ export function AppearanceSection() {
   return (
     <>
       <View style={styles.section}>
-        <Text role="headline" style={styles.sectionTitle}>General</Text>
+        <Text role="headline" style={styles.sectionTitle}>{t('settings.general')}</Text>
         <ToggleRow
           first
-          label="Always show timer"
+          label={t('settings.alwaysShowTimer')}
           value={settings.alwaysShowTimer}
           onToggle={v => updateSettings({ alwaysShowTimer: v })}
         />
         <ToggleRow
-          label="Always show toolbar"
+          label={t('settings.alwaysShowToolbar')}
           value={settings.alwaysShowToolbar}
           onToggle={v => updateSettings({ alwaysShowToolbar: v })}
         />
         <ToggleRow
-          label="Haptics"
+          label={t('settings.haptics')}
           value={settings.haptics}
           onToggle={v => updateSettings({ haptics: v })}
         />
         <View style={styles.themeRow}>
-          <Text role="body" style={styles.rowLabel}>Theme</Text>
+          <Text role="body" style={styles.rowLabel}>{t('settings.theme')}</Text>
           <View style={styles.themeButtons}>
             {THEME_OPTIONS.map(option => {
               const active = settings.theme === option.value;
@@ -109,7 +113,7 @@ export function AppearanceSection() {
                       active && styles.themeButtonLabelActive,
                     ]}
                   >
-                    {option.label}
+                    {t(option.labelKey)}
                   </Text>
                 </Pressable>
               );
@@ -119,7 +123,7 @@ export function AppearanceSection() {
       </View>
 
       <View style={styles.section}>
-        <Text role="headline" style={styles.sectionTitle}>Color Theme</Text>
+        <Text role="headline" style={styles.sectionTitle}>{t('settings.colorTheme')}</Text>
         <View style={styles.swatchGrid}>
           {paletteRows.map((row, rowIdx) => (
             <View key={rowIdx} style={styles.swatchRow}>

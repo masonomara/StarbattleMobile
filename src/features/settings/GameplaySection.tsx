@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, StyleSheet } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import { ToggleRow } from '../../shared/ui/ToggleRow';
@@ -8,6 +9,7 @@ import { useTheme } from '../../shared/theme/useTheme';
 import type { Theme } from '../../types';
 
 export function GameplaySection() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const styles = createStyles(theme);
   const settings = useSettingsStore(s => s.settings);
@@ -17,11 +19,11 @@ export function GameplaySection() {
   return (
     <View style={styles.section}>
       <Text role="headline" style={styles.sectionTitle}>
-        Gameplay
+        {t('settings.gameplay')}
       </Text>
       <ToggleRow
         first
-        label="Auto-X Neighbors"
+        label={t('settings.autoXNeighbors')}
         value={settings.autoXNeighbors}
         onToggle={v => {
           updateSettings({ autoXNeighbors: v });
@@ -29,7 +31,7 @@ export function GameplaySection() {
         }}
       />
       <ToggleRow
-        label="Auto-X Rows & Columns"
+        label={t('settings.autoXRowsCols')}
         value={settings.autoXRowsCols}
         onToggle={v => {
           updateSettings({ autoXRowsCols: v });
@@ -37,7 +39,7 @@ export function GameplaySection() {
         }}
       />
       <ToggleRow
-        label="Auto-X Regions"
+        label={t('settings.autoXRegions')}
         value={settings.autoXRegions}
         onToggle={v => {
           updateSettings({ autoXRegions: v });
@@ -45,12 +47,12 @@ export function GameplaySection() {
         }}
       />
       <ToggleRow
-        label="Highlight Errors"
+        label={t('settings.highlightErrors')}
         value={settings.highlightErrors}
         onToggle={v => updateSettings({ highlightErrors: v })}
       />
       <ToggleRow
-        label="Colored Regions"
+        label={t('settings.coloredRegions')}
         value={settings.coloredRegions}
         onToggle={v => updateSettings({ coloredRegions: v })}
       />

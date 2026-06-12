@@ -1,4 +1,5 @@
 import { View, Pressable, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Text } from '../../shared/ui/Text';
 import { PuzzleThumbnail } from './PuzzleThumbnail';
 import { PulseBox, PulseLine } from '../../shared/ui/Pulse';
@@ -21,13 +22,17 @@ export function PackCard({
   coloredRegions,
   disabled = false,
 }: PackCardProps) {
+  const { t } = useTranslation();
   const styles = createStyles(theme);
 
   const isComplete = total != null && total > 0 && completed === total;
-  // Fold solve progress into the subtitle, e.g. "1-star · 60/90 complete"
-  // (non-breaking spaces keep the middot glued to its neighbors).
+  // Fold solve progress into the subtitle, e.g. "1-star · 60/90" via the
+  // library.packMeta key. `meta` arrives already-localized (the star string, or
+  // "Coming soon" from StreaksModal).
   const subtitle =
-    !locked && total != null ? `${meta} · ${completed ?? 0}/${total}` : meta;
+    !locked && total != null
+      ? t('library.packMeta', { star: meta, completed: completed ?? 0, total })
+      : meta;
   const rightNode =
     right ??
     (locked ? (

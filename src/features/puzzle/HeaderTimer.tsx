@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { AppState, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Text } from '../../shared/ui/Text';
 import { usePuzzleStore } from './puzzleStore';
 import { useTheme } from '../../shared/theme/useTheme';
@@ -7,6 +8,7 @@ import { formatElapsedTime } from '../../shared/lib/time';
 import type { Theme } from '../../types';
 
 export function HeaderTimer() {
+  const { t } = useTranslation();
   const timeMs = usePuzzleStore(s => s.timeMs);
   const completed = usePuzzleStore(s => s.completed);
   const stars = usePuzzleStore(s => s.puzzle?.stars);
@@ -41,8 +43,9 @@ export function HeaderTimer() {
 
   return (
     <Text role="body" style={styles.timer}>
-      {stars != null ? `${stars} ${stars === 1 ? 'star' : 'stars'} - ` : ''}
-      {formatElapsedTime(timeMs)}
+      {stars != null
+        ? t('puzzle.timer', { count: stars, time: formatElapsedTime(timeMs) })
+        : formatElapsedTime(timeMs)}
     </Text>
   );
 }

@@ -17,6 +17,8 @@ import {
   hasHintsCacheEntry,
 } from './packCache';
 import { time } from '../shared/lib/perfLog';
+import i18n from '../shared/lib/i18n';
+import { UserFacingError } from '../shared/lib/errors';
 
 const PREVIEW_PUZZLE_COUNT = 1;
 
@@ -148,10 +150,7 @@ export async function downloadPack(
 ): Promise<void> {
   assertSafeKey(packId);
   const rnfs = getRNFS();
-  if (!rnfs)
-    throw new Error(
-      'File system unavailable. Please restart the app or reinstall.',
-    );
+  if (!rnfs) throw new UserFacingError(i18n.t('errors.storageUnavailable'));
   const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
   await rnfs.mkdir(packDir).catch(() => {});
   const text = await fetchFromSupabase(storagePath);

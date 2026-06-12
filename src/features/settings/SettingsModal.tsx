@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
@@ -13,6 +14,7 @@ import type { Theme } from '../../types';
 
 // Visibility is driven by Zustand so any screen can open this modal without prop drilling.
 export function SettingsModal() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const styles = createStyles(theme);
   const settingsModalVisible = useSettingsStore(s => s.settingsModalVisible);
@@ -29,7 +31,7 @@ export function SettingsModal() {
         <View style={styles.modalHeader}>
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text role="largeTitle" style={styles.title}>Settings</Text>
+            <Text role="largeTitle" style={styles.title}>{t('settings.title')}</Text>
           </View>
           <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeSettings} hitSlop={8}>
@@ -52,7 +54,7 @@ export function SettingsModal() {
                 onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>Terms of Use</Text>
+                <Text role="footnote" style={styles.legalLinkText}>{t('settings.terms')}</Text>
               </Pressable>
               <Text role="footnote" style={styles.legalSep}>·</Text>
               <Pressable
@@ -61,14 +63,14 @@ export function SettingsModal() {
                 }
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>Privacy Policy</Text>
+                <Text role="footnote" style={styles.legalLinkText}>{t('settings.privacy')}</Text>
               </Pressable>
               <Text role="footnote" style={styles.legalSep}>·</Text>
               <Pressable
                 onPress={() => Linking.openURL(CREDITS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text role="footnote" style={styles.legalLinkText}>Credits</Text>
+                <Text role="footnote" style={styles.legalLinkText}>{t('settings.credits')}</Text>
               </Pressable>
             </View>
           </View>
