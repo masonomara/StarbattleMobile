@@ -10,6 +10,7 @@ import {
   readFileText,
 } from './packStorage';
 import { mark, time } from '../shared/lib/perfLog';
+import { track } from '../shared/lib/telemetry';
 
 // Packs below this version use a format that the parser no longer supports.
 // On first load, stale packs are evicted from disk and re-fetched.
@@ -225,6 +226,8 @@ export function validateHintsText(text: string): HintStep[][] {
 export async function fetchHints(packId: string): Promise<HintStep[][]> {
   assertSafeKey(packId);
   const key = `${packId}-hints.json`;
+  // hint_load wall-clock starts here; emitted with its source at each return.
+  const t0 = Date.now();
   const rnfs = getRNFS();
   if (rnfs) {
     const localPath = `${rnfs.DocumentDirectoryPath}/packs/${key}`;
@@ -241,6 +244,11 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
       try {
         const parsed = decodeHintsFromDisk(raw).hints;
         endParse(`${parsed.length} puzzles`);
+        track('hint_load', {
+          duration_ms: Date.now() - t0,
+          value: Math.round(raw.length / 1024),
+          meta: { source: 'disk', pack: packId },
+        });
         return parsed;
       } catch {
         // On disk but corrupt: evict the file and its ETag so the next prefetch
@@ -267,6 +275,11 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
       });
       const parsed = decodeHintsFromDisk(text).hints;
       endParse(`${parsed.length} puzzles`);
+      track('hint_load', {
+        duration_ms: Date.now() - t0,
+        value: Math.round(text.length / 1024),
+        meta: { source: 'download', pack: packId },
+      });
       return parsed;
     } catch (e) {
       // Streaming/read failed (FS error, or a genuinely offline first-open).
@@ -274,11 +287,19 @@ export async function fetchHints(packId: string): Promise<HintStep[][]> {
       // stall, but only when streaming to disk is impossible — better than no
       // hints. Returns without persisting; the next prefetch caches it properly.
       // Surface the real reason so a streaming failure can't hide as a "fallback".
-      mark(
-        'HINTS',
-        `${key} streaming failed (${(e as Error)?.message ?? String(e)}) — in-memory fallback`,
-      );
+      const reason = (e as Error)?.message ?? String(e);
+      mark('HINTS', `${key} streaming failed (${reason}) — in-memory fallback`);
+      // error: the streaming path failed and we fell back to the bridge fetch.
+      // This is the reliability signal — track how often it fires across users.
+      track('error', {
+        meta: { kind: 'hint_streaming_fallback', pack: packId, reason },
+      });
       const text = await fetchFromSupabase(key);
+      track('hint_load', {
+        duration_ms: Date.now() - t0,
+        value: Math.round(text.length / 1024),
+        meta: { source: 'fallback', pack: packId },
+      });
       return validateHintsText(text);
     }
   }

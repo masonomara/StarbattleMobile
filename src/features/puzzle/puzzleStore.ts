@@ -9,6 +9,7 @@ import {
   checkWin,
 } from './puzzleLogic';
 import { loadProgress, saveProgress } from '../../shared/lib/progress';
+import { track } from '../../shared/lib/telemetry';
 import type { CellChange, CellValue, HintStep, Move, Puzzle, TapMode } from '../../types';
 
 // Keeps memory usage bounded — older moves beyond this limit are dropped.
@@ -50,6 +51,8 @@ type PuzzleState = {
   tapMode: TapMode;
   hintGhosts: Map<number, 'star' | 'mark'>;
   hintsLoading: boolean;
+  // Count of hints revealed this puzzle (reported with puzzle_complete telemetry).
+  hintsUsed: number;
   loadPuzzle: (puzzle: Puzzle) => Promise<void>;
   setHints: (hints: HintStep[]) => void;
   tapCell: (row: number, col: number) => void;
@@ -98,6 +101,21 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
       Haptics.notification('success');
     }
     set({ completed: true });
+    // puzzle_complete: a genuine solve this session (not revisiting a puzzle that
+    // loaded already-completed). duration_ms = solve time; meta carries the
+    // difficulty + hint reliance that drive the completion-rate analysis.
+    const { timeMs, hintsUsed, loadedAsCompleted } = get();
+    if (!loadedAsCompleted) {
+      track('puzzle_complete', {
+        duration_ms: timeMs,
+        meta: {
+          puzzle_id: puzzle.id,
+          difficulty: puzzle.difficulty ?? null,
+          band: puzzle.band ?? null,
+          hints_used: hintsUsed,
+        },
+      });
+    }
   }
 
   return {
@@ -108,6 +126,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
   completed: false,
   loadedAsCompleted: false,
   timeMs: 0,
+  hintsUsed: 0,
   moveLog: [],
   redoStack: [],
   tapMode: 'cycle',
@@ -124,6 +143,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
       completed: false,
       loadedAsCompleted: false,
       timeMs: 0,
+      hintsUsed: 0,
       moveLog: [],
       redoStack: [],
       hintGhosts: new Map(),
@@ -411,7 +431,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
       }
 
       if (ghosts.size > 0) {
-        set({ hintGhosts: ghosts });
+        set(s => ({ hintGhosts: ghosts, hintsUsed: s.hintsUsed + 1 }));
         return;
       }
     }

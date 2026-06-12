@@ -31,6 +31,7 @@ import { usePackData } from './usePackData';
 import { useStreakRows } from '../../shared/hooks/useStreakRows';
 import { loadPackHints } from '../../packs/packCache';
 import { mark, time } from '../../shared/lib/perfLog';
+import { track } from '../../shared/lib/telemetry';
 import { TUTORIAL_PUZZLE } from './tutorial/tutorialPuzzle';
 import { tutorialMessage } from './tutorial/tutorialMessage';
 import { parsePuzzle } from '../../shared/lib/parsePuzzle';
@@ -189,10 +190,14 @@ export function PuzzleScreen({
 
   // One-shot mount marker so the puzzle-open timeline can be located in the log.
   const mountedRef = useRef(false);
+  const mountTimeRef = useRef(0);
   if (!mountedRef.current) {
     mountedRef.current = true;
+    mountTimeRef.current = Date.now();
     mark('PZSCREEN', `mount ${isTutorial ? 'tutorial' : packId}`);
   }
+  // Guards the one-shot puzzle_open telemetry (the load effect can re-run).
+  const openTrackedRef = useRef(false);
 
   // Load the puzzle into the store. Tutorial loads its fixed puzzle; the real
   // path parses the resolved pack puzzle once packData is ready.
@@ -212,10 +217,27 @@ export function PuzzleScreen({
       loadPuzzle(parsed);
       setIsReady(true);
       mark('PZSCREEN', `isReady=true — board can render for ${puzzleId}`);
+      // puzzle_open: tap-to-play → board interactive. Once per screen.
+      if (!openTrackedRef.current) {
+        openTrackedRef.current = true;
+        track('puzzle_open', {
+          duration_ms: Date.now() - mountTimeRef.current,
+          meta: { pack: effectivePackId ?? packId },
+        });
+      }
     } catch {
       navigation.goBack();
     }
-  }, [isTutorial, packData, rawPuzzle, puzzleId, loadPuzzle, navigation]);
+  }, [
+    isTutorial,
+    packData,
+    rawPuzzle,
+    puzzleId,
+    loadPuzzle,
+    navigation,
+    effectivePackId,
+    packId,
+  ]);
 
   // Hints load from the disk-cached "{packId}-hints.json" (real packs only).
   // setHints([]) on failure clears hintsLoading so the toolbar spinner never hangs.

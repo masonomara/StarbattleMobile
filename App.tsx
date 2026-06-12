@@ -9,6 +9,7 @@ import { useSettingsStore } from './src/shared/stores/settingsStore';
 import { useEntitlementsStore } from './src/shared/stores/entitlementsStore';
 import { startupTimer } from './src/shared/lib/startupTimer';
 import { startStallWatch, mark, time } from './src/shared/lib/perfLog';
+import { flush as flushTelemetry } from './src/shared/lib/telemetry';
 import { db } from './src/powersync/AppSchema';
 import { PowerSyncContext } from '@powersync/react-native';
 import { SupabaseConnector } from './src/powersync/Connector';
@@ -273,6 +274,9 @@ export default function App() {
         // force: re-check ETags on every foreground even when the catalog and
         // entitlements are unchanged, so a server-side content update is picked up.
         runTieredPrefetch(packCatalog, { force: true });
+      } else if (nextState === 'background' || nextState === 'inactive') {
+        // Send any buffered telemetry before the OS suspends the JS thread.
+        flushTelemetry();
       }
     });
 

@@ -30,6 +30,12 @@ export const GOOGLE_IOS_CLIENT_ID =
     throw new Error('Missing env var: GOOGLE_IOS_CLIENT_ID');
   })();
 
+// App version for telemetry slicing (p95 by version, etc.). Sourced from
+// package.json so it tracks one number; bump that on release. (Swap to the
+// native CFBundleShortVersionString via a device-info lib if/when added.)
+export const APP_VERSION: string =
+  (require('../../../package.json') as { version?: string }).version ?? '0.0.0';
+
 export const PRIVACY_POLICY_URL = 'https://starbattlefree.com/privacy-policy';
 export const TERMS_URL = 'https://starbattlefree.com/terms-and-conditions';
 export const CREDITS_URL = 'https://starbattlefree.com/credits';

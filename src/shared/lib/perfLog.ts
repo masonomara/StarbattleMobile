@@ -12,7 +12,14 @@
 // release builds. Temporarily flip to `true` to capture release-build timings
 // (the real ones — dev inflates them); revert before merging so these logs never
 // ship to production users.
+import { track, TELEMETRY_ENABLED } from './telemetry';
+
 const PERF_ENABLED = __DEV__;
+
+// Stalls over this go to telemetry as js_stall in production. Higher than the
+// console THRESHOLD_MS below: dev wants to see every 80ms blip, but as a
+// fleet-wide signal we only care about freezes a user actually feels.
+const STALL_TELEMETRY_MS = 500;
 
 // Module-load time ≈ app launch. Shared epoch so every line is comparable and
 // can be cross-referenced against [SB:STARTUP] lines (loaded within ms of this).
@@ -72,10 +79,15 @@ let lastTick = 0;
 let worstStall = 0;
 
 export function startStallWatch(): void {
-  if (!PERF_ENABLED || watchHandle) return;
-  // Loud, unmistakable confirmation that this (new) bundle is running — if you
-  // don't see this line, the build is stale and none of the other logs are real.
-  console.log('[SB:PERF] ===== perfLog instrumentation ACTIVE =====');
+  // Runs whenever EITHER the dev console OR production telemetry consumes stalls.
+  // In release PERF_ENABLED is false but the watchdog must still run to feed
+  // js_stall telemetry — the timer is cheap (a 100ms tick + a subtraction).
+  if (watchHandle || (!PERF_ENABLED && !TELEMETRY_ENABLED)) return;
+  if (PERF_ENABLED) {
+    // Loud, unmistakable confirmation that this (new) bundle is running — if you
+    // don't see this line, the build is stale and none of the other logs are real.
+    console.log('[SB:PERF] ===== perfLog instrumentation ACTIVE =====');
+  }
   lastTick = now();
   worstStall = 0;
   watchHandle = setInterval(() => {
@@ -83,12 +95,15 @@ export function startStallWatch(): void {
     const gap = t - lastTick;
     lastTick = t;
     const stall = gap - INTERVAL_MS;
-    if (stall > THRESHOLD_MS) {
-      if (stall > worstStall) worstStall = stall;
+    if (stall <= THRESHOLD_MS) return;
+    if (stall > worstStall) worstStall = stall;
+    if (PERF_ENABLED) {
       console.log(
         `[SB:STALL] ${fmt(t)} JS thread blocked ~${stall}ms (worst so far ${worstStall}ms)`,
       );
     }
+    // Fleet signal: only freezes a user actually feels.
+    if (stall > STALL_TELEMETRY_MS) track('js_stall', { duration_ms: stall });
   }, INTERVAL_MS);
   mark('STALL', 'watchdog started');
 }

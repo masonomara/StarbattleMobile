@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
-  ScrollView,
   Animated,
   StyleSheet,
   useWindowDimensions,
@@ -24,8 +23,9 @@ import {
   isStreakType,
 } from '../../shared/lib/streakDate';
 import { useAuthStore } from '../../shared/stores/authStore';
-import { startupTimer } from '../../shared/lib/startupTimer';
+import { startupTimer, msSinceLaunch } from '../../shared/lib/startupTimer';
 import { mark } from '../../shared/lib/perfLog';
+import { track } from '../../shared/lib/telemetry';
 import { StreakProgressRow } from './StreakProgressRow';
 import { StreakCard, StreakCardSkeleton } from './StreakCard';
 import { PackCard, PackCardSkeleton } from './PackCard';
@@ -199,6 +199,9 @@ export function HomeScreen({
 
   useEffect(() => {
     startupTimer.log('HomeScreen first mount');
+    // app_start: launch → home interactive. First HomeScreen mount per process
+    // is always a cold start (a warm resume doesn't remount it).
+    track('app_start', { duration_ms: msSinceLaunch(), meta: { cold: true } });
   }, []);
 
   // Split the catalog in one pass: StreakType packs go to the carousel, the rest
