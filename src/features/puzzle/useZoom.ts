@@ -67,8 +67,12 @@ export function useZoom(puzzleSize: number, cellSize: number) {
 
       const effectiveW = boardPixels * clampedScale;
       const effectiveH = boardPixels * clampedScale;
-      const maxX = Math.max(0, (effectiveW - screenWidth) / 2 + PAN_PADDING);
-      const maxY = Math.max(0, (effectiveH - screenHeight) / 2 + PAN_PADDING);
+      // If the board fits within the screen on an axis, the bound is 0 so it
+      // always springs back to dead center; otherwise allow overscroll padding.
+      const maxX =
+        effectiveW <= screenWidth ? 0 : (effectiveW - screenWidth) / 2 + PAN_PADDING;
+      const maxY =
+        effectiveH <= screenHeight ? 0 : (effectiveH - screenHeight) / 2 + PAN_PADDING;
       const cx = Math.max(-maxX, Math.min(savedTranslateX.value, maxX));
       const cy = Math.max(-maxY, Math.min(savedTranslateY.value, maxY));
 
@@ -100,8 +104,12 @@ export function useZoom(puzzleSize: number, cellSize: number) {
 
       const effectiveW = boardPixels * savedScale.value;
       const effectiveH = boardPixels * savedScale.value;
-      const maxX = Math.max(0, (effectiveW - screenWidth) / 2 + PAN_PADDING);
-      const maxY = Math.max(0, (effectiveH - screenHeight) / 2 + PAN_PADDING);
+      // If the board fits within the screen on an axis, the bound is 0 so it
+      // always springs back to dead center; otherwise allow overscroll padding.
+      const maxX =
+        effectiveW <= screenWidth ? 0 : (effectiveW - screenWidth) / 2 + PAN_PADDING;
+      const maxY =
+        effectiveH <= screenHeight ? 0 : (effectiveH - screenHeight) / 2 + PAN_PADDING;
       const cx = Math.max(-maxX, Math.min(rawX, maxX));
       const cy = Math.max(-maxY, Math.min(rawY, maxY));
 

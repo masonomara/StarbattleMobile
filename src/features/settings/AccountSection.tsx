@@ -636,7 +636,7 @@ const createStyles = (theme: Theme) =>
     input: {
       height: 52,
       borderRadius: 8,
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: theme.border,
       paddingHorizontal: theme.spacingLg,
       backgroundColor: theme.surface,
