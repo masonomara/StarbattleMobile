@@ -23,7 +23,7 @@ export function ToggleRow({
         { borderColor: theme.border },
       ]}
     >
-      <Text role="subhead" style={{ color: theme.text, fontWeight: 400 }}>
+      <Text role="subhead" style={{ color: theme.text, fontWeight: 600 }}>
         {label}
       </Text>
       <View>
