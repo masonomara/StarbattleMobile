@@ -36,6 +36,14 @@ let prefetchRerunRequested = false;
 let prefetchRerunForce = false;
 let lastPrefetchSignature = '';
 
+// Resolves once auth has initialized (the signInAnonymously() fallback included).
+// Storage downloads need a user JWT — the packs bucket requires the authenticated
+// role, so any prefetch that fires before this 404s every ETag and download. The
+// packs watch can emit pre-auth (it fires with 0 rows before the first sync), so
+// runTieredPrefetch gates on this before fanning out. Held at module scope (set in
+// the setup effect) so the module-level prefetch can await it.
+let authReadyPromise: Promise<void> | null = null;
+
 function prefetchSignature(catalog: PackCatalogItem[]): string {
   const { entitlements } = useEntitlementsStore.getState();
   const packs = catalog.map(p => `${p.id}:${p.storagePath ?? ''}`).join(',');
@@ -70,8 +78,15 @@ function runTieredPrefetch(
   // once every interaction handle clears, so a leaked/long animation handle can
   // delay the whole catalog prefetch (and anything chained behind it).
   mark('STARTUP', 'runTieredPrefetch scheduled (awaiting interactions)');
-  InteractionManager.runAfterInteractions(() => {
-    mark('STARTUP', 'runAfterInteractions fired — prefetch starting');
+  InteractionManager.runAfterInteractions(async () => {
+    mark('STARTUP', 'runAfterInteractions fired — awaiting auth before prefetch');
+    // Wait for auth before any download: storage needs a JWT (see authReadyPromise).
+    // Without this the pre-sync packs-watch fire wastes a full cycle on 404s; with
+    // it, first-launch streak hints land on disk right after anonymous sign-in
+    // (~1s) instead of after the first PowerSync sync (~6s). Swallow a rejection so
+    // a failed auth init can't strand the in-flight guard below.
+    await authReadyPromise?.catch(() => {});
+    mark('STARTUP', 'auth ready — prefetch starting');
     // Streak hints prefetch alongside (not behind) the catalog: both stream
     // natively to disk off the JS thread, and the daily puzzle is the most-opened
     // file in the app, so it shouldn't queue behind the entire catalog. Folded
@@ -127,6 +142,8 @@ export default function App() {
     // authenticated role; without a user JWT every download returns 404.
     startupTimer.log('auth initialize called');
     const authReady = useAuthStore.getState().initialize();
+    // Publish to module scope so runTieredPrefetch can gate downloads on a JWT.
+    authReadyPromise = authReady;
 
     // Warm streak pack data so HomeScreen's previews are cached when it mounts.
     // Hints are intentionally NOT warmed here — they're only needed when a puzzle
