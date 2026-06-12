@@ -336,12 +336,12 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     page: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      alignContent: 'flex-start',
+      alignContent: 'center',
       rowGap: GAP,
       columnGap: GAP,
       paddingHorizontal: PADDING,
-      paddingTop: SCREEN_HEADER_HEIGHT + insets.top + 24,
-      paddingBottom: insets.bottom + 60,
+      paddingTop: SCREEN_HEADER_HEIGHT + insets.top,
+      paddingBottom: insets.top + SCREEN_HEADER_HEIGHT,
     },
     tabs: {
       position: 'absolute',

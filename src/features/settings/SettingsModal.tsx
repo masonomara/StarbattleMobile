@@ -35,7 +35,7 @@ export function SettingsModal() {
         <View style={styles.modalHeader}>
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text role="title2" style={styles.title}>
+            <Text role="title3" style={styles.title}>
               {t('settings.title')}
             </Text>
           </View>
@@ -100,7 +100,7 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
     modalHeader: {
-      height: 80,
+      height: 70,
       paddingTop: 24,
       paddingBottom: 12,
       flexDirection: 'row',

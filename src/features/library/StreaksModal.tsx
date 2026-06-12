@@ -35,7 +35,12 @@ import {
   STREAK_TYPES,
   STREAK_UNIT_KEY,
 } from '../../shared/lib/streakDate';
-import type { Theme, StreakType, Puzzle, RootStackParamList } from '../../types';
+import type {
+  Theme,
+  StreakType,
+  Puzzle,
+  RootStackParamList,
+} from '../../types';
 
 export function StreaksModal() {
   const { t } = useTranslation();
@@ -117,7 +122,9 @@ export function StreaksModal() {
         <View style={styles.modalHeader}>
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
-            <Text role="largeTitle" style={styles.headerTitle}>{t('streaks.title')}</Text>
+            <Text role="title3" style={styles.headerTitle}>
+              {t('streaks.title')}
+            </Text>
           </View>
           <View style={styles.modalHeaderSide}>
             <Pressable onPress={closeStreaks} hitSlop={8}>
@@ -126,9 +133,7 @@ export function StreaksModal() {
           </View>
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.streakGrid}>
             {STREAK_TYPES.map(type => {
               const found = streaks.find(s => s.type === type);
@@ -136,17 +141,25 @@ export function StreaksModal() {
               const best = found ? found.best : 0;
               return (
                 <View key={type} style={[styles.streakTile]}>
-                  <Text role="headline" style={styles.streakLabel}>{t(`streaks.label${capitalize(type)}`)}</Text>
+                  <Text role="headline" style={styles.streakLabel}>
+                    {t(`streaks.label${capitalize(type)}`)}
+                  </Text>
                   <View style={styles.streakStatRow}>
-                    <Text role="subhead" style={styles.streakStatLabel}>{t('streaks.best')}</Text>
+                    <Text role="subhead" style={styles.streakStatLabel}>
+                      {t('streaks.best')}
+                    </Text>
                     <Text role="body" style={styles.streakStatValue}>
                       {t(`streaks.${STREAK_UNIT_KEY[type]}`, { count: best })}
                     </Text>
                   </View>
                   <View style={styles.streakStatRow}>
-                    <Text role="subhead" style={styles.streakStatLabel}>{t('streaks.current')}</Text>
+                    <Text role="subhead" style={styles.streakStatLabel}>
+                      {t('streaks.current')}
+                    </Text>
                     <Text role="body" style={styles.streakStatValue}>
-                      {t(`streaks.${STREAK_UNIT_KEY[type]}`, { count: current })}
+                      {t(`streaks.${STREAK_UNIT_KEY[type]}`, {
+                        count: current,
+                      })}
                     </Text>
                   </View>
                 </View>
@@ -154,7 +167,9 @@ export function StreaksModal() {
             })}
           </View>
 
-          <Text role="headline" style={styles.sectionTitle}>{t('streaks.archivedTitle')}</Text>
+          <Text role="headline" style={styles.sectionTitle}>
+            {t('streaks.archivedTitle')}
+          </Text>
 
           {STREAK_TYPES.map(type => {
             const count = archiveCounts[type];
@@ -227,7 +242,7 @@ const createStyles = (theme: Theme) => {
       backgroundColor: theme.background,
     },
     modalHeader: {
-      height: 80,
+      height: 70,
       paddingTop: 24,
       paddingBottom: 12,
       flexDirection: 'row',

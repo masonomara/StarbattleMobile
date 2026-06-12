@@ -41,10 +41,11 @@ import { parsePuzzle } from '../../shared/lib/parsePuzzle';
 import { saveProgress } from '../../shared/lib/progress';
 import { getActiveStreak } from '../../shared/lib/streakDate';
 import type { Theme, RootStackParamList, DrawLayerHandle } from '../../types';
+import { MoreHorizontal } from 'lucide-react-native';
 
 // Chrome heights used both in the board layout calculation and in the view
 // padding. Centralizing them ensures handleBoardLayout and the JSX agree.
-const HEADER_H = 48;
+const HEADER_H = 70;
 const TOOLBAR_H = 80;
 
 // The 'Tutorial' route renders this same screen so the tutorial inherits zoom,
@@ -376,7 +377,7 @@ export function PuzzleScreen({
               pointerEvents={headerVisible ? 'auto' : 'none'}
             >
               <CircleButton onPress={openSettings}>
-                <Ellipsis size={20} color={theme.text} />
+                <MoreHorizontal size={26} strokeWidth={2} color={theme.text} />
               </CircleButton>
             </Animated.View>
           )

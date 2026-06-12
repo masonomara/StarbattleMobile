@@ -282,7 +282,7 @@ export function HomeScreen({
               pointerEvents="none"
               style={[styles.headerTitle, { opacity: headerTitleOpacity }]}
             >
-              <Text role="subhead" style={styles.headerTitleText}>
+              <Text role="body" style={styles.headerTitleText}>
                 {t('home.libraryTitle')}
               </Text>
             </Animated.View>
@@ -486,7 +486,7 @@ const createStyles = (
     headerRight: {
       flexDirection: 'row',
       gap: 12,
-      marginRight: -7,
+      marginRight: -4,
     },
     streakSection: {
       backgroundColor: theme.background,

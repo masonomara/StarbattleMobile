@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/useTheme';
 import type { HeaderProps } from '../../types';
+import { SCREEN_HEADER_HEIGHT } from '../lib/layout';
 
 export function Header({
   left,
@@ -21,7 +22,7 @@ export function Header({
       style={[
         styles.header,
         absolute && styles.absolute,
-        { paddingTop: insets.top, height: 48 + insets.top },
+        { paddingTop: insets.top, height: SCREEN_HEADER_HEIGHT + insets.top },
         bordered && {
           borderBottomWidth: StyleSheet.hairlineWidth,
           borderBottomColor: theme.border,
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     gap: 16,
     overflow: 'visible',
   },
