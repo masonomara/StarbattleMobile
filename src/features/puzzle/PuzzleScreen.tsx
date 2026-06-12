@@ -16,7 +16,6 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import ReAnimated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
-import Ellipsis from 'lucide-react-native/dist/cjs/icons/ellipsis';
 import ChevronsRight from 'lucide-react-native/dist/cjs/icons/chevrons-right';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { Header } from '../../shared/ui/Header';

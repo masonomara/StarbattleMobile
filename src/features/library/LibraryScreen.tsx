@@ -280,7 +280,7 @@ export function LibraryScreen({
         }
       />
       {sections.length > 1 && (
-        <View style={[styles.tabs, { bottom: insets.bottom + 16 }]}>
+        <View style={[styles.tabs, { bottom: insets.bottom - 12 }]}>
           {sections.map(s => (
             <Pressable
               key={s}
@@ -349,13 +349,15 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       right: 0,
       flexDirection: 'row',
       justifyContent: 'center',
+      alignItems: 'center',
       gap: 8,
+      height: 80,
     },
     tab: {
-      minWidth: 32,
-      height: 32,
+      width: 22,
+      height: 22,
       borderRadius: 100,
-      paddingHorizontal: 10,
+
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.surface,
@@ -365,9 +367,15 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     tabText: {
       color: theme.textSecondary,
+      fontSize: 11,
+      lineHeight: 15,
+      fontWeight: '600',
     },
     tabTextActive: {
       color: theme.background,
+      fontSize: 11,
+      lineHeight: 15,
+      fontWeight: '600',
     },
     lockedCell: {
       opacity: 0.4,
