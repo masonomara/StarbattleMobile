@@ -5,6 +5,7 @@ import { Text } from '../../shared/ui/Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
 import { Linking } from 'react-native';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
+import { useScrollBorder } from '../../shared/hooks/useScrollBorder';
 import { useTheme } from '../../shared/theme/useTheme';
 import { AccountSection } from './AccountSection';
 import { GameplaySection } from './GameplaySection';
@@ -24,6 +25,8 @@ export function SettingsModal() {
   const styles = createStyles(theme);
   const settingsModalVisible = useSettingsStore(s => s.settingsModalVisible);
   const closeSettings = useSettingsStore(s => s.closeSettings);
+  // Shows the header's bottom hairline once the settings list scrolls.
+  const { scrolled, onScroll } = useScrollBorder();
 
   return (
     <Modal
@@ -33,7 +36,7 @@ export function SettingsModal() {
       onRequestClose={closeSettings}
     >
       <View style={styles.container}>
-        <View style={styles.modalHeader}>
+        <View style={[styles.modalHeader, scrolled && styles.headerBorder]}>
           <View style={styles.modalHeaderSide} />
           <View style={styles.modalHeaderCenter}>
             <Text role="title3" style={styles.title}>
@@ -50,6 +53,8 @@ export function SettingsModal() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          onScroll={onScroll}
+          scrollEventThrottle={16}
         >
           <AccountSection />
           <GameplaySection />
@@ -108,6 +113,11 @@ const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 16,
+    },
+    // Bottom hairline shown once the settings list scrolls off the top.
+    headerBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.border,
     },
     modalHeaderSide: {
       width: 44,

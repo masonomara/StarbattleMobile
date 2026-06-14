@@ -49,7 +49,7 @@ export function StreakCard({
       <Text role="title1" style={styles.label}>
         {label}
       </Text>
-      <Text role="subhead" style={styles.meta}>
+      <Text role="body" style={styles.meta}>
         {t('home.packStar', { count: starCount })}&nbsp;·&nbsp;
         {t(STATUS_KEY[status])}
       </Text>
@@ -95,12 +95,19 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     card: {
       justifyContent: 'flex-start',
+      padding: 18,
+      backgroundColor: theme.background,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 4,
     },
     label: {
       color: theme.text,
-      marginTop: 10,
+      marginTop: 12,
+      marginBottom: 3,
     },
     meta: {
       color: theme.textSecondary,
+      // marginBottom: 6,
     },
   });

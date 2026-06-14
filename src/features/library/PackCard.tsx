@@ -7,7 +7,7 @@ import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import type { PackCardProps, PackCardSkeletonProps, Theme } from '../../types';
 
-const THUMB_SIZE = 64;
+const THUMB_SIZE = 48;
 
 export function PackCard({
   name,
@@ -68,7 +68,7 @@ export function PackCard({
         <Text role="body" style={styles.name} numberOfLines={1}>
           {name}
         </Text>
-        <Text role="subhead" style={styles.metaText}>
+        <Text role="body" style={styles.metaText}>
           {subtitle}
         </Text>
       </View>
@@ -119,18 +119,19 @@ const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      // padding: 16,
+      padding: 18,
+      height: 84,
       borderRadius: 4,
-      marginBottom: 20,
+      marginBottom: 12,
       backgroundColor: theme.background,
-      // borderWidth: 1,
-      // borderColor: theme.border,
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     cardDisabled: {
       opacity: 0.4,
     },
     thumb: {
-      marginRight: 10,
+      marginRight: 14,
     },
     // Static, non-animated fallback for cards that legitimately have no preview
     // (e.g. StreaksModal's "Coming soon" archive tiles). Loading states use a
@@ -140,7 +141,13 @@ const createStyles = (theme: Theme) =>
       height: THUMB_SIZE,
       backgroundColor: theme.border,
     },
-    info: { flex: 1 },
+    info: {
+      flex: 1,
+      gap: 3,
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'flex-start',
+    },
     name: {
       color: theme.text,
       fontWeight: '600',

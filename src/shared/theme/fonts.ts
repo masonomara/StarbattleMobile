@@ -51,4 +51,5 @@ export const DISPLAY_ROLES: ReadonlySet<TextRole> = new Set<TextRole>([
   'largeTitle',
   'title1',
   'title2',
+  'title3',
 ]);

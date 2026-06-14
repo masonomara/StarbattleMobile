@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
@@ -40,6 +41,7 @@ import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useAuthStore } from '../../shared/stores/authStore';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { useStreakRows } from '../../shared/hooks/useStreakRows';
+import { useScrollBorder } from '../../shared/hooks/useScrollBorder';
 import type { RootStackParamList, Theme } from '../../types';
 
 const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -123,6 +125,8 @@ export function ArchivePackScreen({
 
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  // Shows the header's bottom hairline once a calendar scrolls off the top.
+  const { scrolled, onScroll } = useScrollBorder();
 
   useEffect(() => {
     loadAllCompletionData().then(ids => {
@@ -173,6 +177,7 @@ export function ArchivePackScreen({
     keySet,
     isCompleted,
     onPress: onChallengePress,
+    onScroll,
     theme,
     styles,
     t,
@@ -180,7 +185,7 @@ export function ArchivePackScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, scrolled && styles.headerBorder]}>
         <View style={styles.headerSide} />
         <View style={styles.headerCenter}>
           <Text role="title3" style={styles.headerTitle}>
@@ -274,6 +279,7 @@ type CalendarProps = {
   keySet: Set<string>;
   isCompleted: (k: string) => boolean;
   onPress: (k: string) => void;
+  onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   theme: Theme;
   styles: Styles;
   t: TFunction;
@@ -288,6 +294,7 @@ function MonthCalendar({
   keySet,
   isCompleted,
   onPress,
+  onScroll,
   theme,
   styles,
 }: CalendarProps & { width: number }) {
@@ -310,6 +317,8 @@ function MonthCalendar({
       <ScrollView
         ref={scroll.ref}
         onContentSizeChange={scroll.onContentSizeChange}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.calendarContent,
@@ -430,6 +439,7 @@ function WeekCalendar({
   keySet,
   isCompleted,
   onPress,
+  onScroll,
   theme,
   styles,
   t,
@@ -456,6 +466,8 @@ function WeekCalendar({
     <ScrollView
       ref={scroll.ref}
       onContentSizeChange={scroll.onContentSizeChange}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         styles.calendarContent,
@@ -537,6 +549,7 @@ function YearCalendar({
   keySet,
   isCompleted,
   onPress,
+  onScroll,
   theme,
   styles,
 }: CalendarProps & { width: number }) {
@@ -557,6 +570,8 @@ function YearCalendar({
     <ScrollView
       ref={scroll.ref}
       onContentSizeChange={scroll.onContentSizeChange}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         styles.calendarContent,
@@ -631,6 +646,11 @@ const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 16,
+    },
+    // Bottom hairline shown once a calendar scrolls off the top.
+    headerBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.border,
     },
     headerSide: {
       width: 44,

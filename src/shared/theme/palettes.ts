@@ -18,7 +18,7 @@ const type: Record<TextRole, TextRoleStyle> = {
   },
   title1: { fontSize: 30, lineHeight: 37, fontWeight: '700' },
   title2: { fontSize: 24, lineHeight: 30, fontWeight: '700' },
-  title3: { fontSize: 22, lineHeight: 28, fontWeight: '600' },
+  title3: { fontSize: 22, lineHeight: 28, fontWeight: '700' },
   headline: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
   body: { fontSize: 17, lineHeight: 22, fontWeight: '400' },
   callout: { fontSize: 16, lineHeight: 21, fontWeight: '400' },

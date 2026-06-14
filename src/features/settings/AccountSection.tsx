@@ -155,7 +155,7 @@ export function AccountSection() {
 
   return (
     <View style={styles.section}>
-      <Text role="subhead" style={styles.sectionTitle}>
+      <Text role="title3" style={styles.sectionTitle}>
         {isReset
           ? t('account.resetTitle')
           : isAnonymous
@@ -554,8 +554,7 @@ const createStyles = (theme: Theme) =>
       // borderTopWidth: 1,
       // borderTopColor: theme.border,
       // paddingTop: 8,
-      marginBottom: 12,
-      fontWeight: '500',
+      marginBottom: 14,
     },
     sectionBody: {
       color: theme.textSecondary,

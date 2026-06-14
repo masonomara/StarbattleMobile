@@ -14,6 +14,7 @@ import { Haptics } from 'react-native-nitro-haptics';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
+import { useScrollBorder } from '../../shared/hooks/useScrollBorder';
 import { usePackPreviews } from './usePackPreviews';
 import { useCompletionData } from './useCompletionData';
 import { useTranslation } from 'react-i18next';
@@ -54,11 +55,17 @@ let loggedFirstRender = false;
 // a stable, populated-looking shape from first paint.
 const SKELETON_PACK_COUNT = 4;
 // Streak card thumbnail width as a fraction of the viewport (RN has no vw unit).
-const STREAK_CARD_FRACTION = 0.85;
+const STREAK_CARD_FRACTION = 0.7;
 // Horizontal gap between streak cards (matches the carousel's contentContainer gap).
-const STREAK_CARD_GAP = 20;
+const STREAK_CARD_GAP = 16;
 // Left inset of the streak carousel from the screen edge.
-const STREAK_ROW_PADDING = 20;
+const STREAK_ROW_PADDING = 16;
+// Card chrome around the thumbnail — must match StreakCard's own `padding` and
+// `borderWidth`. The carousel snaps/measures on the card's outer edge, so its
+// footprint is the thumbnail plus this chrome on each side.
+const STREAK_CARD_PADDING = 18;
+const STREAK_CARD_BORDER = 1;
+const STREAK_CARD_CHROME = 2 * (STREAK_CARD_PADDING + STREAK_CARD_BORDER);
 
 // Star rating per challenge, shown as the streak card's static subtitle.
 const STREAK_STAR_COUNT: Record<StreakType, number> = {
@@ -93,7 +100,11 @@ export function HomeScreen({
   const { t } = useTranslation();
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
+  // Thumbnail width (what PuzzleThumbnail renders) vs. the card's outer width
+  // (thumbnail + padding + border). Snapping and the trailing inset key off the
+  // outer width so a card's edge lands flush at the row's left padding.
   const streakCardSize = windowWidth * STREAK_CARD_FRACTION;
+  const streakCardWidth = streakCardSize + STREAK_CARD_CHROME;
   const insets = useSafeAreaInsets();
   const styles = createStyles(theme, insets);
   const userId = useAuthStore(s => s.user?.id);
@@ -102,7 +113,7 @@ export function HomeScreen({
   const { packCatalog, hasPackAccess } = useEntitlements();
 
   // Distance between consecutive snap points (one card + the gap after it).
-  const streakInterval = streakCardSize + STREAK_CARD_GAP;
+  const streakInterval = streakCardWidth + STREAK_CARD_GAP;
 
   // Carousel scroll offset, mapped natively so the header crossfade tracks the
   // drag on the UI thread without re-rendering on JS (the fast-scroll jank).
@@ -112,12 +123,15 @@ export function HomeScreen({
   // once the streak carousel it mirrors has scrolled up behind the header — once
   // the cards are gone, the little progress dots have nothing to point at.
   const scrollY = useRef(new Animated.Value(0)).current;
+  // Shows the header's bottom hairline once the page scrolls off the top.
+  const { scrolled, onScroll: onScrollBorder } = useScrollBorder();
   const onPageScroll = useMemo(
     () =>
       Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
         useNativeDriver: true,
+        listener: onScrollBorder,
       }),
-    [scrollY],
+    [scrollY, onScrollBorder],
   );
   // Bottom edge of the streak section in content coordinates (measured), so we
   // know the scroll offset at which the carousel finishes hiding behind header.
@@ -250,7 +264,13 @@ export function HomeScreen({
     <PulseProvider>
       <View style={styles.container}>
         {/* Floating header */}
-        <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View
+          style={[
+            styles.header,
+            { paddingTop: insets.top },
+            scrolled && styles.headerBorder,
+          ]}
+        >
           {/* Stacked progress rows that crossfade as the carousel scrolls between
               challenges — driven by native scroll offset, no re-renders. */}
           <Pressable
@@ -324,7 +344,7 @@ export function HomeScreen({
               scrollEventThrottle={16}
               // Snap each card's left edge; interval is the card width plus the
               // gap, both viewport-derived so it stays aligned on every device.
-              snapToInterval={streakCardSize + STREAK_CARD_GAP}
+              snapToInterval={streakInterval}
               snapToAlignment="start"
               decelerationRate="fast"
               contentContainerStyle={{
@@ -333,7 +353,7 @@ export function HomeScreen({
                 // clamping early: viewport − card − left inset.
                 paddingRight: Math.max(
                   STREAK_ROW_PADDING,
-                  windowWidth - streakCardSize - STREAK_ROW_PADDING,
+                  windowWidth - streakCardWidth - STREAK_ROW_PADDING,
                 ),
                 gap: STREAK_CARD_GAP,
               }}
@@ -399,7 +419,7 @@ export function HomeScreen({
             {librarySections.map(section => (
               <View key={section.bundle || 'ungrouped'}>
                 {section.bundle ? (
-                  <Text role="subhead" style={styles.sectionLabel}>
+                  <Text role="title3" style={styles.sectionLabel}>
                     {section.bundle}
                   </Text>
                 ) : null}
@@ -460,6 +480,12 @@ const createStyles = (
       height: HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
     },
+    // Bottom hairline shown once the page scrolls, detaching the header from
+    // the content beneath it.
+    headerBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.border,
+    },
     // Reserves header space for the absolutely-positioned progress rows.
     // Height = one circle; width covers the widest row (daily, 7 cells).
     headerProgress: {
@@ -493,6 +519,7 @@ const createStyles = (
     },
     streakSection: {
       backgroundColor: theme.background,
+      marginBottom: 20,
     },
     packSection: {
       backgroundColor: theme.background,
@@ -500,22 +527,20 @@ const createStyles = (
     },
     streakRow: {
       flexDirection: 'row',
-      gap: 12,
       zIndex: 100,
       overflow: 'visible',
-      marginTop: 34,
-      marginBottom: 34,
+      marginTop: 8,
     },
     // Section header for each Puzzle Library bundle (Intro, 1-Star, …).
     sectionLabel: {
       color: theme.text,
-      borderTopWidth: 1,
-      borderTopColor: theme.border,
-      paddingTop: 8,
-      marginTop: 12,
-      marginBottom: 24,
+      // borderTopWidth: 1,
+      // borderTopColor: theme.border,
+      // paddingTop: 8,
+      marginTop: 10,
+      marginBottom: 14,
       // textTransform: 'uppercase',
-      fontWeight: '500',
+
       // fontSize: 14,
       // lineHeight: 19,
     },
