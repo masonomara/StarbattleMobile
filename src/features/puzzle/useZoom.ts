@@ -15,13 +15,44 @@ const MAX_ZOOM = 3;
 // Extra pixels the board can be panned beyond its visible edge, giving the user
 // comfortable overscroll before the spring snaps it back.
 const PAN_PADDING = 120;
+// When a board fits within the visible area on an axis it used to spring to dead
+// center, which fought the user whenever they nudged it. Instead we let it rest
+// wherever it's left, springing back only once it drifts close enough to an edge
+// that less than this much gap would remain. The spring stays disabled inside
+// that comfortable zone.
+const REST_EDGE_MARGIN = 80;
 
 // High-stiffness spring for snappy snap-back; no explicit damping so Reanimated
 // uses its default (critically damped), avoiding oscillation.
 const SPRING_CONFIG = { stiffness: 750 } as const;
 
-export function useZoom(puzzleSize: number, cellSize: number) {
+// Vertical pan bound, measured against the visible play area. A board taller
+// than the play area can be panned far enough to bring its hidden top/bottom
+// rows into view, plus PAN_PADDING of overscroll. A board that fits rests
+// freely within the leftover space (minus a comfortable margin) rather than
+// snapping to dead center.
+function boundY(effectiveH: number, playHeight: number) {
+  'worklet';
+  const overflow = (effectiveH - playHeight) / 2;
+  return overflow > 0
+    ? overflow + PAN_PADDING
+    : Math.max(0, -overflow - REST_EDGE_MARGIN);
+}
+
+// verticalChrome is the height the header + toolbar (plus safe-area insets) eat
+// out of the screen. The board rests centered in the play area *between* them,
+// not in the full screen, so its pan bounds must be measured against that area —
+// otherwise a board taller than the play area but shorter than the screen (the
+// weekly grid) reads as "fits" and snaps to center with its top/bottom rows
+// stuck under the chrome.
+export function useZoom(
+  puzzleSize: number,
+  cellSize: number,
+  verticalChrome: number,
+) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  // Visible vertical space the board actually centers within.
+  const playHeight = Math.max(0, screenHeight - verticalChrome);
 
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -67,12 +98,13 @@ export function useZoom(puzzleSize: number, cellSize: number) {
 
       const effectiveW = boardPixels * clampedScale;
       const effectiveH = boardPixels * clampedScale;
-      // If the board fits within the screen on an axis, the bound is 0 so it
-      // always springs back to dead center; otherwise allow overscroll padding.
+      // X: if the board fits within the screen the bound is 0, so it always
+      // springs back to dead center; otherwise allow overscroll padding.
       const maxX =
-        effectiveW <= screenWidth ? 0 : (effectiveW - screenWidth) / 2 + PAN_PADDING;
-      const maxY =
-        effectiveH <= screenHeight ? 0 : (effectiveH - screenHeight) / 2 + PAN_PADDING;
+        effectiveW <= screenWidth
+          ? 0
+          : (effectiveW - screenWidth) / 2 + PAN_PADDING;
+      const maxY = boundY(effectiveH, playHeight);
       const cx = Math.max(-maxX, Math.min(savedTranslateX.value, maxX));
       const cy = Math.max(-maxY, Math.min(savedTranslateY.value, maxY));
 
@@ -104,12 +136,13 @@ export function useZoom(puzzleSize: number, cellSize: number) {
 
       const effectiveW = boardPixels * savedScale.value;
       const effectiveH = boardPixels * savedScale.value;
-      // If the board fits within the screen on an axis, the bound is 0 so it
-      // always springs back to dead center; otherwise allow overscroll padding.
+      // X: if the board fits within the screen the bound is 0, so it always
+      // springs back to dead center; otherwise allow overscroll padding.
       const maxX =
-        effectiveW <= screenWidth ? 0 : (effectiveW - screenWidth) / 2 + PAN_PADDING;
-      const maxY =
-        effectiveH <= screenHeight ? 0 : (effectiveH - screenHeight) / 2 + PAN_PADDING;
+        effectiveW <= screenWidth
+          ? 0
+          : (effectiveW - screenWidth) / 2 + PAN_PADDING;
+      const maxY = boundY(effectiveH, playHeight);
       const cx = Math.max(-maxX, Math.min(rawX, maxX));
       const cy = Math.max(-maxY, Math.min(rawY, maxY));
 

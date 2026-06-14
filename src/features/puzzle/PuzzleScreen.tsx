@@ -160,7 +160,12 @@ export function PuzzleScreen({
     isZoomed,
     handleZoomReset,
     lastGestureEndRef,
-  } = useZoom(boardSize, theme.cellSize);
+  } = useZoom(
+    boardSize,
+    theme.cellSize,
+    // Chrome the board centers between — must match the boardArea padding below.
+    insets.top + HEADER_H + insets.bottom + TOOLBAR_H,
+  );
 
   const drawLayerRef = useRef<DrawLayerHandle>(null);
 
