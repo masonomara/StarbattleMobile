@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   Animated,
@@ -6,6 +12,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,21 +22,22 @@ import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useTheme } from '../../shared/theme/useTheme';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { useScrollBorder } from '../../shared/hooks/useScrollBorder';
+import { useStreakRows } from '../../shared/hooks/useStreakRows';
 import { usePackPreviews } from './usePackPreviews';
 import { useCompletionData } from './useCompletionData';
 import { useTranslation } from 'react-i18next';
 import {
   getCurrentKey,
-  getStreakCells,
+  getActiveStreak,
   capitalize,
   STREAK_TYPES,
+  STREAK_UNIT_KEY,
   isStreakType,
 } from '../../shared/lib/streakDate';
 import { useAuthStore } from '../../shared/stores/authStore';
 import { startupTimer, msSinceLaunch } from '../../shared/lib/startupTimer';
 import { mark } from '../../shared/lib/perfLog';
 import { track } from '../../shared/lib/telemetry';
-import { StreakProgressRow } from './StreakProgressRow';
 import { StreakCard, StreakCardSkeleton } from './StreakCard';
 import { PackCard, PackCardSkeleton } from './PackCard';
 import { PulseProvider } from '../../shared/ui/Pulse';
@@ -41,7 +49,7 @@ import type {
   StreakCardStatus,
 } from '../../types';
 import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
-import { MoreHorizontal } from 'lucide-react-native';
+import { MoreHorizontal, ChevronDown } from 'lucide-react-native';
 
 const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 
@@ -55,9 +63,9 @@ let loggedFirstRender = false;
 // a stable, populated-looking shape from first paint.
 const SKELETON_PACK_COUNT = 4;
 // Streak card thumbnail width as a fraction of the viewport (RN has no vw unit).
-const STREAK_CARD_FRACTION = 0.7;
+const STREAK_CARD_FRACTION = 0.75;
 // Horizontal gap between streak cards (matches the carousel's contentContainer gap).
-const STREAK_CARD_GAP = 16;
+const STREAK_CARD_GAP = 12;
 // Left inset of the streak carousel from the screen edge.
 const STREAK_ROW_PADDING = 16;
 // Card chrome around the thumbnail — must match StreakCard's own `padding` and
@@ -115,80 +123,121 @@ export function HomeScreen({
   // Distance between consecutive snap points (one card + the gap after it).
   const streakInterval = streakCardWidth + STREAK_CARD_GAP;
 
-  // Carousel scroll offset, mapped natively so the header crossfade tracks the
-  // drag on the UI thread without re-rendering on JS (the fast-scroll jank).
-  const scrollX = useRef(new Animated.Value(0)).current;
-
-  // Vertical scroll offset of the page, used to fade the header progress row out
-  // once the streak carousel it mirrors has scrolled up behind the header — once
-  // the cards are gone, the little progress dots have nothing to point at.
+  // Vertical scroll offset of the page. Native-driven for the header hairline
+  // (via useScrollBorder); a JS listener also tracks the offset so the header
+  // title can name whichever section sits at the top of the scroll.
   const scrollY = useRef(new Animated.Value(0)).current;
-  // Shows the header's bottom hairline once the page scrolls off the top.
   const { scrolled, onScroll: onScrollBorder } = useScrollBorder();
+  const headerBottom = HEADER_HEIGHT + insets.top;
+
+  // Current user's streaks, for the header title while the carousel is on top.
+  const { streaks } = useStreakRows(userId);
+
+  // Header title for a streak card: the live streak ("7-day streak") once one is
+  // running, otherwise the challenge name. Used for the initial title and for
+  // the cached lookup the scroll handler reads.
+  const streakLabelFor = (type: StreakType) => {
+    const s = streaks.find(x => x.type === type);
+    const count = s ? getActiveStreak(s, type) : 0;
+    return count > 0
+      ? t(`home.streak${capitalize(STREAK_UNIT_KEY[type])}`, { count })
+      : t(`library.challenge${capitalize(type)}`);
+  };
+
+  // The header title plus whether it's a challenge (shows a chevron and opens the
+  // archive). Recomputed from scroll position, but re-rendered only when the
+  // resolved section actually changes — a fast flick never strobes the title.
+  const [headerSection, setHeaderSection] = useState(() => ({
+    label: streakLabelFor('daily'),
+    isChallenge: true,
+  }));
+
+  // Scroll/measurement state kept in refs so the scroll handler stays stable and
+  // never re-renders per frame. `scrollYRef` mirrors the native offset; the
+  // section refs hold each named library section's top in content coordinates
+  // (packSection's own offset plus the section's offset within it).
+  const scrollYRef = useRef(0);
+  const activeStreakIndexRef = useRef(0);
+  const streakLabelsRef = useRef<Partial<Record<StreakType, string>> | null>(
+    null,
+  );
+  // Seed on first render so a layout-triggered recompute (which can land before
+  // the streaks effect below) never reads an empty map and blanks the title.
+  if (streakLabelsRef.current === null) {
+    const init: Partial<Record<StreakType, string>> = {};
+    for (const type of STREAK_TYPES) init[type] = streakLabelFor(type);
+    streakLabelsRef.current = init;
+  }
+  const packSectionYRef = useRef(0);
+  const sectionLocalRef = useRef(new Map<string, number>());
+  const sectionTopsRef = useRef<{ label: string; top: number }[]>([]);
+
+  // Resolves the title from the current scroll offset: a streak label while the
+  // carousel is on top, then each library section's name as it reaches the
+  // header. setState only fires on a real change (the equality guard below).
+  const recomputeHeader = useCallback(() => {
+    const fold = scrollYRef.current + headerBottom;
+    const tops = sectionTopsRef.current;
+    let next: { label: string; isChallenge: boolean };
+    if (tops.length === 0 || fold < tops[0].top) {
+      const type = STREAK_TYPES[activeStreakIndexRef.current];
+      next = {
+        label: streakLabelsRef.current?.[type] ?? '',
+        isChallenge: true,
+      };
+    } else {
+      let label = tops[0].label;
+      for (const s of tops) {
+        if (s.top <= fold + 1) label = s.label;
+        else break;
+      }
+      next = { label, isChallenge: false };
+    }
+    setHeaderSection(prev =>
+      prev.label === next.label && prev.isChallenge === next.isChallenge
+        ? prev
+        : next,
+    );
+  }, [headerBottom]);
+
+  // Rebuilds the sorted section-top list from the latest layout measurements.
+  const rebuildSectionTops = useCallback(() => {
+    const base = packSectionYRef.current;
+    const tops: { label: string; top: number }[] = [];
+    sectionLocalRef.current.forEach((localY, bundle) => {
+      if (bundle) tops.push({ label: bundle, top: base + localY });
+    });
+    tops.sort((a, b) => a.top - b.top);
+    sectionTopsRef.current = tops;
+    recomputeHeader();
+  }, [recomputeHeader]);
+
+  // Refresh the cached streak labels as streaks sync, then refresh the title.
+  useEffect(() => {
+    const labels: Partial<Record<StreakType, string>> = {};
+    for (const type of STREAK_TYPES) labels[type] = streakLabelFor(type);
+    streakLabelsRef.current = labels;
+    recomputeHeader();
+    // streakLabelFor closes over streaks + t.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streaks, t, recomputeHeader]);
+
   const onPageScroll = useMemo(
     () =>
       Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
         useNativeDriver: true,
-        listener: onScrollBorder,
+        listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+          onScrollBorder(e);
+          scrollYRef.current = e.nativeEvent.contentOffset.y;
+          recomputeHeader();
+        },
       }),
-    [scrollY, onScrollBorder],
-  );
-  // Bottom edge of the streak section in content coordinates (measured), so we
-  // know the scroll offset at which the carousel finishes hiding behind header.
-  const [streakBottom, setStreakBottom] = useState(0);
-  const headerBottom = HEADER_HEIGHT + insets.top;
-  // As the carousel hides behind the header, crossfade the progress dots out and
-  // a "Puzzle Library" title in — the header keeps a label once the dots have
-  // nothing to point at.
-  const { headerProgressOpacity, headerTitleOpacity } = useMemo(() => {
-    if (streakBottom <= 0)
-      return { headerProgressOpacity: 1, headerTitleOpacity: 0 };
-    // scrollY at which the section's bottom edge meets the header's bottom edge —
-    // the moment the carousel is fully tucked away. Fade across the last stretch
-    // before that so it dissolves as it goes rather than blinking off.
-    const goneAt = streakBottom - headerBottom;
-    const fadeStart = Math.max(0, goneAt - 80);
-    return {
-      headerProgressOpacity: scrollY.interpolate({
-        inputRange: [fadeStart, goneAt],
-        outputRange: [1, 0],
-        extrapolate: 'clamp',
-      }),
-      headerTitleOpacity: scrollY.interpolate({
-        inputRange: [fadeStart, goneAt],
-        outputRange: [0, 1],
-        extrapolate: 'clamp',
-      }),
-    };
-  }, [scrollY, streakBottom, headerBottom]);
-
-  // One opacity per challenge. A row stays fully visible while its card is parked
-  // and through most of the swipe (the PLATEAU), then fades to 0 by the midpoint —
-  // so neighbours never overlap and a fast flick reads as a dip, not a strobe.
-  const PLATEAU = 0.34; // fraction of a card kept at full opacity on each side
-  const headerOpacities = useMemo(
-    () =>
-      STREAK_TYPES.map((_, i) =>
-        scrollX.interpolate({
-          inputRange: [
-            (i - 0.5) * streakInterval,
-            (i - PLATEAU) * streakInterval,
-            (i + PLATEAU) * streakInterval,
-            (i + 0.5) * streakInterval,
-          ],
-          outputRange: [0, 1, 1, 0],
-          extrapolate: 'clamp',
-        }),
-      ),
-    [scrollX, streakInterval],
+    [scrollY, onScrollBorder, recomputeHeader],
   );
 
-  // Fires the haptic when the carousel parks on a new card — no setState, so a
-  // fast flick never re-renders mid-scroll. The ref makes it fire once per card.
-  const activeStreakIndexRef = useRef(0);
-  const handleStreakScroll = (e: {
-    nativeEvent: { contentOffset: { x: number } };
-  }) => {
+  // Updates the centred streak card (for the title and a light haptic) as the
+  // carousel parks on a new one. Ref-guarded so it fires once per card.
+  const handleStreakScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / streakInterval);
     if (
       index !== activeStreakIndexRef.current &&
@@ -197,22 +246,9 @@ export function HomeScreen({
     ) {
       activeStreakIndexRef.current = index;
       if (hapticsEnabled) Haptics.impact('light');
+      recomputeHeader();
     }
   };
-
-  // Native-driven offset mapping for the crossfade, with the JS listener above
-  // still firing for the haptic.
-  const onStreakScroll = useMemo(
-    () =>
-      Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
-        useNativeDriver: true,
-        listener: handleStreakScroll,
-      }),
-    // handleStreakScroll closes over hapticsEnabled/streakInterval; rebuild when
-    // those change so the listener always sees current values.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [scrollX, streakInterval, hapticsEnabled],
-  );
 
   useEffect(() => {
     startupTimer.log('HomeScreen first mount');
@@ -250,15 +286,10 @@ export function HomeScreen({
   // Thumbnail previews per pack; each card fills in as its preview resolves.
   const { packPreviews } = usePackPreviews(packCatalog);
 
-  // Streak status (completed / in-progress today) and per-pack solved counts plus
-  // the streak keys for the header progress rows. Updates reactively as the user
-  // solves or starts puzzles.
-  const {
-    completedPuzzleIds,
-    startedStreakIds,
-    completedPerPack,
-    completedStreakKeys,
-  } = useCompletionData(packCatalog, userId);
+  // Streak status (completed / in-progress today) and per-pack solved counts.
+  // Updates reactively as the user solves or starts puzzles.
+  const { completedPuzzleIds, startedStreakIds, completedPerPack } =
+    useCompletionData(packCatalog, userId);
 
   return (
     <PulseProvider>
@@ -271,44 +302,33 @@ export function HomeScreen({
             scrolled && styles.headerBorder,
           ]}
         >
-          {/* Stacked progress rows that crossfade as the carousel scrolls between
-              challenges — driven by native scroll offset, no re-renders. */}
+          {/* Title names the section at the top of the scroll; a challenge gets
+              a chevron and opens its archive. */}
           <Pressable
-            style={styles.headerProgress}
+            style={styles.headerTitleRow}
             hitSlop={8}
+            disabled={!headerSection.isChallenge}
             onPress={() =>
               navigation.navigate('ArchivePack', {
                 type: STREAK_TYPES[activeStreakIndexRef.current],
               })
             }
           >
-            <Animated.View style={{ opacity: headerProgressOpacity }}>
-              {STREAK_TYPES.map((type, i) => (
-                <Animated.View
-                  key={type}
-                  pointerEvents="none"
-                  style={[
-                    styles.headerProgressLayer,
-                    { opacity: headerOpacities[i] },
-                  ]}
-                >
-                  <StreakProgressRow
-                    cells={getStreakCells(type)}
-                    completedKeys={completedStreakKeys[type]}
-                    theme={theme}
-                  />
-                </Animated.View>
-              ))}
-            </Animated.View>
-            {/* Fades in as the progress dots fade out, once the carousel is gone. */}
-            <Animated.View
-              pointerEvents="none"
-              style={[styles.headerTitle, { opacity: headerTitleOpacity }]}
+            <Text
+              role="title3"
+              style={styles.headerTitleText}
+              numberOfLines={1}
             >
-              <Text role="body" style={styles.headerTitleText}>
-                {t('home.libraryTitle')}
-              </Text>
-            </Animated.View>
+              {headerSection.label}
+            </Text>
+            {headerSection.isChallenge && (
+              <ChevronDown
+                size={20}
+                strokeWidth={2.5}
+                color={theme.text}
+                style={styles.headerChevron}
+              />
+            )}
           </Pressable>
           <View style={styles.headerRight}>
             <CircleButton
@@ -329,18 +349,12 @@ export function HomeScreen({
           }}
         >
           {/* Horizontal carousel of streak packs (daily, weekly, monthly) */}
-          <View
-            style={styles.streakSection}
-            onLayout={e => {
-              const { y, height } = e.nativeEvent.layout;
-              setStreakBottom(y + height);
-            }}
-          >
+          <View style={styles.streakSection}>
             <Animated.ScrollView
               style={styles.streakRow}
               horizontal
               showsHorizontalScrollIndicator={false}
-              onScroll={onStreakScroll}
+              onScroll={handleStreakScroll}
               scrollEventThrottle={16}
               // Snap each card's left edge; interval is the card width plus the
               // gap, both viewport-derived so it stays aligned on every device.
@@ -409,15 +423,32 @@ export function HomeScreen({
             </Animated.ScrollView>
           </View>
 
-          {/* Puzzle library: packs grouped into sections by bundle (`type`). */}
-          <View style={styles.packSection}>
+          {/* Puzzle library: packs grouped into sections by bundle (`type`).
+              Each section's top is measured (offset within packSection, added to
+              packSection's own offset) so the header can name the one on top. */}
+          <View
+            style={styles.packSection}
+            onLayout={e => {
+              packSectionYRef.current = e.nativeEvent.layout.y;
+              rebuildSectionTops();
+            }}
+          >
             {packCatalog.length === 0 &&
               Array.from({ length: SKELETON_PACK_COUNT }, (_, i) => (
                 <PackCardSkeleton key={`pack-skeleton-${i}`} theme={theme} />
               ))}
 
             {librarySections.map(section => (
-              <View key={section.bundle || 'ungrouped'}>
+              <View
+                key={section.bundle || 'ungrouped'}
+                onLayout={e => {
+                  sectionLocalRef.current.set(
+                    section.bundle,
+                    e.nativeEvent.layout.y,
+                  );
+                  rebuildSectionTops();
+                }}
+              >
                 {section.bundle ? (
                   <Text role="title3" style={styles.sectionLabel}>
                     {section.bundle}
@@ -483,34 +514,25 @@ const createStyles = (
     // Bottom hairline shown once the page scrolls, detaching the header from
     // the content beneath it.
     headerBorder: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
-    // Reserves header space for the absolutely-positioned progress rows.
-    // Height = one circle; width covers the widest row (daily, 7 cells).
-    headerProgress: {
-      height: 22,
-      width: 156,
-      overflow: 'visible',
-    },
-    // Crossfading layers stack at the same spot, anchored to the container's top.
-    headerProgressLayer: {
-      position: 'absolute',
-      left: 0,
-    },
-    // "Puzzle Library" title that replaces the progress dots once they fade out.
-    // Absolute + left-anchored so it shares the slot without wrapping (the
-    // reserved 156px box has overflow visible, so a wider title still shows).
-    headerTitle: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      justifyContent: 'center',
+    // Title for the section currently on top, with a chevron when it's a
+    // challenge. Shrinks (and the text truncates) so a long bundle name never
+    // collides with the settings button.
+    headerTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      flexShrink: 1,
     },
     headerTitleText: {
       color: theme.text,
-      fontWeight: '600',
+      flexShrink: 1,
+    },
+    // Nudge the chevron onto the text baseline.
+    headerChevron: {
+      marginTop: 2,
     },
     headerRight: {
       flexDirection: 'row',

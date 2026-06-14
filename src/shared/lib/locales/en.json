@@ -43,6 +43,9 @@
   },
   "home": {
     "libraryTitle": "Puzzle Library",
+    "streakDay": "{{count}}-day streak",
+    "streakWeek": "{{count}}-week streak",
+    "streakMonth": "{{count}}-month streak",
     "packStar_one": "{{count}}-star",
     "packStar_other": "{{count}}-star"
   },

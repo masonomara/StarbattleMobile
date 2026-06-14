@@ -364,8 +364,7 @@ function MonthGrid({
 }) {
   const { year, month } = page;
   const now = new Date();
-  const isCurrentMonth =
-    year === now.getFullYear() && month === now.getMonth();
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
   const monthName = new Date(year, month, 1).toLocaleDateString('en-US', {
     month: 'long',
   });
@@ -649,7 +648,7 @@ const createStyles = (theme: Theme) =>
     },
     // Bottom hairline shown once a calendar scrolls off the top.
     headerBorder: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
     headerSide: {

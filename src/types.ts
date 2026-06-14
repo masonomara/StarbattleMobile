@@ -138,15 +138,6 @@ export type StreakCell = {
   isCurrent: boolean;
 };
 
-// Progress row at the bottom of a streak card. Renders one circle per cell,
-// filling those whose key is in completedKeys and connecting consecutive solved
-// cells. Used for daily, weekly, and monthly with cadence-specific cells.
-export type StreakProgressRowProps = {
-  cells: StreakCell[];
-  completedKeys: Set<string>;
-  theme: Theme;
-};
-
 // Whether today's streak puzzle is untouched, started but unsolved, or solved.
 export type StreakCardStatus = 'not-started' | 'in-progress' | 'complete';
 

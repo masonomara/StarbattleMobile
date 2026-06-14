@@ -116,7 +116,7 @@ const createStyles = (theme: Theme) =>
     },
     // Bottom hairline shown once the settings list scrolls off the top.
     headerBorder: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
     modalHeaderSide: {

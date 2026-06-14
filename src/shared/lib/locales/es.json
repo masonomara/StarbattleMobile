@@ -43,6 +43,9 @@
   },
   "home": {
     "libraryTitle": "Biblioteca de puzles",
+    "streakDay": "racha de {{count}} días",
+    "streakWeek": "racha de {{count}} semanas",
+    "streakMonth": "racha de {{count}} meses",
     "packStar_one": "{{count}} estrella",
     "packStar_other": "{{count}} estrellas"
   },

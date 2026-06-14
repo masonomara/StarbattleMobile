@@ -24,7 +24,7 @@ export function Header({
         absolute && styles.absolute,
         { paddingTop: insets.top, height: SCREEN_HEADER_HEIGHT + insets.top },
         bordered && {
-          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomWidth: 1,
           borderBottomColor: theme.border,
         },
       ]}
