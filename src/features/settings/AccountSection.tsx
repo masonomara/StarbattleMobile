@@ -168,23 +168,23 @@ export function AccountSection() {
       {isAnonymous ? (
         <>
           {isReset ? (
-            <Text role="subhead" style={styles.sectionBody}>
+            <Text role="body" style={styles.sectionBody}>
               {emailMode === 'reset-otp'
                 ? t('account.resetOtpInstructions', { email })
                 : t('account.resetHelper')}
             </Text>
           ) : authTab === 'signup' ? (
-            <Text role="subhead" style={styles.sectionBody}>
+            <Text role="body" style={styles.sectionBody}>
               {t('account.signUpIntro')}
             </Text>
           ) : (
-            <Text role="subhead" style={styles.sectionBody}>
+            <Text role="body" style={styles.sectionBody}>
               {t('account.signInIntro')}
             </Text>
           )}
 
           {emailMode === null && (
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 12, marginBottom: 22 }}>
               <Pressable
                 style={[styles.secondaryButton, loading && styles.disabled]}
                 onPress={() => {
@@ -548,17 +548,17 @@ export function AccountSection() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    section: { marginTop: 16 },
+    section: { marginTop: 30 },
     sectionTitle: {
       color: theme.text,
       // borderTopWidth: 1,
       // borderTopColor: theme.border,
       // paddingTop: 8,
-      marginBottom: 14,
+      marginBottom: 6,
     },
     sectionBody: {
       color: theme.textSecondary,
-      marginTop: -7,
+      marginTop: -3,
       marginBottom: 14,
     },
     infoRow: {
@@ -603,7 +603,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background,
     },
     secondaryButtonText: { color: theme.text, fontWeight: '600' },
-    accountActions: { gap: 10, marginTop: 14 },
+    accountActions: { gap: 12, marginTop: 14, marginBottom: 22 },
     subLabel: {
       color: theme.textSecondary,
     },

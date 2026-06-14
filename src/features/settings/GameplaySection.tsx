@@ -18,7 +18,7 @@ export function GameplaySection() {
 
   return (
     <View style={styles.section}>
-      <Text role="subhead" style={styles.sectionTitle}>
+      <Text role="title3" style={styles.sectionTitle}>
         {t('settings.gameplay')}
       </Text>
       <ToggleRow
@@ -62,13 +62,12 @@ export function GameplaySection() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    section: { marginTop: 40 },
+    section: { marginTop: 8 },
     sectionTitle: {
       color: theme.text,
       // borderTopWidth: 1,
       // borderTopColor: theme.border,
       // paddingTop: 8,
-      marginBottom: 14,
-      fontWeight: '500',
+      marginBottom: 6,
     },
   });

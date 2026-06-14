@@ -23,7 +23,7 @@ export function ToggleRow({
         { borderColor: theme.border },
       ]}
     >
-      <Text role="subhead" style={{ color: theme.text, fontWeight: 600 }}>
+      <Text role="body" style={{ color: theme.text, fontWeight: 400 }}>
         {label}
       </Text>
       <View>
@@ -50,6 +50,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   switch: {
-    transform: [{ scaleX: 0.87 }, { scaleY: 0.87 }],
+    transform: [{ scaleX: 0.92 }, { scaleY: 0.92 }],
   },
 });

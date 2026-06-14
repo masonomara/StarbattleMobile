@@ -75,7 +75,7 @@ export function AppearanceSection() {
   return (
     <>
       <View style={styles.section}>
-        <Text role="subhead" style={styles.sectionTitle}>
+        <Text role="title3" style={styles.sectionTitle}>
           {t('settings.general')}
         </Text>
         <ToggleRow
@@ -95,7 +95,7 @@ export function AppearanceSection() {
           onToggle={v => updateSettings({ haptics: v })}
         />
         <View style={styles.themeRow}>
-          <Text role="subhead" style={styles.rowLabel}>
+          <Text role="body" style={styles.rowLabel}>
             {t('settings.theme')}
           </Text>
           <View style={styles.themeButtons}>
@@ -127,7 +127,7 @@ export function AppearanceSection() {
       </View>
 
       <View style={styles.section}>
-        <Text role="subhead" style={styles.sectionTitle}>
+        <Text role="title3" style={styles.sectionTitle}>
           {t('settings.colorTheme')}
         </Text>
         <View style={styles.swatchGrid}>
@@ -170,14 +170,13 @@ export function AppearanceSection() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    section: { marginTop: 40 },
+    section: { marginTop: 22 },
     sectionTitle: {
       color: theme.text,
       // borderTopWidth: 1,
       // borderTopColor: theme.border,
       // paddingTop: 8,
-      marginBottom: 14,
-      fontWeight: '500',
+      marginBottom: 6,
     },
     themeRow: {
       flexDirection: 'row',
@@ -187,7 +186,7 @@ const createStyles = (theme: Theme) =>
       borderTopWidth: 1,
       borderColor: theme.border,
     },
-    rowLabel: { color: theme.text, fontWeight: '600' },
+    rowLabel: { color: theme.text },
     themeButtons: {
       flexDirection: 'row',
       gap: 6,
@@ -210,11 +209,11 @@ const createStyles = (theme: Theme) =>
     themeButtonLabelActive: {
       color: theme.background,
     },
-    swatchGrid: { gap: 10 },
-    swatchRow: { flexDirection: 'row', gap: 10 },
+    swatchGrid: { gap: 12, marginTop: 8 },
+    swatchRow: { flexDirection: 'row', gap: 12 },
     swatchCard: {
       flex: 1,
-      borderRadius: 8,
+      borderRadius: 4,
       borderWidth: 1,
       borderColor: theme.border,
       overflow: 'hidden',
