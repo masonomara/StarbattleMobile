@@ -67,7 +67,7 @@ export function SettingsModal() {
                 onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text role="caption1" style={styles.legalLinkText}>
+                <Text role="footnote" style={styles.legalLinkText}>
                   {t('settings.terms')}
                 </Text>
               </Pressable>
@@ -80,18 +80,18 @@ export function SettingsModal() {
                 }
                 hitSlop={8}
               >
-                <Text role="caption1" style={styles.legalLinkText}>
+                <Text role="footnote" style={styles.legalLinkText}>
                   {t('settings.privacy')}
                 </Text>
               </Pressable>
-              <Text role="caption1" style={styles.legalSep}>
+              <Text role="footnote" style={styles.legalSep}>
                 ·
               </Text>
               <Pressable
                 onPress={() => Linking.openURL(CREDITS_URL).catch(() => {})}
                 hitSlop={8}
               >
-                <Text role="caption1" style={styles.legalLinkText}>
+                <Text role="footnote" style={styles.legalLinkText}>
                   {t('settings.credits')}
                 </Text>
               </Pressable>

@@ -256,7 +256,7 @@ export function AccountSection() {
           )}
 
           {(emailMode === 'signup' || emailMode === 'signin') && (
-            <View style={{ gap: 10, marginTop: 10 }}>
+            <View style={{ gap: 12, marginTop: 10, marginBottom: 22 }}>
               <Text role="subhead" style={styles.inputLabel}>
                 {t('account.emailLabel')}
               </Text>
@@ -336,7 +336,7 @@ export function AccountSection() {
           )}
 
           {emailMode === 'forgot-password' && (
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 12 }}>
               <Text role="subhead" style={styles.inputLabel}>
                 {t('account.emailLabel')}
               </Text>
@@ -377,7 +377,7 @@ export function AccountSection() {
           )}
 
           {emailMode === 'reset-otp' && (
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 12 }}>
               <Text role="subhead" style={styles.inputLabel}>
                 {t('account.otpLabel')}
               </Text>
@@ -548,7 +548,7 @@ export function AccountSection() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    section: { marginTop: 30 },
+    section: { marginTop: 22 },
     sectionTitle: {
       color: theme.text,
       // borderTopWidth: 1,
@@ -581,7 +581,7 @@ const createStyles = (theme: Theme) =>
     },
     primaryButton: {
       height: 48,
-      borderRadius: 800,
+      borderRadius: 8,
 
       alignItems: 'center',
       justifyContent: 'center',
@@ -595,15 +595,15 @@ const createStyles = (theme: Theme) =>
     secondaryButton: {
       height: 48,
       flex: 1,
-      borderRadius: 100,
-      borderWidth: 1,
+      borderRadius: 8,
+      borderWidth: 2,
       borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.background,
     },
     secondaryButtonText: { color: theme.text, fontWeight: '600' },
-    accountActions: { gap: 12, marginTop: 14, marginBottom: 22 },
+    accountActions: { gap: 12, marginTop: 14 },
     subLabel: {
       color: theme.textSecondary,
     },
@@ -612,8 +612,8 @@ const createStyles = (theme: Theme) =>
     linkButton: {
       height: 48,
       flex: 1,
-      borderRadius: 800,
-      borderWidth: 1,
+      borderRadius: 8,
+      borderWidth: 2,
       borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',
@@ -631,11 +631,12 @@ const createStyles = (theme: Theme) =>
     inputLabel: {
       marginBottom: -3,
       color: theme.text,
+      fontWeight: '600',
     },
     input: {
       height: 52,
       borderRadius: 8,
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: theme.border,
       paddingHorizontal: theme.spacingLg,
       backgroundColor: theme.surface,
@@ -657,7 +658,7 @@ const createStyles = (theme: Theme) =>
       color: theme.red,
       fontWeight: 600,
     },
-    confirmEmailBox: { gap: 10 },
+    confirmEmailBox: { gap: 12 },
     confirmEmailTitle: {
       color: theme.text,
     },
