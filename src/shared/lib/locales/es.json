@@ -56,7 +56,9 @@
     "streakStatusComplete": "Completado",
     "challengeDaily": "Desafío diario",
     "challengeWeekly": "Desafío semanal",
-    "challengeMonthly": "Desafío mensual"
+    "challengeMonthly": "Desafío mensual",
+    "weekLabel": "Semana {{n}}",
+    "currentWeek": "Esta semana"
   },
   "streaks": {
     "title": "Rachas",

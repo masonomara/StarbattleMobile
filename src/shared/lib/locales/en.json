@@ -56,7 +56,9 @@
     "streakStatusComplete": "Complete",
     "challengeDaily": "Daily Challenge",
     "challengeWeekly": "Weekly Challenge",
-    "challengeMonthly": "Monthly Challenge"
+    "challengeMonthly": "Monthly Challenge",
+    "weekLabel": "Week {{n}}",
+    "currentWeek": "This week"
   },
   "streaks": {
     "title": "Streaks",

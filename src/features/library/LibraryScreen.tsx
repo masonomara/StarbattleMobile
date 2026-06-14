@@ -81,7 +81,7 @@ function RadialScrim({
     >
       <Defs>
         <RadialGradient id="cellScrim" cx="50%" cy="50%" r="50%">
-          <Stop offset="0" stopColor={color} stopOpacity={centerOpacity} />
+          <Stop offset=".4" stopColor={color} stopOpacity={centerOpacity} />
           <Stop offset="1" stopColor={color} stopOpacity={edgeOpacity} />
         </RadialGradient>
       </Defs>
@@ -109,8 +109,6 @@ const PuzzleCell = React.memo(function PuzzleCell({
   );
 
   const locked = !isCompleted && !canPlay;
-  const badge = Math.round(cellSize * 0.36);
-  const numberSize = Math.round(cellSize * 0.34);
 
   return (
     <Pressable
@@ -124,18 +122,17 @@ const PuzzleCell = React.memo(function PuzzleCell({
       <View style={styles.overlay} pointerEvents="none">
         <RadialScrim
           size={cellSize}
-          color={isCompleted ? theme.blue : theme.background}
-          centerOpacity={locked ? 0.62 : isCompleted ? 0.5 : 0.48}
+          color={isCompleted ? theme.background : theme.background}
+          centerOpacity={1}
           edgeOpacity={0}
         />
         <Text
           style={[
             styles.cellNumber,
-            { fontSize: numberSize, lineHeight: Math.round(numberSize * 1.2) },
             isCompleted && styles.cellNumberCompleted,
             locked && styles.cellNumberLocked,
           ]}
-          role="headline"
+          role="title3"
         >
           {index + 1}
         </Text>
@@ -144,17 +141,13 @@ const PuzzleCell = React.memo(function PuzzleCell({
             style={[
               styles.cornerBadge,
               styles.cornerBadgeCompleted,
-              { width: badge, height: badge, borderRadius: badge / 2 },
+              { width: 20, height: 20, borderRadius: 100 },
             ]}
           >
-            <Check
-              size={Math.round(badge * 0.62)}
-              strokeWidth={3}
-              color={theme.background}
-            />
+            <Check size={11} strokeWidth={3} color={theme.background} />
           </View>
         )}
-        {locked && (
+        {/*{locked && (
           <View
             style={[
               styles.cornerBadge,
@@ -168,7 +161,7 @@ const PuzzleCell = React.memo(function PuzzleCell({
               color={theme.textSecondary}
             />
           </View>
-        )}
+        )}*/}
       </View>
       {puzzle && (
         <PuzzleThumbnail
@@ -496,12 +489,9 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       justifyContent: 'center',
       borderRadius: 199,
       overflow: 'visible',
-      backgroundColor: theme.background,
-      height: 32,
-      width: 32,
     },
     cellNumberCompleted: {
-      color: theme.background,
+      color: theme.text,
     },
     cellNumberLocked: {
       color: theme.textSecondary,

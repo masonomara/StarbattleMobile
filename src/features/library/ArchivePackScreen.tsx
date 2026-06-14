@@ -1,7 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {
+  Fragment,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import {
   View,
-  FlatList,
+  ScrollView,
   Pressable,
   StyleSheet,
   Alert,
@@ -13,15 +20,17 @@ import X from 'lucide-react-native/dist/cjs/icons/x';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useTheme } from '../../shared/theme/useTheme';
 import { loadAllCompletionData } from '../../shared/lib/progress';
 import {
   getActiveStreak,
   getCurrentKey,
   getPastDateKeys,
-  formatArchiveKey,
+  archiveKeyToDate,
   capitalize,
   RELEASE_DATE,
   STREAK_UNIT_KEY,
@@ -31,15 +40,18 @@ import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useAuthStore } from '../../shared/stores/authStore';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { useStreakRows } from '../../shared/hooks/useStreakRows';
-import type { RootStackParamList, StreakType, Theme } from '../../types';
+import type { RootStackParamList, Theme } from '../../types';
 
 const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const MS_PER_DAY = 86400000;
 
-// One horizontal page of the daily calendar.
+type Styles = ReturnType<typeof createStyles>;
+
+// One month of the daily calendar.
 type MonthPage = { year: number; month: number };
 
 // All months from launch through the current month, oldest first. The daily
-// calendar pages through these left-to-right, opening on the latest.
+// calendar stacks these vertically and opens scrolled to the latest.
 function getMonthPages(now: Date): MonthPage[] {
   const pages: MonthPage[] = [];
   let y = RELEASE_DATE.getFullYear();
@@ -61,6 +73,31 @@ function pad(n: number): string {
   return String(n).padStart(2, '0');
 }
 
+// "Jun 2 – 8" within a month, "Jun 30 – Jul 6" across one.
+function weekRangeLabel(monday: Date): string {
+  const sunday = new Date(monday.getTime() + 6 * MS_PER_DAY);
+  const m1 = monday.toLocaleDateString('en-US', { month: 'short' });
+  const m2 = sunday.toLocaleDateString('en-US', { month: 'short' });
+  if (m1 === m2) {
+    return `${m1} ${monday.getDate()} – ${sunday.getDate()}`;
+  }
+  return `${m1} ${monday.getDate()} – ${m2} ${sunday.getDate()}`;
+}
+
+// Scrolls a vertical list to its bottom once, the first time content lays out —
+// every archive view opens on the most recent period, the way Calendar opens
+// on today.
+function useScrollToEndOnce() {
+  const ref = useRef<ScrollView>(null);
+  const done = useRef(false);
+  const onContentSizeChange = useCallback(() => {
+    if (done.current) return;
+    done.current = true;
+    ref.current?.scrollToEnd({ animated: false });
+  }, []);
+  return { ref, onContentSizeChange };
+}
+
 export function ArchivePackScreen({
   route,
   navigation,
@@ -70,7 +107,7 @@ export function ArchivePackScreen({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const styles = useMemo(() => createStyles(theme, insets), [theme, insets]);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { entitlements } = useEntitlements();
   const isPremium = entitlements.isPremium;
@@ -131,6 +168,16 @@ export function ArchivePackScreen({
     );
   }
 
+  const calendarProps = {
+    insets,
+    keySet,
+    isCompleted,
+    onPress: onChallengePress,
+    theme,
+    styles,
+    t,
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -174,21 +221,11 @@ export function ArchivePackScreen({
         )}
 
         {type === 'daily' ? (
-          <DailyCalendar
-            width={width}
-            keySet={keySet}
-            isCompleted={isCompleted}
-            onPress={onChallengePress}
-            theme={theme}
-          />
+          <MonthCalendar width={width} {...calendarProps} />
+        ) : type === 'weekly' ? (
+          <WeekCalendar {...calendarProps} />
         ) : (
-          <ChallengeStrip
-            type={type}
-            dateKeys={dateKeys}
-            isCompleted={isCompleted}
-            onPress={onChallengePress}
-            theme={theme}
-          />
+          <YearCalendar width={width} {...calendarProps} />
         )}
       </View>
     </View>
@@ -208,7 +245,7 @@ function StreakBar({
   value: string;
   fillRatio: number;
   highlight?: boolean;
-  styles: ReturnType<typeof createStyles>;
+  styles: Styles;
 }) {
   const pct = Math.max(0, Math.min(1, fillRatio)) * 100;
   return (
@@ -232,68 +269,73 @@ function StreakBar({
   );
 }
 
-// ── Daily calendar ───────────────────────────────────────────────────────────
-// Month grids paged horizontally; opens on the latest month.
-function DailyCalendar({
-  width,
-  keySet,
-  isCompleted,
-  onPress,
-  theme,
-}: {
-  width: number;
+type CalendarProps = {
+  insets: EdgeInsets;
   keySet: Set<string>;
   isCompleted: (k: string) => boolean;
   onPress: (k: string) => void;
   theme: Theme;
-}) {
-  const pages = useMemo(() => getMonthPages(new Date()), []);
-  const todayKey = getCurrentKey('daily');
-  const styles = useMemo(
-    () => createStyles(theme, { top: 0, bottom: 0 }),
-    [theme],
-  );
-  const cell = Math.floor((width - 2 * 24) / 7);
+  styles: Styles;
+  t: TFunction;
+};
 
-  const renderPage = useCallback(
-    ({ item }: { item: MonthPage }) => (
-      <MonthGrid
-        page={item}
-        width={width}
-        cell={cell}
-        keySet={keySet}
-        todayKey={todayKey}
-        isCompleted={isCompleted}
-        onPress={onPress}
-        theme={theme}
-        styles={styles}
-      />
-    ),
-    [width, cell, keySet, todayKey, isCompleted, onPress, theme, styles],
-  );
+// ── Daily → month view ───────────────────────────────────────────────────────
+// Apple Calendar's month view: a fixed weekday header over a vertical stack of
+// month grids, opening on the latest month. Days are tappable circles.
+function MonthCalendar({
+  width,
+  insets,
+  keySet,
+  isCompleted,
+  onPress,
+  theme,
+  styles,
+}: CalendarProps & { width: number }) {
+  const months = useMemo(() => getMonthPages(new Date()), []);
+  const todayKey = getCurrentKey('daily');
+  const cell = Math.floor((width - 2 * 24) / 7);
+  const scroll = useScrollToEndOnce();
 
   return (
-    <FlatList
-      data={pages}
-      horizontal
-      pagingEnabled
-      showsHorizontalScrollIndicator={false}
-      keyExtractor={p => `${p.year}-${p.month}`}
-      renderItem={renderPage}
-      initialScrollIndex={pages.length - 1}
-      getItemLayout={(_, index) => ({
-        length: width,
-        offset: width * index,
-        index,
-      })}
-      onScrollToIndexFailed={() => {}}
-    />
+    <View style={styles.calendarFlex}>
+      <View style={styles.weekdayHeader}>
+        {WEEKDAY_LETTERS.map((letter, i) => (
+          <View key={i} style={[styles.weekdayCell, { width: cell }]}>
+            <Text role="footnote" style={styles.weekdayLetter}>
+              {letter}
+            </Text>
+          </View>
+        ))}
+      </View>
+      <ScrollView
+        ref={scroll.ref}
+        onContentSizeChange={scroll.onContentSizeChange}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.calendarContent,
+          { paddingBottom: insets.bottom + 32 },
+        ]}
+      >
+        {months.map(page => (
+          <MonthGrid
+            key={`${page.year}-${page.month}`}
+            page={page}
+            cell={cell}
+            keySet={keySet}
+            todayKey={todayKey}
+            isCompleted={isCompleted}
+            onPress={onPress}
+            theme={theme}
+            styles={styles}
+          />
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
 function MonthGrid({
   page,
-  width,
   cell,
   keySet,
   todayKey,
@@ -303,19 +345,20 @@ function MonthGrid({
   styles,
 }: {
   page: MonthPage;
-  width: number;
   cell: number;
   keySet: Set<string>;
   todayKey: string;
   isCompleted: (k: string) => boolean;
   onPress: (k: string) => void;
   theme: Theme;
-  styles: ReturnType<typeof createStyles>;
+  styles: Styles;
 }) {
   const { year, month } = page;
-  const title = new Date(year, month, 1).toLocaleDateString('en-US', {
+  const now = new Date();
+  const isCurrentMonth =
+    year === now.getFullYear() && month === now.getMonth();
+  const monthName = new Date(year, month, 1).toLocaleDateString('en-US', {
     month: 'long',
-    year: 'numeric',
   });
   const offset = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -324,18 +367,17 @@ function MonthGrid({
   for (let d = 1; d <= daysInMonth; d++) slots.push(d);
 
   return (
-    <View style={[styles.monthPage, { width }]}>
-      <Text role="headline" style={styles.monthTitle}>
-        {title}
-      </Text>
-      <View style={styles.weekdayRow}>
-        {WEEKDAY_LETTERS.map((letter, i) => (
-          <View key={i} style={[styles.weekdayCell, { width: cell }]}>
-            <Text role="footnote" style={styles.weekdayLetter}>
-              {letter}
-            </Text>
-          </View>
-        ))}
+    <View style={styles.monthBlock}>
+      <View style={styles.monthTitleRow}>
+        <Text
+          role="title3"
+          style={[styles.monthTitle, isCurrentMonth && { color: theme.blue }]}
+        >
+          {monthName}
+        </Text>
+        <Text role="subhead" style={styles.monthYear}>
+          {year}
+        </Text>
       </View>
       <View style={styles.daysGrid}>
         {slots.map((day, i) => {
@@ -380,67 +422,203 @@ function MonthGrid({
   );
 }
 
-// ── Weekly / monthly strip ────────────────────────────────────────────────────
-// A horizontal row of challenge cells; opens on the most recent.
-function ChallengeStrip({
-  type,
-  dateKeys,
+// ── Weekly → week view ────────────────────────────────────────────────────────
+// Apple Calendar's week list: weeks stacked vertically under month headers,
+// each a tappable row showing its date span. Opens on the most recent week.
+function WeekCalendar({
+  insets,
+  keySet,
   isCompleted,
   onPress,
   theme,
-}: {
-  type: StreakType;
-  dateKeys: string[];
-  isCompleted: (k: string) => boolean;
-  onPress: (k: string) => void;
-  theme: Theme;
-}) {
-  const styles = useMemo(
-    () => createStyles(theme, { top: 0, bottom: 0 }),
-    [theme],
-  );
-  // dateKeys arrive newest-first; show oldest-first and open at the end.
-  const ordered = useMemo(() => [...dateKeys].reverse(), [dateKeys]);
+  styles,
+  t,
+}: CalendarProps) {
+  const now = new Date();
+  const currentWeekKey = getCurrentKey('weekly', now);
+  const weekKeys = useMemo(() => {
+    const out: string[] = [];
+    let d = new Date(RELEASE_DATE);
+    let guard = 0;
+    while (getCurrentKey('weekly', d) <= currentWeekKey && guard < 600) {
+      const key = getCurrentKey('weekly', d);
+      if (out[out.length - 1] !== key) out.push(key);
+      d = new Date(d.getTime() + 7 * MS_PER_DAY);
+      guard++;
+    }
+    return out;
+  }, [currentWeekKey]);
+  const scroll = useScrollToEndOnce();
 
-  const renderCell = useCallback(
-    ({ item: dateKey }: { item: string }) => {
-      const completed = isCompleted(dateKey);
-      return (
-        <Pressable style={styles.stripCell} onPress={() => onPress(dateKey)}>
-          {completed && (
-            <View style={styles.stripCheck}>
-              <Check size={18} color={theme.blue} strokeWidth={2.5} />
-            </View>
-          )}
-          <Text role="subhead" style={styles.stripCellText}>
-            {formatArchiveKey(type, dateKey)}
-          </Text>
-        </Pressable>
-      );
-    },
-    [type, isCompleted, onPress, styles, theme],
-  );
+  let lastSection = '';
 
   return (
-    <FlatList
-      data={ordered}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      keyExtractor={k => k}
-      renderItem={renderCell}
-      contentContainerStyle={styles.stripContent}
-      initialScrollIndex={Math.max(0, ordered.length - 1)}
-      getItemLayout={(_, index) => ({
-        length: STRIP_CELL_WIDTH + 12,
-        offset: (STRIP_CELL_WIDTH + 12) * index,
-        index,
+    <ScrollView
+      ref={scroll.ref}
+      onContentSizeChange={scroll.onContentSizeChange}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={[
+        styles.calendarContent,
+        { paddingBottom: insets.bottom + 32 },
+      ]}
+    >
+      {weekKeys.map(key => {
+        const monday = archiveKeyToDate('weekly', key);
+        // ISO weeks belong to the month/year of their Thursday.
+        const thursday = new Date(monday.getTime() + 3 * MS_PER_DAY);
+        const section = `${thursday.getFullYear()}-${thursday.getMonth()}`;
+        const showHeader = section !== lastSection;
+        lastSection = section;
+
+        const isCurrent = key === currentWeekKey;
+        const challenge = keySet.has(key);
+        const completed = challenge && isCompleted(key);
+        const weekNo = Number(key.split('-W')[1]);
+
+        return (
+          <Fragment key={key}>
+            {showHeader && (
+              <Text role="headline" style={styles.sectionHeader}>
+                {thursday.toLocaleDateString('en-US', {
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </Text>
+            )}
+            <Pressable
+              disabled={!challenge}
+              onPress={() => onPress(key)}
+              style={[
+                styles.weekRow,
+                completed && styles.weekRowCompleted,
+                isCurrent && styles.weekRowCurrent,
+              ]}
+            >
+              <View>
+                <Text
+                  role="headline"
+                  style={[
+                    styles.weekRange,
+                    completed && { color: theme.background },
+                  ]}
+                >
+                  {weekRangeLabel(monday)}
+                </Text>
+                <Text
+                  role="subhead"
+                  style={[
+                    styles.weekSub,
+                    completed && styles.weekSubCompleted,
+                    completed && { color: theme.background },
+                  ]}
+                >
+                  {isCurrent
+                    ? t('library.currentWeek')
+                    : t('library.weekLabel', { n: weekNo })}
+                </Text>
+              </View>
+              {completed && (
+                <Check size={20} color={theme.background} strokeWidth={3} />
+              )}
+            </Pressable>
+          </Fragment>
+        );
       })}
-      onScrollToIndexFailed={() => {}}
-    />
+    </ScrollView>
   );
 }
 
-const STRIP_CELL_WIDTH = 150;
+// ── Monthly → year view ───────────────────────────────────────────────────────
+// Apple Calendar's year view: each year a grid of month tiles. Tap a month to
+// open its puzzle. Opens on the latest year.
+function YearCalendar({
+  width,
+  insets,
+  keySet,
+  isCompleted,
+  onPress,
+  theme,
+  styles,
+}: CalendarProps & { width: number }) {
+  const now = new Date();
+  const currentMonthKey = getCurrentKey('monthly', now);
+  const currentYear = now.getFullYear();
+  const years = useMemo(() => {
+    const out: number[] = [];
+    for (let y = RELEASE_DATE.getFullYear(); y <= currentYear; y++) {
+      out.push(y);
+    }
+    return out;
+  }, [currentYear]);
+  const tile = Math.floor((width - 2 * 24 - 2 * 12) / 3);
+  const scroll = useScrollToEndOnce();
+
+  return (
+    <ScrollView
+      ref={scroll.ref}
+      onContentSizeChange={scroll.onContentSizeChange}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={[
+        styles.calendarContent,
+        { paddingBottom: insets.bottom + 32 },
+      ]}
+    >
+      {years.map(year => (
+        <View key={year} style={styles.yearBlock}>
+          <Text role="title3" style={styles.yearLabel}>
+            {year}
+          </Text>
+          <View style={styles.monthTiles}>
+            {Array.from({ length: 12 }, (_, m) => {
+              const key = `${year}-${pad(m + 1)}`;
+              const challenge = keySet.has(key);
+              const completed = challenge && isCompleted(key);
+              const isCurrent = key === currentMonthKey;
+              const short = new Date(year, m, 1).toLocaleDateString('en-US', {
+                month: 'short',
+              });
+              return (
+                <Pressable
+                  key={m}
+                  disabled={!challenge}
+                  onPress={() => onPress(key)}
+                  style={[
+                    styles.monthTile,
+                    { width: tile },
+                    challenge && styles.monthTileChallenge,
+                    completed && styles.monthTileCompleted,
+                    isCurrent && styles.monthTileCurrent,
+                  ]}
+                >
+                  {completed && (
+                    <View style={styles.monthTileCheck}>
+                      <Check
+                        size={14}
+                        color={theme.background}
+                        strokeWidth={3}
+                      />
+                    </View>
+                  )}
+                  <Text
+                    role="headline"
+                    style={[
+                      styles.monthTileText,
+                      completed && { color: theme.background },
+                      isCurrent && { color: theme.blue },
+                      !challenge && !isCurrent && styles.monthTileTextMuted,
+                    ]}
+                  >
+                    {short}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -521,24 +699,42 @@ const createStyles = (theme: Theme) =>
       color: theme.textSecondary,
       flexShrink: 1,
     },
-    // Daily calendar
-    monthPage: {
+
+    // Shared calendar scaffolding
+    calendarFlex: {
+      flex: 1,
+    },
+    calendarContent: {
       paddingHorizontal: 24,
-      paddingTop: 28,
+      paddingTop: 20,
     },
-    monthTitle: {
-      color: theme.text,
-      textAlign: 'center',
-      marginBottom: 16,
-    },
-    weekdayRow: {
+
+    // Daily — month view
+    weekdayHeader: {
       flexDirection: 'row',
-      marginBottom: 8,
+      paddingHorizontal: 24,
+      paddingTop: 20,
+      paddingBottom: 8,
     },
     weekdayCell: {
       alignItems: 'center',
     },
     weekdayLetter: {
+      color: theme.textSecondary,
+    },
+    monthBlock: {
+      marginBottom: 28,
+    },
+    monthTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 8,
+      marginBottom: 12,
+    },
+    monthTitle: {
+      color: theme.text,
+    },
+    monthYear: {
       color: theme.textSecondary,
     },
     daysGrid: {
@@ -571,28 +767,81 @@ const createStyles = (theme: Theme) =>
       color: theme.textSecondary,
       opacity: 0.5,
     },
-    // Weekly / monthly strip
-    stripContent: {
-      paddingHorizontal: 24,
-      paddingTop: 28,
+
+    // Weekly — week list
+    sectionHeader: {
+      color: theme.text,
+      marginBottom: 10,
+      marginTop: 4,
+    },
+    weekRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: theme.surface,
+      borderRadius: theme.radiusMd,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 8,
+    },
+    weekRowCompleted: {
+      backgroundColor: theme.text,
+    },
+    weekRowCurrent: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: theme.blue,
+    },
+    weekRange: {
+      color: theme.text,
+    },
+    weekSub: {
+      color: theme.textSecondary,
+      marginTop: 2,
+    },
+    weekSubCompleted: {
+      opacity: 0.7,
+    },
+
+    // Monthly — year view
+    yearBlock: {
+      marginBottom: 28,
+    },
+    yearLabel: {
+      color: theme.text,
+      marginBottom: 12,
+    },
+    monthTiles: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: 12,
     },
-    stripCell: {
-      width: STRIP_CELL_WIDTH,
-      height: STRIP_CELL_WIDTH,
-      backgroundColor: theme.surface,
+    monthTile: {
+      height: 64,
       borderRadius: theme.radiusMd,
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 12,
     },
-    stripCheck: {
+    monthTileChallenge: {
+      backgroundColor: theme.surface,
+    },
+    monthTileCompleted: {
+      backgroundColor: theme.text,
+    },
+    monthTileCurrent: {
+      borderWidth: 1.5,
+      borderColor: theme.blue,
+    },
+    monthTileCheck: {
       position: 'absolute',
-      top: 10,
-      right: 10,
+      top: 8,
+      right: 8,
     },
-    stripCellText: {
+    monthTileText: {
       color: theme.text,
-      textAlign: 'center',
+    },
+    monthTileTextMuted: {
+      color: theme.textSecondary,
+      opacity: 0.5,
     },
   });
