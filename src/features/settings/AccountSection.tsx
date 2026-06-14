@@ -336,7 +336,7 @@ export function AccountSection() {
           )}
 
           {emailMode === 'forgot-password' && (
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: 12, marginBottom: 22 }}>
               <Text role="subhead" style={styles.inputLabel}>
                 {t('account.emailLabel')}
               </Text>
@@ -377,7 +377,7 @@ export function AccountSection() {
           )}
 
           {emailMode === 'reset-otp' && (
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: 12, marginBottom: 22 }}>
               <Text role="subhead" style={styles.inputLabel}>
                 {t('account.otpLabel')}
               </Text>
@@ -424,15 +424,7 @@ export function AccountSection() {
                   </Text>
                 )}
               </Pressable>
-              <Pressable
-                style={styles.linkButton}
-                onPress={() => withLoading(() => requestPasswordReset(email))}
-                disabled={loading}
-              >
-                <Text role="callout" style={styles.linkText}>
-                  {t('account.resendCode')}
-                </Text>
-              </Pressable>
+
               <Pressable
                 style={styles.linkButton}
                 onPress={() => {
@@ -673,7 +665,8 @@ const createStyles = (theme: Theme) =>
     error: {
       color: theme.red,
       textAlign: 'center',
-      marginTop: 14,
+      marginTop: 6,
       fontWeight: '500',
+      marginBottom: 22,
     },
   });
