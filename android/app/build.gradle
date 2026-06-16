@@ -82,8 +82,8 @@ android {
         applicationId "com.omaratechnologydesign.starbattle"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "0.0.2"
         // Default to no cleartext; debug overrides to true so Metro can serve over http.
         manifestPlaceholders = [usesCleartextTraffic: "false"]
     }
