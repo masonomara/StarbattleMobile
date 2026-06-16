@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -22,6 +16,7 @@ import MoreHorizontal from 'lucide-react-native/dist/cjs/icons/ellipsis';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EdgeInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -132,12 +127,17 @@ export function ArchivePackScreen({
   // Shows the header's bottom hairline once a calendar scrolls off the top.
   const { scrolled, onScroll } = useScrollBorder();
 
-  useEffect(() => {
-    loadAllCompletionData().then(ids => {
-      setCompletedIds(ids);
-      setLoading(false);
-    });
-  }, []);
+  // Reload on every focus, not just mount: finishing a puzzle pops back to this
+  // still-mounted screen, so a one-shot mount effect would leave completion
+  // state stale and the just-solved day uncolored.
+  useFocusEffect(
+    useCallback(() => {
+      loadAllCompletionData().then(ids => {
+        setCompletedIds(ids);
+        setLoading(false);
+      });
+    }, []),
+  );
 
   // Tapping a challenge: the current period opens the live puzzle (free, same as
   // Home); past challenges are premium — everyone else gets the paywall.
@@ -341,6 +341,15 @@ function MonthGrid({
   for (let i = 0; i < offset; i++) slots.push(null);
   for (let d = 1; d <= daysInMonth; d++) slots.push(d);
 
+  // Whether a given day of this month is a completed challenge. Used both to
+  // color a day and to decide if it should visually join its neighbour, so a
+  // streak of consecutive days reads as one continuous bar.
+  const dayCompleted = (d: number) => {
+    if (d < 1 || d > daysInMonth) return false;
+    const k = `${year}-${pad(month + 1)}-${pad(d)}`;
+    return (keySet.has(k) || k === todayKey) && isCompleted(k);
+  };
+
   return (
     <View style={styles.monthBlock}>
       <View style={styles.monthTitleRow}>
@@ -363,6 +372,11 @@ function MonthGrid({
           const challenge = keySet.has(key);
           const today = key === todayKey;
           const completed = (challenge || today) && isCompleted(key);
+          // Bridge to a completed neighbour only within the same week row, so the
+          // streak bar flows across a row and breaks cleanly at week boundaries.
+          const col = (offset + day - 1) % 7;
+          const joinLeft = completed && col !== 0 && dayCompleted(day - 1);
+          const joinRight = completed && col !== 6 && dayCompleted(day + 1);
           return (
             <Pressable
               key={key}
@@ -370,17 +384,40 @@ function MonthGrid({
               onPress={() => onPress(key)}
               style={[styles.dayCell, { width: cell, height: cell }]}
             >
+              {completed && (
+                <View
+                  style={[
+                    styles.dayFill,
+                    {
+                      backgroundColor: today ? theme.text : theme.border,
+                    },
+                    joinLeft
+                      ? {
+                          left: 0,
+                          borderTopLeftRadius: 0,
+                          borderBottomLeftRadius: 0,
+                        }
+                      : null,
+                    joinRight
+                      ? {
+                          right: 0,
+                          borderTopRightRadius: 0,
+                          borderBottomRightRadius: 0,
+                        }
+                      : null,
+                  ]}
+                />
+              )}
               <View
-                style={[
-                  styles.day,
-                  challenge && styles.dayChallenge,
-                  completed && styles.dayCompleted,
-                  today && styles.dayToday,
-                ]}
+                style={[styles.day, today && !completed && styles.dayToday]}
               >
                 <Text
                   role="callout"
-                  style={[styles.dayText, !challenge && styles.dayTextMuted]}
+                  style={[
+                    styles.dayText,
+                    !challenge && styles.dayTextMuted,
+                    completed && styles.dayTextCompleted,
+                  ]}
                 >
                   {day}
                 </Text>
@@ -716,11 +753,16 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    dayChallenge: {
-      backgroundColor: theme.background,
-    },
-    dayCompleted: {
-      backgroundColor: theme.background,
+    // Completion fill behind a day. Inset 4px to match dayCell padding; when a
+    // day joins a neighbour, left/right snap to 0 to close the gap and the inner
+    // corners square off so consecutive days form one continuous pill.
+    dayFill: {
+      position: 'absolute',
+      top: 4,
+      bottom: 4,
+      left: 4,
+      right: 4,
+      borderRadius: 100,
     },
     dayToday: {
       borderRadius: 100,
@@ -732,7 +774,9 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     dayTextMuted: {
       color: theme.textSecondary,
-      opacity: 0.5,
+    },
+    dayTextCompleted: {
+      color: theme.text,
     },
 
     // Weekly — week grid (2-wide, grouped by month)
