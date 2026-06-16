@@ -14,7 +14,6 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Text } from '../../shared/ui/Text';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -58,38 +57,6 @@ type PuzzleCellProps = {
   cellSize: number;
 };
 
-// Radial scrim: tints each cell strongest at the center — behind the number —
-// and fades to transparent at the edges so the thumbnail corners read through.
-// Replaces the old flat scrim while keeping the same per-state colors.
-function RadialScrim({
-  size,
-  color,
-  centerOpacity,
-  edgeOpacity,
-}: {
-  size: number;
-  color: string;
-  centerOpacity: number;
-  edgeOpacity: number;
-}) {
-  return (
-    <Svg
-      width={size}
-      height={size}
-      style={StyleSheet.absoluteFill}
-      pointerEvents="none"
-    >
-      <Defs>
-        <RadialGradient id="cellScrim" cx="50%" cy="50%" r="50%">
-          <Stop offset=".4" stopColor={color} stopOpacity={centerOpacity} />
-          <Stop offset="1" stopColor={color} stopOpacity={edgeOpacity} />
-        </RadialGradient>
-      </Defs>
-      <Rect width={size} height={size} fill="url(#cellScrim)" />
-    </Svg>
-  );
-}
-
 const PuzzleCell = React.memo(function PuzzleCell({
   packId,
   index,
@@ -120,12 +87,6 @@ const PuzzleCell = React.memo(function PuzzleCell({
       onPress={() => (locked ? onLockedPress(index) : onPress(index))}
     >
       <View style={styles.overlay} pointerEvents="none">
-        <RadialScrim
-          size={cellSize}
-          color={isCompleted ? theme.background : theme.background}
-          centerOpacity={1}
-          edgeOpacity={0}
-        />
         <Text
           style={[
             styles.cellNumber,
