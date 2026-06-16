@@ -19,7 +19,6 @@ import { Text } from '../../shared/ui/Text';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import MoreHorizontal from 'lucide-react-native/dist/cjs/icons/ellipsis';
-import Check from 'lucide-react-native/dist/cjs/icons/check';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EdgeInsets } from 'react-native-safe-area-context';
@@ -379,16 +378,12 @@ function MonthGrid({
                   today && styles.dayToday,
                 ]}
               >
-                {completed ? (
-                  <Check size={16} color={theme.background} strokeWidth={3} />
-                ) : (
-                  <Text
-                    role="callout"
-                    style={[styles.dayText, !challenge && styles.dayTextMuted]}
-                  >
-                    {day}
-                  </Text>
-                )}
+                <Text
+                  role="callout"
+                  style={[styles.dayText, !challenge && styles.dayTextMuted]}
+                >
+                  {day}
+                </Text>
               </View>
             </Pressable>
           );
@@ -488,15 +483,6 @@ function WeekCalendar({
                     isCurrent && styles.weekRowCurrent,
                   ]}
                 >
-                  {completed && (
-                    <View style={styles.monthTileCheck}>
-                      <Check
-                        size={14}
-                        color={theme.background}
-                        strokeWidth={3}
-                      />
-                    </View>
-                  )}
                   <Text
                     role="callout"
                     style={[
@@ -581,20 +567,11 @@ function YearCalendar({
                     isCurrent && styles.monthTileCurrent,
                   ]}
                 >
-                  {completed && (
-                    <View style={styles.monthTileCheck}>
-                      <Check
-                        size={14}
-                        color={theme.background}
-                        strokeWidth={3}
-                      />
-                    </View>
-                  )}
                   <Text
                     role="callout"
                     style={[
                       styles.monthTileText,
-                      completed && { color: theme.background },
+                      completed && { color: theme.text },
                       isCurrent && { color: theme.blue },
                       !challenge && !isCurrent && styles.monthTileTextMuted,
                     ]}
@@ -681,7 +658,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      paddingHorizontal: 24,
+      paddingHorizontal: 20,
       marginTop: 14,
     },
     lockNoteText: {
@@ -694,15 +671,15 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       flex: 1,
     },
     calendarContent: {
-      paddingHorizontal: 24,
+      paddingHorizontal: 20,
       paddingTop: 20,
     },
 
     // Daily — month view
     weekdayHeader: {
       flexDirection: 'row',
-      paddingHorizontal: 24,
-      paddingTop: 20,
+      paddingHorizontal: 20,
+      paddingTop: 8,
       paddingBottom: 8,
     },
     weekdayCell: {
@@ -724,6 +701,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     monthYear: {
       color: theme.textSecondary,
+      lineHeight: 28,
     },
     daysGrid: {
       flexDirection: 'row',
@@ -739,16 +717,14 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       justifyContent: 'center',
     },
     dayChallenge: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
     },
     dayCompleted: {
-      backgroundColor: theme.text,
-      borderRadius: 8,
+      backgroundColor: theme.background,
     },
     dayToday: {
-      borderWidth: 1,
-      borderColor: theme.text,
-      backgroundColor: theme.text,
+      borderRadius: 100,
+      backgroundColor: theme.border,
     },
     dayText: {
       color: theme.text,
@@ -803,11 +779,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
 
     // Monthly — year view
     yearBlock: {
-      marginBottom: 28,
+      marginBottom: 22,
     },
     yearLabel: {
       color: theme.text,
-      marginBottom: 12,
+      marginBottom: 14,
     },
     monthTiles: {
       flexDirection: 'row',
@@ -831,11 +807,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     monthTileCurrent: {
       borderWidth: 1,
       borderColor: theme.blue,
-    },
-    monthTileCheck: {
-      position: 'absolute',
-      top: 8,
-      right: 8,
     },
     monthTileText: {
       color: theme.text,
