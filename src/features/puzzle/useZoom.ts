@@ -10,33 +10,34 @@ import {
 import { Gesture } from 'react-native-gesture-handler';
 
 const DEFAULT_ZOOM = 1;
-const MIN_ZOOM = 0.67; // ~2/3 — lets small boards breathe on large screens
+const MIN_ZOOM = 0.3; // ~2/3 — lets small boards breathe on large screens
 const MAX_ZOOM = 3;
 // Extra pixels the board can be panned beyond its visible edge, giving the user
 // comfortable overscroll before the spring snaps it back.
 const PAN_PADDING = 120;
-// When a board fits within the visible area on an axis it used to spring to dead
-// center, which fought the user whenever they nudged it. Instead we let it rest
-// wherever it's left, springing back only once it drifts close enough to an edge
-// that less than this much gap would remain. The spring stays disabled inside
-// that comfortable zone.
-const REST_EDGE_MARGIN = 80;
+// Slack added to the vertical pan bound on top of the board's edge-to-edge
+// travel. It does double duty: a board that fits the play area gets this much
+// gentle give to rest in (instead of snapping to dead center), and a taller
+// board gets this much comfortable overscroll past the point where its hidden
+// rows are flush with the play-area edge. Keeping it a single constant makes
+// boundY continuous, so a board that just barely fits behaves almost exactly
+// like one that just barely overflows — no cliff between "small" and "tall".
+const PAN_GIVE_Y = 0;
 
 // High-stiffness spring for snappy snap-back; no explicit damping so Reanimated
 // uses its default (critically damped), avoiding oscillation.
 const SPRING_CONFIG = { stiffness: 750 } as const;
 
-// Vertical pan bound, measured against the visible play area. A board taller
-// than the play area can be panned far enough to bring its hidden top/bottom
-// rows into view, plus PAN_PADDING of overscroll. A board that fits rests
-// freely within the leftover space (minus a comfortable margin) rather than
-// snapping to dead center.
+// Vertical pan bound, measured against the visible play area. `overflow` is how
+// far each edge of the board sticks out past the play area (negative when the
+// board fits with room to spare). A taller board can travel that far to bring
+// its hidden rows into view; either way it gets PAN_GIVE_Y of slack on top. The
+// max(0, …) means a fitting board contributes no edge travel — just the give —
+// so the bound varies smoothly across the fits/overflows boundary.
 function boundY(effectiveH: number, playHeight: number) {
   'worklet';
   const overflow = (effectiveH - playHeight) / 2;
-  return overflow > 0
-    ? overflow + PAN_PADDING
-    : Math.max(0, -overflow - REST_EDGE_MARGIN);
+  return Math.max(0, overflow) + PAN_GIVE_Y;
 }
 
 // verticalChrome is the height the header + toolbar (plus safe-area insets) eat
