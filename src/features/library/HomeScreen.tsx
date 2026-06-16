@@ -49,7 +49,7 @@ import type {
   StreakCardStatus,
 } from '../../types';
 import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
-import { MoreHorizontal, ChevronDown } from 'lucide-react-native';
+import { MoreHorizontal, ChevronRight } from 'lucide-react-native';
 
 const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 
@@ -322,7 +322,7 @@ export function HomeScreen({
               {headerSection.label}
             </Text>
             {headerSection.isChallenge && (
-              <ChevronDown
+              <ChevronRight
                 size={20}
                 strokeWidth={2.5}
                 color={theme.text}

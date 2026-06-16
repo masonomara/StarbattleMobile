@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { usePuzzleStore } from './puzzleStore';
 import { recordStreak } from '../../shared/lib/progress';
 import { formatElapsedTime } from '../../shared/lib/time';
-import { STREAK_UNIT_KEY } from '../../shared/lib/streakDate';
 
 import { useTheme } from '../../shared/theme/useTheme';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
@@ -54,15 +53,25 @@ export function WinBanner({
 
   const [bannerHeight, setBannerHeight] = useState(0);
   const bannerTranslateY = useRef(new Animated.Value(0)).current;
+  // The streak count to show. Seeded from the reactive row (correct when
+  // viewing an already-completed puzzle); overwritten with the value returned
+  // by recordStreak for a fresh win, so the banner shows the right number
+  // immediately instead of the stale pre-completion count.
+  const [recordedStreak, setRecordedStreak] = useState<number | null>(null);
 
   const onLayout = (e: LayoutChangeEvent) => {
     setBannerHeight(e.nativeEvent.layout.height);
   };
 
   useEffect(() => {
-    if (!completed || !streakType || loadedAsCompleted) return;
-    recordStreak(streakType);
-  }, [completed, streakType, loadedAsCompleted]);
+    // Only the live current challenge advances the streak. Archive (past)
+    // puzzles have isLastPuzzle=false and must not record — otherwise replaying
+    // an old day would bump *today's* streak.
+    if (!completed || !streakType || loadedAsCompleted || !isLastPuzzle) return;
+    recordStreak(streakType).then(setRecordedStreak);
+  }, [completed, streakType, loadedAsCompleted, isLastPuzzle]);
+
+  const displayStreak = recordedStreak ?? streakCount;
 
   useEffect(() => {
     if (!bannerHeight) return;
@@ -126,9 +135,9 @@ export function WinBanner({
         {info}{' '}
         {streakType && (
           <Text role="body" style={styles.winInfo}>
-            {streakCount > 0
-              ? ` · ${t(`streaks.${STREAK_UNIT_KEY[streakType!]}`, {
-                  count: streakCount,
+            {displayStreak > 0
+              ? ` · ${t(`puzzle.winStreakCount${STREAK_INFO_SUFFIX[streakType!]}`, {
+                  count: displayStreak,
                 })}`
               : ``}
           </Text>

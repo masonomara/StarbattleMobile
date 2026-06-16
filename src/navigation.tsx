@@ -90,11 +90,7 @@ export function Navigation() {
         <Stack.Screen name="Home" component={WrappedHome} />
         <Stack.Screen name="Library" component={WrappedLibrary} />
         <Stack.Screen name="Puzzle" component={WrappedPuzzle} />
-        <Stack.Screen
-          name="ArchivePack"
-          component={WrappedArchivePack}
-          options={{ presentation: 'modal' }}
-        />
+        <Stack.Screen name="ArchivePack" component={WrappedArchivePack} />
         <Stack.Screen name="Tutorial" component={WrappedTutorial} />
       </Stack.Navigator>
       <SettingsModal />

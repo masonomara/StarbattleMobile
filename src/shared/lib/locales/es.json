@@ -33,13 +33,19 @@
     "winTutorialButton": "Empezar a jugar",
     "winSolvedHeadline": "Resuelto en {{time}}",
     "winPackInfo": "{{packName}} · Puzle {{n}}",
-    "winStreakInfoDay": "Racha diaria",
-    "winStreakInfoWeek": "Racha semanal",
-    "winStreakInfoMonth": "Racha mensual",
+    "winStreakInfoDay": "Desafío diario",
+    "winStreakInfoWeek": "Desafío semanal",
+    "winStreakInfoMonth": "Desafío mensual",
     "winBackHome": "Volver al inicio",
     "winNextPuzzle": "Siguiente puzle",
     "winBackToPack": "Volver a {{packName}}",
-    "winBackToPackFallback": "Volver al paquete"
+    "winBackToPackFallback": "Volver al paquete",
+    "winStreakCountDay_one": "racha de {{count}} día",
+    "winStreakCountDay_other": "racha de {{count}} días",
+    "winStreakCountWeek_one": "racha de {{count}} semana",
+    "winStreakCountWeek_other": "racha de {{count}} semanas",
+    "winStreakCountMonth_one": "racha de {{count}} mes",
+    "winStreakCountMonth_other": "racha de {{count}} meses"
   },
   "home": {
     "libraryTitle": "Biblioteca de puzles",

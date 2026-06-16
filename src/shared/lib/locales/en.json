@@ -33,13 +33,19 @@
     "winTutorialButton": "Start Playing",
     "winSolvedHeadline": "Solved in {{time}}",
     "winPackInfo": "{{packName}} · Puzzle {{n}}",
-    "winStreakInfoDay": "Day Streak",
-    "winStreakInfoWeek": "Week Streak",
-    "winStreakInfoMonth": "Month Streak",
+    "winStreakInfoDay": "Daily Challenge",
+    "winStreakInfoWeek": "Weekly Challenge",
+    "winStreakInfoMonth": "Monthly Challenge",
     "winBackHome": "Back to Home",
     "winNextPuzzle": "Next Puzzle",
     "winBackToPack": "Back to {{packName}}",
-    "winBackToPackFallback": "Back to Pack"
+    "winBackToPackFallback": "Back to Pack",
+    "winStreakCountDay_one": "{{count}}-day streak",
+    "winStreakCountDay_other": "{{count}}-day streak",
+    "winStreakCountWeek_one": "{{count}}-week streak",
+    "winStreakCountWeek_other": "{{count}}-week streak",
+    "winStreakCountMonth_one": "{{count}}-month streak",
+    "winStreakCountMonth_other": "{{count}}-month streak"
   },
   "home": {
     "libraryTitle": "Puzzle Library",

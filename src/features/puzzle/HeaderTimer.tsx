@@ -55,8 +55,6 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
     },
     timer: {
-      fontVariant: ['tabular-nums'],
       color: theme.text,
-      letterSpacing: 0,
     },
   });
