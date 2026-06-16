@@ -11,7 +11,6 @@ export function HeaderTimer() {
   const { t } = useTranslation();
   const timeMs = usePuzzleStore(s => s.timeMs);
   const completed = usePuzzleStore(s => s.completed);
-  const stars = usePuzzleStore(s => s.puzzle?.stars);
   const theme = useTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
@@ -43,11 +42,6 @@ export function HeaderTimer() {
 
   return (
     <View style={styles.container}>
-      {stars != null && (
-        <Text role="subhead" style={styles.stars}>
-          {t('puzzle.stars', { stars })}
-        </Text>
-      )}
       <Text role="headline" style={styles.timer}>
         {t('puzzle.timer', { time: formatElapsedTime(timeMs) })}
       </Text>
@@ -59,9 +53,6 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
       alignItems: 'center',
-    },
-    stars: {
-      color: theme.textSecondary,
     },
     timer: {
       fontVariant: ['tabular-nums'],

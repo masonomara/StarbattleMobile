@@ -26,10 +26,15 @@ declare global {
 // COMPONENTS
 
 export type CircleButtonProps = {
-  onPress: () => void;
+  onPress?: () => void;
   children: ReactNode;
   hitSlop?: number;
   ghost?: boolean;
+};
+
+export type StarIconProps = {
+  size: number;
+  color: string;
 };
 
 export type HeaderProps = {

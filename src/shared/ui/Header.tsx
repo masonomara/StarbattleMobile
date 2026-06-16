@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   },
   side: {
     width: 44,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     height: '100%',
   },

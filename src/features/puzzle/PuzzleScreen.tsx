@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import ChevronsRight from 'lucide-react-native/dist/cjs/icons/chevrons-right';
 import { CircleButton } from '../../shared/ui/CircleButton';
+import { StarIcon } from '../../shared/ui/StarIcon';
 import { Header } from '../../shared/ui/Header';
 import { HeaderTimer } from './HeaderTimer';
 import { PuzzleCanvas } from './PuzzleCanvas';
@@ -338,11 +339,23 @@ export function PuzzleScreen({
         left={
           isTutorial ? undefined : (
             <Animated.View
-              style={{ opacity: buttonOpacity }}
+              style={{
+                opacity: buttonOpacity,
+                gap: 12,
+                flexDirection: 'row',
+              }}
               pointerEvents={headerVisible ? 'auto' : 'none'}
             >
               <CircleButton onPress={() => navigation.goBack()}>
                 <ChevronLeft size={26} color={theme.text} />
+              </CircleButton>
+              <CircleButton>
+                <View style={styles.starCount}>
+                  <Text role="callout" style={styles.starNumber}>
+                    {puzzle.stars}
+                  </Text>
+                  <StarIcon size={14} color={theme.text} />
+                </View>
               </CircleButton>
             </Animated.View>
           )
@@ -459,6 +472,14 @@ const createStyles = (theme: Theme) =>
       zIndex: 200,
       height: 'auto',
       maxWidth: 309,
+    },
+    starCount: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
+    starNumber: {
+      fontWeight: '600',
     },
     skipButton: {
       backgroundColor: theme.surface,
