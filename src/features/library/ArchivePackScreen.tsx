@@ -380,10 +380,10 @@ function MonthGrid({
                 ]}
               >
                 {completed ? (
-                  <Check size={14} color={theme.background} strokeWidth={3} />
+                  <Check size={16} color={theme.background} strokeWidth={3} />
                 ) : (
                   <Text
-                    role="subhead"
+                    role="callout"
                     style={[styles.dayText, !challenge && styles.dayTextMuted]}
                   >
                     {day}
@@ -410,7 +410,6 @@ function WeekCalendar({
   onScroll,
   theme,
   styles,
-  t,
 }: CalendarProps & { width: number }) {
   const now = new Date();
   const currentWeekKey = getCurrentKey('weekly', now);
@@ -735,9 +734,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     day: {
       flex: 1,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: theme.border,
+
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -746,6 +743,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     dayCompleted: {
       backgroundColor: theme.text,
+      borderRadius: 8,
     },
     dayToday: {
       borderWidth: 1,
@@ -754,6 +752,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     dayText: {
       color: theme.text,
+      fontWeight: 600,
     },
     dayTextMuted: {
       color: theme.textSecondary,
