@@ -1,5 +1,4 @@
 import React, {
-  Fragment,
   useState,
   useEffect,
   useCallback,
@@ -17,7 +16,9 @@ import {
 } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { Text } from '../../shared/ui/Text';
-import X from 'lucide-react-native/dist/cjs/icons/x';
+import { CircleButton } from '../../shared/ui/CircleButton';
+import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
+import MoreHorizontal from 'lucide-react-native/dist/cjs/icons/ellipsis';
 import Check from 'lucide-react-native/dist/cjs/icons/check';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useTheme } from '../../shared/theme/useTheme';
 import { loadAllCompletionData } from '../../shared/lib/progress';
+import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
 import {
   getActiveStreak,
   getCurrentKey,
@@ -109,7 +111,7 @@ export function ArchivePackScreen({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createStyles(theme, insets), [theme, insets]);
 
   const { entitlements } = useEntitlements();
   const isPremium = entitlements.isPremium;
@@ -122,6 +124,9 @@ export function ArchivePackScreen({
   // Past challenge keys for this cadence (excludes today + the future).
   const dateKeys = useMemo(() => getPastDateKeys(type), [type]);
   const keySet = useMemo(() => new Set(dateKeys), [dateKeys]);
+  // The current period (today / this week / this month) isn't in keySet — it's
+  // the live challenge, played for free and stored without an archive key.
+  const currentKey = useMemo(() => getCurrentKey(type), [type]);
 
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -135,9 +140,17 @@ export function ArchivePackScreen({
     });
   }, []);
 
-  // Tapping a challenge: premium plays it, everyone else gets the paywall.
+  // Tapping a challenge: the current period opens the live puzzle (free, same as
+  // Home); past challenges are premium — everyone else gets the paywall.
   const onChallengePress = useCallback(
     (dateKey: string) => {
+      const catalog = useEntitlementsStore.getState().packCatalog;
+      const packId = catalog.find(p => p.type === type)?.id;
+      if (!packId) return;
+      if (dateKey === currentKey) {
+        navigation.navigate('Puzzle', { packId });
+        return;
+      }
       if (!isPremium) {
         Alert.alert(t('streaks.premiumTitle'), t('streaks.premiumBody'), [
           { text: t('streaks.notNow'), style: 'cancel' },
@@ -148,16 +161,15 @@ export function ArchivePackScreen({
         ]);
         return;
       }
-      const catalog = useEntitlementsStore.getState().packCatalog;
-      const packId = catalog.find(p => p.type === type)?.id;
-      if (!packId) return;
       navigation.navigate('Puzzle', { packId, archiveKey: dateKey });
     },
-    [isPremium, type, navigation, t],
+    [isPremium, type, navigation, t, currentKey],
   );
 
+  // One record per date (see usePackData): completion is stored under the
+  // live id whether the puzzle was played live or opened from the archive.
   const isCompleted = useCallback(
-    (dateKey: string) => completedIds.has(`${type}:archive:${dateKey}`),
+    (dateKey: string) => completedIds.has(`${type}:${dateKey}`),
     [completedIds, type],
   );
 
@@ -186,36 +198,29 @@ export function ArchivePackScreen({
   return (
     <View style={styles.container}>
       <View style={[styles.header, scrolled && styles.headerBorder]}>
-        <View style={styles.headerSide} />
-        <View style={styles.headerCenter}>
+        <CircleButton ghost onPress={() => navigation.goBack()}>
+          <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
+        </CircleButton>
+        <View>
           <Text role="title3" style={styles.headerTitle}>
             {t(`library.archiveHeader${capitalize(type)}`)}
           </Text>
+          <Text style={styles.bars} role="subhead">
+            {t('streaks.current')}:{' '}
+            {t(`streaks.${STREAK_UNIT_KEY[type]}`, { count: current })} ·{' '}
+            {t('streaks.best')}:{' '}
+            {t(`streaks.${STREAK_UNIT_KEY[type]}`, { count: best })}
+          </Text>
         </View>
-        <View style={styles.headerSide}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <X size={24} color={theme.text} />
-          </Pressable>
-        </View>
+        <CircleButton
+          ghost
+          onPress={() => useSettingsStore.getState().openSettings()}
+        >
+          <MoreHorizontal size={26} strokeWidth={2} color={theme.text} />
+        </CircleButton>
       </View>
 
       <View style={styles.body}>
-        <View style={styles.bars}>
-          <StreakBar
-            label={t('streaks.current')}
-            value={t(`streaks.${STREAK_UNIT_KEY[type]}`, { count: current })}
-            fillRatio={best > 0 ? current / best : current > 0 ? 1 : 0}
-            highlight
-            styles={styles}
-          />
-          <StreakBar
-            label={t('streaks.best')}
-            value={t(`streaks.${STREAK_UNIT_KEY[type]}`, { count: best })}
-            fillRatio={best > 0 ? 1 : 0}
-            styles={styles}
-          />
-        </View>
-
         {!isPremium && (
           <View style={styles.lockNote}>
             <Lock size={13} color={theme.textSecondary} strokeWidth={2.5} />
@@ -228,47 +233,10 @@ export function ArchivePackScreen({
         {type === 'daily' ? (
           <MonthCalendar width={width} {...calendarProps} />
         ) : type === 'weekly' ? (
-          <WeekCalendar {...calendarProps} />
+          <WeekCalendar width={width} {...calendarProps} />
         ) : (
           <YearCalendar width={width} {...calendarProps} />
         )}
-      </View>
-    </View>
-  );
-}
-
-// ── Streak bar ──────────────────────────────────────────────────────────────
-// A horizontal bar whose fill shows current relative to best.
-function StreakBar({
-  label,
-  value,
-  fillRatio,
-  highlight,
-  styles,
-}: {
-  label: string;
-  value: string;
-  fillRatio: number;
-  highlight?: boolean;
-  styles: Styles;
-}) {
-  const pct = Math.max(0, Math.min(1, fillRatio)) * 100;
-  return (
-    <View style={styles.bar}>
-      <View
-        style={[
-          styles.barFill,
-          { width: `${pct}%` },
-          highlight ? styles.barFillHighlight : styles.barFillMuted,
-        ]}
-      />
-      <View style={styles.barContent}>
-        <Text role="subhead" style={styles.barLabel}>
-          {label}
-        </Text>
-        <Text role="headline" style={styles.barValue}>
-          {value}
-        </Text>
       </View>
     </View>
   );
@@ -379,9 +347,9 @@ function MonthGrid({
       <View style={styles.monthTitleRow}>
         <Text
           role="title3"
-          style={[styles.monthTitle, isCurrentMonth && { color: theme.blue }]}
+          style={[styles.monthTitle, isCurrentMonth && { color: theme.text }]}
         >
-          {monthName}
+          {monthName}&nbsp;
         </Text>
         <Text role="subhead" style={styles.monthYear}>
           {year}
@@ -394,12 +362,12 @@ function MonthGrid({
           }
           const key = `${year}-${pad(month + 1)}-${pad(day)}`;
           const challenge = keySet.has(key);
-          const completed = challenge && isCompleted(key);
           const today = key === todayKey;
+          const completed = (challenge || today) && isCompleted(key);
           return (
             <Pressable
               key={key}
-              disabled={!challenge}
+              disabled={!challenge && !today}
               onPress={() => onPress(key)}
               style={[styles.dayCell, { width: cell, height: cell }]}
             >
@@ -434,6 +402,7 @@ function MonthGrid({
 // Apple Calendar's week list: weeks stacked vertically under month headers,
 // each a tappable row showing its date span. Opens on the most recent week.
 function WeekCalendar({
+  width,
   insets,
   keySet,
   isCompleted,
@@ -442,7 +411,7 @@ function WeekCalendar({
   theme,
   styles,
   t,
-}: CalendarProps) {
+}: CalendarProps & { width: number }) {
   const now = new Date();
   const currentWeekKey = getCurrentKey('weekly', now);
   const weekKeys = useMemo(() => {
@@ -457,9 +426,32 @@ function WeekCalendar({
     }
     return out;
   }, [currentWeekKey]);
+  // Group weeks into month sections (an ISO week belongs to its Thursday's
+  // month) so each section can render as a 2-wide grid.
+  const sections = useMemo(() => {
+    const out: { id: string; label: string; weeks: string[] }[] = [];
+    for (const key of weekKeys) {
+      const monday = archiveKeyToDate('weekly', key);
+      const thursday = new Date(monday.getTime() + 3 * MS_PER_DAY);
+      const id = `${thursday.getFullYear()}-${thursday.getMonth()}`;
+      let section = out[out.length - 1];
+      if (!section || section.id !== id) {
+        section = {
+          id,
+          label: thursday.toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric',
+          }),
+          weeks: [],
+        };
+        out.push(section);
+      }
+      section.weeks.push(key);
+    }
+    return out;
+  }, [weekKeys]);
+  const tile = Math.floor((width - 2 * 24 - 12) / 2);
   const scroll = useScrollToEndOnce();
-
-  let lastSection = '';
 
   return (
     <ScrollView
@@ -473,68 +465,54 @@ function WeekCalendar({
         { paddingBottom: insets.bottom + 32 },
       ]}
     >
-      {weekKeys.map(key => {
-        const monday = archiveKeyToDate('weekly', key);
-        // ISO weeks belong to the month/year of their Thursday.
-        const thursday = new Date(monday.getTime() + 3 * MS_PER_DAY);
-        const section = `${thursday.getFullYear()}-${thursday.getMonth()}`;
-        const showHeader = section !== lastSection;
-        lastSection = section;
+      {sections.map(section => (
+        <View key={section.id} style={styles.weekBlock}>
+          <Text role="title3" style={styles.sectionHeader}>
+            {section.label}
+          </Text>
+          <View style={styles.weekGrid}>
+            {section.weeks.map(key => {
+              const monday = archiveKeyToDate('weekly', key);
+              const isCurrent = key === currentWeekKey;
+              const challenge = keySet.has(key);
+              const completed = (challenge || isCurrent) && isCompleted(key);
 
-        const isCurrent = key === currentWeekKey;
-        const challenge = keySet.has(key);
-        const completed = challenge && isCompleted(key);
-        const weekNo = Number(key.split('-W')[1]);
-
-        return (
-          <Fragment key={key}>
-            {showHeader && (
-              <Text role="headline" style={styles.sectionHeader}>
-                {thursday.toLocaleDateString('en-US', {
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </Text>
-            )}
-            <Pressable
-              disabled={!challenge}
-              onPress={() => onPress(key)}
-              style={[
-                styles.weekRow,
-                completed && styles.weekRowCompleted,
-                isCurrent && styles.weekRowCurrent,
-              ]}
-            >
-              <View>
-                <Text
-                  role="headline"
+              return (
+                <Pressable
+                  key={key}
+                  disabled={!isCurrent && !challenge}
+                  onPress={() => onPress(key)}
                   style={[
-                    styles.weekRange,
-                    completed && { color: theme.background },
+                    styles.weekRow,
+                    { width: tile },
+                    completed && styles.weekRowCompleted,
+                    isCurrent && styles.weekRowCurrent,
                   ]}
                 >
-                  {weekRangeLabel(monday)}
-                </Text>
-                <Text
-                  role="subhead"
-                  style={[
-                    styles.weekSub,
-                    completed && styles.weekSubCompleted,
-                    completed && { color: theme.background },
-                  ]}
-                >
-                  {isCurrent
-                    ? t('library.currentWeek')
-                    : t('library.weekLabel', { n: weekNo })}
-                </Text>
-              </View>
-              {completed && (
-                <Check size={20} color={theme.background} strokeWidth={3} />
-              )}
-            </Pressable>
-          </Fragment>
-        );
-      })}
+                  {completed && (
+                    <View style={styles.monthTileCheck}>
+                      <Check
+                        size={14}
+                        color={theme.background}
+                        strokeWidth={3}
+                      />
+                    </View>
+                  )}
+                  <Text
+                    role="callout"
+                    style={[
+                      styles.weekRange,
+                      completed && { color: theme.background },
+                    ]}
+                  >
+                    {weekRangeLabel(monday)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ))}
     </ScrollView>
   );
 }
@@ -586,15 +564,15 @@ function YearCalendar({
             {Array.from({ length: 12 }, (_, m) => {
               const key = `${year}-${pad(m + 1)}`;
               const challenge = keySet.has(key);
-              const completed = challenge && isCompleted(key);
               const isCurrent = key === currentMonthKey;
+              const completed = (challenge || isCurrent) && isCompleted(key);
               const short = new Date(year, m, 1).toLocaleDateString('en-US', {
                 month: 'short',
               });
               return (
                 <Pressable
                   key={m}
-                  disabled={!challenge}
+                  disabled={!isCurrent && !challenge}
                   onPress={() => onPress(key)}
                   style={[
                     styles.monthTile,
@@ -614,7 +592,7 @@ function YearCalendar({
                     </View>
                   )}
                   <Text
-                    role="headline"
+                    role="callout"
                     style={[
                       styles.monthTileText,
                       completed && { color: theme.background },
@@ -634,53 +612,46 @@ function YearCalendar({
   );
 }
 
-const createStyles = (theme: Theme) =>
+const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
 
     header: {
-      height: 70,
-      paddingTop: 24,
-      paddingBottom: 12,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 100,
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: 16,
+      height: SCREEN_HEADER_HEIGHT + insets.top,
+      paddingTop: insets.top,
+      backgroundColor: theme.background,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.background,
     },
     // Bottom hairline shown once a calendar scrolls off the top.
     headerBorder: {
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
-    headerSide: {
-      width: 44,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    headerCenter: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     headerTitle: {
+      textAlign: 'center',
       color: theme.text,
     },
     body: {
       flex: 1,
-      paddingTop: 8,
+      paddingTop: SCREEN_HEADER_HEIGHT + insets.top + 8,
     },
     // Streak bars
     bars: {
-      paddingHorizontal: 24,
-      gap: 20,
       flexDirection: 'row',
+      color: theme.textSecondary,
+      marginTop: 3,
     },
     bar: {
-      height: 56,
-      borderRadius: theme.radiusMd,
-      borderWidth: 1,
-      flex: 1,
-      borderColor: theme.border,
-      overflow: 'hidden',
       justifyContent: 'center',
     },
     barFill: {
@@ -702,10 +673,10 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: 16,
     },
     barLabel: {
-      color: theme.textSecondary,
+      color: theme.text,
     },
     barValue: {
-      color: theme.text,
+      color: theme.textSecondary,
     },
     lockNote: {
       flexDirection: 'row',
@@ -742,13 +713,12 @@ const createStyles = (theme: Theme) =>
       color: theme.textSecondary,
     },
     monthBlock: {
-      marginBottom: 28,
+      marginBottom: 22,
     },
     monthTitleRow: {
       flexDirection: 'row',
       alignItems: 'baseline',
-      gap: 8,
-      marginBottom: 12,
+      marginBottom: 14,
     },
     monthTitle: {
       color: theme.text,
@@ -761,11 +731,13 @@ const createStyles = (theme: Theme) =>
       flexWrap: 'wrap',
     },
     dayCell: {
-      padding: 3,
+      padding: 4,
     },
     day: {
       flex: 1,
-      borderRadius: 999,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -776,8 +748,9 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.text,
     },
     dayToday: {
-      borderWidth: 1.5,
-      borderColor: theme.blue,
+      borderWidth: 1,
+      borderColor: theme.text,
+      backgroundColor: theme.text,
     },
     dayText: {
       color: theme.text,
@@ -787,32 +760,39 @@ const createStyles = (theme: Theme) =>
       opacity: 0.5,
     },
 
-    // Weekly — week list
+    // Weekly — week grid (2-wide, grouped by month)
     sectionHeader: {
       color: theme.text,
-      marginBottom: 10,
-      marginTop: 4,
+      marginBottom: 14,
+      marginTop: 0,
+    },
+    weekBlock: {
+      marginBottom: 22,
+    },
+    weekGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
     },
     weekRow: {
-      flexDirection: 'row',
+      height: 48,
+      borderRadius: 8,
       alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: theme.surface,
-      borderRadius: theme.radiusMd,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      marginBottom: 8,
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     weekRowCompleted: {
       backgroundColor: theme.text,
     },
     weekRowCurrent: {
       backgroundColor: 'transparent',
-      borderWidth: 1.5,
-      borderColor: theme.blue,
+      borderWidth: 1,
+      borderColor: theme.text,
     },
     weekRange: {
       color: theme.text,
+      fontWeight: 600,
     },
     weekSub: {
       color: theme.textSecondary,
@@ -836,10 +816,12 @@ const createStyles = (theme: Theme) =>
       gap: 12,
     },
     monthTile: {
-      height: 64,
-      borderRadius: theme.radiusMd,
+      height: 48,
+      borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     monthTileChallenge: {
       backgroundColor: theme.surface,
@@ -848,7 +830,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.text,
     },
     monthTileCurrent: {
-      borderWidth: 1.5,
+      borderWidth: 1,
       borderColor: theme.blue,
     },
     monthTileCheck: {
@@ -858,6 +840,7 @@ const createStyles = (theme: Theme) =>
     },
     monthTileText: {
       color: theme.text,
+      fontWeight: '600',
     },
     monthTileTextMuted: {
       color: theme.textSecondary,

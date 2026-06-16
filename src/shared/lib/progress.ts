@@ -189,9 +189,12 @@ export async function loadStreaks(): Promise<Streak[]> {
   }));
 }
 
-export async function recordStreak(type: StreakType): Promise<void> {
+// Records a completion of the current period and returns the resulting current
+// streak count (so callers can display it immediately, without waiting for the
+// reactive streak query to round-trip).
+export async function recordStreak(type: StreakType): Promise<number> {
   const userId = useAuthStore.getState().user?.id;
-  if (!userId) return;
+  if (!userId) return 0;
 
   const currentKey = getCurrentKey(type);
 
@@ -205,12 +208,15 @@ export async function recordStreak(type: StreakType): Promise<void> {
     [userId, type],
   );
 
-  if (existing?.last_completed_key === currentKey) return;
+  // Already recorded for this period — return the existing count unchanged.
+  if (existing?.last_completed_key === currentKey) return existing.current_count;
 
   // Reject if the device clock appears to have been set backwards — ISO keys
   // are zero-padded and sort lexicographically, so a key that is less than
   // an already-recorded key means the clock has moved backward.
-  if (existing && currentKey < existing.last_completed_key) return;
+  if (existing && currentKey < existing.last_completed_key) {
+    return existing.current_count;
+  }
 
   const prevKey = getPreviousKey(type);
   const newCount =
@@ -218,4 +224,5 @@ export async function recordStreak(type: StreakType): Promise<void> {
   const bestCount = Math.max(existing?.best_count ?? 0, newCount);
 
   await saveStreak(type, newCount, bestCount, currentKey);
+  return newCount;
 }

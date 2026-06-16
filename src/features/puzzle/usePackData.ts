@@ -53,11 +53,10 @@ export function usePackData(
 
           setPackData({
             rawPuzzle: pack.puzzles[idx],
-            // Archive puzzles get a distinct ID so their progress is stored
-            // separately from the live daily/weekly/monthly puzzle.
-            puzzleId: archiveKey
-              ? `${streakType}:archive:${key}`
-              : `${streakType}:${key}`,
+            // A given date has one progress record, whether it was played live
+            // that day or opened later from the archive — so the archive shows
+            // the same completion/solution you already have for that date.
+            puzzleId: `${streakType}:${key}`,
             gridSize: pack.gridSize,
             packName: pack.name,
             // Archive puzzles are never the "last" puzzle in a sequence.
