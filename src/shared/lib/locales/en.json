@@ -50,9 +50,9 @@
     "packStar_other": "{{count}}-star"
   },
   "library": {
-    "archiveHeaderDaily": "Past Daily Challenges",
-    "archiveHeaderWeekly": "Past Weekly Challenges",
-    "archiveHeaderMonthly": "Past Monthly Challenges",
+    "archiveHeaderDaily": "Daily Challenges",
+    "archiveHeaderWeekly": "Weekly Challenges",
+    "archiveHeaderMonthly": "Monthly Challenges",
     "packMeta": "{{star}} · {{completed}}/{{total}}",
     "streakStatusNotStarted": "Not started",
     "streakStatusInProgress": "In progress",
@@ -69,7 +69,7 @@
     "labelWeekly": "Weekly",
     "labelMonthly": "Monthly",
     "best": "Best",
-    "current": "Current",
+    "current": "Current Streak",
     "day_one": "{{count}} day",
     "day_other": "{{count}} days",
     "week_one": "{{count}} week",

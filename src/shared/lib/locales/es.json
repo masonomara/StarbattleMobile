@@ -50,9 +50,9 @@
     "packStar_other": "{{count}} estrellas"
   },
   "library": {
-    "archiveHeaderDaily": "Desafíos diarios anteriores",
-    "archiveHeaderWeekly": "Desafíos semanales anteriores",
-    "archiveHeaderMonthly": "Desafíos mensuales anteriores",
+    "archiveHeaderDaily": "Diarios anteriores",
+    "archiveHeaderWeekly": "Semanales anteriores",
+    "archiveHeaderMonthly": "Mensuales anteriores",
     "packMeta": "{{star}} · {{completed}}/{{total}}",
     "streakStatusNotStarted": "No iniciado",
     "streakStatusInProgress": "En curso",
@@ -69,7 +69,7 @@
     "labelWeekly": "Semanal",
     "labelMonthly": "Mensual",
     "best": "Mejor",
-    "current": "Actual",
+    "current": "Racha Actual",
     "day_one": "{{count}} día",
     "day_other": "{{count}} días",
     "week_one": "{{count}} semana",
