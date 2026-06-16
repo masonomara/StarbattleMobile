@@ -97,7 +97,7 @@ const createStyles = (theme: Theme) =>
     secondaryButton: {
       height: 48,
       flex: 1,
-      borderRadius: 8,
+      borderRadius: 800,
       borderWidth: 1,
       borderColor: theme.border,
       alignItems: 'center',
@@ -108,7 +108,7 @@ const createStyles = (theme: Theme) =>
     destructiveButton: {
       height: 48,
       flex: 1,
-      borderRadius: 8,
+      borderRadius: 800,
       borderWidth: 1,
       borderColor: theme.border,
       alignItems: 'center',

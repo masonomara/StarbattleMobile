@@ -482,7 +482,7 @@ export function AccountSection() {
           </View>
 
           <View style={styles.infoRow}>
-            <Text role="subhead" style={styles.infoLabel}>
+            <Text role="body" style={styles.infoLabel}>
               {t('account.accountType')}
             </Text>
             <Text role="body" style={styles.infoValue}>
@@ -564,7 +564,7 @@ const createStyles = (theme: Theme) =>
     infoRowFirst: {
       borderTopWidth: 0,
     },
-    infoLabel: { color: theme.text, fontWeight: '600' },
+    infoLabel: { color: theme.text },
     infoValue: {
       color: theme.textSecondary,
       maxWidth: 240,
@@ -573,7 +573,7 @@ const createStyles = (theme: Theme) =>
     },
     primaryButton: {
       height: 48,
-      borderRadius: 8,
+      borderRadius: 800,
 
       alignItems: 'center',
       justifyContent: 'center',
@@ -587,7 +587,7 @@ const createStyles = (theme: Theme) =>
     secondaryButton: {
       height: 48,
       flex: 1,
-      borderRadius: 8,
+      borderRadius: 800,
       borderWidth: 2,
       borderColor: theme.border,
       alignItems: 'center',
@@ -604,7 +604,7 @@ const createStyles = (theme: Theme) =>
     linkButton: {
       height: 48,
       flex: 1,
-      borderRadius: 8,
+      borderRadius: 800,
       borderWidth: 2,
       borderColor: theme.border,
       alignItems: 'center',
