@@ -79,11 +79,11 @@ export function StreakCardSkeleton({ size, theme }: StreakCardSkeletonProps) {
         baseColor={theme.border}
         style={styles.label}
       />
-      {/* subhead meta line: 15/20, butted directly under the title (no gap). */}
+      {/* body meta line: 17/22, butted directly under the title (no gap). */}
       <PulseLine
         width={140}
-        lineHeight={20}
-        barHeight={11}
+        lineHeight={22}
+        barHeight={12}
         radius={4}
         baseColor={theme.border}
       />

@@ -66,8 +66,10 @@ const SKELETON_PACK_COUNT = 4;
 const STREAK_CARD_FRACTION = 0.75;
 // Horizontal gap between streak cards (matches the carousel's contentContainer gap).
 const STREAK_CARD_GAP = 12;
-// Left inset of the streak carousel from the screen edge.
-const STREAK_ROW_PADDING = 16;
+// Left inset of the streak carousel from the screen edge. Matches the screen's
+// 20px horizontal margin (header + packSection paddingHorizontal) so the first
+// card's edge lines up with the library cards below.
+const STREAK_ROW_PADDING = 20;
 // Card chrome around the thumbnail — must match StreakCard's own `padding` and
 // `borderWidth`. The carousel snaps/measures on the card's outer edge, so its
 // footprint is the thumbnail plus this chrome on each side.

@@ -101,11 +101,11 @@ export function PackCardSkeleton({ theme }: PackCardSkeletonProps) {
           barHeight={12}
           baseColor={theme.border}
         />
-        {/* subhead meta line: 15/20, butted under the name like the real card. */}
+        {/* body meta line: 17/22, butted under the name like the real card. */}
         <PulseLine
           width={56}
-          lineHeight={20}
-          barHeight={11}
+          lineHeight={22}
+          barHeight={12}
           baseColor={theme.border}
         />
       </View>
