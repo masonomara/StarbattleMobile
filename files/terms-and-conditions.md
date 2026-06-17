@@ -10,7 +10,7 @@ By downloading or using Star Battle Free ("the App"), you agree to these Terms o
 
 ## 2. License
 
-O'Mara Technology grants you a personal, non-exclusive, non-transferable, revocable license to use the App on a mobile device that you own or control, for your personal, non-commercial use. Your use is also subject to the terms of the app store from which you obtained the App — the Apple Media Services Terms and Conditions (App Store) or the Google Play Terms of Service (Google Play), as applicable.
+O'Mara Technology & Design grants you a personal, non-exclusive, non-transferable, revocable license to use the App on a mobile device that you own or control, for your personal, non-commercial use. Your use is also subject to the terms of the app store from which you obtained the App — the Apple Media Services Terms and Conditions (App Store) or the Google Play Terms of Service (Google Play), as applicable.
 
 You may not:
 
@@ -47,7 +47,7 @@ You agree not to:
 
 ## 6. Intellectual Property
 
-All puzzle content, artwork, and software in the App are owned by O'Mara Technology or its licensors. Certain visual themes are used under open-source licenses, as described on our [Credits](https://www.starbattlefree.com/credits) page. These Terms do not grant you any rights to our trademarks or intellectual property beyond the license in Section 2.
+All puzzle content, artwork, and software in the App are owned by O'Mara Technology & Design or its licensors. Certain visual themes are used under open-source licenses, as described on our [Credits](https://www.starbattlefree.com/credits) page. These Terms do not grant you any rights to our trademarks or intellectual property beyond the license in Section 2.
 
 ## 7. Disclaimer of Warranties
 
@@ -55,7 +55,7 @@ THE APP IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT 
 
 ## 8. Limitation of Liability
 
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, OMARA TECHNOLOGY DESIGN SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE APP, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING FROM THESE TERMS OR THE APP SHALL NOT EXCEED THE AMOUNT YOU PAID US IN THE TWELVE MONTHS PRECEDING THE CLAIM.
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, O'MARA TECHNOLOGY & DESIGN SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE APP, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING FROM THESE TERMS OR THE APP SHALL NOT EXCEED THE AMOUNT YOU PAID US IN THE TWELVE MONTHS PRECEDING THE CLAIM.
 
 Nothing in these Terms limits liability that cannot be excluded under applicable law (including consumer protection statutes).
 
@@ -69,7 +69,7 @@ These Terms are governed by the laws of the State of California, United States, 
 
 ## 11. Platform Providers (Apple and Google)
 
-These Terms are between you and O'Mara Technology, not Apple or Google.
+These Terms are between you and O'Mara Technology & Design, not Apple or Google.
 
 **If you obtained the App from the Apple App Store:** Apple is not responsible for the App or its content and has no obligation to provide support. Apple and its subsidiaries are third-party beneficiaries of these Terms and may enforce them against you. In the event of any conflict between these Terms and the Apple Media Services Terms and Conditions, the Apple terms govern with respect to Apple's services.
 
@@ -81,5 +81,5 @@ We may update these Terms. Continued use of the App after changes constitutes ac
 
 ## 13. Contact
 
-**O'Mara Technology**
+**O'Mara Technology & Design**
 [mason@omaratechnology.com](mailto:mason@omaratechnology.com)

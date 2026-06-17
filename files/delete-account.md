@@ -2,7 +2,7 @@
 
 # Delete Your Account
 
-Star Battle Free is operated by O'Mara Technology. You can delete your account and all associated data at any time, using either of the methods below.
+Star Battle Free is operated by O'Mara Technology & Design. You can delete your account and all associated data at any time, using either of the methods below.
 
 ## What gets deleted
 
@@ -15,7 +15,7 @@ When your account is deleted, we permanently remove the following from our serve
 
 This action is permanent and cannot be undone. Access to previously purchased content cannot be restored after deletion.
 
-**Note on store purchases:** Purchases are processed by Apple (App Store) or Google (Google Play). Those stores keep their own transaction records under their own policies, which are outside our control. Deleting your O'Mara Technology account does not request a refund — refunds are handled by Apple or Google.
+**Note on store purchases:** Purchases are processed by Apple (App Store) or Google (Google Play). Those stores keep their own transaction records under their own policies, which are outside our control. Deleting your O'Mara Technology & Design account does not request a refund — refunds are handled by Apple or Google.
 
 ## Option 1 — Delete in the app
 
@@ -37,5 +37,5 @@ Please send your request from the email address associated with your account, an
 
 For anything else, see our [Support](https://www.starbattlefree.com/support) and [Privacy Policy](https://www.starbattlefree.com/privacy-policy) pages, or contact us at [mason@omaratechnology.com](mailto:mason@omaratechnology.com).
 
-**O'Mara Technology**
+**O'Mara Technology & Design**
 [mason@omaratechnology.com](mailto:mason@omaratechnology.com)

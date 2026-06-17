@@ -6,7 +6,7 @@ Last updated: June 2026
 
 ## 1. Overview
 
-Star Battle Free ("the App") is operated by O'Mara Technology ("we", "us", "our"). This policy explains what data we collect, why we collect it, and your rights over it. It applies to the App however you obtained it, including from the Apple App Store and Google Play.
+Star Battle Free ("the App") is operated by O'Mara Technology & Design ("we", "us", "our"). This policy explains what data we collect, why we collect it, and your rights over it. It applies to the App however you obtained it, including from the Apple App Store and Google Play.
 
 ## 2. Data We Collect
 
@@ -31,6 +31,19 @@ If you choose to create an account, we additionally collect:
 
 In-app purchases are processed by the app store you downloaded the App from — Apple (via the App Store) or Google (via Google Play). We use Adapty (adapty.io) to verify purchase receipts and manage entitlements across both platforms. We receive a confirmation of your purchase (product ID and entitlement status) but do not receive your payment card details.
 
+### Performance and Diagnostics
+
+In published (App Store and Google Play) versions of the App, we collect a small set of first-party performance and engagement events to measure and improve speed, reliability, and gameplay. This data is sent only to our own servers; it is **not** collected in development builds and is **not** shared with advertising or analytics networks.
+
+The events we record are: app start, puzzle opened, puzzle completed, hint loaded, app errors, and performance stalls. Each event is stored with:
+
+- A timestamp and a session identifier (regenerated each time you open the App)
+- Your anonymous user identifier (the same UUID described above)
+- The app version and platform (iOS or Android)
+- Timing and related values — for example, how long a puzzle took to load or solve, and how many hints were used
+
+These events are tied to your anonymous identifier so we can group them by session and app version. They are not associated with your name or email, and we do not use them to build an advertising profile or to track you across other apps or websites.
+
 ## 3. How We Use Your Data
 
 | Data                           | Purpose                                              |
@@ -38,6 +51,7 @@ In-app purchases are processed by the app store you downloaded the App from — 
 | Anonymous UUID + gameplay data | Sync progress across app restarts; calculate streaks |
 | Email address                  | Account authentication; account recovery             |
 | Purchase confirmation          | Unlock purchased content; restore purchases          |
+| Performance and diagnostic events | Measure and improve load times, reliability, and gameplay |
 
 We do not sell or share your data for advertising. We do not use your data for advertising. We do not use third-party advertising or analytics SDKs that track you across other apps or websites.
 
@@ -60,6 +74,7 @@ The App uses the following third-party services, each with their own privacy pol
 - **Anonymous sessions:** Retained until you delete the App or use Delete Account in Settings.
 - **Named accounts:** Retained until you request deletion (see Section 6), which permanently removes your account and all associated data from our servers.
 - **Purchase records:** Adapty retains transaction records per its own policy. Apple and Google each retain store transaction records per their respective policies.
+- **Performance and diagnostic events:** Retained in aggregate to monitor and improve the App. These events are tied only to your anonymous identifier, not to your name or email.
 
 ## 6. Your Rights
 
@@ -100,5 +115,5 @@ We may update this policy. When we do, we will update the "Last updated" date at
 
 ## 9. Contact
 
-**O'Mara Technology**
+**O'Mara Technology & Design**
 [mason@omaratechnology.com](mailto:mason@omaratechnology.com)
