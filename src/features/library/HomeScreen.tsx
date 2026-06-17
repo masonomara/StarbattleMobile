@@ -510,6 +510,8 @@ const createStyles = (
       paddingHorizontal: 20,
       height: HEADER_HEIGHT + insets.top,
       backgroundColor: theme.background,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.background,
     },
     // Bottom hairline shown once the page scrolls, detaching the header from
     // the content beneath it.

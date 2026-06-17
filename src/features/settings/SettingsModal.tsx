@@ -113,6 +113,8 @@ const createStyles = (theme: Theme) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.background,
     },
     // Bottom hairline shown once the settings list scrolls off the top.
     headerBorder: {
