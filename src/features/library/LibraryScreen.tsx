@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
-import { MoreHorizontal, Lock, Check } from 'lucide-react-native';
+import { MoreHorizontal, Check } from 'lucide-react-native';
 import { CircleButton } from '../../shared/ui/CircleButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPuzzlesForPack } from '../../packs';
@@ -79,67 +79,46 @@ const PuzzleCell = React.memo(function PuzzleCell({
 
   return (
     <Pressable
-      style={[
-        styles.cell,
-        { width: cellSize, height: cellSize },
-        locked && styles.lockedCell,
-      ]}
+      style={[styles.cell, { width: cellSize }, locked && styles.lockedCell]}
       onPress={() => (locked ? onLockedPress(index) : onPress(index))}
     >
-      <View style={styles.overlay} pointerEvents="none">
-        <View style={styles.numberCircle}>
-          <Text
-            style={[
-              styles.cellNumber,
-              isCompleted && styles.cellNumberCompleted,
-              locked && styles.cellNumberLocked,
-            ]}
-            role="title3"
-          >
-            {index + 1}
-          </Text>
-        </View>
-        {isCompleted && (
-          <View
-            style={[
-              styles.cornerBadge,
-              styles.cornerBadgeCompleted,
-              { width: 20, height: 20, borderRadius: 100 },
-            ]}
-          >
-            <Check size={11} strokeWidth={3} color={theme.background} />
-          </View>
+      <View style={{ width: cellSize, height: cellSize }}>
+        {puzzle && (
+          <PuzzleThumbnail
+            puzzle={puzzle}
+            size={cellSize}
+            theme={theme}
+            coloredRegions={coloredRegions}
+            regionBorderTarget={2.1}
+            regionBorderCapFrac={0.15}
+            regionBorderMin={0.9}
+            gridLineTarget={0.7}
+            gridLineCapFrac={0.05}
+            gridLineMin={0.3}
+          />
         )}
-        {/*{locked && (
-          <View
-            style={[
-              styles.cornerBadge,
-              styles.cornerBadgeLocked,
-              { width: badge, height: badge, borderRadius: badge / 2 },
-            ]}
-          >
-            <Lock
-              size={Math.round(badge * 0.54)}
-              strokeWidth={2.5}
-              color={theme.textSecondary}
-            />
-          </View>
-        )}*/}
       </View>
-      {puzzle && (
-        <PuzzleThumbnail
-          puzzle={puzzle}
-          size={cellSize}
-          theme={theme}
-          coloredRegions={coloredRegions}
-          regionBorderTarget={2.1}
-          regionBorderCapFrac={0.15}
-          regionBorderMin={0.9}
-          gridLineTarget={0.7}
-          gridLineCapFrac={0.05}
-          gridLineMin={0.3}
-        />
-      )}
+      <View style={styles.labelRow}>
+        {isCompleted && (
+          <Check
+            size={9}
+            strokeWidth={4}
+            color={theme.text}
+            style={{ marginLeft: -3 }}
+          />
+        )}
+        <Text
+          style={[
+            styles.cellLabel,
+            isCompleted && styles.cellNumberCompleted,
+            locked && styles.cellNumberLocked,
+          ]}
+          role="caption1"
+          numberOfLines={1}
+        >
+          Puzzle {index + 1}
+        </Text>
+      </View>
     </Pressable>
   );
 });
@@ -214,34 +193,31 @@ export function LibraryScreen({
     [navigation, packId],
   );
 
-  const handleLockedPress = useCallback(
-    (index: number) => {
-      if (!isFree && !hasPackAccess(packId)) {
-        if (storagePath !== undefined) {
-          setPaywallContext({
-            type: 'paid-pack',
-            packId,
-            packName,
-            storagePath,
-          });
-        } else {
-          setPaywallContext({ type: 'unavailable', packId, packName });
-        }
-        return;
+  const handleLockedPress = useCallback(() => {
+    if (!isFree && !hasPackAccess(packId)) {
+      if (storagePath !== undefined) {
+        setPaywallContext({
+          type: 'paid-pack',
+          packId,
+          packName,
+          storagePath,
+        });
+      } else {
+        setPaywallContext({ type: 'unavailable', packId, packName });
       }
-      // Sequential lock on a free pack: a native alert mirroring the premium
-      // prompt in ArchivePackScreen. "Unlock All" routes to settings, where the
-      // premium purchase lives.
-      Alert.alert(t('paywall.lockedTitle'), t('paywall.lockedBody'), [
-        { text: t('streaks.notNow'), style: 'cancel' },
-        {
-          text: t('paywall.unlockAll'),
-          onPress: () => useSettingsStore.getState().openSettings(),
-        },
-      ]);
-    },
-    [isFree, hasPackAccess, packId, storagePath, packName, t],
-  );
+      return;
+    }
+    // Sequential lock on a free pack: a native alert mirroring the premium
+    // prompt in ArchivePackScreen. "Unlock All" routes to settings, where the
+    // premium purchase lives.
+    Alert.alert(t('paywall.lockedTitle'), t('paywall.lockedBody'), [
+      { text: t('streaks.notNow'), style: 'cancel' },
+      {
+        text: t('paywall.unlockAll'),
+        onPress: () => useSettingsStore.getState().openSettings(),
+      },
+    ]);
+  }, [isFree, hasPackAccess, packId, storagePath, packName, t]);
 
   const sections = useMemo(
     () =>
@@ -306,7 +282,7 @@ export function LibraryScreen({
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
-        <Text role="headline" style={styles.headerTitle}>
+        <Text role="title3" style={styles.headerTitle}>
           {packName}
         </Text>
         <CircleButton
@@ -433,32 +409,22 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     cell: {
       position: 'relative',
+      alignItems: 'center',
     },
     lockedCell: {
       opacity: 0.33,
     },
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
+    labelRow: {
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 200,
+      gap: 3,
+      marginTop: 5,
     },
-    numberCircle: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.background,
-      shadowColor: theme.background,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 1,
-      shadowRadius: 6,
-    },
-    cellNumber: {
+    cellLabel: {
       color: theme.text,
       fontWeight: '600',
-      textAlign: 'center',
+      textAlign: 'left',
     },
     cellNumberCompleted: {
       color: theme.text,
@@ -472,9 +438,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       right: 4,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    cornerBadgeCompleted: {
-      backgroundColor: theme.green,
     },
     cornerBadgeLocked: {
       backgroundColor: theme.surface,
