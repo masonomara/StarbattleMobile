@@ -15,6 +15,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import ReAnimated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SystemBars } from 'react-native-edge-to-edge';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import ChevronsRight from 'lucide-react-native/dist/cjs/icons/chevrons-right';
 import { CircleButton } from '../../shared/ui/CircleButton';
@@ -41,7 +42,7 @@ import { parsePuzzle } from '../../shared/lib/parsePuzzle';
 import { saveProgress } from '../../shared/lib/progress';
 import { getActiveStreak } from '../../shared/lib/streakDate';
 import type { Theme, RootStackParamList, DrawLayerHandle } from '../../types';
-import { MoreHorizontal } from 'lucide-react-native';
+import MoreHorizontal from 'lucide-react-native/dist/cjs/icons/ellipsis';
 
 // Chrome heights used both in the board layout calculation and in the view
 // padding. Centralizing them ensures handleBoardLayout and the JSX agree.
@@ -144,12 +145,6 @@ export function PuzzleScreen({
     }).start();
   }, [headerVisible, buttonOpacity]);
 
-  useEffect(() => {
-    navigation.setOptions({
-      statusBarHidden: !headerVisible,
-      statusBarAnimation: 'fade',
-    });
-  }, [headerVisible, navigation]);
 
   const {
     pinchGesture,
@@ -335,6 +330,7 @@ export function PuzzleScreen({
 
   return (
     <View style={styles.container}>
+      <SystemBars hidden={{ statusBar: !headerVisible }} />
       <Header
         left={
           isTutorial ? undefined : (

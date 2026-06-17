@@ -49,7 +49,8 @@ import type {
   StreakCardStatus,
 } from '../../types';
 import { SCREEN_HEADER_HEIGHT } from '../../shared/lib/layout';
-import { MoreHorizontal, ChevronRight } from 'lucide-react-native';
+import MoreHorizontal from 'lucide-react-native/dist/cjs/icons/ellipsis';
+import ChevronRight from 'lucide-react-native/dist/cjs/icons/chevron-right';
 
 const HEADER_HEIGHT = SCREEN_HEADER_HEIGHT;
 

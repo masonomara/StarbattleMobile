@@ -19,6 +19,26 @@ const babelConfigHash = crypto
 
 const config = {
   cacheVersion: babelConfigHash,
+  resolver: {
+    // lucide-react-native ships one module per icon under dist/{cjs,esm}/icons/*,
+    // but its package.json `exports` only maps "." and "./icons" — both the full
+    // ~1500-icon barrel. We import single icons by deep path to keep the bundle
+    // small (Metro doesn't tree-shake the barrel away), which trips Metro's
+    // package-exports check and logs a noisy fallback warning for every icon on
+    // every bundle. Resolve just those specifiers with package-exports turned off
+    // so they go straight to the file — small bundle, no warning — while exports
+    // stays on for every other package.
+    resolveRequest: (context, moduleName, platform) => {
+      if (moduleName.startsWith('lucide-react-native/dist/')) {
+        return context.resolveRequest(
+          { ...context, unstable_enablePackageExports: false },
+          moduleName,
+          platform,
+        );
+      }
+      return context.resolveRequest(context, moduleName, platform);
+    },
+  },
   transformer: {
     getTransformOptions: async () => ({
       transform: {
