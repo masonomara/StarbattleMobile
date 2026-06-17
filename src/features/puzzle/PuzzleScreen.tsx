@@ -8,6 +8,7 @@ import {
   AppState,
   Pressable,
   Alert,
+  Platform,
 } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import type { LayoutChangeEvent } from 'react-native';
@@ -88,6 +89,15 @@ export function PuzzleScreen({
 
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  // Freeze the top inset. Hiding the header also hides the Android status bar
+  // (SystemBars below), which drops insets.top to 0 mid-session; because the
+  // board centers within insets.top-derived chrome, the live inset would reflow
+  // and jump the board on every header toggle. Latch the largest value seen so
+  // the board geometry stays stable regardless of status-bar visibility. No-op
+  // on iOS, where the top inset doesn't change when the status bar hides.
+  const topInsetRef = useRef(insets.top);
+  if (insets.top > topInsetRef.current) topInsetRef.current = insets.top;
+  const topInset = topInsetRef.current;
   const styles = createStyles(theme);
 
   const loadPuzzle = usePuzzleStore(s => s.loadPuzzle);
@@ -160,7 +170,7 @@ export function PuzzleScreen({
     boardSize,
     theme.cellSize,
     // Chrome the board centers between — must match the boardArea padding below.
-    insets.top + HEADER_H + insets.bottom + TOOLBAR_H,
+    topInset + HEADER_H + insets.bottom + TOOLBAR_H,
   );
 
   const drawLayerRef = useRef<DrawLayerHandle>(null);
@@ -171,7 +181,7 @@ export function PuzzleScreen({
 
   const handleBoardLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
-    const paddingTop = insets.top + HEADER_H;
+    const paddingTop = topInset + HEADER_H;
     const paddingBottom = insets.bottom + TOOLBAR_H;
     // Visual center of the play area, accounting for asymmetric chrome.
     // Derivation: paddingTop + (height - paddingTop - paddingBottom) / 2
@@ -199,10 +209,23 @@ export function PuzzleScreen({
   //   Simultaneous — pinch-to-zoom runs alongside any other gesture.
   //   Race         — draw and (pan/tap) are mutually exclusive; first to move wins.
   //   Exclusive    — pan takes priority over tap; tap only fires if no pan occurs.
-  const gesture = Gesture.Simultaneous(
-    pinchGesture,
-    Gesture.Race(drawGesture, Gesture.Exclusive(panGesture, tapGesture)),
-  );
+  //
+  // Android omits the draw gesture entirely. The draw gesture activates after a
+  // 150ms long press, and on a real finger the natural press-then-drag of a pan
+  // lingers past that threshold, so draw always won the race and one-finger
+  // panning was unreachable (only a fast flick — with no initial dwell — would
+  // pan). This was specific to Android; iOS keeps drag-to-paint. Marks are still
+  // placed by tapping (tapCell); only the multi-cell drag-paint is dropped here.
+  const gesture =
+    Platform.OS === 'android'
+      ? Gesture.Simultaneous(
+          pinchGesture,
+          Gesture.Exclusive(panGesture, tapGesture),
+        )
+      : Gesture.Simultaneous(
+          pinchGesture,
+          Gesture.Race(drawGesture, Gesture.Exclusive(panGesture, tapGesture)),
+        );
 
   // One-shot mount marker so the puzzle-open timeline can be located in the log.
   const mountedRef = useRef(false);
@@ -398,7 +421,7 @@ export function PuzzleScreen({
           style={[
             styles.boardArea,
             {
-              paddingTop: insets.top + HEADER_H,
+              paddingTop: topInset + HEADER_H,
               paddingBottom: insets.bottom + TOOLBAR_H,
             },
           ]}

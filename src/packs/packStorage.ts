@@ -1,4 +1,4 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import type * as RNFSType from 'react-native-fs';
 import type { Pack, HintsFile } from '../types';
 import { time } from '../shared/lib/perfLog';
@@ -43,23 +43,36 @@ export function decodeHintsFromDisk(text: string): HintsFile {
 }
 
 // --- Large-file read -----------------------------------------------------
-// Reads a cached file as text WITHOUT RNFS, because RNFS 2.20.0 is broken for
-// reads on RN 0.84's New Architecture:
-//   - read() (byte-ranged) declares `NSInteger *` params the new-arch legacy
-//     interop rejects outright ("Objective C type NSInteger is unsupported");
-//   - readFile() marshals the whole string through that same slow interop shim —
-//     MEASURED at ~28s for the 3.7MB hints file, pinning the JS thread (barely
-//     better than the old bridge's 39s; the new arch did NOT make it fast).
-// RN's own networking stack reads file:// URLs natively and efficiently — the
-// same path blobToText uses for Storage blobs (sub-second for the same 3.7MB) —
-// so we read through fetch instead. If fetch can't read file:// on a platform it
-// rejects fast, and the caller falls through to its in-memory fetch (no freeze).
+// Reads a cached file as text. The mechanism is platform-split because the two
+// platforms break in opposite ways:
+//
+// iOS — reads via fetch('file://'). RNFS 2.20.0 is broken/slow for reads on RN
+//   0.84's New Architecture here: read() declares `NSInteger *` params the
+//   new-arch legacy interop rejects ("Objective C type NSInteger is
+//   unsupported"), and readFile() marshals the whole string through that same
+//   slow shim — MEASURED at ~28s for the 3.7MB hints file. RN's networking stack
+//   reads file:// natively and efficiently (sub-second for the same file).
+//
+// Android — reads via rnfs.readFile. RN's networking layer (OkHttp) REJECTS the
+//   file:// scheme outright ("Expected URL scheme 'http' or 'https' but was
+//   'file'"), so the fetch path throws and every cached read silently fell
+//   through to a network re-download — breaking offline hints/packs entirely and
+//   re-downloading on every cold open while online. The ~28s RNFS slowness above
+//   was iOS-specific (Objective-C interop); Android's JNI readFile is fast.
+//
 // Timed ([SB:FSREAD]); callers don't await hints, so a modest read never blocks
 // first paint.
 export async function readFileText(path: string, label: string): Promise<string> {
   const end = time('FSREAD', `readFile ${label}`);
-  const res = await fetch(`file://${path}`);
-  const text = await res.text();
+  let text: string;
+  if (Platform.OS === 'android') {
+    const rnfs = getRNFS();
+    if (!rnfs) throw new Error('RNFS unavailable for file read');
+    text = await rnfs.readFile(path, 'utf8');
+  } else {
+    const res = await fetch(`file://${path}`);
+    text = await res.text();
+  }
   end(`${(text.length / 1024).toFixed(0)} KB`);
   return text;
 }
