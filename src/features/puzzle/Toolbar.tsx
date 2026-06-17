@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, View, Pressable, StyleSheet } from 'react-native';
+import { Alert, View, Pressable, StyleSheet, Platform } from 'react-native';
 import Undo2 from 'lucide-react-native/dist/cjs/icons/undo-2';
 import Redo2 from 'lucide-react-native/dist/cjs/icons/redo-2';
 import Minimize2 from 'lucide-react-native/dist/cjs/icons/minimize-2';
@@ -84,8 +84,15 @@ export function Toolbar({
   }
 
   return (
-    // bottom offset intentionally overlaps the safe area by 12 pt for visual grounding.
-    <View style={[styles.toolbar, { bottom: insets.bottom - 12 }]}>
+    // iOS: overlap the (non-interactive) home indicator by 12pt for visual grounding.
+    // Android: the bottom inset is the interactive nav bar / gesture pill — sit
+    // clear of it instead of drawing under it.
+    <View
+      style={[
+        styles.toolbar,
+        { bottom: Platform.OS === 'android' ? insets.bottom : insets.bottom - 12 },
+      ]}
+    >
       <View style={styles.toolbarWrapper}>
         <Pressable
           onPress={() => press(onZoomReset)}

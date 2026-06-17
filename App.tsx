@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { AppState, InteractionManager, Linking } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SystemBars } from 'react-native-edge-to-edge';
 import { Navigation } from './src/navigation';
 import { useTheme } from './src/shared/theme/useTheme';
 import { useAuthStore } from './src/shared/stores/authStore';
@@ -305,6 +306,10 @@ export default function App() {
     >
       <PowerSyncContext.Provider value={db}>
         <SafeAreaProvider>
+          {/* Drives BOTH the status bar (top) and navigation bar (bottom) icon
+              tint to contrast with the active theme. Follows the in-app palette
+              + light/dark override, which a static Android theme flag can't. */}
+          <SystemBars style={theme.isDark ? 'light' : 'dark'} />
           <Navigation />
         </SafeAreaProvider>
       </PowerSyncContext.Provider>

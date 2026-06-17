@@ -83,7 +83,8 @@ export function Navigation() {
         initialRouteName={initialRouteName}
         screenOptions={{
           headerShown: false,
-          statusBarStyle: theme.isDark ? 'light' : 'dark',
+          // Status/navigation bar icon tint is owned by <SystemBars> (App.tsx)
+          // so it covers both bars and follows the in-app palette.
           contentStyle: { backgroundColor: bgColor },
         }}
       >

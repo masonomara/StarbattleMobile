@@ -10,42 +10,42 @@
 		03DD2BB95E8E45C492CDE083 /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F765FE911B484490BBE785DA /* BootSplash.storyboard */; };
 		11EBF75179204C9E8A7FB096 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 675D8FBAFBB74ED0BE491D9D /* Colors.xcassets */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		28F2D048A2BA4F5993B86535 /* Karla-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 20012349AEE84F8AB09CC546 /* Karla-SemiBold.ttf */; };
+		2FCF366564B34F229949913A /* Karla-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00225F61C11143D4BC72BFE3 /* Karla-Medium.ttf */; };
+		413ACCD914394714B4AF60B9 /* Karla-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 038A8615932A433E919A900A /* Karla-Regular.ttf */; };
+		48073B1D404F40B49987DC23 /* BricolageGrotesque-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 18B8EC25CC3A46F9B56109AA /* BricolageGrotesque-Regular.ttf */; };
+		4FF966C74FEF48C3A690C99E /* BricolageGrotesque-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 153A8E17FB22476D87F3DFE4 /* BricolageGrotesque-Medium.ttf */; };
+		747A8CDFBEBA4636B04E69C9 /* BricolageGrotesque-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2E073A8825EC4BD1882E9DA7 /* BricolageGrotesque-Bold.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		8179B8D3979465D293FBEEC0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		9DB2D5742FC65F40006DB240 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9DB2D5732FC65F40006DB240 /* AppIcon.icon */; };
-		C10ABB28B40D19C36B43D964 /* libPods-StarbattleMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */; };
-		28F2D048A2BA4F5993B86535 /* Karla-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 20012349AEE84F8AB09CC546 /* Karla-SemiBold.ttf */; };
-		48073B1D404F40B49987DC23 /* BricolageGrotesque-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 18B8EC25CC3A46F9B56109AA /* BricolageGrotesque-Regular.ttf */; };
 		AAEE5C0410DA430E83F274BD /* BricolageGrotesque-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E2C71413AF8A493A8A128A6F /* BricolageGrotesque-SemiBold.ttf */; };
-		4FF966C74FEF48C3A690C99E /* BricolageGrotesque-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 153A8E17FB22476D87F3DFE4 /* BricolageGrotesque-Medium.ttf */; };
-		2FCF366564B34F229949913A /* Karla-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00225F61C11143D4BC72BFE3 /* Karla-Medium.ttf */; };
-		747A8CDFBEBA4636B04E69C9 /* BricolageGrotesque-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2E073A8825EC4BD1882E9DA7 /* BricolageGrotesque-Bold.ttf */; };
-		413ACCD914394714B4AF60B9 /* Karla-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 038A8615932A433E919A900A /* Karla-Regular.ttf */; };
+		C10ABB28B40D19C36B43D964 /* libPods-StarbattleMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */; };
 		CFEF7C3D5D1F4053AA233C26 /* Karla-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7422A165DBC44F04811D49DF /* Karla-Bold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		00225F61C11143D4BC72BFE3 /* Karla-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Karla-Medium.ttf"; path = "../assets/fonts/Karla-Medium.ttf"; sourceTree = "<group>"; };
+		038A8615932A433E919A900A /* Karla-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Karla-Regular.ttf"; path = "../assets/fonts/Karla-Regular.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* StarbattleMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StarbattleMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = StarbattleMobile/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = StarbattleMobile/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = StarbattleMobile/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		153A8E17FB22476D87F3DFE4 /* BricolageGrotesque-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "BricolageGrotesque-Medium.ttf"; path = "../assets/fonts/BricolageGrotesque-Medium.ttf"; sourceTree = "<group>"; };
+		18B8EC25CC3A46F9B56109AA /* BricolageGrotesque-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "BricolageGrotesque-Regular.ttf"; path = "../assets/fonts/BricolageGrotesque-Regular.ttf"; sourceTree = "<group>"; };
+		20012349AEE84F8AB09CC546 /* Karla-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Karla-SemiBold.ttf"; path = "../assets/fonts/Karla-SemiBold.ttf"; sourceTree = "<group>"; };
 		2374ABD2F16982C478070F16 /* Pods-StarbattleMobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.debug.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.debug.xcconfig"; sourceTree = "<group>"; };
+		2E073A8825EC4BD1882E9DA7 /* BricolageGrotesque-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "BricolageGrotesque-Bold.ttf"; path = "../assets/fonts/BricolageGrotesque-Bold.ttf"; sourceTree = "<group>"; };
 		675D8FBAFBB74ED0BE491D9D /* Colors.xcassets */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = folder.assetcatalog; name = Colors.xcassets; path = StarbattleMobile/Colors.xcassets; sourceTree = "<group>"; };
+		7422A165DBC44F04811D49DF /* Karla-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Karla-Bold.ttf"; path = "../assets/fonts/Karla-Bold.ttf"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = StarbattleMobile/AppDelegate.swift; sourceTree = "<group>"; };
 		773607658C213B2CF388C76D /* Pods-StarbattleMobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StarbattleMobile.release.xcconfig"; path = "Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile.release.xcconfig"; sourceTree = "<group>"; };
 		9DB2D5732FC65F40006DB240 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		A4F8E1C42B456789ABCDEF12 /* StarbattleMobile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = StarbattleMobile.entitlements; path = StarbattleMobile/StarbattleMobile.entitlements; sourceTree = "<group>"; };
 		E28C89D6F639A163DBFD7EDD /* libPods-StarbattleMobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-StarbattleMobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2C71413AF8A493A8A128A6F /* BricolageGrotesque-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "BricolageGrotesque-SemiBold.ttf"; path = "../assets/fonts/BricolageGrotesque-SemiBold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F765FE911B484490BBE785DA /* BootSplash.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = BootSplash.storyboard; path = StarbattleMobile/BootSplash.storyboard; sourceTree = "<group>"; };
-		20012349AEE84F8AB09CC546 /* Karla-SemiBold.ttf */ = {isa = PBXFileReference; name = "Karla-SemiBold.ttf"; path = "../assets/fonts/Karla-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		18B8EC25CC3A46F9B56109AA /* BricolageGrotesque-Regular.ttf */ = {isa = PBXFileReference; name = "BricolageGrotesque-Regular.ttf"; path = "../assets/fonts/BricolageGrotesque-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		E2C71413AF8A493A8A128A6F /* BricolageGrotesque-SemiBold.ttf */ = {isa = PBXFileReference; name = "BricolageGrotesque-SemiBold.ttf"; path = "../assets/fonts/BricolageGrotesque-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		153A8E17FB22476D87F3DFE4 /* BricolageGrotesque-Medium.ttf */ = {isa = PBXFileReference; name = "BricolageGrotesque-Medium.ttf"; path = "../assets/fonts/BricolageGrotesque-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		00225F61C11143D4BC72BFE3 /* Karla-Medium.ttf */ = {isa = PBXFileReference; name = "Karla-Medium.ttf"; path = "../assets/fonts/Karla-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		2E073A8825EC4BD1882E9DA7 /* BricolageGrotesque-Bold.ttf */ = {isa = PBXFileReference; name = "BricolageGrotesque-Bold.ttf"; path = "../assets/fonts/BricolageGrotesque-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		038A8615932A433E919A900A /* Karla-Regular.ttf */ = {isa = PBXFileReference; name = "Karla-Regular.ttf"; path = "../assets/fonts/Karla-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		7422A165DBC44F04811D49DF /* Karla-Bold.ttf */ = {isa = PBXFileReference; name = "Karla-Bold.ttf"; path = "../assets/fonts/Karla-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -242,13 +242,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -263,13 +259,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-StarbattleMobile/Pods-StarbattleMobile-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

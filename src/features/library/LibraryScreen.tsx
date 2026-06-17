@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import { useTranslation } from 'react-i18next';
@@ -310,7 +311,15 @@ export function LibraryScreen({
         }
       />
       {sections.length > 1 && (
-        <View style={[styles.tabs, { bottom: insets.bottom - 12 }]}>
+        <View
+          style={[
+            styles.tabs,
+            {
+              bottom:
+                Platform.OS === 'android' ? insets.bottom : insets.bottom - 12,
+            },
+          ]}
+        >
           {sections.map(s => (
             <Pressable
               key={s}
