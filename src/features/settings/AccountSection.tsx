@@ -578,7 +578,8 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.text,
-      marginTop: 8,
+      marginTop: 14,
+      marginBottom: 22,
     },
     primaryButtonText: {
       color: theme.background,
