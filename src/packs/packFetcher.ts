@@ -112,6 +112,16 @@ export async function downloadToFile(
   if (error || !data?.signedUrl) {
     throw error ?? new Error(`No signed URL for ${storagePath}`);
   }
+  // Stream to a temp file, then rename onto the final path. rnfs.downloadFile
+  // truncates `toFile` to zero and writes incrementally, so a download straight
+  // to `localPath` leaves the pack partial/empty for the whole multi-MB transfer.
+  // A reader hitting it mid-stream (e.g. usePackPreviews/getStreakPack reading
+  // daily.json while a deferred catalog prefetch re-downloads it) gets truncated
+  // JSON, JSON.parse throws, and fetchPack unlinks + re-downloads it — the
+  // re-download-every-launch / offline-broken bug. moveFile is atomic on the
+  // local FS, so a concurrent reader always sees either the old complete file or
+  // the new complete one, never a partial.
+  const tmpPath = `${localPath}.download`;
   // Capture the advertised body size so we can reject a truncated download
   // (e.g. the connection dropped mid-stream but still reported 200). Without
   // this, a partial file would be persisted AND its ETag cached, so prefetch
@@ -121,7 +131,7 @@ export async function downloadToFile(
   let expectedBytes = -1;
   const result = await rnfs.downloadFile({
     fromUrl: data.signedUrl,
-    toFile: localPath,
+    toFile: tmpPath,
     // Force an UNCOMPRESSED transfer. Supabase fronts storage with Cloudflare,
     // which gzips JSON on the fly whenever the client sends Accept-Encoding: gzip
     // (NSURLSession does by default) AND then drops Content-Length (HTTP/2
@@ -147,11 +157,40 @@ export async function downloadToFile(
   const truncated = expectedBytes > 0 && result.bytesWritten < expectedBytes;
   if (result.statusCode !== 200 || truncated) {
     // Remove the partial/error body so a later read doesn't parse garbage and
-    // so the caller never caches an ETag for it.
-    await rnfs.unlink(localPath).catch(() => {});
+    // so the caller never caches an ETag for it. The final path is untouched —
+    // a previous complete copy (if any) survives a failed refresh.
+    await rnfs.unlink(tmpPath).catch(() => {});
     throw new Error(
       `download ${storagePath} failed: status=${result.statusCode} bytes=${result.bytesWritten}/${expectedBytes}`,
     );
+  }
+  // Publish the complete file. On Android the underlying rename overwrites the
+  // destination atomically, so the happy path is a single moveFile. iOS's
+  // NSFileManager refuses to move onto an existing path, so we fall back to a
+  // backup-swap that never leaves the cache without a valid copy: stash the old
+  // pack, move the new one in, then drop the stash — and on failure restore the
+  // stash, so a failed refresh can never evict a good offline pack.
+  try {
+    await rnfs.moveFile(tmpPath, localPath);
+  } catch {
+    const bakPath = `${localPath}.bak`;
+    let stashed = false;
+    try {
+      await rnfs.unlink(bakPath).catch(() => {}); // clear any stale stash
+      try {
+        await rnfs.moveFile(localPath, bakPath);
+        stashed = true;
+      } catch {
+        // No existing copy to stash (first download) — nothing to roll back to.
+      }
+      await rnfs.moveFile(tmpPath, localPath);
+      if (stashed) await rnfs.unlink(bakPath).catch(() => {});
+    } catch (e) {
+      // The new file didn't land — put the old pack back so offline keeps it.
+      if (stashed) await rnfs.moveFile(bakPath, localPath).catch(() => {});
+      await rnfs.unlink(tmpPath).catch(() => {});
+      throw e;
+    }
   }
 }
 

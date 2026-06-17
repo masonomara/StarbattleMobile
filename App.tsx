@@ -16,7 +16,6 @@ import { PowerSyncContext } from '@powersync/react-native';
 import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/shared/lib/config';
-import { getStreakPack } from './src/packs';
 import { prefetchAllCatalog, prefetchStreakHints } from './src/packs/prefetch';
 import { supabase } from './src/shared/lib/supabase';
 import type { PackCatalogItem } from './src/types';
@@ -147,25 +146,13 @@ export default function App() {
     // Publish to module scope so runTieredPrefetch can gate downloads on a JWT.
     authReadyPromise = authReady;
 
-    // Warm streak pack data so HomeScreen's previews are cached when it mounts.
-    // Hints are intentionally NOT warmed here — they're only needed when a puzzle
-    // opens, and PuzzleScreen loads them itself (sharing this cache), so warming
-    // them at launch is pure startup cost for data the home screen never uses.
-    authReady
-      .then(() => {
-        mark('STARTUP', 'authReady resolved — warming streak packs');
-        const endWarm = time('STARTUP', 'warm streak packs (3x getStreakPack)');
-        return Promise.all([
-          getStreakPack('daily'),
-          getStreakPack('weekly'),
-          getStreakPack('monthly'),
-        ]).then(r => {
-          endWarm();
-          return r;
-        });
-      })
-      .then(() => startupTimer.log('streak packs resolved'))
-      .catch(() => {});
+    // Streak packs are NOT warmed here anymore. HomeScreen's usePackPreviews
+    // already loads each streak pack's preview puzzle when it mounts (sharing the
+    // same packCache), so warming them on the App-mount critical path was a
+    // duplicate load that ran even earlier — competing with auth + PowerSync init
+    // and synchronously JSON-parsing the 365-puzzle daily pack, which pinned the
+    // JS thread for seconds on low-end devices. The full pack is loaded lazily on
+    // demand (PuzzleScreen on tap); previews come from usePackPreviews.
 
     useSettingsStore.getState().initialize();
     startupTimer.log('settings store initialized');

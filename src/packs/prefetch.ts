@@ -1,5 +1,6 @@
 import { prefetchPackFile, cachePackPreview, prefetchHintsFile } from './index';
 import { useEntitlementsStore } from '../shared/stores/entitlementsStore';
+import { isStreakType } from '../shared/lib/streakDate';
 import { mark, time } from '../shared/lib/perfLog';
 import type { PackCatalogItem, StreakType } from '../types';
 
@@ -30,6 +31,34 @@ export async function prefetchStreakHints(): Promise<void> {
   endAll(`${STREAK_HINT_TYPES.length} streak hint files`);
 }
 
+// Caps how many packs prefetch at once. Each pack fans out a signed-URL request,
+// an ETag HEAD, and (for accessible packs) a streamed download + hints download.
+// Firing all ~40 at once right after first paint floods a slow device's network
+// + JS event loop and contends with the home's own preview reads. Bounding the
+// fan-out keeps the post-paint period smooth; this is a background offline-cache
+// task off the critical path, so steadiness beats raw throughput. (Disk writes
+// are separately capped in packStorage's writeFileThrottled.)
+const PREFETCH_CONCURRENCY = 4;
+
+// Runs thunks with at most `limit` in flight. Thunks (not eager promises) so the
+// work doesn't all start before the pool can throttle it. A thrown thunk is the
+// caller's concern — every task below already swallows its own rejection.
+async function runPooled(
+  tasks: Array<() => Promise<void>>,
+  limit: number,
+): Promise<void> {
+  let next = 0;
+  const worker = async () => {
+    while (next < tasks.length) {
+      const idx = next++;
+      await tasks[idx]();
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, tasks.length) }, worker),
+  );
+}
+
 // ETag-aware refresh of all catalog content and streak packs.
 // Each pack gets a full download if the user has access (free, premium, or
 // owned); unpurchased paid packs get only their first puzzle cached as a
@@ -43,10 +72,22 @@ export async function prefetchAllCatalog(catalog: PackCatalogItem[]): Promise<vo
   const accessCount = withPath.filter(p => hasPackAccess(p.id)).length;
   mark(
     'PREFETCH',
-    `prefetchAllCatalog start — ${withPath.length} packs (${accessCount} full+hints, ${withPath.length - accessCount} preview-only), all fan out concurrently`,
+    `prefetchAllCatalog start — ${withPath.length} packs (${accessCount} full+hints, ${withPath.length - accessCount} preview-only), ${PREFETCH_CONCURRENCY} at a time`,
   );
   const endAll = time('PREFETCH', 'prefetchAllCatalog total');
-  const packWork = withPath.map(p => {
+  // Drain order matters: the pool runs this list front-to-back, so if the user
+  // goes offline mid-prefetch, whatever sorts first is what survives in the
+  // offline cache. Rank by offline value — streak packs (the most-opened daily/
+  // weekly/monthly puzzles) first, then other accessible packs (full download =
+  // playable offline), then preview-only paid packs (a single thumbnail puzzle,
+  // least useful offline). A stable sort keeps the catalog's sort_order within
+  // each tier.
+  const offlineRank = (p: PackCatalogItem): number => {
+    if (!hasPackAccess(p.id)) return 2;
+    return isStreakType(p.type) ? 0 : 1;
+  };
+  const ordered = [...withPath].sort((a, b) => offlineRank(a) - offlineRank(b));
+  const tasks: Array<() => Promise<void>> = ordered.map(p => () => {
     if (hasPackAccess(p.id)) {
       // Hints ride the same prefetch as the pack — disk-cached for offline.
       // Awaited (not fire-and-forget) so the cycle actually completes them.
@@ -57,6 +98,6 @@ export async function prefetchAllCatalog(catalog: PackCatalogItem[]): Promise<vo
     }
     return cachePackPreview(p.id, p.storagePath!).catch(() => {});
   });
-  await Promise.allSettled(packWork);
+  await runPooled(tasks, PREFETCH_CONCURRENCY);
   endAll(`${withPath.length} packs`);
 }

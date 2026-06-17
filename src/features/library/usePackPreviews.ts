@@ -9,6 +9,16 @@ import type { PackCatalogItem, Puzzle } from '../../types';
 // - Streak packs: today's puzzle (deterministically selected by date index)
 // - Library packs: always puzzle index 0
 //
+// Previews come from a full-pack read+JSON.parse (the slim "_preview.json" only
+// exists for unpurchased paid packs, so in practice every preview parses a whole
+// pack). Doing all of them in one Promise.all coalesced ~23 synchronous parses —
+// including the 365-puzzle daily pack — into a single multi-second JS-thread
+// freeze that pinned the home on skeletons. Instead we load sequentially and
+// yield to the event loop between packs, committing each preview as it resolves:
+// the home stays scrollable and the cards reveal progressively. Streak packs
+// (the carousel at the top, the primary CTA) load first so they appear before
+// the thread is spent on the library sections below the fold.
+//
 // RISK: `packCatalog` changes when entitlements sync (e.g. after purchase).
 // The effect re-runs, but the `cancelled` flag only guards against stale sets
 // — it does not cancel in-flight fetches. For large catalogs, a previous fetch
@@ -23,44 +33,68 @@ export function usePackPreviews(
   useEffect(() => {
     let cancelled = false;
 
+    // Resolve a single pack's preview puzzle. Streak packs need today's puzzle
+    // (date-indexed); library packs use puzzle 0. Returns null on miss/error.
+    async function loadOne(
+      pack: PackCatalogItem,
+    ): Promise<[string, Puzzle] | null> {
+      try {
+        if (isStreakType(pack.type)) {
+          const streakPack = await getStreakPack(pack.type);
+          if (!streakPack) return null;
+          const idx = getPuzzleIndex(pack.type, streakPack.puzzles.length);
+          return [
+            pack.id,
+            parsePuzzle(
+              streakPack.puzzles[idx],
+              `${pack.id}:${getCurrentKey(pack.type)}`,
+            ),
+          ];
+        }
+        const previewPuzzle = await getPackPreview(pack.id, pack.storagePath);
+        if (!previewPuzzle) return null;
+        return [pack.id, parsePuzzle(previewPuzzle, `${pack.id}:0`)];
+      } catch {
+        return null; // skip this pack, keep others
+      }
+    }
+
+    // Merge into prev so a catalog re-sync never flashes loaded cards back to
+    // skeletons, and a card already revealed in an earlier batch stays put.
+    function commit(id: string, puzzle: Puzzle) {
+      if (cancelled) return;
+      setPackPreviews(prev => ({ ...prev, [id]: puzzle }));
+    }
+
+    // A macrotask yield (not a microtask) so the JS thread actually processes
+    // input, layout, and paint between parses — that's what keeps the home
+    // responsive while previews trickle in.
+    const yieldToLoop = () => new Promise<void>(resolve => setTimeout(resolve, 0));
+
+    async function loadGroup(packs: PackCatalogItem[], label: string) {
+      if (packs.length === 0) return;
+      const endLoad = time('STARTUP', label);
+      let count = 0;
+      for (const pack of packs) {
+        if (cancelled) break;
+        const result = await loadOne(pack);
+        if (result) {
+          commit(result[0], result[1]);
+          count++;
+        }
+        await yieldToLoop();
+      }
+      endLoad(`${count} previews`);
+    }
+
     async function load() {
       if (packCatalog.length === 0) return;
       mark('STARTUP', `usePackPreviews load start — ${packCatalog.length} packs`);
-      const endLoad = time('STARTUP', 'usePackPreviews load+parse all');
-      const results: Record<string, Puzzle> = {};
-      await Promise.all(
-        packCatalog.map(async pack => {
-          try {
-            if (isStreakType(pack.type)) {
-              const streakPack = await getStreakPack(pack.type);
-              if (!streakPack) return;
-              const idx = getPuzzleIndex(pack.type, streakPack.puzzles.length);
-              results[pack.id] = parsePuzzle(
-                streakPack.puzzles[idx],
-                `${pack.id}:${getCurrentKey(pack.type)}`,
-              );
-            } else {
-              const previewPuzzle = await getPackPreview(
-                pack.id,
-                pack.storagePath,
-              );
-              if (!previewPuzzle) return;
-              results[pack.id] = parsePuzzle(previewPuzzle, `${pack.id}:0`);
-            }
-          } catch {
-            // skip this pack, keep others
-          }
-        }),
-      );
-      // Commit every preview in one update so the cards reveal together as a
-      // single coordinated drop-in, rather than popping in one-by-one out of
-      // sync with each other and their pulse animations. Merge into prev so a
-      // catalog re-sync doesn't flash already-loaded cards back to skeletons.
-      endLoad(`${Object.keys(results).length} previews`);
-      if (!cancelled) {
-        mark('STARTUP', 'usePackPreviews committing previews (cards reveal)');
-        setPackPreviews(prev => ({ ...prev, ...results }));
-      }
+      const streak = packCatalog.filter(p => isStreakType(p.type));
+      const library = packCatalog.filter(p => !isStreakType(p.type));
+      await loadGroup(streak, 'usePackPreviews streak previews');
+      await loadGroup(library, 'usePackPreviews library previews');
+      mark('STARTUP', 'usePackPreviews all previews committed');
     }
 
     load();
