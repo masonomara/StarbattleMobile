@@ -431,7 +431,6 @@ export type PackCatalogItem = {
   stars: number;
   difficulty?: 'normal' | 'hard';
   isFree: boolean;
-  priceUsd?: number;
   puzzleCount: number;
   storagePath?: string;
   // Dual-purpose, set by the backend `packs.type` column:
@@ -448,7 +447,6 @@ export type PaywallContext =
       type: 'paid-pack';
       packId: string;
       packName: string;
-      priceUsd: number | undefined;
       storagePath: string;
     }
   | { type: 'unavailable'; packId: string; packName: string };

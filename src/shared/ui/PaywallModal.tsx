@@ -15,7 +15,7 @@ import { useTheme } from '../theme/useTheme';
 import { rgba } from '../theme/color';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useProductPrice } from '../hooks/useProductPrice';
-import { purchasePremium, purchasePack } from '../lib/payments';
+import { purchasePremium, purchasePack, PREMIUM_PRODUCT_ID } from '../lib/payments';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../lib/config';
 import type { Theme, PaywallModalProps } from '../../types';
 
@@ -40,7 +40,7 @@ export function PaywallModal({
   const isAnonymous = useAuthStore(s => s.isAnonymous);
   const { loading, error, run } = useAsyncAction();
 
-  const premiumPrice = useProductPrice('sb_premium_599');
+  const premiumPrice = useProductPrice(PREMIUM_PRODUCT_ID);
   const packPrice = useProductPrice(
     context?.type === 'paid-pack' ? `starbattle_pack_${context.packId}` : '',
   );

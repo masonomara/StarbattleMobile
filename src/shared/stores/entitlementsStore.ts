@@ -42,7 +42,6 @@ function mapPackRow(r: PackRow): PackCatalogItem {
     stars: r.stars,
     difficulty: (r.difficulty ?? undefined) as 'normal' | 'hard' | undefined,
     isFree: r.is_free === 1,
-    priceUsd: r.price_usd ?? undefined,
     puzzleCount: r.puzzle_count,
     storagePath: r.storage_path ?? undefined,
     // Either a StreakType (streak carousel) or a library bundle name — see PackCatalogItem.
