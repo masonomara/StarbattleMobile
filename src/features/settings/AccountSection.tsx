@@ -595,7 +595,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.background,
     },
     secondaryButtonText: { color: theme.text, fontWeight: '600' },
-    accountActions: { gap: 12, marginTop: 14 },
+    accountActions: { gap: 12, marginBottom: 22 },
     subLabel: {
       color: theme.textSecondary,
     },
@@ -640,7 +640,7 @@ const createStyles = (theme: Theme) =>
       height: 48,
       flex: 1,
       borderRadius: 100,
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: theme.border,
       alignItems: 'center',
       justifyContent: 'center',

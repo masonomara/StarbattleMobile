@@ -306,7 +306,7 @@ export function LibraryScreen({
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
         </CircleButton>
-        <Text role="title3" style={styles.headerTitle}>
+        <Text role="headline" style={styles.headerTitle}>
           {packName}
         </Text>
         <CircleButton

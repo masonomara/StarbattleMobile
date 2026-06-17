@@ -214,7 +214,7 @@ const createStyles = (theme: Theme) =>
     swatchCard: {
       flex: 1,
       borderRadius: 4,
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: theme.border,
       overflow: 'hidden',
       alignItems: 'center',
