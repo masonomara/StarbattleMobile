@@ -87,16 +87,18 @@ const PuzzleCell = React.memo(function PuzzleCell({
       onPress={() => (locked ? onLockedPress(index) : onPress(index))}
     >
       <View style={styles.overlay} pointerEvents="none">
-        <Text
-          style={[
-            styles.cellNumber,
-            isCompleted && styles.cellNumberCompleted,
-            locked && styles.cellNumberLocked,
-          ]}
-          role="headline"
-        >
-          {index + 1}
-        </Text>
+        <View style={styles.numberCircle}>
+          <Text
+            style={[
+              styles.cellNumber,
+              isCompleted && styles.cellNumberCompleted,
+              locked && styles.cellNumberLocked,
+            ]}
+            role="title3"
+          >
+            {index + 1}
+          </Text>
+        </View>
         {isCompleted && (
           <View
             style={[
@@ -162,7 +164,6 @@ export function LibraryScreen({
   const puzzleCount = catalogPack?.puzzleCount ?? 0;
   const packName = catalogPack?.name ?? packId;
   const isFree = catalogPack?.isFree ?? true;
-  const priceUsd = catalogPack?.priceUsd;
   const storagePath = catalogPack?.storagePath;
 
   const [rawPuzzles, setRawPuzzles] = useState<RawPuzzle[] | null>(null);
@@ -221,7 +222,6 @@ export function LibraryScreen({
             type: 'paid-pack',
             packId,
             packName,
-            priceUsd,
             storagePath,
           });
         } else {
@@ -240,7 +240,7 @@ export function LibraryScreen({
         },
       ]);
     },
-    [isFree, hasPackAccess, packId, priceUsd, storagePath, packName, t],
+    [isFree, hasPackAccess, packId, storagePath, packName, t],
   );
 
   const sections = useMemo(
@@ -342,7 +342,7 @@ export function LibraryScreen({
               style={[styles.tab, s === activeSection && styles.tabActive]}
             >
               <Text
-                role="subhead"
+                role="footnote"
                 style={
                   s === activeSection ? styles.tabTextActive : styles.tabText
                 }
@@ -408,8 +408,8 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       height: 80,
     },
     tab: {
-      width: 24,
-      height: 24,
+      width: 26,
+      height: 26,
       borderRadius: 100,
 
       alignItems: 'center',
@@ -418,11 +418,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     tabActive: {
       backgroundColor: theme.text,
+      fontWeight: '600',
     },
     tabText: {
       color: theme.textSecondary,
-      fontSize: 12,
-      lineHeight: 16,
+
       fontWeight: '600',
     },
     tabTextActive: {
@@ -443,13 +443,22 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       justifyContent: 'center',
       zIndex: 200,
     },
+    numberCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.background,
+      shadowColor: theme.background,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 1,
+      shadowRadius: 6,
+    },
     cellNumber: {
       color: theme.text,
       fontWeight: '600',
       textAlign: 'center',
-      justifyContent: 'center',
-      borderRadius: 199,
-      overflow: 'visible',
     },
     cellNumberCompleted: {
       color: theme.text,
