@@ -14,6 +14,7 @@ import { CircleButton } from '../../shared/ui/CircleButton';
 import ChevronLeft from 'lucide-react-native/dist/cjs/icons/chevron-left';
 import MoreHorizontal from 'lucide-react-native/dist/cjs/icons/ellipsis';
 import Lock from 'lucide-react-native/dist/cjs/icons/lock';
+import Check from 'lucide-react-native/dist/cjs/icons/check';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -69,6 +70,31 @@ function getMonthPages(now: Date): MonthPage[] {
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
+}
+
+// The set of date keys making up the live daily streak. This is the *official*
+// streak — `current` days ending at `lastCompletedKey` — not just any run of
+// completed days: archive puzzles can be solved out of order, so consecutive
+// completed days don't necessarily belong to the streak the counter tracks.
+// Only days in this set get a connector; everything else reads as
+// completed-but-separate. `current` is the active count (0 when broken).
+function getDailyStreakKeys(
+  current: number,
+  lastCompletedKey: string,
+): Set<string> {
+  const set = new Set<string>();
+  if (current <= 0 || !lastCompletedKey) return set;
+  const [y, m, d] = lastCompletedKey.split('-').map(Number);
+  const cursor = new Date(y, m - 1, d);
+  for (let i = 0; i < current; i++) {
+    set.add(
+      `${cursor.getFullYear()}-${pad(cursor.getMonth() + 1)}-${pad(
+        cursor.getDate(),
+      )}`,
+    );
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return set;
 }
 
 // "Jun 2 – 8" within a month, "Jun 30 – Jul 6" across one.
@@ -222,7 +248,7 @@ export function ArchivePackScreen({
       <View style={styles.body}>
         {!isPremium && (
           <View style={styles.lockNote}>
-            <Lock size={13} color={theme.textSecondary} strokeWidth={2.5} />
+            <Lock size={14} color={theme.textSecondary} strokeWidth={2.5} />
             <Text role="footnote" style={styles.lockNoteText}>
               {t('streaks.premiumBody')}
             </Text>
@@ -230,7 +256,12 @@ export function ArchivePackScreen({
         )}
 
         {type === 'daily' ? (
-          <MonthCalendar width={width} {...calendarProps} />
+          <MonthCalendar
+            width={width}
+            current={current}
+            lastCompletedKey={streak?.lastCompletedKey ?? ''}
+            {...calendarProps}
+          />
         ) : type === 'weekly' ? (
           <WeekCalendar width={width} {...calendarProps} />
         ) : (
@@ -257,6 +288,8 @@ type CalendarProps = {
 // month grids, opening on the latest month. Days are tappable circles.
 function MonthCalendar({
   width,
+  current,
+  lastCompletedKey,
   insets,
   keySet,
   isCompleted,
@@ -264,11 +297,20 @@ function MonthCalendar({
   onScroll,
   theme,
   styles,
-}: CalendarProps & { width: number }) {
+}: CalendarProps & {
+  width: number;
+  current: number;
+  lastCompletedKey: string;
+}) {
   const months = useMemo(() => getMonthPages(new Date()), []);
   const todayKey = getCurrentKey('daily');
   const cell = Math.floor((width - 2 * 24) / 7);
   const scroll = useScrollToEndOnce();
+  // Days that may be linked by a connector — only the live streak qualifies.
+  const streakKeys = useMemo(
+    () => getDailyStreakKeys(current, lastCompletedKey),
+    [current, lastCompletedKey],
+  );
 
   return (
     <View style={styles.calendarFlex}>
@@ -299,6 +341,7 @@ function MonthCalendar({
             cell={cell}
             keySet={keySet}
             todayKey={todayKey}
+            streakKeys={streakKeys}
             isCompleted={isCompleted}
             onPress={onPress}
             theme={theme}
@@ -315,6 +358,7 @@ function MonthGrid({
   cell,
   keySet,
   todayKey,
+  streakKeys,
   isCompleted,
   onPress,
   theme,
@@ -324,6 +368,7 @@ function MonthGrid({
   cell: number;
   keySet: Set<string>;
   todayKey: string;
+  streakKeys: Set<string>;
   isCompleted: (k: string) => boolean;
   onPress: (k: string) => void;
   theme: Theme;
@@ -372,11 +417,23 @@ function MonthGrid({
           const challenge = keySet.has(key);
           const today = key === todayKey;
           const completed = (challenge || today) && isCompleted(key);
-          // Bridge to a completed neighbour only within the same week row, so the
-          // streak bar flows across a row and breaks cleanly at week boundaries.
+          // Connect to a completed neighbour only within the same week row, so a
+          // streak links across a row and breaks cleanly at week boundaries. The
+          // connector is reserved for the live streak: both this day and the next
+          // must belong to it, so a completed-but-broken run shows no bar.
           const col = (offset + day - 1) % 7;
-          const joinLeft = completed && col !== 0 && dayCompleted(day - 1);
-          const joinRight = completed && col !== 6 && dayCompleted(day + 1);
+          const nextKey = `${year}-${pad(month + 1)}-${pad(day + 1)}`;
+          const joinRight =
+            completed &&
+            col !== 6 &&
+            dayCompleted(day + 1) &&
+            streakKeys.has(key) &&
+            streakKeys.has(nextKey);
+          const fillColor = today ? theme.text : theme.border;
+          // A thin bar bridging this circle's centre to the next day's. It sits
+          // behind both circles (drawn first, and the next cell paints over its
+          // right end), so each day stays a full circle and only the gap shows.
+          const connectorHeight = cell - 8;
           return (
             <Pressable
               key={key}
@@ -384,28 +441,23 @@ function MonthGrid({
               onPress={() => onPress(key)}
               style={[styles.dayCell, { width: cell, height: cell }]}
             >
-              {completed && (
+              {joinRight && (
                 <View
                   style={[
-                    styles.dayFill,
+                    styles.dayConnector,
                     {
-                      backgroundColor: today ? theme.text : theme.border,
+                      backgroundColor: fillColor,
+                      left: cell / 2,
+                      width: cell,
+                      top: (cell - connectorHeight) / 2,
+                      height: connectorHeight,
                     },
-                    joinLeft
-                      ? {
-                          left: 0,
-                          borderTopLeftRadius: 0,
-                          borderBottomLeftRadius: 0,
-                        }
-                      : null,
-                    joinRight
-                      ? {
-                          right: 0,
-                          borderTopRightRadius: 0,
-                          borderBottomRightRadius: 0,
-                        }
-                      : null,
                   ]}
+                />
+              )}
+              {completed && (
+                <View
+                  style={[styles.dayFill, { backgroundColor: fillColor }]}
                 />
               )}
               <View
@@ -415,8 +467,11 @@ function MonthGrid({
                   role="callout"
                   style={[
                     styles.dayText,
+
                     !challenge && styles.dayTextMuted,
                     completed && styles.dayTextCompleted,
+                    today && styles.todayText,
+                    completed && today && styles.dayTextCompletedToday,
                   ]}
                 >
                   {day}
@@ -516,15 +571,25 @@ function WeekCalendar({
                   style={[
                     styles.weekRow,
                     { width: tile },
-                    completed && styles.weekRowCompleted,
-                    isCurrent && styles.weekRowCurrent,
+                    isCurrent && !completed && styles.weekRowCurrent,
+                    completed && !isCurrent && styles.weekRowCompleted,
+                    completed && isCurrent && styles.weekRowCurrentCompleted,
                   ]}
                 >
+                  {completed && (
+                    <View style={styles.weekCheck}>
+                      <Check
+                        size={16}
+                        color={isCurrent ? theme.background : theme.text}
+                        strokeWidth={3}
+                      />
+                    </View>
+                  )}
                   <Text
                     role="callout"
                     style={[
                       styles.weekRange,
-                      completed && { color: theme.background },
+                      completed && isCurrent && { color: theme.background },
                     ]}
                   >
                     {weekRangeLabel(monday)}
@@ -599,18 +664,26 @@ function YearCalendar({
                   style={[
                     styles.monthTile,
                     { width: tile },
-                    challenge && styles.monthTileChallenge,
-                    completed && styles.monthTileCompleted,
-                    isCurrent && styles.monthTileCurrent,
+                    isCurrent && !completed && styles.monthTileCurrent,
+                    completed && !isCurrent && styles.monthTileCompleted,
+                    completed && isCurrent && styles.monthTileCurrentCompleted,
                   ]}
                 >
+                  {completed && (
+                    <View style={styles.monthTileCheck}>
+                      <Check
+                        size={16}
+                        color={isCurrent ? theme.background : theme.text}
+                        strokeWidth={3}
+                      />
+                    </View>
+                  )}
                   <Text
                     role="callout"
                     style={[
                       styles.monthTileText,
-                      completed && { color: theme.text },
-                      isCurrent && { color: theme.blue },
                       !challenge && !isCurrent && styles.monthTileTextMuted,
+                      completed && isCurrent && { color: theme.background },
                     ]}
                   >
                     {short}
@@ -694,9 +767,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     lockNote: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      justifyContent: 'center',
+      gap: 7,
       paddingHorizontal: 20,
-      marginTop: 14,
+      marginTop: 9,
+      marginBottom: 9,
     },
     lockNoteText: {
       color: theme.textSecondary,
@@ -753,9 +828,9 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    // Completion fill behind a day. Inset 4px to match dayCell padding; when a
-    // day joins a neighbour, left/right snap to 0 to close the gap and the inner
-    // corners square off so consecutive days form one continuous pill.
+    // Completion fill behind a day — always a full circle, inset 4px to match
+    // dayCell padding. Streak links are drawn separately (dayConnector) so the
+    // circle shape never changes.
     dayFill: {
       position: 'absolute',
       top: 4,
@@ -764,11 +839,20 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       right: 4,
       borderRadius: 100,
     },
+    dayConnector: {
+      position: 'absolute',
+    },
     dayToday: {
       borderRadius: 100,
-      backgroundColor: theme.border,
+      backgroundColor: theme.background,
+      borderWidth: 2,
+      borderColor: theme.text,
     },
     dayText: {
+      color: theme.text,
+      fontWeight: 600,
+    },
+    todayText: {
       color: theme.text,
       fontWeight: 600,
     },
@@ -777,6 +861,9 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     dayTextCompleted: {
       color: theme.text,
+    },
+    dayTextCompletedToday: {
+      color: theme.background,
     },
 
     // Weekly — week grid (2-wide, grouped by month)
@@ -796,18 +883,34 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     weekRow: {
       height: 48,
       borderRadius: 8,
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: theme.border,
+      backgroundColor: theme.background,
     },
+    // Past completed: filled with the border tone, leading check.
     weekRowCompleted: {
-      backgroundColor: theme.text,
+      backgroundColor: theme.border,
     },
+    // This week, not yet solved: emphasized outline only.
     weekRowCurrent: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
+      backgroundColor: theme.background,
       borderColor: theme.text,
+    },
+    // This week, solved: fully filled, no border, inverted text + check.
+    weekRowCurrentCompleted: {
+      backgroundColor: theme.text,
+      borderWidth: 0,
+    },
+    // Leading check pinned to the front of a completed week button.
+    weekCheck: {
+      position: 'absolute',
+      left: 12,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
     },
     weekRange: {
       color: theme.text,
@@ -837,20 +940,34 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     monthTile: {
       height: 48,
       borderRadius: 8,
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: theme.border,
+      backgroundColor: theme.background,
     },
-    monthTileChallenge: {
-      backgroundColor: theme.surface,
-    },
+    // Past completed: filled with the border tone, leading check.
     monthTileCompleted: {
-      backgroundColor: theme.text,
+      backgroundColor: theme.border,
     },
+    // This month, not yet solved: emphasized outline only.
     monthTileCurrent: {
-      borderWidth: 1,
-      borderColor: theme.blue,
+      backgroundColor: theme.background,
+      borderColor: theme.text,
+    },
+    // This month, solved: fully filled, no border, inverted text + check.
+    monthTileCurrentCompleted: {
+      backgroundColor: theme.text,
+      borderWidth: 0,
+    },
+    // Leading check pinned to the front of a completed month tile.
+    monthTileCheck: {
+      position: 'absolute',
+      left: 12,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
     },
     monthTileText: {
       color: theme.text,
