@@ -78,7 +78,11 @@ export function Toolbar({
     press(() =>
       Alert.alert(t('puzzle.clearTitle'), t('puzzle.clearBody'), [
         { text: t('puzzle.clearCancel'), style: 'cancel' },
-        { text: t('puzzle.clearConfirm'), style: 'destructive', onPress: clearBoard },
+        {
+          text: t('puzzle.clearConfirm'),
+          style: 'destructive',
+          onPress: clearBoard,
+        },
       ]),
     );
   }
@@ -90,7 +94,10 @@ export function Toolbar({
     <View
       style={[
         styles.toolbar,
-        { bottom: Platform.OS === 'android' ? insets.bottom : insets.bottom - 12 },
+        {
+          bottom:
+            Platform.OS === 'android' ? insets.bottom : insets.bottom - 12,
+        },
       ]}
     >
       <View style={styles.toolbarWrapper}>
@@ -172,7 +179,7 @@ const createStyles = (theme: Theme) =>
       shadowColor: '#25292E',
       shadowOpacity: 0.1,
       shadowRadius: 24,
-      elevation: 8,
+      elevation: 6,
       zIndex: 0,
     },
     button: {

@@ -4,6 +4,7 @@
 // strict mode. Prefer string literals for consistency.
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../shared/ui/Text';
 import type { LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -47,6 +48,7 @@ export function WinBanner({
   const loadedAsCompleted = usePuzzleStore(s => s.loadedAsCompleted);
   const timeMs = usePuzzleStore(s => s.timeMs);
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -127,6 +129,10 @@ export function WinBanner({
       onLayout={onLayout}
       style={[
         styles.winBanner,
+        // Add the bottom safe-area inset so the button clears the Android
+        // system nav / gesture bar. The banner is offset bottom:-56, so 56 of
+        // the base padding sits off-screen; the inset pushes the button up.
+        { paddingBottom: 80 + insets.bottom },
         { opacity: bannerHeight ? 1 : 0 },
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
@@ -136,9 +142,12 @@ export function WinBanner({
         {streakType && (
           <Text role="body" style={styles.winInfo}>
             {displayStreak > 0
-              ? ` · ${t(`puzzle.winStreakCount${STREAK_INFO_SUFFIX[streakType!]}`, {
-                  count: displayStreak,
-                })}`
+              ? ` · ${t(
+                  `puzzle.winStreakCount${STREAK_INFO_SUFFIX[streakType!]}`,
+                  {
+                    count: displayStreak,
+                  },
+                )}`
               : ``}
           </Text>
         )}

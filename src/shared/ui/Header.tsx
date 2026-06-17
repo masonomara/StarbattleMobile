@@ -25,8 +25,6 @@ export function Header({
         {
           paddingTop: insets.top,
           height: SCREEN_HEADER_HEIGHT + insets.top,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.background,
         },
         bordered && {
           borderBottomWidth: 1,

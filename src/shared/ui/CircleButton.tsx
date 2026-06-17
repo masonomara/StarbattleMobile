@@ -38,7 +38,7 @@ const createStyles = (theme: Theme) =>
       shadowColor: '#000000',
       shadowOpacity: 0.1,
       shadowRadius: 24,
-      elevation: 8,
+      elevation: 4,
     },
     ghost: {
       backgroundColor: 'transparent',
