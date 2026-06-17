@@ -354,7 +354,7 @@ export function PuzzleScreen({
                   <Text role="headline" style={styles.starNumber}>
                     {puzzle.stars}
                   </Text>
-                  <StarIcon size={14} color={theme.text} />
+                  <StarIcon size={16} color={theme.text} />
                 </View>
               </CircleButton>
             </Animated.View>
@@ -476,11 +476,13 @@ const createStyles = (theme: Theme) =>
     starCount: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 2,
     },
     starNumber: {
       fontWeight: '600',
       color: theme.text,
+      fontSize: 19,
+      textAlign: 'center',
+      paddingHorizontal: 3,
     },
     skipButton: {
       backgroundColor: theme.surface,
