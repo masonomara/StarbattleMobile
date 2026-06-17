@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { View } from 'react-native';
+import { tokens } from '../theme/palettes';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -84,23 +85,38 @@ export function PulseBox({
   );
 }
 
+// Measured cap-to-em ratio of the type scale: the bar stands for the text's ink
+// (cap height), not the full leading, so it reads as a line of text rather than
+// a chunky full-leading block. 0.70 reproduces the hand-tuned bars exactly
+// (title1 round(30·0.7)=21, body round(17·0.7)=12).
+const CAP_RATIO = 0.7;
+
 // Skeleton for one line of text. The outer box claims the real line's full
 // lineHeight (so the placeholder footprint matches the Text it stands in for),
 // while the pulsing bar inside is sized to the text's ink (~cap height) and
-// centered — it reads as a line of text, not a chunky full-leading block.
+// centered. Pass `role` to pull both from the type scale `Text` reads, so the
+// skeleton tracks the role's size automatically and can't drift.
 export function PulseLine({
   width,
+  role,
   lineHeight,
   barHeight,
   radius = 4,
   baseColor,
   style,
 }: PulseLineProps) {
+  // The props union guarantees an explicit lineHeight/barHeight whenever `role`
+  // is absent, but destructuring drops that correlation — hence the asserts.
+  const t = role ? tokens.type[role] : null;
+  const resolvedLineHeight = t ? t.lineHeight : lineHeight!;
+  const resolvedBarHeight = t ? Math.round(t.fontSize * CAP_RATIO) : barHeight!;
   return (
-    <View style={[{ height: lineHeight, justifyContent: 'center' }, style]}>
+    <View
+      style={[{ height: resolvedLineHeight, justifyContent: 'center' }, style]}
+    >
       <PulseBox
         width={width}
-        height={barHeight}
+        height={resolvedBarHeight}
         radius={radius}
         baseColor={baseColor}
       />

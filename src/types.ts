@@ -118,14 +118,20 @@ export type PulseBoxProps = {
 // (barHeight ≈ the text's ink height) centered inside a lineHeight-tall box, so
 // the placeholder reads like a text run yet occupies the real line's exact
 // vertical footprint — no layout shift when the real Text swaps in.
+//
+// Pass `role` to derive the footprint and bar from the type scale (the same
+// source `Text` reads) so the skeleton can never drift when a role's size
+// changes; the explicit `lineHeight`/`barHeight` form is the escape hatch for
+// non-text bars. The union enforces exactly one of the two.
 export type PulseLineProps = {
   width: number;
-  lineHeight: number;
-  barHeight: number;
   radius?: number;
   baseColor: string;
   style?: StyleProp<ViewStyle>;
-};
+} & (
+  | { role: TextRole; lineHeight?: never; barHeight?: never }
+  | { role?: never; lineHeight: number; barHeight: number }
+);
 
 export type PackCardSkeletonProps = {
   theme: Theme;

@@ -94,20 +94,10 @@ export function PackCardSkeleton({ theme }: PackCardSkeletonProps) {
         />
       </View>
       <View style={styles.info}>
-        {/* body name line: 17/22. */}
-        <PulseLine
-          width={110}
-          lineHeight={22}
-          barHeight={12}
-          baseColor={theme.border}
-        />
-        {/* body meta line: 17/22, butted under the name like the real card. */}
-        <PulseLine
-          width={56}
-          lineHeight={22}
-          barHeight={12}
-          baseColor={theme.border}
-        />
+        {/* Matches the real card's two body lines; dims track the type scale. */}
+        <PulseLine role="body" width={110} baseColor={theme.border} />
+        {/* body meta line, butted under the name like the real card. */}
+        <PulseLine role="body" width={56} baseColor={theme.border} />
       </View>
     </View>
   );

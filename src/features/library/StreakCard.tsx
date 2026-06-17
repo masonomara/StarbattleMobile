@@ -70,23 +70,16 @@ export function StreakCardSkeleton({ size, theme }: StreakCardSkeletonProps) {
         radius={0}
         baseColor={theme.border}
       />
-      {/* title1 line: 30/37. Bar ≈ cap height, centered in the 37px line box. */}
+      {/* Matches the real card's title1 + body lines; dims track the type scale. */}
       <PulseLine
+        role="title1"
         width={210}
-        lineHeight={37}
-        barHeight={21}
         radius={6}
         baseColor={theme.border}
         style={styles.label}
       />
-      {/* body meta line: 17/22, butted directly under the title (no gap). */}
-      <PulseLine
-        width={140}
-        lineHeight={22}
-        barHeight={12}
-        radius={4}
-        baseColor={theme.border}
-      />
+      {/* body meta line, butted directly under the title (no gap). */}
+      <PulseLine role="body" width={140} radius={4} baseColor={theme.border} />
     </View>
   );
 }
