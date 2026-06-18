@@ -1,0 +1,46 @@
+import React from 'react';
+import { View, Switch, StyleSheet } from 'react-native';
+import { Text } from './Text';
+import { useTheme } from '../theme/useTheme';
+import type { ToggleRowProps } from '../../types';
+
+export function ToggleRow({ label, value, onToggle, first }: ToggleRowProps) {
+  const theme = useTheme();
+  return (
+    <View
+      style={[
+        styles.row,
+        !first && styles.bordered,
+        { borderColor: theme.border },
+      ]}
+    >
+      <Text role="body" style={{ color: theme.text, fontWeight: '400' }}>
+        {label}
+      </Text>
+      <View>
+        <Switch
+          style={styles.switch}
+          value={value}
+          onValueChange={onToggle}
+          trackColor={{ true: theme.blue, false: theme.border }}
+          ios_backgroundColor={theme.border}
+        />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 54,
+  },
+  bordered: {
+    borderTopWidth: 1,
+  },
+  switch: {
+    transform: [{ scaleX: 0.92 }, { scaleY: 0.92 }],
+  },
+});

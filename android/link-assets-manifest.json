@@ -2,12 +2,36 @@
   "migIndex": 1,
   "data": [
     {
-      "path": "assets/fonts/BricolageGrotesque-Variable.ttf",
-      "sha1": "eb41484bba537d10397bc6fa741c534b4c0ae67b"
+      "path": "assets/fonts/BricolageGrotesque-Bold.ttf",
+      "sha1": "0c48c38c9f84c40d05753b18f03e430804abef7e"
     },
     {
-      "path": "assets/fonts/Karla-Variable.ttf",
-      "sha1": "d96122d6b46f29eb39527703e20a429af1b57e66"
+      "path": "assets/fonts/BricolageGrotesque-Medium.ttf",
+      "sha1": "00b52748ab0f9d6d9cb7c20ed1f4227d67af6f50"
+    },
+    {
+      "path": "assets/fonts/BricolageGrotesque-Regular.ttf",
+      "sha1": "bd1311175c813357d3f122cfac1991acbd244516"
+    },
+    {
+      "path": "assets/fonts/BricolageGrotesque-SemiBold.ttf",
+      "sha1": "87104d5573f33b6a347484832c03059a58d201d2"
+    },
+    {
+      "path": "assets/fonts/Karla-Bold.ttf",
+      "sha1": "6f56a9d6cc6e51774600e98dfe91f97b30329840"
+    },
+    {
+      "path": "assets/fonts/Karla-Medium.ttf",
+      "sha1": "d8f2ec12a7caadf0acca76df8dee3fc40f6bb8c0"
+    },
+    {
+      "path": "assets/fonts/Karla-Regular.ttf",
+      "sha1": "512d995b5e15eeb71c52fd724cce3ff99b5f068e"
+    },
+    {
+      "path": "assets/fonts/Karla-SemiBold.ttf",
+      "sha1": "49567e4136d235b6d739c1e87501c642cb9cc3f3"
     }
   ]
 }

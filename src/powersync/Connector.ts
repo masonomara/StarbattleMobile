@@ -4,8 +4,8 @@ import type {
   PowerSyncCredentials,
 } from '@powersync/react-native';
 import { UpdateType } from '@powersync/react-native';
-import { supabase } from '../supabase';
-import { POWERSYNC_URL } from '../config';
+import { supabase } from '../shared/lib/supabase';
+import { POWERSYNC_URL } from '../shared/lib/config';
 
 // Postgres error class codes that indicate the row is fundamentally malformed or
 // forbidden — retrying will never succeed, so we discard the transaction rather

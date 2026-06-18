@@ -7,8 +7,12 @@ import { column, Schema, Table, PowerSyncDatabase } from '@powersync/react-nativ
 // expo-sqlite driver) for PowerSync's local SQLite database.
 import { OPSqliteOpenFactory } from '@powersync/op-sqlite';
 
+// NOTE: the Supabase `pack_hints` table is intentionally NOT wired here. Hints
+// ship as separate "{packId}-hints.json" Storage files (see packFetcher's
+// fetchHints); the DB table is staged for a future sync path, not live yet.
 const packs = new Table({
   name: column.text,
+  name_es: column.text,
   grid_size: column.integer,
   stars: column.integer,
   difficulty: column.text,
@@ -19,6 +23,7 @@ const packs = new Table({
   published: column.integer,
   sort_order: column.integer,
   type: column.text,
+  type_es: column.text,
 });
 
 // Primary key for user-scoped rows is a composite string: "${userId}:${puzzleId}".
@@ -50,14 +55,15 @@ const streaks = new Table(
   { indexes: { by_user_type: ['user_id', 'type'] } },
 );
 
-const user_entitlements = new Table({
-  user_id: column.text,
-  is_premium: column.integer,
-  premium_purchased_at: column.text,
-  owned_pack_ids: column.text,
-  updated_at: column.text,
-},
-{ indexes: { by_user: ['user_id'] } },
+const user_entitlements = new Table(
+  {
+    user_id: column.text,
+    is_premium: column.integer,
+    premium_purchased_at: column.text,
+    owned_pack_ids: column.text,
+    updated_at: column.text,
+  },
+  { indexes: { by_user: ['user_id'] } },
 );
 
 const streak_archive = new Table(
@@ -76,8 +82,6 @@ export const AppSchema = new Schema({
   user_entitlements,
   streak_archive,
 });
-
-export type Database = (typeof AppSchema)['types'];
 
 export const db = new PowerSyncDatabase({
   schema: AppSchema,

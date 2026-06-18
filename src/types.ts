@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { StyleProp, ViewStyle, TextStyle, TextProps } from 'react-native';
 
 // NAVIGATION
 // All app-wide types are centralised here per CLAUDE.md. Keep it that way —
@@ -26,18 +26,28 @@ declare global {
 // COMPONENTS
 
 export type CircleButtonProps = {
-  onPress: () => void;
+  onPress?: () => void;
   children: ReactNode;
   hitSlop?: number;
   ghost?: boolean;
+};
+
+export type StarIconProps = {
+  size: number;
+  color: string;
 };
 
 export type HeaderProps = {
   left?: ReactNode;
   center?: ReactNode;
   right?: ReactNode;
-  absolute?: boolean;
-  bordered?: boolean;
+};
+
+export type ToggleRowProps = {
+  label: string;
+  value: boolean;
+  onToggle: (v: boolean) => void;
+  first?: boolean;
 };
 
 export type ErrorBoundaryProps = {
@@ -66,6 +76,13 @@ export type PuzzleThumbnailProps = {
   size: number;
   theme: Theme;
   coloredRegions: boolean;
+  // Line-weight tuning (px). See PuzzleThumbnail for how each is clamped.
+  regionBorderTarget?: number; // heavy lines between regions + perimeter
+  regionBorderCapFrac?: number; // max fraction of a cell
+  regionBorderMin?: number; // px floor
+  gridLineTarget?: number; // light lines between cells inside a region
+  gridLineCapFrac?: number; // max fraction of a cell
+  gridLineMin?: number; // px floor
 };
 
 export type PackCardProps = {
@@ -73,10 +90,22 @@ export type PackCardProps = {
   meta: string;
   preview?: Puzzle;
   onPress: () => void;
+  // Custom right-side content. Takes precedence over the locked/completed/total
+  // progress states below (used by StreaksModal to render its own lock).
   right?: ReactNode;
+  // Built-in right-side states. `locked` shows a lock icon; otherwise, when
+  // `total` is set, a "completed/total puzzles completed" label (with a leading
+  // checkmark once the pack is fully solved).
+  locked?: boolean;
+  completed?: number;
+  total?: number;
   theme: Theme;
   coloredRegions: boolean;
   disabled?: boolean;
+};
+
+export type PulseProviderProps = {
+  children: ReactNode;
 };
 
 export type PulseBoxProps = {
@@ -87,7 +116,45 @@ export type PulseBoxProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+// A skeleton stand-in for a single line of text: a shorter visible bar
+// (barHeight ≈ the text's ink height) centered inside a lineHeight-tall box, so
+// the placeholder reads like a text run yet occupies the real line's exact
+// vertical footprint — no layout shift when the real Text swaps in.
+//
+// Pass `role` to derive the footprint and bar from the type scale (the same
+// source `Text` reads) so the skeleton can never drift when a role's size
+// changes; the explicit `lineHeight`/`barHeight` form is the escape hatch for
+// non-text bars. The union enforces exactly one of the two.
+export type PulseLineProps = {
+  width: number;
+  radius?: number;
+  baseColor: string;
+  style?: StyleProp<ViewStyle>;
+} & (
+  | { role: TextRole; lineHeight?: never; barHeight?: never }
+  | { role?: never; lineHeight: number; barHeight: number }
+);
+
 export type PackCardSkeletonProps = {
+  theme: Theme;
+};
+
+// Whether today's streak puzzle is untouched, started but unsolved, or solved.
+export type StreakCardStatus = 'not-started' | 'in-progress' | 'complete';
+
+export type StreakCardProps = {
+  label: string;
+  starCount: number;
+  status: StreakCardStatus;
+  preview: Puzzle;
+  size: number;
+  theme: Theme;
+  coloredRegions: boolean;
+  onPress: () => void;
+};
+
+export type StreakCardSkeletonProps = {
+  size: number;
   theme: Theme;
 };
 
@@ -172,10 +239,16 @@ export type HintsFile = {
   hints: HintStep[][];
 };
 
+// Per-puzzle difficulty grade emitted by the generator. `difficulty` is a raw
+// numeric score; `band` is the bucketed label. Carried through but not yet
+// surfaced in the UI — present so they can be displayed/sorted on later.
+export type DifficultyBand = 'easy' | 'medium' | 'hard';
+
 export type RawPuzzle = {
   sbn: string;
   solution: Coord[];
-  hints?: HintStep[];
+  difficulty?: number;
+  band?: DifficultyBand;
 };
 
 export type Puzzle = {
@@ -187,15 +260,15 @@ export type Puzzle = {
   solution: Coord[];
   solutionSet: Set<number>;
   hints: HintStep[];
+  difficulty?: number;
+  band?: DifficultyBand;
 };
 
 export type Pack = {
   id: string;
   name: string;
   version: number;
-  free: boolean;
   gridSize: number;
-  stars: number;
   puzzles: RawPuzzle[];
 };
 
@@ -251,9 +324,9 @@ export type ThemeColors = {
   regions: RegionColors;
 };
 
-// Themes that are shipped and selectable by the user.
-// Commented-out names are palette definitions that exist in src/themes/ but
-// are not yet exposed in the settings UI (pending design review).
+// Themes that are shipped and selectable by the user. To add one: define its
+// dark/light ThemeColors in shared/theme/palettes.ts, add it to PALETTES, then
+// add its name to this union.
 export type ThemeName =
   | 'original'
   | 'primer'
@@ -261,10 +334,10 @@ export type ThemeName =
   | 'rosePine'
   | 'seoul256'
   | 'tokyoNight';
-// Candidates: ayu, catppuccin, everforest, iceberg, nightOwl, nightfox,
-//             one, oneHalf, solarized, zenbonesForestbones, zenbonesNeobones,
-//             zenbonesRosebones, zenbonesSeoulbones, zenbonesTokyobones,
-//             zenbonesZenwritten.
+// Palette ideas, not yet implemented: ayu, catppuccin, everforest, iceberg,
+// nightOwl, nightfox, one, oneHalf, solarized, zenbonesForestbones,
+// zenbonesNeobones, zenbonesRosebones, zenbonesSeoulbones, zenbonesTokyobones,
+// zenbonesZenwritten.
 
 export type PaletteVariants = {
   label: string;
@@ -277,7 +350,7 @@ export type PaletteVariants = {
 // palette; tokens are layout constants that never change per-theme. Consider
 // separating them so callers can import tokens directly without needing a
 // full theme object (e.g. for non-themed utility components).
-// See: src/themes/palettes.ts `tokens` object.
+// See: shared/theme/palettes.ts `tokens` object.
 export type Theme = {
   isDark: boolean;
   background: string;
@@ -302,6 +375,41 @@ export type Theme = {
   fontSizeBody: number;
   fontWeightSemibold: '600';
   cellSize: number;
+  // Named typographic roles — the single source of truth for size/leading/
+  // weight/tracking. Use via <Text role="..."> so every instance of a role is
+  // uniform. Font family is intentionally omitted (system font for Dynamic Type).
+  type: Record<TextRole, TextRoleStyle>;
+};
+
+// The set of typographic roles (an iOS-style type scale). Pick the closest role
+// rather than hardcoding a fontSize. The role owns size/line-height/weight — a
+// style should not override fontWeight, so every instance of a role matches.
+export type TextRole =
+  | 'largeTitle'
+  | 'title1'
+  | 'title2'
+  | 'title3'
+  | 'headline'
+  | 'body'
+  | 'callout'
+  | 'subhead'
+  | 'footnote'
+  | 'caption1'
+  | 'caption2';
+
+// Letter spacing is intentionally omitted: with the system font, the OS applies
+// its own optical tracking per size, which beats a hand-tuned constant.
+export type TextRoleStyle = {
+  fontSize: number;
+  lineHeight: number;
+  fontWeight: TextStyle['fontWeight'];
+};
+
+// Props for the app's <Text> wrapper: RN TextProps plus an optional role token.
+// RN's TextProps already declares an accessibility `role`; omit it so our
+// typographic role takes that name (the app doesn't use the ARIA role on Text).
+export type AppTextProps = Omit<TextProps, 'role'> & {
+  role?: TextRole;
 };
 
 // USER
@@ -315,15 +423,26 @@ export type Entitlements = {
 export type PackCatalogItem = {
   id: string;
   name: string;
+  // Spanish display name (backend `packs.name_es`). Falls back to `name` when
+  // absent. Use packDisplayName() to resolve the right one for the active locale.
+  nameEs?: string;
   gridSize: number;
   stars: number;
   difficulty?: 'normal' | 'hard';
   isFree: boolean;
-  priceUsd?: number;
   puzzleCount: number;
   storagePath?: string;
-  // Present only for streak packs (daily/weekly/monthly). Absent for library packs.
-  type?: StreakType;
+  // Dual-purpose, set by the backend `packs.type` column:
+  //   - a StreakType ('daily' | 'weekly' | 'monthly') marks a streak-carousel pack
+  //   - any other non-empty string is a library bundle name and groups the pack
+  //     into a Puzzle Library section (e.g. 'Intro', '1-Star Puzzles')
+  // Absent/empty packs fall into the library's ungrouped section.
+  // NOTE: `type` is the canonical (English) value — always use it for streak
+  // detection, grouping, and sorting. `typeEs` is display-only.
+  type?: string;
+  // Spanish label for a library bundle section header (backend `packs.type_es`).
+  // Display-only; never used as a grouping/sort key. Falls back to `type`.
+  typeEs?: string;
 };
 
 export type PaywallContext =
@@ -332,7 +451,6 @@ export type PaywallContext =
       type: 'paid-pack';
       packId: string;
       packName: string;
-      priceUsd: number | undefined;
       storagePath: string;
     }
   | { type: 'unavailable'; packId: string; packName: string };

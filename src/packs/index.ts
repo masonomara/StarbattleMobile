@@ -1,30 +1,33 @@
-import type { RawPuzzle, Pack, StreakType, HintStep, HintsFile } from '../types';
-import { getRNFS, assertSafeKey, encodeForDisk } from './packStorage';
+import type { RawPuzzle, Pack, StreakType } from '../types';
+import { getRNFS, assertSafeKey, writeFileThrottled } from './packStorage';
 import {
   fetchFromSupabase,
   validatePackText,
   validateHintsText,
+  downloadToFile,
   fetchPackEtag,
   getCachedEtag,
   setCachedEtag,
 } from './packFetcher';
 import {
   loadPack,
-  loadPackHints as _loadPackHints,
   warmPackCache,
   hasPackCacheEntry,
   warmHintsCache,
   hasHintsCacheEntry,
 } from './packCache';
+import { time } from '../shared/lib/perfLog';
+import i18n from '../shared/lib/i18n';
+import { UserFacingError } from '../shared/lib/errors';
 
 const PREVIEW_PUZZLE_COUNT = 1;
 
-export function loadPackHints(packId: string): Promise<HintStep[][]> {
-  return _loadPackHints(packId);
-}
-
 // ETag-aware background prefetch of "{packId}-hints.json" to disk; mirrors
-// prefetchPackFile.
+// prefetchPackFile. Streams straight to disk (downloadToFile) so the file — the
+// largest in the catalog — never crosses the JS bridge. We intentionally do NOT
+// warm the in-memory cache here: warming would mean reading the multi-MB file
+// back into JS, reintroducing the very bridge cost streaming avoids. The file is
+// on disk for offline use; fetchHints reads and caches it on first demand.
 export async function prefetchHintsFile(packId: string): Promise<void> {
   assertSafeKey(packId);
   const key = `${packId}-hints.json`;
@@ -50,23 +53,25 @@ export async function prefetchHintsFile(packId: string): Promise<void> {
     return;
   }
 
-  let text: string;
-  try {
-    text = await fetchFromSupabase(key);
-    validateHintsText(text);
-  } catch {
+  // No filesystem (e.g. tests): fall back to the in-memory path so hints are
+  // still cached for the session.
+  if (!rnfs) {
+    try {
+      warmHintsCache(packId, validateHintsText(await fetchFromSupabase(key)));
+      if (remoteEtag) setCachedEtag(key, remoteEtag);
+    } catch {
+      // best-effort
+    }
     return;
   }
 
-  if (rnfs) {
-    const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
-    await rnfs.mkdir(packDir).catch(() => {});
-    await rnfs
-      .writeFile(`${packDir}/${key}`, encodeForDisk(text), 'utf8')
-      .catch(() => {});
+  const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+  await rnfs.mkdir(packDir).catch(() => {});
+  try {
+    await downloadToFile(key, `${packDir}/${key}`);
+  } catch {
+    return;
   }
-
-  warmHintsCache(packId, (JSON.parse(text) as HintsFile).hints);
   if (remoteEtag) setCachedEtag(key, remoteEtag);
 }
 
@@ -145,26 +150,21 @@ export async function downloadPack(
 ): Promise<void> {
   assertSafeKey(packId);
   const rnfs = getRNFS();
-  if (!rnfs)
-    throw new Error(
-      'File system unavailable. Please restart the app or reinstall.',
-    );
+  if (!rnfs) throw new UserFacingError(i18n.t('errors.storageUnavailable'));
   const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
   await rnfs.mkdir(packDir).catch(() => {});
   const text = await fetchFromSupabase(storagePath);
-  validatePackText(text);
-  await rnfs.writeFile(
-    `${packDir}/${packId}.json`,
-    encodeForDisk(text),
-    'utf8',
-  );
-  warmPackCache(`${packId}.json`, JSON.parse(text) as Pack);
+  const pack = validatePackText(text);
+  await writeFileThrottled(rnfs, `${packDir}/${packId}.json`, text);
+  warmPackCache(`${packId}.json`, pack);
 }
 
 // ETag-aware download for a regular pack. Uses storagePath for the Supabase
 // key; saves to {packId}.json locally. Skips when:
 //   - the file is already on disk AND the remote ETag matches the cached ETag
 // Always downloads when the file is missing from disk, regardless of ETag.
+// Streams to disk (see prefetchHintsFile) and validates lazily: fetchPack checks
+// the version and re-fetches on a parse failure when the file is first read.
 export async function prefetchPackFile(
   packId: string,
   storagePath: string,
@@ -197,23 +197,27 @@ export async function prefetchPackFile(
     return; // network unavailable
   }
 
-  let text: string;
-  try {
-    text = await fetchFromSupabase(storagePath);
-    validatePackText(text);
-  } catch {
+  // No filesystem (e.g. tests): fall back to the in-memory path.
+  if (!rnfs) {
+    try {
+      warmPackCache(
+        `${packId}.json`,
+        validatePackText(await fetchFromSupabase(storagePath)),
+      );
+      if (remoteEtag) setCachedEtag(storagePath, remoteEtag);
+    } catch {
+      // best-effort
+    }
     return;
   }
 
-  if (rnfs) {
-    const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
-    await rnfs.mkdir(packDir).catch(() => {});
-    await rnfs
-      .writeFile(`${packDir}/${packId}.json`, encodeForDisk(text), 'utf8')
-      .catch(() => {});
+  const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
+  await rnfs.mkdir(packDir).catch(() => {});
+  try {
+    await downloadToFile(storagePath, `${packDir}/${packId}.json`);
+  } catch {
+    return;
   }
-
-  warmPackCache(`${packId}.json`, JSON.parse(text) as Pack);
   if (remoteEtag) setCachedEtag(storagePath, remoteEtag);
 }
 
@@ -261,14 +265,21 @@ export async function cachePackPreview(
   }
 
   let text: string;
+  let parsed: Pack;
   try {
     text = await fetchFromSupabase(storagePath);
-    validatePackText(text);
+    // Old non-streaming path: the full pack crosses the bridge (blobToText) and
+    // is JSON.parsed on the JS thread, once per unpurchased pack. Timed because
+    // several of these can overlap a puzzle open and contend for the thread.
+    const endParse = time('PREVIEW', `JSON.parse ${packId} full pack`, {
+      sync: true,
+    });
+    parsed = validatePackText(text);
+    endParse(`${(text.length / 1024).toFixed(0)} KB`);
   } catch {
     return;
   }
 
-  const parsed = JSON.parse(text) as { puzzles: RawPuzzle[] };
   const previewData = {
     puzzles: parsed.puzzles.slice(0, PREVIEW_PUZZLE_COUNT),
   };
@@ -277,13 +288,11 @@ export async function cachePackPreview(
   if (rnfs) {
     const packDir = `${rnfs.DocumentDirectoryPath}/packs`;
     await rnfs.mkdir(packDir).catch(() => {});
-    await rnfs
-      .writeFile(
-        `${packDir}/${packId}_preview.json`,
-        encodeForDisk(previewText),
-        'utf8',
-      )
-      .catch(() => {});
+    await writeFileThrottled(
+      rnfs,
+      `${packDir}/${packId}_preview.json`,
+      previewText,
+    ).catch(() => {});
   }
 
   warmPackCache(`${packId}_preview.json`, JSON.parse(previewText) as Pack);
