@@ -2,18 +2,9 @@ import React from 'react';
 import { View, Switch, StyleSheet } from 'react-native';
 import { Text } from './Text';
 import { useTheme } from '../theme/useTheme';
+import type { ToggleRowProps } from '../../types';
 
-export function ToggleRow({
-  label,
-  value,
-  onToggle,
-  first,
-}: {
-  label: string;
-  value: boolean;
-  onToggle: (v: boolean) => void;
-  first?: boolean;
-}) {
+export function ToggleRow({ label, value, onToggle, first }: ToggleRowProps) {
   const theme = useTheme();
   return (
     <View
