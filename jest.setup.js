@@ -111,7 +111,9 @@ jest.mock('react-native-mmkv', () => ({
       getString: k => (store.has(k) ? String(store.get(k)) : undefined),
       getNumber: k => (store.has(k) ? Number(store.get(k)) : undefined),
       getBoolean: k => (store.has(k) ? Boolean(store.get(k)) : undefined),
-      delete: k => store.delete(k),
+      // Real react-native-mmkv v4 instances expose remove(), not delete() —
+      // the app (supabase.ts, packFetcher.ts) calls .remove(), so the stub must too.
+      remove: k => store.delete(k),
       contains: k => store.has(k),
       getAllKeys: () => [...store.keys()],
       clearAll: () => store.clear(),
