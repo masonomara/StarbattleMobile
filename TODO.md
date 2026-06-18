@@ -1,9 +1,5 @@
 # TODO
 
-## V1
-
-- [ ] do a run through on android device
-
 ### Monetization
 - [ ] Make sure adapty/google play/app store connect are all working
 - [ ] Add prices for Latin America and Europe
