@@ -31,6 +31,7 @@ import { useTheme } from '../../shared/theme/useTheme';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { getCompletedPuzzleIdsForPack } from '../../shared/lib/progress';
+import { track } from '../../shared/lib/telemetry';
 import { parsePuzzle } from '../../shared/lib/parsePuzzle';
 import { packDisplayName } from '../../shared/lib/localizedPack';
 import type {
@@ -213,6 +214,7 @@ export function LibraryScreen({
     // Sequential lock on a free pack: a native alert mirroring the premium
     // prompt in ArchivePackScreen. "Unlock All" routes to settings, where the
     // premium purchase lives.
+    track('paywall_shown', { meta: { context: 'sequential', pack: packId } });
     Alert.alert(t('paywall.lockedTitle'), t('paywall.lockedBody'), [
       { text: t('streaks.notNow'), style: 'cancel' },
       {

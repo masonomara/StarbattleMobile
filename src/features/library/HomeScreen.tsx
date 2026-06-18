@@ -36,7 +36,7 @@ import {
 } from '../../shared/lib/streakDate';
 import { packDisplayName, packTypeLabel } from '../../shared/lib/localizedPack';
 import { useAuthStore } from '../../shared/stores/authStore';
-import { startupTimer, msSinceLaunch } from '../../shared/lib/startupTimer';
+import { startupTimer } from '../../shared/lib/startupTimer';
 import { mark } from '../../shared/lib/perfLog';
 import { track } from '../../shared/lib/telemetry';
 import { StreakCard, StreakCardSkeleton } from './StreakCard';
@@ -264,10 +264,10 @@ export function HomeScreen({
   };
 
   useEffect(() => {
+    // app_start moved to navigation.tsx (bootsplash-hidden) so it measures
+    // launch → first paint regardless of whether the first route is Home or the
+    // Tutorial. This mount log stays for warm-start / dev tracing only.
     startupTimer.log('HomeScreen first mount');
-    // app_start: launch → home interactive. First HomeScreen mount per process
-    // is always a cold start (a warm resume doesn't remount it).
-    track('app_start', { duration_ms: msSinceLaunch(), meta: { cold: true } });
   }, []);
 
   // Split the catalog in one pass: StreakType packs go to the carousel, the rest
@@ -440,9 +440,10 @@ export function HomeScreen({
                         size={streakCardSize}
                         theme={theme}
                         coloredRegions={coloredRegions}
-                        onPress={() =>
-                          navigation.navigate('Puzzle', { packId: pack.id })
-                        }
+                        onPress={() => {
+                          track('streak_play', { meta: { type } });
+                          navigation.navigate('Puzzle', { packId: pack.id });
+                        }}
                       />
                     );
                   })}

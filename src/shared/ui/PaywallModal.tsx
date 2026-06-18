@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -16,6 +16,7 @@ import { rgba } from '../theme/color';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { purchasePremium, purchasePack, PREMIUM_PRODUCT_ID } from '../lib/payments';
+import { track } from '../lib/telemetry';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../lib/config';
 import type { Theme, PaywallModalProps } from '../../types';
 
@@ -44,6 +45,16 @@ export function PaywallModal({
   const packPrice = useProductPrice(
     context?.type === 'paid-pack' ? `starbattle_pack_${context.packId}` : '',
   );
+
+  // Funnel: top-of-funnel — record that a paywall was surfaced. `context` is a
+  // stable state object while open and a fresh object on each open, so this fires
+  // once per open (and once with null on close, which we ignore).
+  useEffect(() => {
+    if (!context) return;
+    track('paywall_shown', {
+      meta: { context: context.type, pack: context.packId },
+    });
+  }, [context]);
 
   if (!context) return null;
 
