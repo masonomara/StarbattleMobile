@@ -731,38 +731,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
       flex: 1,
       paddingTop: SCREEN_HEADER_HEIGHT + insets.top + 8,
     },
-    // Streak bars
+    // Streak summary line under the header title ("current · best").
     bars: {
       flexDirection: 'row',
       color: theme.textSecondary,
       marginTop: 3,
-    },
-    bar: {
-      justifyContent: 'center',
-    },
-    barFill: {
-      position: 'absolute',
-      top: 0,
-      bottom: 0,
-      left: 0,
-    },
-    barFillHighlight: {
-      backgroundColor: theme.border,
-    },
-    barFillMuted: {
-      backgroundColor: theme.surface,
-    },
-    barContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-    },
-    barLabel: {
-      color: theme.text,
-    },
-    barValue: {
-      color: theme.textSecondary,
     },
     lockNote: {
       flexDirection: 'row',
@@ -915,13 +888,6 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     weekRange: {
       color: theme.text,
       fontWeight: 600,
-    },
-    weekSub: {
-      color: theme.textSecondary,
-      marginTop: 2,
-    },
-    weekSubCompleted: {
-      opacity: 0.7,
     },
 
     // Monthly — year view

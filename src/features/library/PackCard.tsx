@@ -151,16 +151,4 @@ const createStyles = (theme: Theme) =>
       alignItems: 'flex-end',
       justifyContent: 'center',
     },
-    progress: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    progressText: {
-      color: theme.text,
-      fontWeight: '400',
-    },
-    progressComplete: {
-      color: theme.green,
-    },
   });

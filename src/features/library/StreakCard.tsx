@@ -101,6 +101,5 @@ const createStyles = (theme: Theme) =>
     },
     meta: {
       color: theme.textSecondary,
-      // marginBottom: 6,
     },
   });

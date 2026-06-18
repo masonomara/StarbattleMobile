@@ -155,7 +155,6 @@ export function PuzzleScreen({
     }).start();
   }, [headerVisible, buttonOpacity]);
 
-
   const {
     pinchGesture,
     panGesture,
@@ -468,7 +467,7 @@ export function PuzzleScreen({
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background, display: 'flex' },
+    container: { flex: 1, backgroundColor: theme.background },
     loading: {
       flex: 1,
       justifyContent: 'center',
@@ -484,12 +483,7 @@ const createStyles = (theme: Theme) =>
       color: theme.text,
       textAlign: 'center',
       fontWeight: '600',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-
       zIndex: 200,
-      height: 'auto',
       maxWidth: 309,
     },
     starCount: {
@@ -510,7 +504,6 @@ const createStyles = (theme: Theme) =>
       borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
-      display: 'flex',
       shadowOffset: { width: 0, height: 4 },
       shadowColor: '#000000',
       shadowOpacity: 0.1,

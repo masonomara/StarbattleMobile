@@ -1,7 +1,3 @@
-// NOTE: fontWeight values (900, 700, 600) are numeric here, while the rest of
-// the codebase uses string literals ('900', '600'). StyleSheet.create accepts
-// both on newer React Native, but numeric fontWeight can produce TS errors in
-// strict mode. Prefer string literals for consistency.
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -143,7 +139,7 @@ export function WinBanner({
           <Text role="body" style={styles.winInfo}>
             {displayStreak > 0
               ? ` · ${t(
-                  `puzzle.winStreakCount${STREAK_INFO_SUFFIX[streakType!]}`,
+                  `puzzle.winStreakCount${STREAK_INFO_SUFFIX[streakType]}`,
                   {
                     count: displayStreak,
                   },
@@ -200,7 +196,6 @@ const createStyles = (theme: Theme) =>
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: theme.spacingXl,
-
       backgroundColor: theme.text,
     },
     winButtonText: {

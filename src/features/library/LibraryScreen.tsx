@@ -443,14 +443,4 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     cellNumberLocked: {
       color: theme.textSecondary,
     },
-    cornerBadge: {
-      position: 'absolute',
-      top: 4,
-      right: 4,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    cornerBadgeLocked: {
-      backgroundColor: theme.surface,
-    },
   });

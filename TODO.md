@@ -16,3 +16,6 @@
 
 ### UX
 - [ ] Add streak notifications
+
+### Tech debt
+- [ ] `usePackPreviews.ts`: the effect's `cancelled` flag doesn't abort in-flight preview fetches, so an entitlements/catalog re-sync (e.g. after purchase) can let a stale fetch overwrite newer previews on slow connections. Fix = an `AbortController` per effect run. (documented as RISK in the file)

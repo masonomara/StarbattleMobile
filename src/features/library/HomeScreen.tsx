@@ -584,15 +584,8 @@ const createStyles = (
     // Section header for each Puzzle Library bundle (Intro, 1-Star, …).
     sectionLabel: {
       color: theme.text,
-      // borderTopWidth: 1,
-      // borderTopColor: theme.border,
-      // paddingTop: 8,
       marginTop: 10,
       marginBottom: 14,
-      // textTransform: 'uppercase',
-
-      // fontSize: 14,
-      // lineHeight: 19,
     },
   });
 };
