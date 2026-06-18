@@ -17,18 +17,6 @@ async function getProducts(): Promise<AdaptyPaywallProduct[]> {
   if (!_productsPromise) {
     _productsPromise = adapty.getPaywall('main_paywall')
       .then(paywall => adapty.getPaywallProducts(paywall))
-      .then(products => {
-        if (__DEV__) {
-          // TEMP: confirms which storefront/currency StoreKit actually returns.
-          // Remove once regional pricing is validated.
-          products.forEach(p =>
-            console.log(
-              `[price] ${p.vendorProductId} | ${p.price?.currencyCode} | ${p.price?.localizedString} | amount=${p.price?.amount}`,
-            ),
-          );
-        }
-        return products;
-      })
       .catch(e => { _productsPromise = null; throw e; });
   }
   return _productsPromise;
