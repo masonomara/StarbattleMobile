@@ -106,6 +106,10 @@ export type PackCardProps = {
   disabled?: boolean;
 };
 
+export type PulseProviderProps = {
+  children: ReactNode;
+};
+
 export type PulseBoxProps = {
   width: number;
   height: number;

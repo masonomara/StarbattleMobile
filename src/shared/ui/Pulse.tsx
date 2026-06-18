@@ -10,7 +10,11 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import type { PulseBoxProps, PulseLineProps } from '../../types';
+import type {
+  PulseProviderProps,
+  PulseBoxProps,
+  PulseLineProps,
+} from '../../types';
 
 // The box is a solid baseColor View, so its View opacity reads directly as the
 // base color's opacity: pulse between 67% and 33%.
@@ -38,7 +42,7 @@ const PulseContext = createContext<SharedValue<number> | null>(null);
 //   2. Continuity — the phase lives here, not in the boxes, so a box mounting or
 //      unmounting (e.g. generic skeletons → per-pack skeletons as the catalog
 //      loads) reads the ongoing pulse instead of restarting from the start.
-export function PulseProvider({ children }: { children: React.ReactNode }) {
+export function PulseProvider({ children }: PulseProviderProps) {
   const opacity = useSharedValue(MAX_OPACITY);
 
   useEffect(() => {
