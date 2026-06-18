@@ -47,22 +47,30 @@ Apple and Google are **separate systems**: prices set in App Store Connect do
 
 ### Validate
 
-- **Console check:** the product's Pricing screen shows the full per-territory
-  table. Confirm LATAM/Europe rows match your intended discounted prices.
-- **Real proof — sandbox purchase from a discounted region** (the only test that
-  exercises your actual code path):
-  1. **Users and Access → Sandbox → Testers** → create/edit a tester, set
-     **Country or Region** to a discounted one (e.g. Brazil, Mexico).
-  2. On device: **Settings → Developer → Sandbox Apple Account** → sign in as that
-     tester. (If you changed an existing tester's region, sign out and back in.)
-  3. Launch a dev build, trigger the paywall (lock a paid pack, or open premium).
-  4. Confirm the price renders in the **local currency at the discounted amount**
-     (e.g. BRL), not USD.
-  5. Complete the purchase → confirm entitlement unlocks (premium flips / pack
-     downloads).
+**The price-by-territory table is the source of truth.** Real users get prices
+from it directly, based on their App Store account region — deterministically. If
+the table is right, regional pricing works. This is the validation that matters.
 
-> ⚠️ Apple price/metadata changes can take **up to 1 hour** to appear in sandbox.
-> If you still see USD, wait and re-sign-in before assuming a bug.
+- **Console check (do this):** App Store Connect → the product → **Pricing**. The
+  per-territory table must show your discounted LATAM/Europe rows in local
+  currency, with no region marked "Not available." Screenshot it — that's your
+  proof. See `launch-validation-checklist.md` items A1–A3.
+
+> ⚠️ **Do not validate regional pricing through sandbox.** Sandbox storefronts are
+> unreliable and frequently stay stuck on USD regardless of the tester's region —
+> this is a known sandbox bug, **not** a signal your config is wrong. Relocating an
+> existing sandbox tester is especially flaky; even a fresh foreign tester often
+> won't switch. Chasing a foreign price in sandbox is a dead end. TestFlight uses
+> production pricing tied to the tester's **real** account region, so it shows your
+> own region's price too — also not a way to see a foreign price.
+>
+> The only reliable live confirmation of a foreign price is a real App Store
+> account in that region, or **Adapty's post-launch analytics** (real per-country
+> prices and revenue). Pre-launch, trust the territory table.
+
+Sandbox is still useful for one thing: confirming the **purchase + entitlement
+flow** works end-to-end (buy succeeds → `premium` activates → webhook → Supabase).
+Just don't read its *price* as meaningful.
 
 ---
 
@@ -119,21 +127,27 @@ Adapty stores **no prices** — you're verifying mapping and sync, not amounts.
 
 ---
 
-## 4. End-to-end smoke test (per region)
+## 4. Two separate validations — keep them apart
 
-Run this once per discounted region after all three are configured:
+**Regional pricing is a config check, not a runtime test.** Confirm the
+price-by-territory tables in App Store Connect (and Play Console) per §1–§2. That
+is the whole validation — the tables deterministically drive what real users pay.
+Do **not** try to read a foreign price out of sandbox (see the §1 warning).
 
-1. Set the **Apple sandbox tester** to the region.
-2. Cold-launch the app (see caveat below).
-3. Open the paywall → price shows in **local currency, discounted amount**.
-4. Buy → purchase succeeds.
-5. Entitlement unlocks in-app (premium / owned pack).
-6. Adapty profile shows the event + access level.
-7. Supabase `user_entitlements` row updated (webhook fired).
+**The purchase + entitlement flow is the runtime test.** Sandbox is fine for this
+— ignore the *price* it shows and just confirm the chain works:
 
-> ⚠️ **Cold-launch between tests.** `payments.ts` caches paywall products for the
-> process lifetime (`_productsPromise`, see the note at line 9). A warm session
-> will **not** pick up a price change — fully restart the app each time.
+1. Sign in a sandbox tester, cold-launch the app.
+2. Open the paywall → buy → purchase succeeds.
+3. Entitlement unlocks in-app (`premium` / owned pack).
+4. Adapty profile shows the event + `premium` access level.
+5. Supabase `user_entitlements` row updated (webhook fired).
+
+> ⚠️ **Cold-launch between attempts.** `payments.ts` caches paywall products for
+> the process lifetime (`_productsPromise`, see the note at line 9). A warm session
+> won't pick up store-side changes — fully restart the app each time.
+
+See `launch-validation-checklist.md` for the full pre-submission evidence list.
 
 ---
 
