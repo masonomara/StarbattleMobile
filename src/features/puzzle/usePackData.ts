@@ -7,6 +7,7 @@ import {
   archiveKeyToDate,
   isStreakType,
 } from '../../shared/lib/streakDate';
+import { packDisplayName } from '../../shared/lib/localizedPack';
 import type { PackData } from '../../types';
 
 // Resolves route params into a fully loaded PackData object.
@@ -58,7 +59,9 @@ export function usePackData(
             // the same completion/solution you already have for that date.
             puzzleId: `${streakType}:${key}`,
             gridSize: pack.gridSize,
-            packName: pack.name,
+            // meta is defined here (isStreakType(meta.type) passed above); fall
+            // back to the loaded pack's name only to satisfy the type narrowing.
+            packName: meta ? packDisplayName(meta) : pack.name,
             // Archive puzzles are never the "last" puzzle in a sequence.
             isLastPuzzle: !archiveKey,
             // effectivePackId is the streakType, not the catalog ID — this is
@@ -83,7 +86,7 @@ export function usePackData(
             rawPuzzle: raw,
             puzzleId: `${packId}:${idx}`,
             gridSize: meta?.gridSize ?? parseInt(raw.sbn.split('x')[0], 10),
-            packName: meta?.name ?? packId,
+            packName: meta ? packDisplayName(meta) : packId,
             // puzzles is non-null here since raw = puzzles[idx] is truthy.
             isLastPuzzle: idx >= (meta?.puzzleCount ?? puzzles!.length) - 1,
             effectivePackId: packId,

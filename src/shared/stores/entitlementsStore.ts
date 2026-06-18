@@ -8,6 +8,7 @@ import type { Entitlements, PackCatalogItem } from '../../types';
 type PackRow = {
   id: string;
   name: string;
+  name_es: string | null;
   grid_size: number;
   stars: number;
   difficulty: string | null;
@@ -16,6 +17,7 @@ type PackRow = {
   puzzle_count: number;
   storage_path: string | null;
   type: string | null;
+  type_es: string | null;
 };
 
 const PACK_QUERY =
@@ -38,6 +40,7 @@ function mapPackRow(r: PackRow): PackCatalogItem {
   return {
     id: r.id,
     name: r.name,
+    nameEs: r.name_es ?? undefined,
     gridSize: r.grid_size,
     stars: r.stars,
     difficulty: (r.difficulty ?? undefined) as 'normal' | 'hard' | undefined,
@@ -46,6 +49,7 @@ function mapPackRow(r: PackRow): PackCatalogItem {
     storagePath: r.storage_path ?? undefined,
     // Either a StreakType (streak carousel) or a library bundle name — see PackCatalogItem.
     type: r.type ?? undefined,
+    typeEs: r.type_es ?? undefined,
   };
 }
 
@@ -77,6 +81,22 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
     const rows = await db.getAll<PackRow>(PACK_QUERY);
     endQuery(`${rows.length} rows`);
     const packCatalog = rows.map(mapPackRow);
+    if (__DEV__) {
+      // Confirms the _es columns actually synced to the device. If these are all
+      // null, the client schema (AppSchema) or the PowerSync sync rules are
+      // missing name_es/type_es, or the device hasn't re-synced since they were
+      // added — not a display bug.
+      const withEs = packCatalog.filter(p => p.nameEs).length;
+      console.log(
+        `[SB:packs] ${packCatalog.length} packs, ${withEs} have name_es; sample=`,
+        packCatalog[0] && {
+          name: packCatalog[0].name,
+          nameEs: packCatalog[0].nameEs,
+          type: packCatalog[0].type,
+          typeEs: packCatalog[0].typeEs,
+        },
+      );
+    }
     set({ packCatalog });
   },
 

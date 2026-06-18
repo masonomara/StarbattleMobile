@@ -17,6 +17,7 @@ import { useProductPrice } from '../../shared/hooks/useProductPrice';
 import { useTheme } from '../../shared/theme/useTheme';
 import { useAsyncAction } from '../../shared/hooks/useAsyncAction';
 import { purchasePremium, PREMIUM_PRODUCT_ID } from '../../shared/lib/payments';
+import { packDisplayName } from '../../shared/lib/localizedPack';
 import type { Theme } from '../../types';
 
 type EmailMode =
@@ -520,7 +521,7 @@ export function AccountSection() {
                 </Text>
                 {ownedPacks.map(p => (
                   <Text key={p.id} role="body" style={styles.ownedPackName}>
-                    {p.name}
+                    {packDisplayName(p)}
                   </Text>
                 ))}
               </>

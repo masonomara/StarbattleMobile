@@ -433,6 +433,9 @@ export type Entitlements = {
 export type PackCatalogItem = {
   id: string;
   name: string;
+  // Spanish display name (backend `packs.name_es`). Falls back to `name` when
+  // absent. Use packDisplayName() to resolve the right one for the active locale.
+  nameEs?: string;
   gridSize: number;
   stars: number;
   difficulty?: 'normal' | 'hard';
@@ -444,7 +447,12 @@ export type PackCatalogItem = {
   //   - any other non-empty string is a library bundle name and groups the pack
   //     into a Puzzle Library section (e.g. 'Intro', '1-Star Puzzles')
   // Absent/empty packs fall into the library's ungrouped section.
+  // NOTE: `type` is the canonical (English) value — always use it for streak
+  // detection, grouping, and sorting. `typeEs` is display-only.
   type?: string;
+  // Spanish label for a library bundle section header (backend `packs.type_es`).
+  // Display-only; never used as a grouping/sort key. Falls back to `type`.
+  typeEs?: string;
 };
 
 export type PaywallContext =

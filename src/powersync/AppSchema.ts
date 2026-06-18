@@ -12,6 +12,7 @@ import { OPSqliteOpenFactory } from '@powersync/op-sqlite';
 // fetchHints); the DB table is staged for a future sync path, not live yet.
 const packs = new Table({
   name: column.text,
+  name_es: column.text,
   grid_size: column.integer,
   stars: column.integer,
   difficulty: column.text,
@@ -22,6 +23,7 @@ const packs = new Table({
   published: column.integer,
   sort_order: column.integer,
   type: column.text,
+  type_es: column.text,
 });
 
 // Primary key for user-scoped rows is a composite string: "${userId}:${puzzleId}".

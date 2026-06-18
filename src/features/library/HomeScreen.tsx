@@ -34,6 +34,7 @@ import {
   STREAK_UNIT_KEY,
   isStreakType,
 } from '../../shared/lib/streakDate';
+import { packDisplayName, packTypeLabel } from '../../shared/lib/localizedPack';
 import { useAuthStore } from '../../shared/stores/authStore';
 import { startupTimer, msSinceLaunch } from '../../shared/lib/startupTimer';
 import { mark } from '../../shared/lib/perfLog';
@@ -174,6 +175,11 @@ export function HomeScreen({
   const packSectionYRef = useRef(0);
   const sectionLocalRef = useRef(new Map<string, number>());
   const sectionTopsRef = useRef<{ label: string; top: number }[]>([]);
+  // Maps a bundle's canonical (English) `type` to its localized display label,
+  // so the scrolling header title can name each library section in the active
+  // language. Kept in a ref because rebuildSectionTops (below) reads it from the
+  // layout callbacks; it's refreshed during render once librarySections is built.
+  const bundleLabelsRef = useRef<Map<string, string>>(new Map());
 
   // Resolves the title from the current scroll offset: a streak label while the
   // carousel is on top, then each library section's name as it reaches the
@@ -208,7 +214,11 @@ export function HomeScreen({
     const base = packSectionYRef.current;
     const tops: { label: string; top: number }[] = [];
     sectionLocalRef.current.forEach((localY, bundle) => {
-      if (bundle) tops.push({ label: bundle, top: base + localY });
+      if (bundle)
+        tops.push({
+          label: bundleLabelsRef.current.get(bundle) ?? bundle,
+          top: base + localY,
+        });
     });
     tops.sort((a, b) => a.top - b.top);
     sectionTopsRef.current = tops;
@@ -281,10 +291,23 @@ export function HomeScreen({
         STREAK_TYPES.indexOf(b.type as StreakType),
     );
     const sections = [...byBundle.entries()]
-      .map(([bundle, packs]) => ({ bundle, packs }))
+      // `bundle` (English `type`) stays the grouping/sort/measurement key;
+      // `label` is its localized display string for the section header.
+      .map(([bundle, packs]) => ({
+        bundle,
+        label: packTypeLabel(packs[0]),
+        packs,
+      }))
       .sort((a, b) => bundleSortKey(a.bundle) - bundleSortKey(b.bundle));
     return { streakPacks: streak, librarySections: sections };
   }, [packCatalog]);
+
+  // Refresh the bundle -> localized-label lookup the scrolling header reads.
+  bundleLabelsRef.current = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of librarySections) m.set(s.bundle, s.label);
+    return m;
+  }, [librarySections]);
 
   // Thumbnail previews per pack; each card fills in as its preview resolves.
   const { packPreviews } = usePackPreviews(packCatalog);
@@ -454,7 +477,7 @@ export function HomeScreen({
               >
                 {section.bundle ? (
                   <Text role="title3" style={styles.sectionLabel}>
-                    {section.bundle}
+                    {section.label}
                   </Text>
                 ) : null}
                 {section.packs.map(pack => {
@@ -467,7 +490,7 @@ export function HomeScreen({
                   return (
                     <PackCard
                       key={pack.id}
-                      name={pack.name}
+                      name={packDisplayName(pack)}
                       meta={t('home.packStar', { count: pack.stars })}
                       locked={!owned}
                       completed={

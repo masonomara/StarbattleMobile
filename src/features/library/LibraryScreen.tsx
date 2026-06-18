@@ -32,6 +32,7 @@ import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { getCompletedPuzzleIdsForPack } from '../../shared/lib/progress';
 import { parsePuzzle } from '../../shared/lib/parsePuzzle';
+import { packDisplayName } from '../../shared/lib/localizedPack';
 import type {
   Theme,
   RawPuzzle,
@@ -143,7 +144,7 @@ export function LibraryScreen({
 
   const catalogPack = packCatalog.find(p => p.id === packId);
   const puzzleCount = catalogPack?.puzzleCount ?? 0;
-  const packName = catalogPack?.name ?? packId;
+  const packName = catalogPack ? packDisplayName(catalogPack) : packId;
   const isFree = catalogPack?.isFree ?? true;
   const storagePath = catalogPack?.storagePath;
 
