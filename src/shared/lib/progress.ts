@@ -1,7 +1,7 @@
 import { db } from '../../powersync/AppSchema';
 import { useAuthStore } from '../stores/authStore';
 import { getCurrentKey, getPreviousKey } from './streakDate';
-import type { CellValue, StreakType, Streak } from '../../types';
+import type { CellValue, StreakType } from '../../types';
 
 // PowerSync exposes tables as views with INSTEAD OF triggers. rowsAffected is
 // unreliable on views (SQLite does not count trigger-internal changes), so we
@@ -99,7 +99,7 @@ export async function loadProgress(puzzleId: string): Promise<{
   }
 }
 
-async function fetchCompletedIdsForPack(
+export async function getCompletedPuzzleIdsForPack(
   packId: string,
   puzzleCount: number,
 ): Promise<Set<string>> {
@@ -115,13 +115,6 @@ async function fetchCompletedIdsForPack(
     [userId, ...ids],
   );
   return new Set(rows.map(r => r.puzzle_id));
-}
-
-export async function getCompletedPuzzleIdsForPack(
-  packId: string,
-  puzzleCount: number,
-): Promise<Set<string>> {
-  return fetchCompletedIdsForPack(packId, puzzleCount);
 }
 
 // Fetches every completed puzzle ID for the current user in one query.
@@ -163,30 +156,6 @@ export async function saveStreak(
      WHERE id = ?`,
     [currentCount, bestCount, lastCompletedKey, now, id],
   );
-}
-
-// Imperative one-shot read of streak rows. For reactive updates (e.g. the
-// home screen), use the useStreakRows hook instead — it subscribes to live
-// PowerSync changes rather than running a single query.
-export async function loadStreaks(): Promise<Streak[]> {
-  const userId = useAuthStore.getState().user?.id;
-  if (!userId) return [];
-
-  const rows = await db.getAll<{
-    type: string;
-    current_count: number;
-    best_count: number;
-    last_completed_key: string;
-  }>(
-    'SELECT type, current_count, best_count, last_completed_key FROM streaks WHERE user_id = ?',
-    [userId],
-  );
-  return rows.map(r => ({
-    type: r.type as StreakType,
-    current: r.current_count,
-    best: r.best_count,
-    lastCompletedKey: r.last_completed_key,
-  }));
 }
 
 // Records a completion of the current period and returns the resulting current

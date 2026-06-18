@@ -41,8 +41,6 @@ export type HeaderProps = {
   left?: ReactNode;
   center?: ReactNode;
   right?: ReactNode;
-  absolute?: boolean;
-  bordered?: boolean;
 };
 
 export type ToggleRowProps = {
@@ -139,18 +137,6 @@ export type PulseLineProps = {
 
 export type PackCardSkeletonProps = {
   theme: Theme;
-};
-
-// One circle in a streak progress row (daily → days of the week, weekly → weeks
-// of the month, monthly → months of the year).
-//   key       — the streak completion key this cell maps to (matches the suffix
-//               stored in puzzle_progress, e.g. "2026-06-07" / "2026-W23" / "2026-06")
-//   letter    — single-character label drawn in the circle
-//   isCurrent — true for the cell that contains "now" (today's day/week/month)
-export type StreakCell = {
-  key: string;
-  letter: string;
-  isCurrent: boolean;
 };
 
 // Whether today's streak puzzle is untouched, started but unsolved, or solved.
@@ -338,9 +324,9 @@ export type ThemeColors = {
   regions: RegionColors;
 };
 
-// Themes that are shipped and selectable by the user.
-// Commented-out names are palette definitions that exist in src/themes/ but
-// are not yet exposed in the settings UI (pending design review).
+// Themes that are shipped and selectable by the user. To add one: define its
+// dark/light ThemeColors in shared/theme/palettes.ts, add it to PALETTES, then
+// add its name to this union.
 export type ThemeName =
   | 'original'
   | 'primer'
@@ -348,10 +334,10 @@ export type ThemeName =
   | 'rosePine'
   | 'seoul256'
   | 'tokyoNight';
-// Candidates: ayu, catppuccin, everforest, iceberg, nightOwl, nightfox,
-//             one, oneHalf, solarized, zenbonesForestbones, zenbonesNeobones,
-//             zenbonesRosebones, zenbonesSeoulbones, zenbonesTokyobones,
-//             zenbonesZenwritten.
+// Palette ideas, not yet implemented: ayu, catppuccin, everforest, iceberg,
+// nightOwl, nightfox, one, oneHalf, solarized, zenbonesForestbones,
+// zenbonesNeobones, zenbonesRosebones, zenbonesSeoulbones, zenbonesTokyobones,
+// zenbonesZenwritten.
 
 export type PaletteVariants = {
   label: string;
@@ -364,7 +350,7 @@ export type PaletteVariants = {
 // palette; tokens are layout constants that never change per-theme. Consider
 // separating them so callers can import tokens directly without needing a
 // full theme object (e.g. for non-themed utility components).
-// See: src/themes/palettes.ts `tokens` object.
+// See: shared/theme/palettes.ts `tokens` object.
 export type Theme = {
   isDark: boolean;
   background: string;

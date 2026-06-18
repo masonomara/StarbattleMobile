@@ -115,5 +115,3 @@ export async function flush(): Promise<void> {
     // Swallow: telemetry must never surface to the user or retry-loop.
   }
 }
-
-export const telemetry = { track, flush, SESSION_ID };

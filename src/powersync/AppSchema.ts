@@ -55,14 +55,15 @@ const streaks = new Table(
   { indexes: { by_user_type: ['user_id', 'type'] } },
 );
 
-const user_entitlements = new Table({
-  user_id: column.text,
-  is_premium: column.integer,
-  premium_purchased_at: column.text,
-  owned_pack_ids: column.text,
-  updated_at: column.text,
-},
-{ indexes: { by_user: ['user_id'] } },
+const user_entitlements = new Table(
+  {
+    user_id: column.text,
+    is_premium: column.integer,
+    premium_purchased_at: column.text,
+    owned_pack_ids: column.text,
+    updated_at: column.text,
+  },
+  { indexes: { by_user: ['user_id'] } },
 );
 
 const streak_archive = new Table(
@@ -81,8 +82,6 @@ export const AppSchema = new Schema({
   user_entitlements,
   streak_archive,
 });
-
-export type Database = (typeof AppSchema)['types'];
 
 export const db = new PowerSyncDatabase({
   schema: AppSchema,

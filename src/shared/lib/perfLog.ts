@@ -107,13 +107,3 @@ export function startStallWatch(): void {
   }, INTERVAL_MS);
   mark('STALL', 'watchdog started');
 }
-
-export function stopStallWatch(): void {
-  if (watchHandle) {
-    clearInterval(watchHandle);
-    watchHandle = null;
-    mark('STALL', `watchdog stopped (worst stall ${worstStall}ms)`);
-  }
-}
-
-export const perfLog = { mark, time, startStallWatch, stopStallWatch };

@@ -1,19 +1,11 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '../theme/useTheme';
 import type { HeaderProps } from '../../types';
 import { SCREEN_HEADER_HEIGHT } from '../lib/layout';
 
-export function Header({
-  left,
-  center,
-  right,
-  absolute = true,
-  bordered = false,
-}: HeaderProps) {
+export function Header({ left, center, right }: HeaderProps) {
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
 
   return (
     // box-none lets touches fall through the transparent header area to content below.
@@ -21,14 +13,10 @@ export function Header({
       pointerEvents="box-none"
       style={[
         styles.header,
-        absolute && styles.absolute,
+        styles.absolute,
         {
           paddingTop: insets.top,
           height: SCREEN_HEADER_HEIGHT + insets.top,
-        },
-        bordered && {
-          borderBottomWidth: 1,
-          borderBottomColor: theme.border,
         },
       ]}
     >
@@ -65,7 +53,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-
     height: '100%',
   },
 });
