@@ -148,7 +148,7 @@ export function AppearanceSection() {
                       source={
                         PALETTE_ICONS[name][isCurrentlyDark ? 'dark' : 'light']
                       }
-                      style={[styles.swatchImage]}
+                      style={styles.swatchImage}
                     />
                     <Text role="subhead" style={styles.swatchLabel}>
                       {PALETTES[name].label}
@@ -173,9 +173,6 @@ const createStyles = (theme: Theme) =>
     section: { marginTop: 22 },
     sectionTitle: {
       color: theme.text,
-      // borderTopWidth: 1,
-      // borderTopColor: theme.border,
-      // paddingTop: 8,
       marginBottom: 6,
     },
     themeRow: {

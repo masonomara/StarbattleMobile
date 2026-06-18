@@ -494,9 +494,7 @@ export function AccountSection() {
           </View>
 
           <View style={styles.accountActions}>
-            {entitlements.isPremium ? (
-              <></>
-            ) : (
+            {!entitlements.isPremium && (
               <Pressable
                 style={[styles.primaryButton, loading && styles.disabled]}
                 onPress={() => withLoading(purchasePremium)}
@@ -544,9 +542,6 @@ const createStyles = (theme: Theme) =>
     section: { marginTop: 22 },
     sectionTitle: {
       color: theme.text,
-      // borderTopWidth: 1,
-      // borderTopColor: theme.border,
-      // paddingTop: 8,
       marginBottom: 6,
     },
     sectionBody: {
@@ -575,7 +570,6 @@ const createStyles = (theme: Theme) =>
     primaryButton: {
       height: 48,
       borderRadius: 800,
-
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.text,
@@ -637,20 +631,6 @@ const createStyles = (theme: Theme) =>
       color: theme.text,
       fontSize: theme.type.body.fontSize,
       marginBottom: 12,
-    },
-    destructiveButton: {
-      height: 48,
-      flex: 1,
-      borderRadius: 100,
-      borderWidth: 2,
-      borderColor: theme.border,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.background,
-    },
-    destructiveButtonText: {
-      color: theme.red,
-      fontWeight: 600,
     },
     confirmEmailBox: { gap: 12 },
     confirmEmailTitle: {

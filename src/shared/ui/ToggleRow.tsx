@@ -14,7 +14,7 @@ export function ToggleRow({ label, value, onToggle, first }: ToggleRowProps) {
         { borderColor: theme.border },
       ]}
     >
-      <Text role="body" style={{ color: theme.text, fontWeight: 400 }}>
+      <Text role="body" style={{ color: theme.text, fontWeight: '400' }}>
         {label}
       </Text>
       <View>

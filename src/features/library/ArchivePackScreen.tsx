@@ -823,11 +823,11 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     dayText: {
       color: theme.text,
-      fontWeight: 600,
+      fontWeight: '600',
     },
     todayText: {
       color: theme.text,
-      fontWeight: 600,
+      fontWeight: '600',
     },
     dayTextMuted: {
       color: theme.textSecondary,
@@ -887,7 +887,7 @@ const createStyles = (theme: Theme, insets: { top: number; bottom: number }) =>
     },
     weekRange: {
       color: theme.text,
-      fontWeight: 600,
+      fontWeight: '600',
     },
 
     // Monthly — year view

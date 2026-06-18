@@ -65,9 +65,6 @@ const createStyles = (theme: Theme) =>
     section: { marginTop: 8 },
     sectionTitle: {
       color: theme.text,
-      // borderTopWidth: 1,
-      // borderTopColor: theme.border,
-      // paddingTop: 8,
       marginBottom: 6,
     },
   });

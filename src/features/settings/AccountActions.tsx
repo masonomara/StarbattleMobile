@@ -117,7 +117,7 @@ const createStyles = (theme: Theme) =>
     },
     destructiveButtonText: {
       color: theme.red,
-      fontWeight: 600,
+      fontWeight: '600',
     },
     disabled: { opacity: 0.6 },
     error: {

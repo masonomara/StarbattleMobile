@@ -1,9 +1,15 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import {
+  Modal,
+  View,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  Linking,
+} from 'react-native';
 import { Text } from '../../shared/ui/Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
-import { Linking } from 'react-native';
 import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useScrollBorder } from '../../shared/hooks/useScrollBorder';
 import { useTheme } from '../../shared/theme/useTheme';
