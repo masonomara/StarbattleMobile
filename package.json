@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
+    "typecheck": "tsc --noEmit",
     "postinstall": "xattr -dr com.apple.provenance node_modules/react-native/scripts/ 2>/dev/null; exit 0"
   },
   "dependencies": {
