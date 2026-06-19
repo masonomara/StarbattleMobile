@@ -36,7 +36,7 @@ import {
 } from '../../shared/lib/streakDate';
 import { packDisplayName, packTypeLabel } from '../../shared/lib/localizedPack';
 import { useAuthStore } from '../../shared/stores/authStore';
-import { startupTimer, msSinceLaunch } from '../../shared/lib/startupTimer';
+import { startupTimer } from '../../shared/lib/startupTimer';
 import { mark } from '../../shared/lib/perfLog';
 import { track } from '../../shared/lib/telemetry';
 import { StreakCard, StreakCardSkeleton } from './StreakCard';
@@ -264,10 +264,10 @@ export function HomeScreen({
   };
 
   useEffect(() => {
+    // app_start moved to navigation.tsx (bootsplash-hidden) so it measures
+    // launch → first paint regardless of whether the first route is Home or the
+    // Tutorial. This mount log stays for warm-start / dev tracing only.
     startupTimer.log('HomeScreen first mount');
-    // app_start: launch → home interactive. First HomeScreen mount per process
-    // is always a cold start (a warm resume doesn't remount it).
-    track('app_start', { duration_ms: msSinceLaunch(), meta: { cold: true } });
   }, []);
 
   // Split the catalog in one pass: StreakType packs go to the carousel, the rest
@@ -319,7 +319,7 @@ export function HomeScreen({
 
   return (
     <PulseProvider>
-      <View style={styles.container}>
+      <View testID="home-root" style={styles.container}>
         {/* Floating header */}
         <View
           style={[
@@ -331,6 +331,7 @@ export function HomeScreen({
           {/* Title names the section at the top of the scroll; a challenge gets
               a chevron and opens its archive. */}
           <Pressable
+            testID="streak-archive-link"
             style={styles.headerTitleRow}
             hitSlop={8}
             disabled={!headerSection.isChallenge}
@@ -433,6 +434,7 @@ export function HomeScreen({
                     return (
                       <StreakCard
                         key={pack.id}
+                        testID={`streak-card-${type}`}
                         label={t(`library.challenge${capitalize(type)}`)}
                         starCount={STREAK_STAR_COUNT[type]}
                         status={status}
@@ -440,9 +442,10 @@ export function HomeScreen({
                         size={streakCardSize}
                         theme={theme}
                         coloredRegions={coloredRegions}
-                        onPress={() =>
-                          navigation.navigate('Puzzle', { packId: pack.id })
-                        }
+                        onPress={() => {
+                          track('streak_play', { meta: { type } });
+                          navigation.navigate('Puzzle', { packId: pack.id });
+                        }}
                       />
                     );
                   })}
@@ -490,6 +493,7 @@ export function HomeScreen({
                   return (
                     <PackCard
                       key={pack.id}
+                      testID={`pack-card-${pack.id}`}
                       name={packDisplayName(pack)}
                       meta={t('home.packStar', { count: pack.stars })}
                       locked={!owned}

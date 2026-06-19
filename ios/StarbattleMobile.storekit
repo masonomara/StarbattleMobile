@@ -1,0 +1,49 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : []
+  },
+  "identifier" : "93696E8D-AAA6-4BC3-96E0-D7B36ADAD544",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "5.99",
+      "familyShareable" : false,
+      "internalID" : "038A1592-BDD3-4024-98FE-16C4026D9D87",
+      "localizations" : [
+        {
+          "description" : "Unlock all packs, streak archives, and premium features. One-time purchase.",
+          "displayName" : "Star Battle Premium",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "sb_premium_599",
+      "referenceName" : "Star Battle Premium (one-time, non-consumable)",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "806191B3-E88F-4DEA-B1FA-11D91E2575F0",
+      "localizations" : [
+        {
+          "description" : "Unlock this puzzle pack.",
+          "displayName" : "8×8 Challenge Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "starbattle_pack_8x8-challenge",
+      "referenceName" : "Pack — 8x8 Challenge (TEMPLATE — see .maestro/README.md)",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US"
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

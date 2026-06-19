@@ -21,6 +21,7 @@ export function PackCard({
   theme,
   coloredRegions,
   disabled = false,
+  testID,
 }: PackCardProps) {
   const { t } = useTranslation();
   const styles = createStyles(theme);
@@ -43,6 +44,7 @@ export function PackCard({
 
   return (
     <Pressable
+      testID={testID}
       style={[styles.card, disabled && styles.cardDisabled]}
       onPress={disabled ? undefined : onPress}
     >

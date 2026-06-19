@@ -1,0 +1,8 @@
+# Smoke: app launches and reaches Home without crashing.
+appId: com.omaratechnologydesign.starbattle
+---
+- launchApp:
+    clearState: true
+- runFlow: helpers/dismiss-tutorial.yaml
+- assertVisible:
+    id: "home-root"

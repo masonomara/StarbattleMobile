@@ -12,7 +12,7 @@
     "region": "Each outlined region needs exactly one star.",
     "skipTitle": "Skip Tutorial",
     "skipBody": "This one-time walkthrough cannot be replayed.",
-    "skipCancel": "Cancel",
+    "skipCancel": "Keep Learning",
     "skipConfirm": "Skip",
     "skipA11yLabel": "Skip Tutorial",
     "hintsDisabled": "Hints are not available during the tutorial."
@@ -21,7 +21,7 @@
     "stars": "{{stars}}-star",
     "timer": "{{time}}",
     "hintsTitle": "Hints",
-    "hintsLoading": "Hints are loading.",
+    "hintsLoading": "Loading hints…",
     "hintsUnavailableTitle": "Hints Unavailable",
     "hintsLoadFailed": "Could not load hints. Please check your connection and try again.",
     "clearTitle": "Clear Board",
@@ -49,9 +49,12 @@
   },
   "home": {
     "libraryTitle": "Puzzle Library",
-    "streakDay": "{{count}}-day streak",
-    "streakWeek": "{{count}}-week streak",
-    "streakMonth": "{{count}}-month streak",
+    "streakDay_one": "{{count}}-day streak",
+    "streakDay_other": "{{count}}-day streak",
+    "streakWeek_one": "{{count}}-week streak",
+    "streakWeek_other": "{{count}}-week streak",
+    "streakMonth_one": "{{count}}-month streak",
+    "streakMonth_other": "{{count}}-month streak",
     "packStar_one": "{{count}}-star",
     "packStar_other": "{{count}}-star"
   },

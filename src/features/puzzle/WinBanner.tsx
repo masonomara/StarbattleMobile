@@ -122,6 +122,7 @@ export function WinBanner({
   return (
     // Hidden until bannerHeight is measured so the spring starts from the correct off-screen position.
     <Animated.View
+      testID="win-banner"
       onLayout={onLayout}
       style={[
         styles.winBanner,
@@ -152,7 +153,7 @@ export function WinBanner({
         {mainText}
       </Text>
 
-      <Pressable onPress={handlePress} style={styles.winButton}>
+      <Pressable testID="win-button" onPress={handlePress} style={styles.winButton}>
         <Text role="headline" style={styles.winButtonText}>
           {buttonLabel}
         </Text>

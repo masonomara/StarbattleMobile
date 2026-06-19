@@ -12,6 +12,7 @@ import AtSign from 'lucide-react-native/dist/cjs/icons/at-sign';
 import Svg, { Path } from 'react-native-svg';
 import { Text } from '../../shared/ui/Text';
 import { useAuthStore } from '../../shared/stores/authStore';
+import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { useProductPrice } from '../../shared/hooks/useProductPrice';
 import { useTheme } from '../../shared/theme/useTheme';
@@ -497,7 +498,15 @@ export function AccountSection() {
             {!entitlements.isPremium && (
               <Pressable
                 style={[styles.primaryButton, loading && styles.disabled]}
-                onPress={() => withLoading(purchasePremium)}
+                onPress={() =>
+                  withLoading(() =>
+                    purchasePremium(
+                      useSettingsStore.getState().openReason === 'archive'
+                        ? 'archive'
+                        : 'settings',
+                    ),
+                  )
+                }
                 disabled={loading}
               >
                 {loading ? (

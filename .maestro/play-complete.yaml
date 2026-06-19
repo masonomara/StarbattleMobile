@@ -1,0 +1,25 @@
+# Golden path 4 — Play & complete the daily challenge.
+# Opens today's daily streak puzzle and solves it via the __DEV__-only solve
+# hook (dev-solve), then asserts the win banner. In a debug build this also
+# fires streak_recorded (and pack_complete if it's the pack's last puzzle) —
+# visible in Metro as [SB:TELEMETRY] lines.
+appId: com.omaratechnologydesign.starbattle
+---
+- launchApp:
+    clearState: true
+- runFlow: helpers/dismiss-tutorial.yaml
+- extendedWaitUntil:
+    visible:
+      id: "streak-card-daily"
+    timeout: 30000
+- tapOn:
+    id: "streak-card-daily"
+# Wait for the board to load, then trigger the deterministic solve.
+- extendedWaitUntil:
+    visible:
+      id: "dev-solve"
+    timeout: 20000
+- tapOn:
+    id: "dev-solve"
+- assertVisible:
+    id: "win-banner"

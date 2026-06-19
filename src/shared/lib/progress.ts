@@ -1,6 +1,7 @@
 import { db } from '../../powersync/AppSchema';
 import { useAuthStore } from '../stores/authStore';
 import { getCurrentKey, getPreviousKey } from './streakDate';
+import { track } from './telemetry';
 import type { CellValue, StreakType } from '../../types';
 
 // PowerSync exposes tables as views with INSTEAD OF triggers. rowsAffected is
@@ -193,5 +194,6 @@ export async function recordStreak(type: StreakType): Promise<number> {
   const bestCount = Math.max(existing?.best_count ?? 0, newCount);
 
   await saveStreak(type, newCount, bestCount, currentKey);
+  track('streak_recorded', { meta: { type, current: newCount, best: bestCount } });
   return newCount;
 }

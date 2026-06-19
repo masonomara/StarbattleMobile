@@ -8,8 +8,13 @@ import {
   computeErrors,
   checkWin,
 } from './puzzleLogic';
-import { loadProgress, saveProgress } from '../../shared/lib/progress';
+import {
+  loadProgress,
+  saveProgress,
+  getCompletedPuzzleIdsForPack,
+} from '../../shared/lib/progress';
 import { track } from '../../shared/lib/telemetry';
+import { useEntitlementsStore } from '../../shared/stores/entitlementsStore';
 import type { CellChange, CellValue, HintStep, Move, Puzzle, TapMode } from '../../types';
 
 // Keeps memory usage bounded — older moves beyond this limit are dropped.
@@ -64,7 +69,36 @@ type PuzzleState = {
   clearBoard: () => void;
   tick: (ms?: number) => void;
   showHint: () => void;
+  solveForTest: () => void;
 };
+
+// Fires pack_complete exactly once, when the final puzzle of a regular
+// (non-streak) pack is solved. The winning puzzle's progress write is still
+// debounced when this runs, so it isn't persisted yet — count it as +1 over the
+// DB set. Streak (date-keyed) and tutorial ids aren't "pack:index" shaped and are
+// skipped. Best-effort; swallows errors so telemetry never disrupts gameplay.
+async function maybeTrackPackComplete(puzzleId: string): Promise<void> {
+  const sep = puzzleId.lastIndexOf(':');
+  if (sep < 0) return;
+  const packId = puzzleId.slice(0, sep);
+  const idx = puzzleId.slice(sep + 1);
+  if (!/^\d+$/.test(idx)) return; // streak / tutorial — not a pack puzzle
+  const pack = useEntitlementsStore
+    .getState()
+    .packCatalog.find(p => p.id === packId);
+  if (!pack || !pack.puzzleCount) return;
+  try {
+    const done = await getCompletedPuzzleIdsForPack(packId, pack.puzzleCount);
+    const total = done.size + (done.has(puzzleId) ? 0 : 1);
+    if (total >= pack.puzzleCount) {
+      track('pack_complete', {
+        meta: { pack: packId, puzzle_count: pack.puzzleCount },
+      });
+    }
+  } catch {
+    // best-effort
+  }
+}
 
 export const usePuzzleStore = create<PuzzleState>((set, get) => {
   function flushSave(puzzleId: string) {
@@ -115,6 +149,7 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
           hints_used: hintsUsed,
         },
       });
+      maybeTrackPackComplete(puzzle.id).catch(() => {});
     }
   }
 
@@ -432,6 +467,19 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
 
       if (ghosts.size > 0) {
         set(s => ({ hintGhosts: ghosts, hintsUsed: s.hintsUsed + 1 }));
+        // hint_used: a genuine reveal (not the toggle-off branch above). Captures
+        // who uses hints, how often, and on which puzzle — including puzzles the
+        // user never finishes (puzzle_complete only sees solved ones). hint_number
+        // is the running count this puzzle; step is which hint step was revealed.
+        track('hint_used', {
+          meta: {
+            puzzle_id: puzzle.id,
+            difficulty: puzzle.difficulty ?? null,
+            band: puzzle.band ?? null,
+            hint_number: get().hintsUsed,
+            step: i,
+          },
+        });
         return;
       }
     }
@@ -447,6 +495,25 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
   tick: (ms = 1000) => {
     if (get().completed) return;
     set(state => ({ timeMs: state.timeMs + ms }));
+  },
+
+  // Test-only: completes the current puzzle by placing the solution stars, then
+  // runs the normal win path (haptics + telemetry). Wired to an invisible,
+  // __DEV__-only button in PuzzleScreen so E2E flows can finish a puzzle
+  // deterministically. Unreachable in a release build.
+  solveForTest: () => {
+    const { puzzle } = get();
+    if (!puzzle) return;
+    const total = puzzle.size * puzzle.size;
+    const newCells = new Array<CellValue>(total).fill(0) as CellValue[];
+    for (const idx of puzzle.solutionSet) newCells[idx] = 1;
+    set({
+      cells: newCells,
+      autoMarks: new Set<number>(),
+      errorCells: new Set<number>(),
+    });
+    maybeWin(newCells, puzzle);
+    flushSave(puzzle.id);
   },
   };
 });

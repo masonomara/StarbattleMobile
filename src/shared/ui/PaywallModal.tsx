@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -16,6 +16,7 @@ import { rgba } from '../theme/color';
 import { useAsyncAction } from '../hooks/useAsyncAction';
 import { useProductPrice } from '../hooks/useProductPrice';
 import { purchasePremium, purchasePack, PREMIUM_PRODUCT_ID } from '../lib/payments';
+import { track } from '../lib/telemetry';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '../lib/config';
 import type { Theme, PaywallModalProps } from '../../types';
 
@@ -45,6 +46,16 @@ export function PaywallModal({
     context?.type === 'paid-pack' ? `starbattle_pack_${context.packId}` : '',
   );
 
+  // Funnel: top-of-funnel — record that a paywall was surfaced. `context` is a
+  // stable state object while open and a fresh object on each open, so this fires
+  // once per open (and once with null on close, which we ignore).
+  useEffect(() => {
+    if (!context) return;
+    track('paywall_shown', {
+      meta: { context: context.type, pack: context.packId },
+    });
+  }, [context]);
+
   if (!context) return null;
 
   function purchase(fn: () => Promise<unknown>) {
@@ -61,7 +72,7 @@ export function PaywallModal({
           </Text>
           <Pressable
             style={[styles.primaryButton, loading && styles.disabled]}
-            onPress={() => purchase(purchasePremium)}
+            onPress={() => purchase(() => purchasePremium('paywall'))}
             disabled={loading}
           >
             {loading ? (
@@ -123,7 +134,7 @@ export function PaywallModal({
           </Pressable>
           <Pressable
             style={[styles.secondaryButton, loading && styles.disabled]}
-            onPress={() => purchase(purchasePremium)}
+            onPress={() => purchase(() => purchasePremium('paywall'))}
             disabled={loading}
           >
             <Text role="subhead" style={styles.secondaryButtonText}>
@@ -157,7 +168,7 @@ export function PaywallModal({
     // box-none lets the sheet receive touches while the absoluteFill Pressable behind it closes on tap-outside.
     <View style={styles.overlay} pointerEvents="box-none">
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      <View style={styles.sheet}>
+      <View testID="paywall-sheet" style={styles.sheet}>
         <Pressable style={styles.closeButton} onPress={onClose} hitSlop={8}>
           <X size={20} color={theme.textSecondary} />
         </Pressable>

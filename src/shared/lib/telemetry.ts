@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 import { useAuthStore } from '../stores/authStore';
 import { APP_VERSION } from './config';
 
-// Batching telemetry sink for the six locked perf/engagement events. track() is
+// Batching telemetry sink for perf, engagement, and conversion events. track() is
 // cheap and synchronous (just enqueues); the network insert is batched and
 // fire-and-forget so telemetry never competes with gameplay or throws into the
 // app. Every metric is a SQL query over the perf_events table.
@@ -14,12 +14,24 @@ import { APP_VERSION } from './config';
 export const TELEMETRY_ENABLED = !__DEV__;
 
 export type PerfEventName =
-  | 'app_start' // launch → home interactive; meta.cold
+  // perf
+  | 'app_start' // launch → first frame painted (bootsplash hidden); meta.cold, meta.route
   | 'puzzle_open' // puzzle tap → board isReady
   | 'hint_load' // hints fetch; meta.source disk|download|fallback, value=KB
   | 'js_stall' // JS-thread freeze > threshold; duration_ms = block length
   | 'error' // failure events; meta.kind
-  | 'puzzle_complete'; // solve; duration_ms = solve time, meta.hints_used etc.
+  // engagement
+  | 'puzzle_complete' // solve; duration_ms = solve time, meta.hints_used etc.
+  | 'hint_used' // user revealed a hint; meta.puzzle_id, difficulty, band, hint_number, step
+  | 'streak_play' // tap to start a streak challenge; meta.type daily|weekly|monthly
+  | 'streak_recorded' // streak advanced on completion; meta.type, current, best
+  | 'pack_complete' // final puzzle of a non-streak pack solved; meta.pack, puzzle_count
+  // discovery / conversion funnels
+  | 'streak_archive_view' // archive screen opened; meta.type, is_premium
+  | 'streak_archive_gate' // non-premium hit the archive paywall; meta.type
+  | 'paywall_shown' // paywall surfaced; meta.context sequential|paid-pack|unavailable, pack
+  | 'purchase_initiated' // user committed to buy; meta.kind premium|pack, product_id, pack
+  | 'purchase_result'; // outcome; duration_ms, meta.kind, outcome success|failed|cancelled|lag, reason
 
 type EventFields = {
   duration_ms?: number;
@@ -49,6 +61,15 @@ const SAMPLE_RATES: Record<PerfEventName, number> = {
   js_stall: 1,
   error: 1,
   puzzle_complete: 1,
+  hint_used: 1,
+  streak_play: 1,
+  streak_recorded: 1,
+  pack_complete: 1,
+  streak_archive_view: 1,
+  streak_archive_gate: 1,
+  paywall_shown: 1,
+  purchase_initiated: 1,
+  purchase_result: 1,
 };
 
 let queue: QueuedEvent[] = [];
@@ -62,12 +83,43 @@ function armTimer(): void {
   }
 }
 
+// Standard segment properties stamped into EVERY event's meta at emit time, so
+// each row is self-describing for segmentation (see BASELINE.md §3 Segmentation).
+// Paid status (`is_premium` / `owned_pack_count`) is the one user-state dimension
+// that CANNOT be reconstructed at query time — a user's paid status at the instant
+// an event fired is not in the event stream — so it must be captured here. By
+// contrast new-vs-returning and streak-holder ARE derivable from the stream at
+// query time (first-seen ts; presence of streak_recorded), so they are NOT stamped.
+//
+// The provider is INJECTED (App.tsx calls setSegmentProvider) rather than imported:
+// telemetry is a leaf module that perfLog imports, and entitlementsStore imports
+// perfLog, so importing the store here would close a load-time cycle. Inversion
+// keeps telemetry dependency-free. Until App registers it (a few early-boot events),
+// segmentContext() returns {} — those events simply omit the segment keys.
+type SegmentProvider = () => Record<string, unknown>;
+let segmentProvider: SegmentProvider | null = null;
+
+export function setSegmentProvider(provider: SegmentProvider): void {
+  segmentProvider = provider;
+}
+
+function segmentContext(): Record<string, unknown> {
+  try {
+    return segmentProvider?.() ?? {};
+  } catch {
+    return {};
+  }
+}
+
 export function track(event: PerfEventName, fields?: EventFields): void {
   if (__DEV__) console.log(`[SB:TELEMETRY] ${event}`, fields ?? '');
   if (!TELEMETRY_ENABLED) return;
   if (Math.random() > (SAMPLE_RATES[event] ?? 1)) return;
 
-  queue.push({ ts: new Date().toISOString(), event, ...fields });
+  // Segment context first so an event's own meta wins on any key collision
+  // (e.g. streak_archive_view sets its own is_premium — same value).
+  const meta = { ...segmentContext(), ...fields?.meta };
+  queue.push({ ts: new Date().toISOString(), event, ...fields, meta });
   // Drop oldest if we've backed up (offline) so memory stays bounded.
   if (queue.length > MAX_QUEUE) queue.splice(0, queue.length - MAX_QUEUE);
 

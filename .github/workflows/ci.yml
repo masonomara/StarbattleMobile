@@ -1,0 +1,48 @@
+name: CI
+
+# Fast JS gates on every PR and every push to main — the same three checks run
+# locally before a commit (typecheck · lint · test). These run on Linux without
+# any native build (no Pods, no Xcode), so they're cheap and quick; the iOS/Android
+# build + Maestro E2E are deliberately NOT here (they need a macOS runner + a booted
+# simulator and are run manually for now — see BASELINE.md §9).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch/PR cancels the in-progress run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# CI only reads the repo — least privilege.
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: typecheck · lint · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22' # engines floor is >= 22.11 (package.json)
+          cache: npm
+
+      # The macOS-only postinstall (xattr) self-swallows on Linux (`2>/dev/null;
+      # exit 0`), so `npm ci` is safe here. If a native dep's install ever breaks
+      # on Linux, add `--ignore-scripts` — tsc/eslint/jest need no native build.
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --ci

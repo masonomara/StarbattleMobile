@@ -16,6 +16,8 @@ import { ErrorBoundary } from './shared/ui/ErrorBoundary';
 import { useTheme } from './shared/theme/useTheme';
 import { hasSeenTutorial } from './shared/stores/settingsStore';
 import { mark } from './shared/lib/perfLog';
+import { track } from './shared/lib/telemetry';
+import { msSinceLaunch } from './shared/lib/startupTimer';
 import type { RootStackParamList } from './types';
 // type-only: pulls in global ReactNavigation.RootParamList augmentation so
 // useNavigation() is typed correctly app-wide without explicit type parameters.
@@ -74,6 +76,14 @@ export function Navigation() {
     requestAnimationFrame(() => {
       BootSplash.hide({ fade: true }).catch(() => {});
       mark('STARTUP', 'bootsplash hidden (first frame painted)');
+      // app_start: launch → first frame painted. Anchored here (not at HomeScreen
+      // mount) so it's valid no matter which route is first — a fresh install
+      // opens the Tutorial, so a HomeScreen-mount metric measured tutorial dwell,
+      // not load. onReady fires once per cold process launch.
+      track('app_start', {
+        duration_ms: msSinceLaunch(),
+        meta: { cold: true, route: initialRouteName },
+      });
     });
   };
 

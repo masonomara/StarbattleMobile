@@ -5,6 +5,7 @@ import { useEntitlementsStore } from '../stores/entitlementsStore';
 import { prefetchAllCatalog } from '../../packs/prefetch';
 import i18n from './i18n';
 import { UserFacingError } from './errors';
+import { track } from './telemetry';
 
 // NOTE: _productsPromise caches the paywall products for the lifetime of the
 // process. If Adapty's paywall configuration changes server-side (e.g. price
@@ -33,40 +34,125 @@ export async function getLocalizedPrice(vendorProductId: string): Promise<string
 
 export const PREMIUM_PRODUCT_ID = 'sb_premium_599';
 
-export async function purchasePremium(): Promise<boolean> {
-  const products = await getProducts();
-  const product = products.find(p => p.vendorProductId === PREMIUM_PRODUCT_ID);
-  if (!product)
-    throw new UserFacingError(i18n.t('errors.productUnavailable'));
+type PurchaseOutcome = 'success' | 'failed' | 'cancelled' | 'lag';
 
-  const result = await adapty.makePurchase(product);
-  if (result.type === 'success') {
-    if (!(result.profile.accessLevels?.premium?.isActive ?? false)) {
-      throw new UserFacingError(i18n.t('errors.purchaseLag'));
-    }
-    useEntitlementsStore.getState().setIsPremium(true);
-    const { packCatalog } = useEntitlementsStore.getState();
-    prefetchAllCatalog(packCatalog).catch(() => {});
-    return true;
+// Mirrors useAsyncAction's toUserMessage(): Adapty surfaces a user-cancelled
+// purchase via these store error codes. Keep in sync with that list.
+function isCancellation(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  return (
+    msg.includes('1001') || // Apple: user cancelled
+    msg.includes('12501') || // Google: user cancelled
+    msg.includes('The user canceled')
+  );
+}
+
+function errReason(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  return msg.slice(0, 80);
+}
+
+// Wraps a purchase with funnel telemetry: one purchase_initiated when the user
+// commits, then exactly one purchase_result carrying the outcome and elapsed
+// time. Fire-and-forget — it never changes the value returned or the error
+// thrown to the UI. `body` records the precise outcome for its known exits
+// (cancel/lag/store-failure); the catch records anything else and re-throws.
+async function instrumentPurchase<T>(
+  base: {
+    kind: 'premium' | 'pack';
+    product_id: string;
+    pack?: string;
+    // Which surface initiated this purchase — premium can start from the paywall
+    // modal OR the Settings upgrade button (where the streak-archive gate routes,
+    // via openSettings). Settings-originated purchases have no paywall_shown, so
+    // `source` is the only honest way to split the membership funnel by surface
+    // and to attribute archive→purchase. See BASELINE.md §5.1.
+    source?: string;
+  },
+  body: (record: (outcome: PurchaseOutcome, reason?: string) => void) => Promise<T>,
+): Promise<T> {
+  const t0 = Date.now();
+  track('purchase_initiated', { meta: { ...base } });
+  let recorded = false;
+  const record = (outcome: PurchaseOutcome, reason?: string) => {
+    if (recorded) return;
+    recorded = true;
+    track('purchase_result', {
+      duration_ms: Date.now() - t0,
+      meta: { ...base, outcome, ...(reason ? { reason } : {}) },
+    });
+  };
+  try {
+    const out = await body(record);
+    record('success');
+    return out;
+  } catch (e) {
+    record(isCancellation(e) ? 'cancelled' : 'failed', errReason(e));
+    throw e;
   }
-  throw new UserFacingError(i18n.t('errors.purchaseFailed'));
+}
+
+export async function purchasePremium(
+  source: 'paywall' | 'settings' | 'archive' | 'unknown' = 'unknown',
+): Promise<boolean> {
+  return instrumentPurchase(
+    { kind: 'premium', product_id: PREMIUM_PRODUCT_ID, source },
+    async record => {
+      const products = await getProducts();
+      const product = products.find(
+        p => p.vendorProductId === PREMIUM_PRODUCT_ID,
+      );
+      if (!product) {
+        record('failed', 'product_unavailable');
+        throw new UserFacingError(i18n.t('errors.productUnavailable'));
+      }
+
+      const result = await adapty.makePurchase(product);
+      if (result.type !== 'success') {
+        const rt = result.type as string;
+        record(rt === 'user_cancelled' ? 'cancelled' : 'failed', rt);
+        throw new UserFacingError(i18n.t('errors.purchaseFailed'));
+      }
+      if (!(result.profile.accessLevels?.premium?.isActive ?? false)) {
+        // Store reported success but Adapty's webhook hasn't activated the
+        // entitlement yet — the user paid; a retry usually resolves it.
+        record('lag', 'entitlement_inactive');
+        throw new UserFacingError(i18n.t('errors.purchaseLag'));
+      }
+      useEntitlementsStore.getState().setIsPremium(true);
+      const { packCatalog } = useEntitlementsStore.getState();
+      prefetchAllCatalog(packCatalog).catch(() => {});
+      return true;
+    },
+  );
 }
 
 export async function purchasePack(
   packId: string,
   storagePath: string,
 ): Promise<void> {
-  const products = await getProducts();
-  const product = products.find(
-    p => p.vendorProductId === `starbattle_pack_${packId}`,
-  );
-  if (!product) throw new UserFacingError(i18n.t('errors.packUnavailable'));
+  await instrumentPurchase(
+    { kind: 'pack', product_id: `starbattle_pack_${packId}`, pack: packId },
+    async record => {
+      const products = await getProducts();
+      const product = products.find(
+        p => p.vendorProductId === `starbattle_pack_${packId}`,
+      );
+      if (!product) {
+        record('failed', 'product_unavailable');
+        throw new UserFacingError(i18n.t('errors.packUnavailable'));
+      }
 
-  const result = await adapty.makePurchase(product);
-  if (result.type !== 'success')
-    throw new UserFacingError(i18n.t('errors.purchaseFailed'));
-  await downloadPack(packId, storagePath);
-  useEntitlementsStore.getState().addOwnedPack(packId);
+      const result = await adapty.makePurchase(product);
+      if (result.type !== 'success') {
+        const rt = result.type as string;
+        record(rt === 'user_cancelled' ? 'cancelled' : 'failed', rt);
+        throw new UserFacingError(i18n.t('errors.purchaseFailed'));
+      }
+      await downloadPack(packId, storagePath);
+      useEntitlementsStore.getState().addOwnedPack(packId);
+    },
+  );
 }
 
 // Returns true if premium access was found and activated, false otherwise.

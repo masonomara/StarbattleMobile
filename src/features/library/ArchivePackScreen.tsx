@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -38,6 +38,7 @@ import { useSettingsStore } from '../../shared/stores/settingsStore';
 import { useAuthStore } from '../../shared/stores/authStore';
 import { useEntitlements } from '../../shared/hooks/useEntitlements';
 import { useStreakRows } from '../../shared/hooks/useStreakRows';
+import { track } from '../../shared/lib/telemetry';
 import { useScrollBorder } from '../../shared/hooks/useScrollBorder';
 import type { RootStackParamList, Theme } from '../../types';
 
@@ -153,6 +154,14 @@ export function ArchivePackScreen({
   // Shows the header's bottom hairline once a calendar scrolls off the top.
   const { scrolled, onScroll } = useScrollBorder();
 
+  // Funnel: record that the archive was opened — measures whether users discover
+  // it. Once per mount (plain useEffect, not focus) so returning from a finished
+  // puzzle doesn't double-count.
+  useEffect(() => {
+    track('streak_archive_view', { meta: { type, is_premium: isPremium } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Reload on every focus, not just mount: finishing a puzzle pops back to this
   // still-mounted screen, so a one-shot mount effect would leave completion
   // state stale and the just-solved day uncolored.
@@ -177,11 +186,14 @@ export function ArchivePackScreen({
         return;
       }
       if (!isPremium) {
+        track('streak_archive_gate', { meta: { type } });
         Alert.alert(t('streaks.premiumTitle'), t('streaks.premiumBody'), [
           { text: t('streaks.notNow'), style: 'cancel' },
           {
             text: t('streaks.upgrade'),
-            onPress: () => useSettingsStore.getState().openSettings(),
+            // 'archive' tags a resulting premium purchase as archive-driven
+            // (mission 2 attribution) — AccountSection reads openReason. BASELINE.md §5.3.
+            onPress: () => useSettingsStore.getState().openSettings('archive'),
           },
         ]);
         return;
@@ -221,7 +233,7 @@ export function ArchivePackScreen({
   };
 
   return (
-    <View style={styles.container}>
+    <View testID="archive-root" style={styles.container}>
       <View style={[styles.header, scrolled && styles.headerBorder]}>
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
@@ -247,7 +259,7 @@ export function ArchivePackScreen({
 
       <View style={styles.body}>
         {!isPremium && (
-          <View style={styles.lockNote}>
+          <View testID="archive-premium-note" style={styles.lockNote}>
             <Lock size={14} color={theme.textSecondary} strokeWidth={2.5} />
             <Text role="footnote" style={styles.lockNoteText}>
               {t('streaks.premiumBody')}

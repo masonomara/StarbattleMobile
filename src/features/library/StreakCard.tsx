@@ -29,11 +29,12 @@ export function StreakCard({
   theme,
   coloredRegions,
   onPress,
+  testID,
 }: StreakCardProps) {
   const { t } = useTranslation();
   const styles = createStyles(theme);
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable testID={testID} style={styles.card} onPress={onPress}>
       <PuzzleThumbnail
         puzzle={preview}
         size={size}

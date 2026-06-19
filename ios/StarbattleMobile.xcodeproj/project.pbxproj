@@ -311,7 +311,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = StarbattleMobile/StarbattleMobile.entitlements;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = StarbattleMobile/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Star Battle Free";
@@ -344,7 +344,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = StarbattleMobile/StarbattleMobile.entitlements;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				INFOPLIST_FILE = StarbattleMobile/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Star Battle Free";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
