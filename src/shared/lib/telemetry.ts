@@ -83,12 +83,43 @@ function armTimer(): void {
   }
 }
 
+// Standard segment properties stamped into EVERY event's meta at emit time, so
+// each row is self-describing for segmentation (see BASELINE.md §3 Segmentation).
+// Paid status (`is_premium` / `owned_pack_count`) is the one user-state dimension
+// that CANNOT be reconstructed at query time — a user's paid status at the instant
+// an event fired is not in the event stream — so it must be captured here. By
+// contrast new-vs-returning and streak-holder ARE derivable from the stream at
+// query time (first-seen ts; presence of streak_recorded), so they are NOT stamped.
+//
+// The provider is INJECTED (App.tsx calls setSegmentProvider) rather than imported:
+// telemetry is a leaf module that perfLog imports, and entitlementsStore imports
+// perfLog, so importing the store here would close a load-time cycle. Inversion
+// keeps telemetry dependency-free. Until App registers it (a few early-boot events),
+// segmentContext() returns {} — those events simply omit the segment keys.
+type SegmentProvider = () => Record<string, unknown>;
+let segmentProvider: SegmentProvider | null = null;
+
+export function setSegmentProvider(provider: SegmentProvider): void {
+  segmentProvider = provider;
+}
+
+function segmentContext(): Record<string, unknown> {
+  try {
+    return segmentProvider?.() ?? {};
+  } catch {
+    return {};
+  }
+}
+
 export function track(event: PerfEventName, fields?: EventFields): void {
   if (__DEV__) console.log(`[SB:TELEMETRY] ${event}`, fields ?? '');
   if (!TELEMETRY_ENABLED) return;
   if (Math.random() > (SAMPLE_RATES[event] ?? 1)) return;
 
-  queue.push({ ts: new Date().toISOString(), event, ...fields });
+  // Segment context first so an event's own meta wins on any key collision
+  // (e.g. streak_archive_view sets its own is_premium — same value).
+  const meta = { ...segmentContext(), ...fields?.meta };
+  queue.push({ ts: new Date().toISOString(), event, ...fields, meta });
   // Drop oldest if we've backed up (offline) so memory stays bounded.
   if (queue.length > MAX_QUEUE) queue.splice(0, queue.length - MAX_QUEUE);
 

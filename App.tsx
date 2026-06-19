@@ -10,7 +10,7 @@ import { useSettingsStore } from './src/shared/stores/settingsStore';
 import { useEntitlementsStore } from './src/shared/stores/entitlementsStore';
 import { startupTimer } from './src/shared/lib/startupTimer';
 import { startStallWatch, mark, time } from './src/shared/lib/perfLog';
-import { flush as flushTelemetry } from './src/shared/lib/telemetry';
+import { flush as flushTelemetry, setSegmentProvider } from './src/shared/lib/telemetry';
 import { db } from './src/powersync/AppSchema';
 import { PowerSyncContext } from '@powersync/react-native';
 import { SupabaseConnector } from './src/powersync/Connector';
@@ -19,6 +19,16 @@ import { ADAPTY_SDK_KEY } from './src/shared/lib/config';
 import { prefetchAllCatalog, prefetchStreakHints } from './src/packs/prefetch';
 import { supabase } from './src/shared/lib/supabase';
 import type { PackCatalogItem } from './src/types';
+
+// Inject the paid-status segment into every telemetry event's meta (is_premium,
+// owned_pack_count). Registered here — the app composition root — rather than
+// imported into telemetry.ts, which is a leaf module that perfLog imports;
+// importing the store there would close a load-time cycle (telemetry → store →
+// perfLog → telemetry). See BASELINE.md §3 (Segmentation) and telemetry.ts.
+setSegmentProvider(() => {
+  const { isPremium, ownedPackIds } = useEntitlementsStore.getState().entitlements;
+  return { is_premium: isPremium, owned_pack_count: ownedPackIds.length };
+});
 
 // Dedupes prefetch requests. Several independent signals ask for a catalog
 // refresh: the packs and entitlements watches (which RE-EMIT repeatedly while the
