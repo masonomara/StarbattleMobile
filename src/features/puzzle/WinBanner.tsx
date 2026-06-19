@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet } from 'react-native';
+import { Animated, Platform, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../shared/ui/Text';
 import type { LayoutChangeEvent } from 'react-native';
@@ -126,10 +126,12 @@ export function WinBanner({
       onLayout={onLayout}
       style={[
         styles.winBanner,
-        // Add the bottom safe-area inset so the button clears the Android
-        // system nav / gesture bar. The banner is offset bottom:-56, so 56 of
-        // the base padding sits off-screen; the inset pushes the button up.
-        { paddingBottom: 80 + insets.bottom },
+        // Add the bottom safe-area inset only on Android so the button clears
+        // the system nav / gesture bar. iOS already looks right with the base
+        // padding, and adding the home-indicator inset there leaves extra space.
+        // The banner is offset bottom:-56, so 56 of the base padding sits
+        // off-screen; the inset pushes the button up.
+        { paddingBottom: 80 + (Platform.OS === 'android' ? insets.bottom : 0) },
         { opacity: bannerHeight ? 1 : 0 },
         { transform: [{ translateY: bannerTranslateY }] },
       ]}
