@@ -182,3 +182,163 @@ select meta->>'difficulty' difficulty,
 from perf_events
 where event = 'hint_used' and ts > now() - interval '28 days'
 group by 1 order by 1;
+
+-- ───────────────────────────────────────────────────────────────────────────
+-- §D  SEGMENTATION & NAMED-STEP FUNNELS  (BASELINE.md §3, §5, §6)
+-- ───────────────────────────────────────────────────────────────────────────
+-- Segment definitions (BASELINE.md §3) — how each cut is obtained:
+--   platform / app_version  → native columns.
+--   free vs paid            → meta->>'is_premium' / (meta->>'owned_pack_count')::int,
+--                             STAMPED AT EMIT (added 2026-06-19). Rows from older
+--                             builds have no is_premium key → null = "unknown (likely free)".
+--   new vs returning        → DERIVED: first-seen ts per anon_user_id (§D.3).
+--   streak-holder           → DERIVED: has a streak_recorded row (§D.4).
+-- Always split funnels by app_version — never pool across a release that changed the flow.
+
+-- §D.1  MEMBERSHIP FUNNEL AS NAMED STEPS, with drop-off %, by platform × version.
+-- NOTE: `shown` (paywall_shown context=sequential) is the PAYWALL SURFACE ONLY.
+-- Premium also starts from the Settings upgrade button, which emits NO paywall_shown
+-- (BASELINE.md §5.1) — so shown_to_initiated_pct can exceed 100%. Read it only for
+-- the paywall surface; for the all-surface split use §D.1b. The native sheet between
+-- initiated and success is opaque (Adapty/StoreKit). initiated_to_success_pct is valid
+-- for all surfaces (both events fire regardless of origin).
+select
+  coalesce(platform, '?')    platform,
+  coalesce(app_version, '?') ver,
+  count(*) filter (where event = 'paywall_shown'      and meta->>'context' = 'sequential') shown,
+  count(*) filter (where event = 'purchase_initiated' and meta->>'kind'    = 'premium')    initiated,
+  count(*) filter (where event = 'purchase_result'    and meta->>'kind'    = 'premium'
+                                                       and meta->>'outcome' = 'success')    success,
+  round(100.0 * count(*) filter (where event = 'purchase_initiated' and meta->>'kind' = 'premium')
+        / nullif(count(*) filter (where event = 'paywall_shown' and meta->>'context' = 'sequential'), 0), 1) shown_to_initiated_pct,
+  round(100.0 * count(*) filter (where event = 'purchase_result' and meta->>'kind' = 'premium' and meta->>'outcome' = 'success')
+        / nullif(count(*) filter (where event = 'purchase_initiated' and meta->>'kind' = 'premium'), 0), 1)  initiated_to_success_pct
+from perf_events
+where ts > now() - interval '28 days'
+group by 1, 2 order by 1, 2;
+
+-- §D.1b  PREMIUM PURCHASES BY SOURCE (paywall / settings / archive / unknown).
+-- source='archive' is the streak-archive gate → upgrade path (mission 2, EXACT —
+-- stamped via openSettings('archive') → openReason); 'settings' = Settings opened
+-- directly; 'paywall' = PaywallModal. Settings+archive have no paywall_shown by design.
+select
+  coalesce(meta->>'source', 'unknown') source,
+  count(*) filter (where event = 'purchase_initiated') initiated,
+  count(*) filter (where event = 'purchase_result' and meta->>'outcome' = 'success') success,
+  round(100.0 * count(*) filter (where event = 'purchase_result' and meta->>'outcome' = 'success')
+        / nullif(count(*) filter (where event = 'purchase_initiated'), 0), 1) initiated_to_success_pct
+from perf_events
+where meta->>'kind' = 'premium' and ts > now() - interval '28 days'
+group by 1 order by 2 desc;
+
+-- §D.2  PACK-UNLOCK FUNNEL AS NAMED STEPS (BASELINE.md §5.2). Compare these
+-- volumes against §D.1 to answer "is pack-unlock a bigger driver than membership?".
+select
+  coalesce(platform, '?')    platform,
+  coalesce(app_version, '?') ver,
+  count(*) filter (where event = 'paywall_shown'      and meta->>'context' = 'paid-pack') shown,
+  count(*) filter (where event = 'purchase_initiated' and meta->>'kind'    = 'pack')      initiated,
+  count(*) filter (where event = 'purchase_result'    and meta->>'kind'    = 'pack'
+                                                       and meta->>'outcome' = 'success')   success_downloaded,
+  round(100.0 * count(*) filter (where event = 'purchase_result' and meta->>'kind' = 'pack' and meta->>'outcome' = 'success')
+        / nullif(count(*) filter (where event = 'purchase_initiated' and meta->>'kind' = 'pack'), 0), 1) initiated_to_success_pct
+from perf_events
+where ts > now() - interval '28 days'
+group by 1, 2 order by 1, 2;
+
+-- §D.2a  DO PACK-BUYERS UPGRADE TO PREMIUM? Segment buyers by owned_pack_count at
+-- emit time. A user seen buying premium while already owning packs = pack→premium path.
+select
+  (meta->>'owned_pack_count')::int owned_packs_at_purchase,
+  count(*) filter (where meta->>'kind' = 'pack')    pack_purchases,
+  count(*) filter (where meta->>'kind' = 'premium') premium_purchases
+from perf_events
+where event = 'purchase_result' and meta->>'outcome' = 'success'
+  and ts > now() - interval '28 days'
+group by 1 order by 1;
+
+-- §D.3  NEW vs RETURNING (BASELINE.md §3). Window-relative: a user's first session
+-- inside the window = "new"; later sessions = "returning". State the window.
+with first_seen as (
+  select anon_user_id, min(ts) first_ts
+  from perf_events where ts > now() - interval '28 days'
+  group by 1
+)
+select
+  case when f.first_ts > now() - interval '7 days' then 'new_last_7d' else 'returning' end cohort,
+  count(distinct e.anon_user_id) users,
+  count(*)                       events,
+  count(distinct e.session_id)   sessions
+from perf_events e join first_seen f using (anon_user_id)
+where e.ts > now() - interval '28 days'
+group by 1 order by 1;
+
+-- §D.3a  HEADLINE MEMBERSHIP RATE split by new vs returning — do newcomers or
+-- veterans convert? (purchase funnel starts free for everyone, so the meaningful
+-- cut here is cohort/platform, not free/paid.)
+with first_seen as (
+  select anon_user_id, min(ts) first_ts from perf_events
+  where ts > now() - interval '28 days' group by 1
+)
+select
+  case when f.first_ts > now() - interval '7 days' then 'new_last_7d' else 'returning' end cohort,
+  count(*) filter (where event = 'purchase_initiated' and meta->>'kind' = 'premium') initiated,
+  count(*) filter (where event = 'purchase_result' and meta->>'kind' = 'premium'
+                                                    and meta->>'outcome' = 'success') success,
+  round(100.0 * count(*) filter (where event = 'purchase_result' and meta->>'kind' = 'premium' and meta->>'outcome' = 'success')
+        / nullif(count(*) filter (where event = 'purchase_initiated' and meta->>'kind' = 'premium'), 0), 1) initiated_to_success_pct
+from perf_events e join first_seen f using (anon_user_id)
+where e.ts > now() - interval '28 days'
+group by 1 order by 1;
+
+-- §D.4  REENGAGEMENT — DO STREAKS DRIVE RETURN VISITS? (mission 3's hardest Q,
+-- BASELINE.md §6.) Active-days-per-user, streak-holders vs non-holders.
+-- CAVEAT: correlational, not causal — streak-holders are already the more engaged
+-- users (that's WHY they have a streak). §D.4a tries to reduce that selection bias.
+with holders as (
+  select distinct anon_user_id from perf_events
+  where event = 'streak_recorded' and (meta->>'current')::int >= 1
+),
+user_days as (
+  select anon_user_id, count(distinct date_trunc('day', ts)) active_days
+  from perf_events where ts > now() - interval '28 days'
+  group by 1
+)
+select
+  case when h.anon_user_id is not null then 'streak_holder' else 'non_holder' end cohort,
+  count(*)                                                              users,
+  round(avg(active_days), 2)                                            avg_active_days,
+  round(percentile_cont(0.5) within group (order by active_days))       median_active_days
+from user_days u left join holders h using (anon_user_id)
+group by 1 order by 1;
+
+-- §D.4a  Less-biased cut: among users who STARTED a streak (streak_play ≥ 1),
+-- compare those who went on to HOLD one (streak_recorded) vs those who didn't.
+-- Both populations chose to engage with streaks, so the activity gap is closer to
+-- "the streak itself drove return" than the §D.4 split.
+with played as (select distinct anon_user_id from perf_events where event = 'streak_play'),
+     held   as (select distinct anon_user_id from perf_events where event = 'streak_recorded'),
+     user_days as (
+       select anon_user_id, count(distinct date_trunc('day', ts)) active_days
+       from perf_events where ts > now() - interval '28 days' group by 1
+     )
+select
+  case when held.anon_user_id is not null then 'played_and_held' else 'played_not_held' end cohort,
+  count(*) users, round(avg(active_days), 2) avg_active_days
+from played p
+  join user_days using (anon_user_id)
+  left join held on held.anon_user_id = p.anon_user_id
+group by 1 order by 1;
+
+-- §D.5  ENGAGEMENT BY PAID STATUS — do paid users play/complete more? (free/paid
+-- is meaningful here, unlike in the purchase funnel.) Uses the emit-time stamp.
+select
+  coalesce(meta->>'is_premium', 'unknown') is_premium,
+  count(*) filter (where event = 'puzzle_complete')                                completes,
+  count(*) filter (where event = 'streak_recorded')                                streaks,
+  count(*) filter (where event = 'hint_used')                                      hint_reveals,
+  count(distinct anon_user_id)                                                     users
+from perf_events
+where ts > now() - interval '28 days'
+  and event in ('puzzle_complete', 'streak_recorded', 'hint_used')
+group by 1 order by 1;
