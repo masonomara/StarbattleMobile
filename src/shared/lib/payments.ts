@@ -58,7 +58,17 @@ function errReason(e: unknown): string {
 // thrown to the UI. `body` records the precise outcome for its known exits
 // (cancel/lag/store-failure); the catch records anything else and re-throws.
 async function instrumentPurchase<T>(
-  base: { kind: 'premium' | 'pack'; product_id: string; pack?: string },
+  base: {
+    kind: 'premium' | 'pack';
+    product_id: string;
+    pack?: string;
+    // Which surface initiated this purchase — premium can start from the paywall
+    // modal OR the Settings upgrade button (where the streak-archive gate routes,
+    // via openSettings). Settings-originated purchases have no paywall_shown, so
+    // `source` is the only honest way to split the membership funnel by surface
+    // and to attribute archive→purchase. See BASELINE.md §5.1.
+    source?: string;
+  },
   body: (record: (outcome: PurchaseOutcome, reason?: string) => void) => Promise<T>,
 ): Promise<T> {
   const t0 = Date.now();
@@ -82,9 +92,11 @@ async function instrumentPurchase<T>(
   }
 }
 
-export async function purchasePremium(): Promise<boolean> {
+export async function purchasePremium(
+  source: 'paywall' | 'settings' | 'archive' | 'unknown' = 'unknown',
+): Promise<boolean> {
   return instrumentPurchase(
-    { kind: 'premium', product_id: PREMIUM_PRODUCT_ID },
+    { kind: 'premium', product_id: PREMIUM_PRODUCT_ID, source },
     async record => {
       const products = await getProducts();
       const product = products.find(

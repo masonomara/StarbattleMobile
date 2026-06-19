@@ -191,7 +191,9 @@ export function ArchivePackScreen({
           { text: t('streaks.notNow'), style: 'cancel' },
           {
             text: t('streaks.upgrade'),
-            onPress: () => useSettingsStore.getState().openSettings(),
+            // 'archive' tags a resulting premium purchase as archive-driven
+            // (mission 2 attribution) — AccountSection reads openReason. BASELINE.md §5.3.
+            onPress: () => useSettingsStore.getState().openSettings('archive'),
           },
         ]);
         return;

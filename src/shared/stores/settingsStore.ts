@@ -48,9 +48,15 @@ export function hasSeenTutorial(): boolean {
 type SettingsState = {
   settings: UserSettings;
   settingsModalVisible: boolean;
+  // Why settings was opened, when that drives purchase attribution. Set on EVERY
+  // open (generic open → undefined) so it's always fresh — no reliance on
+  // closeSettings firing. Read by AccountSection's upgrade button so a premium
+  // purchase started from the streak-archive gate is tagged source:'archive'
+  // (the gate routes here via openSettings('archive')). See BASELINE.md §5.3.
+  openReason?: 'archive';
   initialize: () => void;
   updateSettings: (update: Partial<UserSettings>) => void;
-  openSettings: () => void;
+  openSettings: (reason?: 'archive') => void;
   closeSettings: () => void;
   completeTutorial: () => void;
 };
@@ -67,8 +73,10 @@ export const useSettingsStore = create<SettingsState>(set => ({
     set({ settings: getSettings() });
   },
 
-  openSettings: () => set({ settingsModalVisible: true }),
-  closeSettings: () => set({ settingsModalVisible: false }),
+  openSettings: reason =>
+    set({ settingsModalVisible: true, openReason: reason }),
+  closeSettings: () =>
+    set({ settingsModalVisible: false, openReason: undefined }),
 
   // Writes to MMKV first, then updates the store. Order matters: if the app
   // crashes between the two operations the persisted value stays correct.

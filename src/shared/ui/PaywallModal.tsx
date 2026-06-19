@@ -72,7 +72,7 @@ export function PaywallModal({
           </Text>
           <Pressable
             style={[styles.primaryButton, loading && styles.disabled]}
-            onPress={() => purchase(purchasePremium)}
+            onPress={() => purchase(() => purchasePremium('paywall'))}
             disabled={loading}
           >
             {loading ? (
@@ -134,7 +134,7 @@ export function PaywallModal({
           </Pressable>
           <Pressable
             style={[styles.secondaryButton, loading && styles.disabled]}
-            onPress={() => purchase(purchasePremium)}
+            onPress={() => purchase(() => purchasePremium('paywall'))}
             disabled={loading}
           >
             <Text role="subhead" style={styles.secondaryButtonText}>
