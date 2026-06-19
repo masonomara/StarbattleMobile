@@ -86,6 +86,7 @@ export type PuzzleThumbnailProps = {
 };
 
 export type PackCardProps = {
+  testID?: string;
   name: string;
   meta: string;
   preview?: Puzzle;
@@ -143,6 +144,7 @@ export type PackCardSkeletonProps = {
 export type StreakCardStatus = 'not-started' | 'in-progress' | 'complete';
 
 export type StreakCardProps = {
+  testID?: string;
   label: string;
   starCount: number;
   status: StreakCardStatus;

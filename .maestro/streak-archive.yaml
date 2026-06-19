@@ -1,0 +1,24 @@
+# Golden path 3 — Find & use streak archive (discovery + premium gate).
+# A fresh (non-premium) user opens the daily archive and is shown the premium
+# gate. Fires streak_archive_view; the gate note is the conversion surface.
+# No purchase performed.
+#
+# NOTE: the archive opens from the Home header title chevron (streak-archive-link),
+# NOT the streak card — the card opens today's live puzzle (fires streak_play).
+appId: com.omaratechnologydesign.starbattle
+---
+- launchApp:
+    clearState: true
+- runFlow: helpers/dismiss-tutorial.yaml
+- extendedWaitUntil:
+    visible:
+      id: "streak-archive-link"
+    timeout: 30000
+- tapOn:
+    id: "streak-archive-link"
+- assertVisible:
+    id: "archive-root"
+# Non-premium users see the premium lock note (text: "Upgrade to Premium to
+# access past challenges.").
+- assertVisible:
+    id: "archive-premium-note"

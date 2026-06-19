@@ -1,0 +1,17 @@
+# Subflow: get a freshly-launched app to Home.
+# A clearState launch opens the Tutorial route (not Home) — see navigation.tsx.
+# We skip via the tutorial-skip button + its native confirm alert. Native dialogs
+# are reliable in Maestro (unlike the win banner, whose native-driven transform
+# confuses touch hit-testing). The alert confirm text ("Skip") is English —
+# flows assume an English-locale device (see README).
+appId: com.omaratechnologydesign.starbattle
+---
+- extendedWaitUntil:
+    visible:
+      id: "tutorial-skip"
+    timeout: 30000
+- tapOn:
+    id: "tutorial-skip"
+- tapOn: "Skip" # confirm button on the "Skip Tutorial" alert
+- assertVisible:
+    id: "home-root"

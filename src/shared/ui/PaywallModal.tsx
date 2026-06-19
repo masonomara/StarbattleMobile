@@ -168,7 +168,7 @@ export function PaywallModal({
     // box-none lets the sheet receive touches while the absoluteFill Pressable behind it closes on tap-outside.
     <View style={styles.overlay} pointerEvents="box-none">
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      <View style={styles.sheet}>
+      <View testID="paywall-sheet" style={styles.sheet}>
         <Pressable style={styles.closeButton} onPress={onClose} hitSlop={8}>
           <X size={20} color={theme.textSecondary} />
         </Pressable>

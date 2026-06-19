@@ -83,6 +83,7 @@ const PuzzleCell = React.memo(function PuzzleCell({
 
   return (
     <Pressable
+      testID={`puzzle-cell-${index}`}
       style={[styles.cell, { width: cellSize }, locked && styles.lockedCell]}
       onPress={() => (locked ? onLockedPress(index) : onPress(index))}
     >

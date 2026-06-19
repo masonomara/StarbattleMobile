@@ -69,6 +69,7 @@ type PuzzleState = {
   clearBoard: () => void;
   tick: (ms?: number) => void;
   showHint: () => void;
+  solveForTest: () => void;
 };
 
 // Fires pack_complete exactly once, when the final puzzle of a regular
@@ -494,6 +495,25 @@ export const usePuzzleStore = create<PuzzleState>((set, get) => {
   tick: (ms = 1000) => {
     if (get().completed) return;
     set(state => ({ timeMs: state.timeMs + ms }));
+  },
+
+  // Test-only: completes the current puzzle by placing the solution stars, then
+  // runs the normal win path (haptics + telemetry). Wired to an invisible,
+  // __DEV__-only button in PuzzleScreen so E2E flows can finish a puzzle
+  // deterministically. Unreachable in a release build.
+  solveForTest: () => {
+    const { puzzle } = get();
+    if (!puzzle) return;
+    const total = puzzle.size * puzzle.size;
+    const newCells = new Array<CellValue>(total).fill(0) as CellValue[];
+    for (const idx of puzzle.solutionSet) newCells[idx] = 1;
+    set({
+      cells: newCells,
+      autoMarks: new Set<number>(),
+      errorCells: new Set<number>(),
+    });
+    maybeWin(newCells, puzzle);
+    flushSave(puzzle.id);
   },
   };
 });

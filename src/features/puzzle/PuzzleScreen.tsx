@@ -106,6 +106,7 @@ export function PuzzleScreen({
   const cells = usePuzzleStore(s => s.cells);
   const errorCells = usePuzzleStore(s => s.errorCells);
   const hintGhosts = usePuzzleStore(s => s.hintGhosts);
+  const solveForTest = usePuzzleStore(s => s.solveForTest);
   const alwaysShowToolbar = useSettingsStore(s => s.settings.alwaysShowToolbar);
   const alwaysShowTimer = useSettingsStore(s => s.settings.alwaysShowTimer);
   const openSettings = useSettingsStore(s => s.openSettings);
@@ -395,6 +396,7 @@ export function PuzzleScreen({
         right={
           isTutorial ? (
             <Pressable
+              testID="tutorial-skip"
               onPress={confirmSkipTutorial}
               hitSlop={12}
               accessibilityRole="button"
@@ -461,6 +463,15 @@ export function PuzzleScreen({
         streakCount={streakCount}
         tutorial={isTutorial}
       />
+      {/* Test-only: invisible deterministic-solve trigger for Maestro E2E. */}
+      {__DEV__ && (
+        <Pressable
+          testID="dev-solve"
+          accessibilityLabel="dev-solve"
+          onPress={solveForTest}
+          style={styles.devSolve}
+        />
+      )}
     </View>
   );
 }
@@ -468,6 +479,20 @@ export function PuzzleScreen({
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
+    // Subtle corner target for the __DEV__ E2E solve trigger. Must stay
+    // non-transparent + sized: iOS drops fully-transparent views from the
+    // accessibility tree, so Maestro can't find an opacity:0 element. __DEV__ only.
+    devSolve: {
+      position: 'absolute',
+      // Below the status bar + header so iOS doesn't intercept the tap; left edge
+      // sits in the board's margin. __DEV__ only.
+      top: 130,
+      left: 0,
+      width: 32,
+      height: 32,
+      opacity: 0.2,
+      backgroundColor: theme.blue,
+    },
     loading: {
       flex: 1,
       justifyContent: 'center',

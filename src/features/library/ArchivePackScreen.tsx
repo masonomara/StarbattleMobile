@@ -231,7 +231,7 @@ export function ArchivePackScreen({
   };
 
   return (
-    <View style={styles.container}>
+    <View testID="archive-root" style={styles.container}>
       <View style={[styles.header, scrolled && styles.headerBorder]}>
         <CircleButton ghost onPress={() => navigation.goBack()}>
           <ChevronLeft size={26} strokeWidth={2} color={theme.text} />
@@ -257,7 +257,7 @@ export function ArchivePackScreen({
 
       <View style={styles.body}>
         {!isPremium && (
-          <View style={styles.lockNote}>
+          <View testID="archive-premium-note" style={styles.lockNote}>
             <Lock size={14} color={theme.textSecondary} strokeWidth={2.5} />
             <Text role="footnote" style={styles.lockNoteText}>
               {t('streaks.premiumBody')}

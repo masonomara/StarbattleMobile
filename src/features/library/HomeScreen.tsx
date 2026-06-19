@@ -319,7 +319,7 @@ export function HomeScreen({
 
   return (
     <PulseProvider>
-      <View style={styles.container}>
+      <View testID="home-root" style={styles.container}>
         {/* Floating header */}
         <View
           style={[
@@ -331,6 +331,7 @@ export function HomeScreen({
           {/* Title names the section at the top of the scroll; a challenge gets
               a chevron and opens its archive. */}
           <Pressable
+            testID="streak-archive-link"
             style={styles.headerTitleRow}
             hitSlop={8}
             disabled={!headerSection.isChallenge}
@@ -433,6 +434,7 @@ export function HomeScreen({
                     return (
                       <StreakCard
                         key={pack.id}
+                        testID={`streak-card-${type}`}
                         label={t(`library.challenge${capitalize(type)}`)}
                         starCount={STREAK_STAR_COUNT[type]}
                         status={status}
@@ -491,6 +493,7 @@ export function HomeScreen({
                   return (
                     <PackCard
                       key={pack.id}
+                      testID={`pack-card-${pack.id}`}
                       name={packDisplayName(pack)}
                       meta={t('home.packStar', { count: pack.stars })}
                       locked={!owned}

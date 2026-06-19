@@ -1,0 +1,30 @@
+# Golden paths 1/2 — Paywall reach (top of the purchase funnel).
+# A fresh (non-premium) user opens a pack and taps a locked puzzle, hitting the
+# sequential lock. Fires paywall_shown(sequential). No purchase performed.
+#
+# ASSUMPTION: the first pack card is the free "intro" pack, where only puzzle 0
+# is unlocked on a fresh install, so puzzle-cell-1 is locked → "Puzzle Locked".
+# If the first pack is instead a PAID pack, the tap opens PaywallModal — swap the
+# final assertion to `id: "paywall-sheet"`.
+appId: com.omaratechnologydesign.starbattle
+---
+- launchApp:
+    clearState: true
+- runFlow: helpers/dismiss-tutorial.yaml
+- assertVisible:
+    id: "home-root"
+# Pack cards sit below the streak carousel; scroll them into view.
+- scrollUntilVisible:
+    element:
+      id: "pack-card-.*"
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: "pack-card-.*" # first matching (top) pack
+- extendedWaitUntil:
+    visible:
+      id: "puzzle-cell-1"
+    timeout: 20000
+- tapOn:
+    id: "puzzle-cell-1" # locked on a fresh free pack (only puzzle 0 is open)
+- assertVisible: "Puzzle Locked"
