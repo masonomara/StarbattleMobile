@@ -15,18 +15,18 @@ For each item: **what to capture → where to find it → what "pass" looks like
 > the source of truth for what real users pay. These artifacts prove the config
 > directly — no sandbox required.
 
-Reference IDs: subscription `sb_premium_599` · packs `starbattle_pack_{packId}` ·
+Reference IDs: premium IAP (one-time, non-consumable) `sb_premium_599` · packs `starbattle_pack_{packId}` ·
 paywall `main_paywall` · access level `premium` · webhook `adapty-webhook`.
 
 ---
 
 ## A. Regional pricing is correct
 
-- [ ] **A1 — Subscription price-by-territory table**
+- [ ] **A1 — Premium IAP price-by-territory table**
   - Capture: the full territory price list for `sb_premium_599`, scrolled so **US,
     Peru, and one Eurozone country** are all visible.
-  - Where: App Store Connect → Apps → Star Battle → **Subscriptions** →
-    `sb_premium_599` → **Subscription Pricing**.
+  - Where: App Store Connect → Apps → Star Battle → **In-App Purchases** →
+    `sb_premium_599` → **Pricing**.
   - Pass: Peru + Europe rows show your **discounted** prices in **local currency**;
     no row says "Not available"; US row is the expected base. *This single
     screenshot is the core proof that regional pricing works.*
@@ -43,7 +43,7 @@ paywall `main_paywall` · access level `premium` · webhook `adapty-webhook`.
   - What I have: I dont have any packs yet, i just want this launche diwht the premium pricing not the rest of the stuff yet
 
 - [ ] **A3 — Availability / territories**
-  - Capture: the product **Availability** panel for the subscription (and a pack).
+  - Capture: the product **Availability** panel for the premium IAP (and a pack).
   - Where: same product pages → Availability section.
   - Pass: the discounted regions (Peru, your Europe targets) are **included**, not
     excluded from sale.
@@ -63,12 +63,12 @@ paywall `main_paywall` · access level `premium` · webhook `adapty-webhook`.
     confirm anyway; it gates everything.)
   - What I have: all complete
 
-- [ ] **B2 — Subscription review-readiness**
+- [ ] **B2 — Premium IAP review-readiness**
   - Capture: the `sb_premium_599` detail page top (status + metadata section).
-  - Where: Subscriptions → `sb_premium_599`.
+  - Where: In-App Purchases → `sb_premium_599`.
   - Pass: status **Ready to Submit** (not "Missing Metadata"); localized **display
-    name + description** present; **review screenshot** attached; assigned to a
-    **subscription group**.
+    name + description** present; **review screenshot** attached. (Non-consumable —
+    no subscription group applies.)
   - What I have: all complete
 
 - [ ] **B3 — Packs review-readiness**
@@ -78,7 +78,7 @@ paywall `main_paywall` · access level `premium` · webhook `adapty-webhook`.
 
 - [ ] **B4 — Build + version attaches the IAPs**
   - Capture: the app **version** page showing the uploaded build and the In-App
-    Purchases / subscription selected for **this version's** first submission.
+    Purchases selected for **this version's** first submission.
   - Where: App Store Connect → the app version (e.g. "1.0 Prepare for Submission").
   - Pass: a build is attached, and the IAPs are included with the submission
     (Apple reviews new IAPs alongside the first app version that contains them).
@@ -152,9 +152,10 @@ To find App ID, open your app page in App Store Connect, go to the App Informati
   - Capture: either Adapty showing server notifications "connected/enabled," **or**
     App Store Connect → App Information → **App Store Server Notifications** showing
     the **Production URL set to Adapty's endpoint (Version 2)**.
-  - Pass: V2 production URL points at Adapty. *(Without this, production
-    renewals/refunds never reach `adapty-webhook` → Supabase, so entitlements go
-    stale silently. Easy to forget, costly to miss.)*
+  - Pass: V2 production URL points at Adapty. *(Without this, production refunds
+    and purchase confirmations never reach `adapty-webhook` → Supabase, so
+    entitlements can go stale silently — a lifetime IAP has no renewals, but a
+    refund must still revoke `premium`. Easy to forget, costly to miss.)*
   - What I have: App Store server notifications
   Stalled
   Notification received 15 days ago.
