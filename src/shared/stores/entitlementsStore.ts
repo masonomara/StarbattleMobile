@@ -54,10 +54,24 @@ function mapPackRow(r: PackRow): PackCatalogItem {
 }
 
 type EntitlementsState = {
+  // Effective entitlements: the UNION of `server` and `device` (see
+  // mergeEntitlements). This is what the whole app reads — never write it
+  // directly, it's recomputed whenever a source changes.
   entitlements: Entitlements;
+  // Cross-device entitlements synced from the user_entitlements row via
+  // PowerSync. Only populated once an Adapty purchase is attributed server-side,
+  // which requires a named account (the webhook keys off customer_user_id, set
+  // only when we adapty.identify() a signed-in user). Empty for anonymous users.
+  server: Entitlements;
+  // On-device entitlements derived from the StoreKit/Adapty receipt
+  // (adapty.getProfile / makePurchase / restorePurchases). Authoritative for THIS
+  // device regardless of sign-in state — this is what lets an anonymous user buy
+  // and keep access without registering (App Review 5.1.1(v)).
+  device: Entitlements;
   packCatalog: PackCatalogItem[];
   loadPackCatalog: () => Promise<void>;
   loadEntitlements: (userId: string) => Promise<void>;
+  setDeviceEntitlements: (device: Entitlements) => void;
   setIsPremium: (val: boolean) => void;
   addOwnedPack: (packId: string) => void;
   hasPackAccess: (packId: string) => boolean;
@@ -70,8 +84,59 @@ const DEFAULT_ENTITLEMENTS: Entitlements = {
   ownedPackIds: [],
 };
 
+// Effective access is the UNION of the server (cross-device) and device
+// (this-device receipt) sources: a purchase is honored if EITHER source confirms
+// it. This is the core of the App Review 5.1.1(v) fix — an anonymous on-device
+// purchase lives only in `device`, so it is never lost for lack of an account,
+// and registering later only ADDS the cross-device `server` source. Union is
+// order-independent and idempotent, so the PowerSync load and the Adapty sync can
+// land in any order without clobbering each other. Revoking access therefore
+// requires BOTH sources to drop it (e.g. a refund: Adapty drops the receipt and
+// the webhook clears the row) — correct for a one-time, non-account-based unlock.
+function mergeEntitlements(server: Entitlements, device: Entitlements): Entitlements {
+  return {
+    isPremium: server.isPremium || device.isPremium,
+    premiumPurchasedAt: server.premiumPurchasedAt ?? device.premiumPurchasedAt,
+    ownedPackIds: Array.from(
+      new Set([...server.ownedPackIds, ...device.ownedPackIds]),
+    ),
+  };
+}
+
+// Value-equality on effective entitlements, used to PRESERVE the `entitlements`
+// object identity when a source update doesn't change the merged result. Every
+// foreground re-reads the Adapty profile (usually identical), and useEntitlements
+// keys on the object reference via useShallow — recomputing a fresh-but-equal
+// object would re-render every consumer for nothing. Order-independent on packs.
+function sameEntitlements(a: Entitlements, b: Entitlements): boolean {
+  return (
+    a.isPremium === b.isPremium &&
+    a.premiumPurchasedAt === b.premiumPurchasedAt &&
+    a.ownedPackIds.length === b.ownedPackIds.length &&
+    a.ownedPackIds.every(id => b.ownedPackIds.includes(id))
+  );
+}
+
+// Builds the state patch when a source slice changes: re-merge, and reuse the
+// previous effective object when the merge is value-equal so consumers keyed on
+// its identity don't re-render needlessly.
+function reconcile(
+  prevEffective: Entitlements,
+  server: Entitlements,
+  device: Entitlements,
+): { server: Entitlements; device: Entitlements; entitlements: Entitlements } {
+  const merged = mergeEntitlements(server, device);
+  return {
+    server,
+    device,
+    entitlements: sameEntitlements(prevEffective, merged) ? prevEffective : merged,
+  };
+}
+
 export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
   entitlements: DEFAULT_ENTITLEMENTS,
+  server: DEFAULT_ENTITLEMENTS,
+  device: DEFAULT_ENTITLEMENTS,
   packCatalog: [],
 
   // Loads the published pack list from PowerSync. Called once at app startup
@@ -100,8 +165,11 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
     set({ packCatalog });
   },
 
-  // Loads the user's entitlement row from PowerSync. Called after sign-in
-  // and after account migration to reflect the merged entitlements.
+  // Loads the user's entitlement row from PowerSync into the `server` source.
+  // Called after sign-in and account migration to reflect the merged
+  // cross-device entitlements. Anonymous users have no row, so this resets the
+  // server source to empty — the device source still carries their on-device
+  // purchases, so effective access is preserved.
   loadEntitlements: async (userId: string) => {
     const entRow = await db.getOptional<{
       is_premium: number;
@@ -109,7 +177,7 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
       owned_pack_ids: string;
     }>('SELECT * FROM user_entitlements WHERE user_id = ?', [userId]);
 
-    const entitlements: Entitlements = entRow
+    const server: Entitlements = entRow
       ? {
           isPremium: entRow.is_premium === 1,
           premiumPurchasedAt: entRow.premium_purchased_at ?? undefined,
@@ -117,26 +185,38 @@ export const useEntitlementsStore = create<EntitlementsState>((set, get) => ({
         }
       : DEFAULT_ENTITLEMENTS;
 
-    set({ entitlements });
+    set(state => reconcile(state.entitlements, server, state.device));
   },
 
-  // Called by the Adapty purchase webhook handler to flip premium status
-  // immediately after a successful purchase, without waiting for a sync cycle.
+  // Replaces the device source with a fresh snapshot derived from the Adapty
+  // profile (the StoreKit receipt). Called on startup, foreground, and after
+  // every purchase/restore so an on-device purchase is honored without an
+  // account. See syncEntitlementsFromAdapty in payments.ts.
+  setDeviceEntitlements: (device: Entitlements) => {
+    set(state => reconcile(state.entitlements, state.server, device));
+  },
+
+  // Optimistically flips device premium immediately after a successful purchase,
+  // without waiting for a full profile read. Reconciled by the next
+  // setDeviceEntitlements (which reads the authoritative Adapty profile).
   setIsPremium: (val: boolean) => {
-    set(state => ({ entitlements: { ...state.entitlements, isPremium: val } }));
+    set(state =>
+      reconcile(state.entitlements, state.server, {
+        ...state.device,
+        isPremium: val,
+      }),
+    );
   },
 
-  // Appends a pack to the owned list after an individual pack purchase.
-  // No-ops if the pack is already owned (idempotent).
+  // Optimistically appends a pack to the device owned list after an individual
+  // pack purchase. No-ops if already present (idempotent).
   addOwnedPack: (packId: string) => {
     set(state => {
-      if (state.entitlements.ownedPackIds.includes(packId)) return state;
-      return {
-        entitlements: {
-          ...state.entitlements,
-          ownedPackIds: [...state.entitlements.ownedPackIds, packId],
-        },
-      };
+      if (state.device.ownedPackIds.includes(packId)) return state;
+      return reconcile(state.entitlements, state.server, {
+        ...state.device,
+        ownedPackIds: [...state.device.ownedPackIds, packId],
+      });
     });
   },
 

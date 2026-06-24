@@ -6,7 +6,7 @@ Last updated: June 2026
 
 ## 1. Overview
 
-Star Battle Free ("the App") is operated by O'Mara Technology & Design ("we", "us", "our"). This policy explains what data we collect, why we collect it, and your rights over it. It applies to the App however you obtained it, including from the Apple App Store and Google Play.
+Star Battle ("the App") is operated by O'Mara Technology & Design ("we", "us", "our"). This policy explains what data we collect, why we collect it, and your rights over it. It applies to the App however you obtained it, including from the Apple App Store and Google Play.
 
 ## 2. Data We Collect
 

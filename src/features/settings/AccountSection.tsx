@@ -157,6 +157,38 @@ export function AccountSection() {
 
   return (
     <View style={styles.section}>
+      {/* Premium purchase — available to EVERYONE, no sign-in required. The
+          unlock is a one-time, non-account-based IAP, so gating it behind
+          registration violates App Review 5.1.1(v). Anonymous users buy directly
+          here (Adapty ties it to the Apple ID and it persists on-device);
+          signing in below only adds cross-device sync. Hidden during the auth
+          sub-flows (emailMode) so the sign-in forms stay uncluttered. */}
+      {!entitlements.isPremium && emailMode === null && (
+        <Pressable
+          style={[styles.primaryButton, styles.premiumCta, loading && styles.disabled]}
+          onPress={() =>
+            withLoading(() =>
+              purchasePremium(
+                useSettingsStore.getState().openReason === 'archive'
+                  ? 'archive'
+                  : 'settings',
+              ),
+            )
+          }
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color={theme.background} />
+          ) : (
+            <Text role="callout" style={styles.primaryButtonText}>
+              {premiumPrice
+                ? t('account.buyPremiumPrice', { price: premiumPrice })
+                : t('account.buyPremium')}
+            </Text>
+          )}
+        </Pressable>
+      )}
+
       <Text role="title3" style={styles.sectionTitle}>
         {isReset
           ? t('account.resetTitle')
@@ -495,32 +527,6 @@ export function AccountSection() {
           </View>
 
           <View style={styles.accountActions}>
-            {!entitlements.isPremium && (
-              <Pressable
-                style={[styles.primaryButton, loading && styles.disabled]}
-                onPress={() =>
-                  withLoading(() =>
-                    purchasePremium(
-                      useSettingsStore.getState().openReason === 'archive'
-                        ? 'archive'
-                        : 'settings',
-                    ),
-                  )
-                }
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color={theme.background} />
-                ) : (
-                  <Text role="callout" style={styles.primaryButtonText}>
-                    {premiumPrice
-                      ? t('account.buyPremiumPrice', { price: premiumPrice })
-                      : t('account.buyPremium')}
-                  </Text>
-                )}
-              </Pressable>
-            )}
-
             {ownedPacks.length > 0 && (
               <>
                 <Text role="subhead" style={styles.subLabel}>
@@ -588,6 +594,11 @@ const createStyles = (theme: Theme) =>
     primaryButtonText: {
       color: theme.background,
       fontWeight: '600',
+    },
+    // Top-of-section premium CTA: drop the default top margin so it sits at the
+    // section top, above the account title.
+    premiumCta: {
+      marginTop: 22,
     },
     secondaryButton: {
       height: 48,

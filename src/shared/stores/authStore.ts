@@ -229,10 +229,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     authSubscription = subscription;
 
     // Handle deep links that launched the app cold (e.g. password recovery email).
-    // Fire-and-forget — we don't await so initialization isn't blocked.
-    Linking.getInitialURL()
-      .then(url => { if (url) get().handleDeepLink(url); })
-      .catch(() => {});
+    // Fire-and-forget — we don't await so initialization isn't blocked. Wrapped
+    // in try/catch because accessing Linking can throw synchronously (before a
+    // promise exists, so .catch can't attach) — e.g. in tests where this runs
+    // after the RN module registry is torn down. A failed deep-link probe must
+    // never take down auth init with an unhandled rejection.
+    try {
+      Linking.getInitialURL()
+        .then(url => { if (url) get().handleDeepLink(url); })
+        .catch(() => {});
+    } catch {}
   },
 
   handleDeepLink: async (url: string) => {
@@ -314,9 +320,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         requestedScopes: [appleAuth.Scope.EMAIL],
       });
       if (!credential.identityToken) throw new Error('Apple sign-in: missing identity token');
+      // The nonce is REQUIRED. invertase enables nonces by default (nonceEnabled),
+      // so it sends SHA256(credential.nonce) to Apple and Apple embeds that hash as
+      // the identity token's `nonce` claim. Our Supabase project keeps Apple's
+      // skip_nonce_check = false, so gotrue re-hashes whatever nonce we pass and
+      // compares it to that claim. Omitting it makes validation fail on EVERY iOS
+      // device with an opaque error — which is exactly what App Review hit. Pass the
+      // raw credential.nonce; gotrue hashes it to match the token.
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
+        nonce: credential.nonce,
       });
       if (error) throw error;
       return { session: data.session, user: data.user };

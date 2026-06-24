@@ -17,6 +17,7 @@ import { SupabaseConnector } from './src/powersync/Connector';
 import { adapty } from 'react-native-adapty';
 import { ADAPTY_SDK_KEY } from './src/shared/lib/config';
 import { prefetchAllCatalog, prefetchStreakHints } from './src/packs/prefetch';
+import { syncEntitlementsFromAdapty } from './src/shared/lib/payments';
 import { supabase } from './src/shared/lib/supabase';
 import type { PackCatalogItem } from './src/types';
 
@@ -143,9 +144,18 @@ export default function App() {
     // first screen has actually painted — hiding here (on App mount) faded the
     // splash into an unpainted frame and caused a white flash on the handoff.
 
-    adapty.activate(ADAPTY_SDK_KEY).catch(() => {
-      // Swallow "already activated" error on Fast Refresh in dev
-    });
+    adapty
+      .activate(ADAPTY_SDK_KEY)
+      .catch(() => {
+        // Swallow "already activated" error on Fast Refresh in dev
+      })
+      // Hydrate device entitlements from the StoreKit receipt once Adapty is
+      // ready, so an on-device purchase (including an anonymous one) is honored
+      // before any account sync. .finally so it still runs on Fast Refresh's
+      // "already activated" rejection; getProfile is safe only post-activation.
+      .finally(() => {
+        syncEntitlementsFromAdapty();
+      });
     startupTimer.log('adapty.activate called');
 
     // Auth must resolve (including the signInAnonymously() fallback) before any
@@ -268,6 +278,11 @@ export default function App() {
     const appStateSub = AppState.addEventListener('change', async nextState => {
       if (nextState === 'active') {
         await supabase.auth.refreshSession();
+        // Re-validate the StoreKit receipt on every foreground so a purchase or
+        // refund made elsewhere (or a webhook that landed while backgrounded) is
+        // reflected. A change flips device entitlements, which the subscription
+        // above turns into a prefetch on its own.
+        syncEntitlementsFromAdapty();
         const { packCatalog } = useEntitlementsStore.getState();
         // force: re-check ETags on every foreground even when the catalog and
         // entitlements are unchanged, so a server-side content update is picked up.

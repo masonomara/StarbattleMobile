@@ -6,7 +6,7 @@ Last updated: June 2026
 
 ## 1. Acceptance
 
-By downloading or using Star Battle Free ("the App"), you agree to these Terms of Use. If you do not agree, do not use the App.
+By downloading or using Star Battle ("the App"), you agree to these Terms of Use. If you do not agree, do not use the App.
 
 ## 2. License
 

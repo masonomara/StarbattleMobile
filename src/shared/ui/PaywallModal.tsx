@@ -9,8 +9,6 @@ import {
 } from 'react-native';
 import { Text } from './Text';
 import X from 'lucide-react-native/dist/cjs/icons/x';
-import { useAuthStore } from '../stores/authStore';
-import { useSettingsStore } from '../stores/settingsStore';
 import { useTheme } from '../theme/useTheme';
 import { rgba } from '../theme/color';
 import { useAsyncAction } from '../hooks/useAsyncAction';
@@ -38,7 +36,6 @@ export function PaywallModal({
   const { t } = useTranslation();
   const theme = useTheme();
   const styles = createStyles(theme);
-  const isAnonymous = useAuthStore(s => s.isAnonymous);
   const { loading, error, run } = useAsyncAction();
 
   const premiumPrice = useProductPrice(PREMIUM_PRODUCT_ID);
@@ -90,28 +87,10 @@ export function PaywallModal({
     }
 
     if (context.type === 'paid-pack') {
-      if (isAnonymous) {
-        return (
-          <>
-            <Text role="headline" style={styles.title}>{context.packName}</Text>
-            <Text role="body" style={styles.body}>
-              {packPrice
-                ? t('paywall.createAccountToBuy', { price: packPrice })
-                : t('paywall.createAccountToBuyNoPrice')}
-            </Text>
-            <Pressable
-              style={styles.primaryButton}
-              onPress={() => {
-                onClose();
-                useSettingsStore.getState().openSettings();
-              }}
-            >
-              <Text role="headline" style={styles.primaryButtonText}>{t('paywall.createAccount')}</Text>
-            </Pressable>
-          </>
-        );
-      }
-
+      // No sign-in gate: the purchase is a one-time, non-account-based unlock, so
+      // anyone (anonymous included) buys directly. Adapty ties it to the Apple ID
+      // and it persists on-device; registering later only adds cross-device sync.
+      // Gating purchase behind registration violates App Review 5.1.1(v).
       return (
         <>
           <Text role="headline" style={styles.title}>{context.packName}</Text>
