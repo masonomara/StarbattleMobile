@@ -1,11 +1,56 @@
 import { adapty } from 'react-native-adapty';
-import type { AdaptyPaywallProduct } from 'react-native-adapty';
+import type { AdaptyPaywallProduct, AdaptyProfile } from 'react-native-adapty';
 import { downloadPack } from '../../packs';
 import { useEntitlementsStore } from '../stores/entitlementsStore';
 import { prefetchAllCatalog } from '../../packs/prefetch';
 import i18n from './i18n';
 import { UserFacingError } from './errors';
 import { track } from './telemetry';
+import type { Entitlements } from '../../types';
+
+const PACK_PREFIX = 'starbattle_pack_';
+
+// Derives effective entitlements from an Adapty profile (the StoreKit receipt).
+// Premium comes from the `premium` access level (granted by sb_premium_599);
+// individual packs come from non-subscription purchases whose vendorProductId is
+// starbattle_pack_<id> and that haven't been refunded. Mirrors the server-side
+// adapty-webhook so device-derived state matches what a named account syncs down.
+function deriveEntitlements(profile: AdaptyProfile): Entitlements {
+  const premium = profile.accessLevels?.premium;
+  const ownedPackIds: string[] = [];
+  for (const [vendorProductId, entries] of Object.entries(
+    profile.nonSubscriptions ?? {},
+  )) {
+    if (!vendorProductId.startsWith(PACK_PREFIX)) continue;
+    if (entries.some(e => !e.isRefund)) {
+      ownedPackIds.push(vendorProductId.slice(PACK_PREFIX.length));
+    }
+  }
+  return {
+    isPremium: premium?.isActive ?? false,
+    premiumPurchasedAt: premium?.activatedAt?.toISOString(),
+    ownedPackIds,
+  };
+}
+
+function applyProfile(profile: AdaptyProfile): void {
+  useEntitlementsStore.getState().setDeviceEntitlements(deriveEntitlements(profile));
+}
+
+// Reads the current Adapty profile and refreshes the device entitlements slice.
+// Call on startup and foreground so a purchase made on this device — including by
+// an anonymous user who never registered — is honored across app restarts. Adapty
+// validates the StoreKit receipt, which is tied to the Apple ID rather than our
+// account, so no sign-in is required (App Review 5.1.1(v)). Safe offline: Adapty
+// returns its cached profile; a failure leaves the existing device state intact.
+export async function syncEntitlementsFromAdapty(): Promise<void> {
+  try {
+    applyProfile(await adapty.getProfile());
+  } catch {
+    // No profile yet (SDK not activated / offline first launch) — a later sync
+    // or a purchase will populate the device entitlements.
+  }
+}
 
 // NOTE: _productsPromise caches the paywall products for the lifetime of the
 // process. If Adapty's paywall configuration changes server-side (e.g. price
@@ -119,7 +164,7 @@ export async function purchasePremium(
         record('lag', 'entitlement_inactive');
         throw new UserFacingError(i18n.t('errors.purchaseLag'));
       }
-      useEntitlementsStore.getState().setIsPremium(true);
+      applyProfile(result.profile);
       const { packCatalog } = useEntitlementsStore.getState();
       prefetchAllCatalog(packCatalog).catch(() => {});
       return true;
@@ -150,20 +195,23 @@ export async function purchasePack(
         throw new UserFacingError(i18n.t('errors.purchaseFailed'));
       }
       await downloadPack(packId, storagePath);
+      applyProfile(result.profile);
+      // Belt-and-suspenders: guarantee the just-bought pack is reflected even if
+      // the purchase-result profile hasn't propagated the non-subscription yet.
       useEntitlementsStore.getState().addOwnedPack(packId);
     },
   );
 }
 
-// Returns true if premium access was found and activated, false otherwise.
-// Pack entitlements sync automatically via PowerSync once Adapty's webhook fires.
+// Restores purchases from the StoreKit receipt and applies them to the device
+// entitlements — premium AND individual packs, for anonymous or named users
+// alike. Returns true if any purchase was found. Then prefetches now-accessible
+// pack files so restored content is playable offline.
 export async function restorePurchases(): Promise<boolean> {
   const profile = await adapty.restorePurchases();
-  const isPremium = profile.accessLevels?.premium?.isActive ?? false;
-  if (isPremium) {
-    useEntitlementsStore.getState().setIsPremium(true);
-    const { packCatalog } = useEntitlementsStore.getState();
-    prefetchAllCatalog(packCatalog).catch(() => {});
-  }
-  return isPremium;
+  applyProfile(profile);
+  const { entitlements, packCatalog } = useEntitlementsStore.getState();
+  const found = entitlements.isPremium || entitlements.ownedPackIds.length > 0;
+  if (found) prefetchAllCatalog(packCatalog).catch(() => {});
+  return found;
 }

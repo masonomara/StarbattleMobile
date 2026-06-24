@@ -33,34 +33,49 @@ export function AccountActions() {
     ]);
   }
 
-  // These actions only apply to a signed-in account.
-  if (isAnonymous) return null;
+  // Restore is available to everyone — a purchase made anonymously must be
+  // recoverable without an account (App Review 5.1.1(v) / required restore path).
+  // Sign-out and delete only apply to a signed-in account.
+  const restoreButton = (
+    <Pressable
+      style={[styles.secondaryButton, loading && styles.disabled]}
+      onPress={() => {
+        let wasPremium = false;
+        withLoading(
+          async () => {
+            wasPremium = await restorePurchases();
+          },
+          () =>
+            Alert.alert(
+              t('account.restoredTitle'),
+              wasPremium ? t('account.restoredFound') : t('account.restoredNone'),
+            ),
+        );
+      }}
+      disabled={loading}
+    >
+      <Text role="callout" style={styles.secondaryButtonText}>
+        {t('account.restorePurchases')}
+      </Text>
+    </Pressable>
+  );
+
+  if (isAnonymous) {
+    return (
+      <View style={styles.accountActions}>
+        {restoreButton}
+        {error && (
+          <Text role="subhead" style={styles.error}>
+            {error}
+          </Text>
+        )}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.accountActions}>
-      <Pressable
-        style={[styles.secondaryButton, loading && styles.disabled]}
-        onPress={() => {
-          let wasPremium = false;
-          withLoading(
-            async () => {
-              wasPremium = await restorePurchases();
-            },
-            () =>
-              Alert.alert(
-                t('account.restoredTitle'),
-                wasPremium
-                  ? t('account.restoredFound')
-                  : t('account.restoredNone'),
-              ),
-          );
-        }}
-        disabled={loading}
-      >
-        <Text role="callout" style={styles.secondaryButtonText}>
-          {t('account.restorePurchases')}
-        </Text>
-      </Pressable>
+      {restoreButton}
 
       <Pressable
         style={[styles.secondaryButton, loading && styles.disabled]}
