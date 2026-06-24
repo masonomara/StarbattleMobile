@@ -2,7 +2,7 @@
 
 # Delete Your Account
 
-Star Battle Free is operated by O'Mara Technology & Design. You can delete your account and all associated data at any time, using either of the methods below.
+Star Battle is operated by O'Mara Technology & Design. You can delete your account and all associated data at any time, using either of the methods below.
 
 ## What gets deleted
 
@@ -19,7 +19,7 @@ This action is permanent and cannot be undone. Access to previously purchased co
 
 ## Option 1 — Delete in the app
 
-1. Open Star Battle Free.
+1. Open Star Battle.
 2. Go to **Settings**.
 3. Tap **Delete Account** and confirm.
 

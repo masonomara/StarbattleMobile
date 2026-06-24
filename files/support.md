@@ -2,7 +2,7 @@
 
 # Support
 
-Need help with Star Battle Free? We're happy to help. Email us and we'll get back to you as soon as we can — usually within a few business days.
+Need help with Star Battle? We're happy to help. Email us and we'll get back to you as soon as we can — usually within a few business days.
 
 ## Contact us
 
@@ -18,7 +18,7 @@ Place stars on the grid so that every row, every column, and every outlined regi
 
 ### Does the app cost anything?
 
-Star Battle Free is free to download and play. A new puzzle is available every day. Optional one-time purchases unlock additional puzzle packs and the streak archive.
+Star Battle is free to download and play. A new puzzle is available every day. Optional one-time purchases unlock additional puzzle packs and the streak archive.
 
 ### How do I restore my purchases?
 

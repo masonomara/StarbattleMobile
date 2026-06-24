@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Star Battle Free"
+    "name": "Star Battle"
   },
   "tutorial": {
     "start": "Coloca una estrella en cada fila, columna y región, sin que se toquen. Toca una celda para empezar.",

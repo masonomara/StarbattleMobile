@@ -1,6 +1,6 @@
 ## Architecture overview
 
-The stack is React Native 0.84 and React 19.2.3. It is bare and not Expo. New Architecture. TypeScript. The bundle id is `com.omaratechnologydesign.starbattle` and the display name is Star Battle Free.
+The stack is React Native 0.84 and React 19.2.3. It is bare and not Expo. New Architecture. TypeScript. The bundle id is `com.omaratechnologydesign.starbattle` and the display name is Star Battle.
 
 The key libraries and what they do:
 - **Supabase** (`@supabase/supabase-js`) does auth which is anonymous and Apple and Google and email. It does Storage which is the `packs` bucket of puzzle JSON. It does Edge Functions and the Postgres that PowerSync mirrors.

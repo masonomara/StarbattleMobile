@@ -314,7 +314,7 @@
 				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = StarbattleMobile/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Star Battle Free";
+				INFOPLIST_KEY_CFBundleDisplayName = "Star Battle";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -346,7 +346,7 @@
 				CODE_SIGN_ENTITLEMENTS = StarbattleMobile/StarbattleMobile.entitlements;
 				CURRENT_PROJECT_VERSION = 3;
 				INFOPLIST_FILE = StarbattleMobile/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Star Battle Free";
+				INFOPLIST_KEY_CFBundleDisplayName = "Star Battle";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
