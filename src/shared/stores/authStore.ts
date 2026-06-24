@@ -229,10 +229,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     authSubscription = subscription;
 
     // Handle deep links that launched the app cold (e.g. password recovery email).
-    // Fire-and-forget — we don't await so initialization isn't blocked.
-    Linking.getInitialURL()
-      .then(url => { if (url) get().handleDeepLink(url); })
-      .catch(() => {});
+    // Fire-and-forget — we don't await so initialization isn't blocked. Wrapped
+    // in try/catch because accessing Linking can throw synchronously (before a
+    // promise exists, so .catch can't attach) — e.g. in tests where this runs
+    // after the RN module registry is torn down. A failed deep-link probe must
+    // never take down auth init with an unhandled rejection.
+    try {
+      Linking.getInitialURL()
+        .then(url => { if (url) get().handleDeepLink(url); })
+        .catch(() => {});
+    } catch {}
   },
 
   handleDeepLink: async (url: string) => {
