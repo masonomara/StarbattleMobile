@@ -41,6 +41,10 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
+
+# Android release signing — never commit these
+*.jks
+android/keystore.properties
 .kotlin/
 
 # node.js
