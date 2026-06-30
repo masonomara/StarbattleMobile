@@ -204,6 +204,7 @@
     "migrationFailed": "Progress migration failed: {{message}}",
     "deleteFailed": "Account deletion failed. Try again or contact support.",
     "purchaseLag": "Purchase recorded, but access isn't active yet. Tap Restore Purchases.",
+    "purchasePending": "Your purchase is pending approval. You'll get access once it's approved.",
     "purchaseFailed": "Purchase didn't complete. Try again.",
     "productUnavailable": "This item isn't available right now. Try again later.",
     "packUnavailable": "This pack isn't available right now. Try again later.",

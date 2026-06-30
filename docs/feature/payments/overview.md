@@ -119,7 +119,9 @@ Placement ID: `main_paywall`
 
 I think having all the payment and accoutn sign up stuff on one screen is a bit confusing, open to adding a navigation flwo across multiple screens in the future. Not worth delayign the resubmission for this in my opinion.
 
-## Bugs that Claude caught
+## Additional Bugs
+
+Found by Claude
 
 These bugs do not fix the rejection but should be fixed independently.
 
@@ -139,4 +141,14 @@ BUG-003:
 
 ```text
 No Adapty **fallback paywall** is set, so a network blip = dead paywall.
+```
+
+### Key Finding
+
+Via Claude:
+
+```text
+Adapty v3 `makePurchase()` RESOLVES on cancel/pending (`{ type: 'user_cancelled' | 'pending' }`)
+— it does not throw. Always branch on `result.type`; never treat non-`success` as an error.
+A completed StoreKit purchase must never show the user an error.
 ```

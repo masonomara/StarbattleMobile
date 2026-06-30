@@ -154,6 +154,18 @@ export default function App() {
       // before any account sync. .finally so it still runs on Fast Refresh's
       // "already activated" rejection; getProfile is safe only post-activation.
       .finally(() => {
+        // Register the bundled offline fallback paywall: if getPaywall fails or
+        // times out (network blip / Adapty outage), the SDK serves products from
+        // this file instead of leaving "Buy Premium" dead. Must run
+        // post-activation and before any getPaywall call. JSON is exported from
+        // the Adapty dashboard for native SDK v3.12+ and bundled per platform
+        // (iOS: Xcode Copy Bundle Resources; Android: src/main/assets).
+        adapty
+          .setFallback({
+            ios: { fileName: 'ios_3_12_0_fallback.json' },
+            android: { relativeAssetPath: 'android_3_12_0_fallback.json' },
+          })
+          .catch(() => {});
         syncEntitlementsFromAdapty();
       });
     startupTimer.log('adapty.activate called');
