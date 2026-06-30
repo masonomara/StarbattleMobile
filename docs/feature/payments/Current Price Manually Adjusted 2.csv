@@ -1,0 +1,176 @@
+Countries or Regions,Currency Code,Price,Proceeds,May Adjust Automatically
+United States,USD,5.99,4.2,N
+Afghanistan,USD,0.99,0.7,N
+Albania,USD,1.99,1.16,N
+Algeria,USD,0.99,0.7,N
+Angola,USD,0.99,0.7,N
+Anguilla,USD,2.99,2.1,N
+Antigua and Barbuda,USD,1.99,1.4,N
+Argentina,USD,0.99,0.7,N
+Armenia,USD,1.99,1.16,N
+Australia,AUD,9.99,6.36,N
+Austria,EUR,2.99,1.74,N
+Azerbaijan,USD,1.99,1.18,N
+Bahamas,USD,2.99,1.9,N
+Bahrain,USD,6.99,4.45,N
+Barbados,USD,3.99,2.38,N
+Belarus,USD,0.99,0.58,N
+Belgium,EUR,2.99,1.73,N
+Belize,USD,1.99,1.4,N
+Benin,USD,0.99,0.59,N
+Bermuda,USD,2.99,2.1,N
+Bhutan,USD,0.99,0.66,N
+Bolivia,USD,0.99,0.7,N
+Bosnia and Herzegovina,EUR,1.99,1.19,N
+Botswana,USD,1.99,1.4,N
+Brazil,BRL,12.9,7.89,N
+British Virgin Islands,USD,2.99,2.1,N
+Brunei,USD,2.99,2.1,N
+Bulgaria,EUR,1.99,1.16,N
+Burkina Faso,USD,0.99,0.7,N
+Cambodia,USD,0.99,0.63,N
+Cameroon,USD,0.99,0.58,N
+Canada,CAD,7.99,5.59,N
+Cape Verde,USD,0.99,0.7,N
+Cayman Islands,USD,2.99,2.1,N
+Chad,USD,0.99,0.7,N
+Chile,CLP,1990,1171,N
+China mainland,CNY,22.0,15.13,N
+Colombia,COP,9900.0,5823.53,N
+"Congo, Democratic Republic of the",USD,0.99,0.7,N
+"Congo, Republic of the",USD,0.99,0.7,N
+Costa Rica,USD,1.99,1.4,N
+Côte d’Ivoire,USD,0.99,0.59,N
+Croatia,EUR,2.99,1.67,N
+Cyprus,EUR,2.99,1.76,N
+Czech Republic,CZK,79.0,45.7,N
+Denmark,DKK,49.0,27.44,N
+Dominica,USD,1.99,1.4,N
+Dominican Republic,USD,1.99,1.4,N
+Ecuador,USD,0.99,0.7,N
+Egypt,EGP,49.99,30.7,N
+El Salvador,USD,0.99,0.7,N
+Estonia,EUR,2.99,1.69,N
+Eswatini,USD,0.99,0.7,N
+Fiji,USD,1.99,1.4,N
+Finland,EUR,6.99,3.9,N
+France,EUR,2.99,1.74,N
+Gabon,USD,1.99,1.4,N
+Gambia,USD,0.99,0.7,N
+Georgia,USD,1.99,1.18,N
+Germany,EUR,2.99,1.76,N
+Ghana,USD,0.99,0.58,N
+Greece,EUR,2.99,1.69,N
+Grenada,USD,1.99,1.4,N
+Guatemala,USD,0.99,0.7,N
+Guinea-Bissau,USD,0.99,0.7,N
+Guyana,USD,1.99,1.4,N
+Honduras,USD,0.99,0.7,N
+Hong Kong,HKD,48.0,33.6,N
+Hungary,HUF,1490,821,N
+Iceland,USD,6.99,3.95,N
+India,INR,99.0,58.73,N
+Indonesia,IDR,19000,11982,N
+Iraq,USD,0.99,0.7,N
+Ireland,EUR,2.99,1.7,N
+Israel,ILS,19.9,13.93,N
+Italy,EUR,2.99,1.7,N
+Jamaica,USD,1.99,1.4,N
+Japan,JPY,1000,636,N
+Jordan,USD,1.99,1.4,N
+Kazakhstan,KZT,999.0,602.84,N
+Kenya,USD,0.99,0.59,N
+"Korea, Republic of",KRW,9900,6300,N
+Kosovo,EUR,1.99,1.18,N
+Kuwait,USD,5.99,4.2,N
+Kyrgyzstan,USD,0.99,0.62,N
+Laos,USD,0.99,0.63,N
+Latvia,EUR,2.99,1.73,N
+Lebanon,USD,0.99,0.7,N
+Liberia,USD,0.99,0.7,N
+Libya,USD,0.99,0.7,N
+Lithuania,EUR,2.99,1.73,N
+Luxembourg,EUR,6.99,4.18,N
+Macau,USD,5.99,4.2,N
+Madagascar,USD,0.99,0.7,N
+Malawi,USD,0.99,0.7,N
+Malaysia,MYR,9.9,6.42,N
+Maldives,USD,1.99,1.4,N
+Mali,USD,0.99,0.7,N
+Malta,EUR,2.99,1.77,N
+Mauritania,USD,0.99,0.7,N
+Mauritius,USD,1.99,1.21,N
+Mexico,MXN,39.0,23.53,N
+Micronesia,USD,0.99,0.7,N
+Moldova,USD,1.99,1.16,N
+Mongolia,USD,1.99,1.4,N
+Montenegro,EUR,1.99,1.39,N
+Montserrat,USD,1.99,1.4,N
+Morocco,USD,1.99,1.4,N
+Mozambique,USD,0.99,0.7,N
+Myanmar,USD,0.99,0.7,N
+Namibia,USD,1.99,1.4,N
+Nauru,USD,1.99,1.4,N
+Nepal,USD,0.99,0.6,N
+Netherlands,EUR,2.99,1.73,N
+New Zealand,NZD,9.99,6.08,N
+Nicaragua,USD,0.99,0.7,N
+Niger,USD,0.99,0.7,N
+Nigeria,NGN,1500.0,976.74,N
+North Macedonia,USD,1.99,1.4,N
+Norway,NOK,79.0,44.24,N
+Oman,USD,5.99,3.99,N
+Pakistan,PKR,300.0,210.0,N
+Palau,USD,1.99,1.4,N
+Panama,USD,1.99,1.4,N
+Papua New Guinea,USD,0.99,0.7,N
+Paraguay,USD,0.99,0.7,N
+Peru,PEN,7.9,4.69,N
+Philippines,PHP,49.0,30.63,N
+Poland,PLN,14.99,8.53,N
+Portugal,EUR,2.99,1.7,N
+Qatar,QAR,19.99,13.99,N
+Romania,RON,9.99,5.78,N
+Russia,RUB,99.0,56.8,N
+Rwanda,USD,0.99,0.7,N
+São Tomé and Príncipe,USD,0.99,0.7,N
+Saudi Arabia,SAR,24.99,15.21,N
+Senegal,USD,0.99,0.59,N
+Serbia,EUR,1.99,1.16,N
+Seychelles,USD,1.99,1.4,N
+Sierra Leone,USD,0.99,0.7,N
+Singapore,SGD,8.98,5.77,N
+Slovakia,EUR,2.99,1.7,N
+Slovenia,EUR,2.99,1.72,N
+Solomon Islands,USD,0.99,0.7,N
+South Africa,ZAR,39.99,24.34,N
+Spain,EUR,2.99,1.72,N
+Sri Lanka,USD,0.99,0.7,N
+St. Kitts and Nevis,USD,2.99,2.1,N
+St. Lucia,USD,1.99,1.4,N
+St. Vincent and the Grenadines,USD,1.99,1.4,N
+Suriname,USD,1.99,1.27,N
+Sweden,SEK,79.0,44.24,N
+Switzerland,CHF,5.0,3.24,N
+Taiwan,TWD,190,123,N
+Tajikistan,USD,0.99,0.61,N
+Tanzania,TZS,2900.0,1685.93,N
+Thailand,THB,79.0,51.68,N
+Tonga,USD,1.99,1.4,N
+Trinidad and Tobago,USD,1.99,1.4,N
+Tunisia,USD,0.99,0.7,N
+Türkiye,TRY,99.99,55.41,N
+Turkmenistan,USD,0.99,0.7,N
+Turks and Caicos Islands,USD,2.99,2.1,N
+Uganda,USD,0.99,0.56,N
+Ukraine,USD,0.99,0.58,N
+United Arab Emirates,AED,22.99,15.33,N
+United Kingdom,GBP,2.99,1.73,N
+Uruguay,USD,1.99,1.35,N
+Uzbekistan,USD,0.99,0.62,N
+Vanuatu,USD,1.99,1.4,N
+Venezuela,USD,0.99,0.7,N
+Vietnam,VND,29000,17440,N
+Yemen,USD,0.99,0.7,N
+Zambia,USD,0.99,0.6,N
+Zimbabwe,USD,0.99,0.57,N

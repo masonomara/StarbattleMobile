@@ -204,6 +204,7 @@
     "migrationFailed": "Falló la migración del progreso: {{message}}",
     "deleteFailed": "No se pudo eliminar la cuenta. Inténtalo de nuevo o contacta a soporte.",
     "purchaseLag": "Compra registrada, pero el acceso aún no está activo. Toca Restaurar compras.",
+    "purchasePending": "Tu compra está pendiente de aprobación. Tendrás acceso una vez aprobada.",
     "purchaseFailed": "La compra no se completó. Inténtalo de nuevo.",
     "productUnavailable": "Este artículo no está disponible por ahora. Inténtalo más tarde.",
     "packUnavailable": "Este paquete no está disponible por ahora. Inténtalo más tarde.",

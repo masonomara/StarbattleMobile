@@ -1,8 +1,11 @@
 import { useState, useCallback } from 'react';
 import i18n from '../lib/i18n';
-import { UserFacingError } from '../lib/errors';
+import { UserFacingError, CancelledError } from '../lib/errors';
 
 function toUserMessage(e: unknown): string | null {
+  // Explicit cancellation (e.g. dismissed purchase sheet) — show nothing.
+  if (e instanceof CancelledError) return null;
+
   const msg = e instanceof Error ? e.message : String(e);
 
   // User-cancelled flows — show nothing
